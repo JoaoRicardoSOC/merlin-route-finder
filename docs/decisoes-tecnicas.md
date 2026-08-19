@@ -22,6 +22,8 @@
 - [D-06. `encerrar()` desdobrado em três métodos nomeados por evento](#d-06-encerrar-desdobrado-em-três-métodos-nomeados-por-evento)
 - [D-07. `ItemRoteiro.reconstituir` para leitura do banco](#d-07-itemroteiroreconstituir-para-leitura-do-banco)
 - [D-08. O domínio registra o token de handoff, nunca o assina](#d-08-o-domínio-registra-o-token-de-handoff-nunca-o-assina)
+- [D-27. Segredo do JWT por ambiente, com chave aleatória em desenvolvimento](#d-27-segredo-do-jwt-por-ambiente-com-chave-aleatória-em-desenvolvimento)
+- [D-28. A rota parte do primeiro ponto do tipo TOTEM](#d-28-a-rota-parte-do-primeiro-ponto-do-tipo-totem)
 - [D-09. Relação com a sessão é unidirecional](#d-09-relação-com-a-sessão-é-unidirecional)
 
 **Persistência**
@@ -228,6 +230,36 @@ Complementos: `isTokenValido()` e `invalidarToken()` — este último é o que v
 **Consequências.** O caso de uso de handoff precisa orquestrar dois passos (assinar na infraestrutura, registrar no domínio) em vez de um.
 
 **Onde no código.** `domain/entity/ListaRoteiro.java`.
+
+**Implementação do lado da infraestrutura.** O contrato ficou em `domain/service/GeradorTokenHandoff` — uma interface escrita em termos de negócio ("produza um token de transição confiável"), que não menciona JWT. A implementação `infrastructure/security/GeradorTokenJwt` é a única classe do projeto que conhece a biblioteca `jjwt`. Mesmo arranjo dos repositórios: contrato no domínio, tecnologia na infraestrutura.
+
+---
+
+### D-27. Segredo do JWT por ambiente, com chave aleatória em desenvolvimento
+
+**Contexto.** Assinar o token de handoff exige uma chave secreta. Cada integrante roda a aplicação na própria máquina, e o projeto vai para deploy público.
+
+**Decisão.** A chave vem de `JWT_SECRET` (via `merlin.jwt.secret`). Se estiver ausente ou vazia, a aplicação **gera uma chave aleatória no startup** e registra um aviso no log.
+
+**Alternativas.** Um segredo padrão embutido no `application.yml` — descartada, e essa é a decisão central aqui: um segredo commitado é exatamente o tipo de coisa que passa despercebida e chega em produção. Qualquer pessoa com acesso ao repositório poderia forjar tokens válidos. Falhar o startup quando o segredo falta — descartada por atritar o dia a dia dos cinco integrantes sem ganho real de segurança em desenvolvimento.
+
+**Consequências.** Em desenvolvimento, tokens não sobrevivem a um restart da aplicação. Irrelevante, dado o TTL de 5 minutos: um QR Code gerado antes de reiniciar já estaria perto de expirar de qualquer forma. Em produção, basta definir a variável de ambiente.
+
+**Onde no código.** `infrastructure/security/GeradorTokenJwt.java`, `src/main/resources/application.yml`.
+
+---
+
+### D-28. A rota parte do primeiro ponto do tipo TOTEM
+
+**Contexto.** O algoritmo de roteamento precisa de uma origem (D-26). No handoff, a origem natural é o totem onde o cliente está montando a lista.
+
+**Decisão.** O caso de uso busca pontos do tipo `TOTEM` e usa o primeiro encontrado.
+
+**Limitação assumida.** Numa loja com vários totens, o roteiro sairia calculado a partir do totem errado. Resolver exigiria o Totem se identificar na requisição, e o contrato hoje envia apenas `sessaoId` — mudar isso afetaria a dupla de frontend, o que pela política da D-25 exige combinar antes.
+
+É uma limitação sem impacto no escopo atual (a massa de demonstração tem um totem) e de correção simples quando for necessário: acrescentar `totemId` opcional ao `HandoffRequest`.
+
+**Onde no código.** `application/usecase/GerarHandoffUseCase.java`.
 
 ---
 

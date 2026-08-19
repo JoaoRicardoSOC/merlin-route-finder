@@ -2,6 +2,7 @@ package br.com.jence.backend.presentation.advice;
 
 import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
+import br.com.jence.backend.domain.exception.TokenHandoffInvalidoException;
 import br.com.jence.backend.presentation.response.StandardError;
 import br.com.jence.backend.presentation.response.StandardError.ValidationError;
 import jakarta.servlet.http.HttpServletRequest;
@@ -66,6 +67,21 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(TokenHandoffInvalidoException.class)
+    public ResponseEntity<StandardError> handleTokenInvalido(TokenHandoffInvalidoException ex, HttpServletRequest request) {
+
+        StandardError response = new StandardError(
+                LocalDateTime.now(),
+                HttpStatus.UNAUTHORIZED.value(),
+                "Token de Handoff Invalido",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
     @ExceptionHandler(Exception.class)

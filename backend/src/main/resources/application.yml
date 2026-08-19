@@ -20,6 +20,15 @@ spring:
 server:
   port: 8080
 
+merlin:
+  jwt:
+    # Sem valor configurado, a aplicacao gera uma chave aleatoria no startup e avisa no log.
+    # Nunca definir um segredo padrao aqui: ver D-27 em docs/decisoes-tecnicas.md.
+    secret: ${JWT_SECRET:}
+  handoff:
+    # URL base do PWA mobile, codificada no QR Code exibido no Totem.
+    base-url: ${HANDOFF_BASE_URL:http://localhost:5173}
+
 springdoc:
   swagger-ui:
     path: /swagger.html
