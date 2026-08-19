@@ -1,5 +1,6 @@
 package br.com.jence.backend.presentation.advice;
 
+import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.presentation.response.StandardError;
 import br.com.jence.backend.presentation.response.StandardError.ValidationError;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,6 +35,21 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(RecursoNaoEncontradoException.class)
+    public ResponseEntity<StandardError> handleRecursoNaoEncontrado(RecursoNaoEncontradoException ex, HttpServletRequest request) {
+
+        StandardError response = new StandardError(
+                LocalDateTime.now(),
+                HttpStatus.NOT_FOUND.value(),
+                "Recurso Nao Encontrado",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @ExceptionHandler(Exception.class)

@@ -12,6 +12,7 @@
 - [D-01. Arquitetura hexagonal com domínio livre de framework](#d-01-arquitetura-hexagonal-com-domínio-livre-de-framework)
 - [D-02. Casos de uso devolvem DTO, não entidade de domínio](#d-02-casos-de-uso-devolvem-dto-não-entidade-de-domínio)
 - [D-03. Tipo de paginação próprio em vez de `Page` do Spring](#d-03-tipo-de-paginação-próprio-em-vez-de-page-do-spring)
+- [D-22. Exceção única para "não encontrado", tratada centralmente](#d-22-exceção-única-para-não-encontrado-tratada-centralmente)
 
 **Domínio**
 - [D-04. Entidades imutáveis por padrão](#d-04-entidades-imutáveis-por-padrão)
@@ -36,6 +37,7 @@
 - [D-19. Coordenadas do seed seguem a planta real da loja](#d-19-coordenadas-do-seed-seguem-a-planta-real-da-loja)
 - [D-20. Google Gemini como provedor de LLM](#d-20-google-gemini-como-provedor-de-llm)
 - [D-21. Demo da banca por simulação animada, não posicionamento real](#d-21-demo-da-banca-por-simulação-animada-não-posicionamento-real)
+- [D-23. "Resolução síncrona de inventário" não é integração com ERP](#d-23-resolução-síncrona-de-inventário-não-é-integração-com-erp)
 
 ---
 
@@ -87,6 +89,22 @@ grep -rn "org.springframework\|jakarta.persistence\|org.hibernate" backend/src/m
 **Consequências.** ~15 linhas de código e uma tradução no adaptador.
 
 **Onde no código.** `domain/repository/Pagina.java`, `infrastructure/database/adapter/ProdutoRepositoryAdapter.java`.
+
+---
+
+### D-22. Exceção única para "não encontrado", tratada centralmente
+
+**Contexto.** Vários casos de uso recebem um identificador e podem não encontrar o recurso (produto, sessão, lista, item). O contrato manda responder 404.
+
+**Decisão.** Uma `RecursoNaoEncontradoException(recurso, identificador)` em `domain/exception`, lançada pelo caso de uso, capturada pelo `GlobalExceptionHandler` e convertida em 404 com o `StandardError` padrão do projeto.
+
+**Alternativas.** Cada caso de uso devolver `Optional` e cada controller decidir o status — descartada porque espalharia a mesma decisão por ~8 controllers, e bastaria um esquecer para a API responder 200 com corpo vazio em vez de 404.
+
+Uma classe de exceção por entidade (`ProdutoNaoEncontradoException`, `SessaoNaoEncontradaException`, ...) — descartada porque seis classes que diferem apenas no nome são repetição, não design. A mensagem carrega o contexto: `"Produto nao encontrado(a): <uuid>"`.
+
+**Consequências.** Nenhum controller precisa tratar ausência de recurso: basta o caso de uso lançar. Se no futuro alguma resposta 404 precisar de corpo diferente, é um `@ExceptionHandler` novo, não uma mudança espalhada.
+
+**Onde no código.** `domain/exception/RecursoNaoEncontradoException.java`, `presentation/advice/GlobalExceptionHandler.java`.
 
 ---
 
@@ -368,6 +386,22 @@ Efeito colateral positivo: por usar os ports de domínio, o seeder funciona como
 **Consequências.** A simulação usa as coordenadas reais calculadas pelo algoritmo, então o que se vê na tela é a rota de verdade — não uma animação fabricada. O sistema de posicionamento real fica reservado para o NEXT (24/10/2026), se o grupo for selecionado.
 
 **Dependência.** É o que torna o endpoint de marcação de item coletado (UC-014) parte do caminho crítico: é ele que faz o marcador avançar.
+
+---
+
+### D-23. "Resolução síncrona de inventário" não é integração com ERP
+
+**Contexto.** O card do UC-003 no backlog se chama "Consulta de Detalhamento e **Resolução Síncrona de Inventário**". O nome sugere consulta em tempo real a um sistema de estoque externo.
+
+**Decisão.** Não há integração alguma. O `saldoEstoque` é lido da nossa própria tabela `TB_PRODUTO` no momento da requisição, sem cache. "Síncrono" significa apenas que o valor não é pré-calculado nem defasado em relação ao nosso banco.
+
+**Motivo.** Integração com ERP/WMS está fora do escopo de um projeto acadêmico — não temos acesso a sistema real da Leroy Merlin, e a restrição de custo zero inviabiliza qualquer serviço intermediário.
+
+**Consequências.** É importante ser honesto sobre isso na apresentação: o sistema resolve o problema de **localizar** o produto, mas a confiabilidade do estoque exibido depende do dado no banco estar atualizado. Esse é justamente o risco de negócio levantado no início do projeto — o Merlin poderia reproduzir a mesma "ruptura silenciosa" que promete resolver, se o estoque não refletir a prateleira.
+
+É por isso que o fluxo de ruptura física (UC-013) existe e é tratado como diferencial: ele assume que a divergência **vai** acontecer e converte a falha em oportunidade de venda, em vez de fingir que o estoque é confiável.
+
+**Onde no código.** `application/usecase/ConsultarProdutoUseCase.java`.
 
 ---
 
