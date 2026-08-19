@@ -12,6 +12,7 @@
 - [D-01. Arquitetura hexagonal com domínio livre de framework](#d-01-arquitetura-hexagonal-com-domínio-livre-de-framework)
 - [D-02. Casos de uso devolvem DTO, não entidade de domínio](#d-02-casos-de-uso-devolvem-dto-não-entidade-de-domínio)
 - [D-03. Tipo de paginação próprio em vez de `Page` do Spring](#d-03-tipo-de-paginação-próprio-em-vez-de-page-do-spring)
+- [D-26. Nearest Neighbor como heurística de roteamento](#d-26-nearest-neighbor-como-heurística-de-roteamento)
 - [D-22. Exceção única para "não encontrado", tratada centralmente](#d-22-exceção-única-para-não-encontrado-tratada-centralmente)
 - [D-25. 409 para sessão inativa, e quando é aceitável evoluir o contrato](#d-25-409-para-sessão-inativa-e-quando-é-aceitável-evoluir-o-contrato)
 
@@ -125,6 +126,32 @@ A separação entre as duas exceções é semântica e vale registrar: **404 = o
 Foi por esse critério que no UC-003 optamos por **não** adicionar um campo `disponivel` ao `ProdutoDetalhado` (mudança sem necessidade real), mas aqui adicionamos o 409 (sem ele, o frontend receberia um status não documentado e não saberia tratar).
 
 **Onde no código.** `domain/exception/OperacaoNaoPermitidaException.java`, `presentation/advice/GlobalExceptionHandler.java`, `backend/src/main/resources/openapi/openapi.yaml`.
+
+---
+
+### D-26. Nearest Neighbor como heurística de roteamento
+
+**Contexto.** Ordenar as paradas de uma lista de compras para minimizar o percurso é uma instância do Problema do Caixeiro Viajante (TSP), que é NP-difícil: não existe algoritmo exato eficiente conhecido para o caso geral.
+
+**Decisão.** Heurística do vizinho mais próximo (Nearest Neighbor): a partir do ponto atual, sempre seguir para o item ainda não visitado que estiver mais perto. Complexidade O(n²).
+
+**Alternativas.**
+- **Solver exato (força bruta ou programação dinâmica)** — descartada: força bruta é O(n!), inviável já com ~12 itens, e o carrinho não tem limite (D-17). Além disso, a diferença entre a rota ótima e uma boa aproximação é irrelevante para um cliente andando numa loja.
+- **Bibliotecas de otimização (OR-Tools e afins)** — descartada por adicionar dependência pesada para um ganho marginal no contexto do projeto.
+
+**Consequências assumidas.** Nearest Neighbor é guloso: decide o melhor passo imediato sem enxergar o todo, então pode "se pintar num canto" — deixar um item isolado para o fim e obrigar uma travessia longa. Não produz a rota ótima, e sim uma rota boa.
+
+Medido com as coordenadas reais da loja (6 itens, cenário de reforma de banheiro): **197 unidades contra 320 da ordem em que o cliente adicionou os itens — 38,6% de redução**. É esse o valor que o produto entrega.
+
+O refinamento 2-opt está planejado para a Fase 3 justamente para atacar a limitação acima: ele detecta e desfaz cruzamentos na rota gerada, sem o custo de um solver exato.
+
+**A origem é parâmetro, não constante.** `calcularRota(origem, itens)` — no handoff a origem é o totem da entrada; no tratamento de ruptura de estoque (UC-013) será a posição onde o cliente está naquele momento. Com origem fixa internamente, o segundo caso exigiria outro algoritmo.
+
+**Efeito emergente útil.** Itens que dividem o mesmo `PontoMapa` ficam a distância zero entre si, então a heurística os agrupa naturalmente: o cliente resolve o corredor inteiro de uma vez em vez de voltar nele depois. Não foi programado explicitamente — cai fora da própria regra do vizinho mais próximo.
+
+**Testes versionados.** Por ser domínio puro, é a primeira parte do sistema com testes no repositório: rodam com `./mvnw test` sem banco nem configuração, em ~0,2s.
+
+**Onde no código.** `domain/service/CalculadoraRota.java`, `src/test/java/.../domain/service/CalculadoraRotaTest.java`.
 
 ---
 
