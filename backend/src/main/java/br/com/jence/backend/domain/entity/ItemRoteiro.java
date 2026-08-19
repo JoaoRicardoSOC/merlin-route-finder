@@ -19,6 +19,17 @@ public class ItemRoteiro {
         this.coletado = false;
     }
 
+    private ItemRoteiro(UUID id, Produto produto, Integer ordemCaminho, boolean coletado) {
+        this.id = id;
+        this.produto = produto;
+        this.ordemCaminho = ordemCaminho;
+        this.coletado = coletado;
+    }
+
+    public static ItemRoteiro reconstituir(UUID id, Produto produto, Integer ordemCaminho, boolean coletado) {
+        return new ItemRoteiro(id, produto, ordemCaminho, coletado);
+    }
+
     public void marcarComoColetado() {
         this.coletado = true;
     }
