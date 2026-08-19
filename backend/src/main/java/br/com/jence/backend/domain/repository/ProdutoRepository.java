@@ -13,5 +13,8 @@ public interface ProdutoRepository {
 
     Pagina<Produto> buscarPaginado(int pagina, int tamanho);
 
+    /** Busca por nome, tolerante a busca parcial e a pequenos erros de digitacao. */
+    Pagina<Produto> buscarPorTermo(String termo, int pagina, int tamanho);
+
     Produto salvar(Produto produto);
 }

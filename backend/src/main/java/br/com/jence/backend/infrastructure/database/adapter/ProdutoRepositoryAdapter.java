@@ -37,7 +37,16 @@ public class ProdutoRepositoryAdapter implements ProdutoRepository {
     @Override
     @Transactional(readOnly = true)
     public Pagina<Produto> buscarPaginado(int pagina, int tamanho) {
-        Page<ProdutoEntity> page = jpaRepository.findAll(PageRequest.of(pagina, tamanho));
+        return converter(jpaRepository.findAll(PageRequest.of(pagina, tamanho)));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Pagina<Produto> buscarPorTermo(String termo, int pagina, int tamanho) {
+        return converter(jpaRepository.buscarPorTermo(termo, PageRequest.of(pagina, tamanho)));
+    }
+
+    private Pagina<Produto> converter(Page<ProdutoEntity> page) {
         return new Pagina<>(
                 page.getContent().stream().map(produtoFactory::paraDominio).toList(),
                 page.getNumber(),
