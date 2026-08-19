@@ -1,6 +1,12 @@
 # Merlin Route Finder — Backend
 
-API do Merlin Route Finder (Java 21 + Spring Boot). Contexto de negócio e planejamento técnico completos estão em [`../docs/contexto-e-planejamento.md`](../docs/contexto-e-planejamento.md) e [`../docs/planejamento-tecnico.md`](../docs/planejamento-tecnico.md).
+API do Merlin Route Finder (Java 21 + Spring Boot).
+
+**Documentação do projeto:**
+- [`../docs/contexto-e-planejamento.md`](../docs/contexto-e-planejamento.md) — contexto de negócio, equipe, cronograma e rubrica do Challenge
+- [`../docs/planejamento-tecnico.md`](../docs/planejamento-tecnico.md) — arquitetura, convenções de pacotes e organização do trabalho em fases
+- [`../docs/decisoes-tecnicas.md`](../docs/decisoes-tecnicas.md) — **por que** cada escolha não convencional foi feita (leitura recomendada antes de mexer no código)
+- [`src/main/resources/openapi/openapi.yaml`](src/main/resources/openapi/openapi.yaml) — contrato REST completo (API-First)
 
 ## Pré-requisitos
 
