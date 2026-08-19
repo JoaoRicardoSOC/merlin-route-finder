@@ -45,6 +45,8 @@ Reagrupamento dos 25 cards do Trello em fases, da mais bloqueante para a mais op
 
 ## 4. Convenções de arquitetura
 
+> **Contrato de API:** o contrato REST completo (card 1, Fase 0) está em [`../backend/src/main/resources/openapi/openapi.yaml`](../backend/src/main/resources/openapi/openapi.yaml), escrito à mão em OpenAPI 3.0 seguindo o padrão API-First — é a fonte de verdade para as duplas de frontend (Totem e Mobile) integrarem, mesmo antes da implementação dos controllers.
+
 O próprio backlog já denuncia uma arquitetura hexagonal com **entidades de domínio puras** separadas do **mapeamento JPA** (cards 2-6 vs. 11-13) — confirma o padrão de portas e adaptadores que o esqueleto de pastas em `backend/src/main/java/br/com/jence/backend` já sugere:
 
 - `domain/entity` — POJOs puros (Sessao, ListaRoteiro, ItemRoteiro, Produto, PontoMapa, ChatMensagem), sem anotações JPA, com os métodos de comportamento do diagrama de classes (`isValida()`, `gerarTokenHandoff()`, `temDisponibilidade()` etc.).

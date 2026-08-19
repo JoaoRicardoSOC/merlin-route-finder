@@ -1,0 +1,675 @@
+openapi: 3.0.3
+info:
+  title: Merlin Route Finder API
+  description: >
+    Contrato da API REST do Merlin Route Finder (FIAP Challenge 2026 / Leroy Merlin).
+    Escrito à mão como fonte de verdade API-First (ver docs/planejamento-tecnico.md),
+    antes da implementação dos controllers reais. Cobre os recursos das Fases 0 a 3
+    do backlog revisado (docs/backlog-trello-revisado.md).
+  version: "0.1.0"
+servers:
+  - url: /api/v1
+
+tags:
+  - name: Sessao
+    description: Ciclo de vida da sessão do cliente (Totem e Mobile)
+  - name: Catalogo
+    description: Busca e detalhamento de produtos
+  - name: Roteiro
+    description: Montagem da lista de compras (Totem) e execução da rota (Mobile)
+  - name: Handoff
+    description: Transição de dispositivo Totem -> Mobile via QR Code/JWT
+  - name: RupturaEstoque
+    description: Tratamento de ruptura física e sugestão de substituto por IA
+  - name: Chat
+    description: Assistente conversacional (RAG)
+
+paths:
+  /sessoes:
+    post:
+      tags: [Sessao]
+      summary: Inicializar sessão (UC-001)
+      description: Acionado quando o cliente inicia interação no Totem. Cria uma Sessao ACTIVE com uma ListaRoteiro vazia.
+      responses:
+        "201":
+          description: Sessão criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sessao"
+        "500":
+          $ref: "#/components/responses/ErroInterno"
+
+  /sessoes/{sessaoId}:
+    get:
+      tags: [Sessao]
+      summary: Consultar status/ciclo de vida da sessão
+      parameters:
+        - $ref: "#/components/parameters/SessaoId"
+      responses:
+        "200":
+          description: Sessão encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sessao"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+
+  /sessoes/{sessaoId}/concluir:
+    post:
+      tags: [Sessao]
+      summary: Concluir rota e encerrar sessão (UC-014)
+      description: Acionado pelo Mobile quando o cliente finaliza a caminhada (manualmente ou após coletar todos os itens). Transiciona StatusSessao para COMPLETED.
+      parameters:
+        - $ref: "#/components/parameters/SessaoId"
+      responses:
+        "200":
+          description: Sessão encerrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sessao"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+        "409":
+          description: Sessão já não está mais ativa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardError"
+
+  /produtos:
+    get:
+      tags: [Catalogo]
+      summary: Busca paginada e fuzzy de produtos (UC-002)
+      parameters:
+        - name: query
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Termo de busca (tolerante a pequenos erros de digitação)
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Página de resultados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProdutoPage"
+
+  /produtos/{produtoId}:
+    get:
+      tags: [Catalogo]
+      summary: Detalhamento de produto e resolução síncrona de inventário (UC-003)
+      parameters:
+        - $ref: "#/components/parameters/ProdutoId"
+      responses:
+        "200":
+          description: Produto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProdutoDetalhado"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+
+  /produtos/{produtoId}/estoque:
+    patch:
+      tags: [Catalogo]
+      summary: Simular alteração de estoque (ferramenta interna de demonstração)
+      description: >
+        Não faz parte de nenhum caso de uso do cliente final. Permite zerar ou restaurar o
+        saldoEstoque de um produto sob demanda, para disparar o fluxo de ruptura (UC-013)
+        de forma confiável durante gravação de vídeo ou apresentação ao vivo.
+      parameters:
+        - $ref: "#/components/parameters/ProdutoId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EstoqueUpdateRequest"
+      responses:
+        "200":
+          description: Estoque atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Produto"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+
+  /sessoes/{sessaoId}/roteiro:
+    get:
+      tags: [Roteiro]
+      summary: Consultar a lista de compras da sessão (UC-005)
+      parameters:
+        - $ref: "#/components/parameters/SessaoId"
+      responses:
+        "200":
+          description: Lista de roteiro da sessão
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListaRoteiroResponse"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+
+  /sessoes/{sessaoId}/roteiro/itens:
+    post:
+      tags: [Roteiro]
+      summary: Adicionar produto ao roteiro (UC-004)
+      description: Sem limite máximo de itens (decisão de negócio de 17/08/2026).
+      parameters:
+        - $ref: "#/components/parameters/SessaoId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdicionarItemRequest"
+      responses:
+        "201":
+          description: Item adicionado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemRoteiroDetalhado"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+
+  /sessoes/{sessaoId}/roteiro/itens/{itemId}:
+    delete:
+      tags: [Roteiro]
+      summary: Remover produto da lista (UC-006)
+      parameters:
+        - $ref: "#/components/parameters/SessaoId"
+        - $ref: "#/components/parameters/ItemId"
+      responses:
+        "204":
+          description: Item removido
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+
+  /sessoes/{sessaoId}/roteiro/pontos-interesse:
+    post:
+      tags: [Roteiro]
+      summary: Incluir ponto de interesse na rota em andamento (UC-012)
+      description: >
+        Acionado pelo Mobile para incluir um ponto de apoio (banheiro ou caixa) no trajeto,
+        sem que isso seja um produto do roteiro de compras. Localiza o PontoMapa do tipo
+        solicitado mais próximo e insere na sequência de navegação sem alterar a ordem dos
+        itens de compra já calculada.
+      parameters:
+        - $ref: "#/components/parameters/SessaoId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IncluirPontoInteresseRequest"
+      responses:
+        "200":
+          description: Rota atualizada com o ponto de interesse incluído
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RotaCalculada"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+
+  /roteiro/itens/{itemId}/coletar:
+    patch:
+      tags: [Roteiro]
+      summary: Marcar item como coletado durante a caminhada (UC-014)
+      description: >
+        Acionado pelo Mobile quando o cliente confirma ter pego um produto. É o mecanismo
+        que faz o "ponto" avançar visualmente na simulação de caminhada do Mobile PWA
+        (estratégia de demo da banca final).
+      parameters:
+        - $ref: "#/components/parameters/ItemId"
+      responses:
+        "200":
+          description: Item marcado como coletado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemRoteiroDetalhado"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+
+  /handoff:
+    post:
+      tags: [Handoff]
+      summary: Gerar handoff (concluir lista e transicionar para o Mobile) (UC-010)
+      description: >
+        Valida a sessão, executa o algoritmo de roteamento (Nearest Neighbor, com
+        refinamento 2-opt na Fase 3), gera um JWT assinado com TTL de 5 minutos e uso
+        único, e persiste o token na ListaRoteiro.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HandoffRequest"
+      responses:
+        "201":
+          description: Handoff gerado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HandoffResponse"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+        "409":
+          description: Lista de roteiro vazia ou sessão inválida
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardError"
+
+  /handoff/validate:
+    get:
+      tags: [Handoff]
+      summary: Validar token de handoff e iniciar navegação (UC-011)
+      description: >
+        Acionado quando o Mobile escaneia o QR Code. Valida o JWT, invalida-o
+        imediatamente após uso (uso único) e retorna a matriz de rota calculada,
+        os itens e as coordenadas.
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Token válido — rota liberada para navegação
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RotaCalculada"
+        "401":
+          description: Token inválido, expirado ou já utilizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardError"
+
+  /roteiro/itens/{itemId}/ruptura:
+    post:
+      tags: [RupturaEstoque]
+      summary: Tratar ruptura de estoque e sugerir substituto (UC-013)
+      description: >
+        Acionado quando o cliente sinaliza "Prateleira Vazia" no Mobile. Registra a
+        ruptura, faz uma pré-filtragem espacial por corredores adjacentes ao PontoMapa
+        do produto em falta, e aciona o Gemini via function calling para eleger o
+        substituto semântico mais adequado dentre os candidatos já filtrados
+        espacialmente (nunca por texto livre do modelo).
+      parameters:
+        - $ref: "#/components/parameters/ItemId"
+      responses:
+        "200":
+          description: Substituto sugerido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RupturaEstoqueResponse"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+        "422":
+          description: Nenhum substituto plausível encontrado nas proximidades
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardError"
+
+  /sessoes/{sessaoId}/chat/mensagens:
+    get:
+      tags: [Chat]
+      summary: Consultar histórico conversacional da sessão (UC-007 a UC-009)
+      parameters:
+        - $ref: "#/components/parameters/SessaoId"
+      responses:
+        "200":
+          description: Histórico de mensagens
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMensagem"
+    post:
+      tags: [Chat]
+      summary: Enviar mensagem ao assistente virtual (UC-007 a UC-009)
+      description: >
+        O assistente tem escopo fechado (conjunto de "projetos"/categorias mapeados a
+        categorias de produto — não é um chat totalmente aberto).
+      parameters:
+        - $ref: "#/components/parameters/SessaoId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnviarMensagemRequest"
+      responses:
+        "201":
+          description: Resposta do assistente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMensagem"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+
+components:
+  parameters:
+    SessaoId:
+      name: sessaoId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ProdutoId:
+      name: produtoId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ItemId:
+      name: itemId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    NaoEncontrado:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/StandardError"
+    ErroInterno:
+      description: Erro interno inesperado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/StandardError"
+
+  schemas:
+    StatusSessao:
+      type: string
+      enum: [ACTIVE, COMPLETED, EXPIRED, ABANDONED]
+    TipoPonto:
+      type: string
+      enum: [PRATELEIRA, BANHEIRO, CAIXA, TOTEM]
+    Remetente:
+      type: string
+      enum: [USER, ASSISTANT]
+
+    Sessao:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/StatusSessao"
+        criadoEm:
+          type: string
+          format: date-time
+        expiracaoTtl:
+          type: string
+          format: date-time
+
+    PontoMapa:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tipo:
+          $ref: "#/components/schemas/TipoPonto"
+        corredor:
+          type: string
+        coordenadaX:
+          type: integer
+        coordenadaY:
+          type: integer
+
+    Produto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sku:
+          type: string
+        nome:
+          type: string
+        preco:
+          type: number
+          format: double
+        saldoEstoque:
+          type: integer
+        pontoMapaId:
+          type: string
+          format: uuid
+
+    ProdutoDetalhado:
+      allOf:
+        - $ref: "#/components/schemas/Produto"
+        - type: object
+          properties:
+            pontoMapa:
+              $ref: "#/components/schemas/PontoMapa"
+
+    ProdutoPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/Produto"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+
+    ItemRoteiro:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        produtoId:
+          type: string
+          format: uuid
+        ordemCaminho:
+          type: integer
+        coletado:
+          type: boolean
+
+    ItemRoteiroDetalhado:
+      allOf:
+        - $ref: "#/components/schemas/ItemRoteiro"
+        - type: object
+          properties:
+            produto:
+              $ref: "#/components/schemas/Produto"
+
+    ListaRoteiroResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sessaoId:
+          type: string
+          format: uuid
+        quantidadeItens:
+          type: integer
+        itens:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemRoteiroDetalhado"
+
+    AdicionarItemRequest:
+      type: object
+      required: [produtoId]
+      properties:
+        produtoId:
+          type: string
+          format: uuid
+
+    IncluirPontoInteresseRequest:
+      type: object
+      required: [tipo]
+      properties:
+        tipo:
+          type: string
+          enum: [BANHEIRO, CAIXA]
+          description: Tipo de ponto de apoio a incluir na rota (não é um item de compra)
+
+    EstoqueUpdateRequest:
+      type: object
+      required: [saldoEstoque]
+      properties:
+        saldoEstoque:
+          type: integer
+          minimum: 0
+
+    HandoffRequest:
+      type: object
+      required: [sessaoId]
+      properties:
+        sessaoId:
+          type: string
+          format: uuid
+
+    HandoffResponse:
+      type: object
+      properties:
+        handoffUrl:
+          type: string
+          description: URL a ser codificada no QR Code exibido no Totem
+        token:
+          type: string
+        tokenExpiracao:
+          type: string
+          format: date-time
+
+    PontoRota:
+      type: object
+      description: Um ponto na sequência de navegação calculada (item de compra ou ponto de interesse)
+      properties:
+        ordem:
+          type: integer
+        item:
+          $ref: "#/components/schemas/ItemRoteiroDetalhado"
+        pontoMapa:
+          $ref: "#/components/schemas/PontoMapa"
+
+    RotaCalculada:
+      type: object
+      properties:
+        sessaoId:
+          type: string
+          format: uuid
+        listaRoteiroId:
+          type: string
+          format: uuid
+        pontos:
+          type: array
+          items:
+            $ref: "#/components/schemas/PontoRota"
+
+    RupturaEstoqueResponse:
+      type: object
+      properties:
+        produtoOriginalId:
+          type: string
+          format: uuid
+        produtoSugeridoId:
+          type: string
+          format: uuid
+        produtoSugerido:
+          $ref: "#/components/schemas/ProdutoDetalhado"
+        justificativa:
+          type: string
+          description: Explicação em linguagem natural gerada pela IA para a sugestão
+
+    ChatMensagem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sessaoId:
+          type: string
+          format: uuid
+        remetente:
+          $ref: "#/components/schemas/Remetente"
+        conteudo:
+          type: string
+        enviadoEm:
+          type: string
+          format: date-time
+
+    EnviarMensagemRequest:
+      type: object
+      required: [conteudo]
+      properties:
+        conteudo:
+          type: string
+
+    StandardError:
+      type: object
+      description: Espelha br.com.jence.backend.presentation.response.StandardError
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        validationErrors:
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/ValidationError"
+
+    ValidationError:
+      type: object
+      properties:
+        field:
+          type: string
+        message:
+          type: string
