@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Credenciais locais (nunca commitar) ###
+.env
+application-local.yml
+application-local.yaml
