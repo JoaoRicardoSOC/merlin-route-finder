@@ -13,6 +13,7 @@
 - [D-02. Casos de uso devolvem DTO, não entidade de domínio](#d-02-casos-de-uso-devolvem-dto-não-entidade-de-domínio)
 - [D-03. Tipo de paginação próprio em vez de `Page` do Spring](#d-03-tipo-de-paginação-próprio-em-vez-de-page-do-spring)
 - [D-22. Exceção única para "não encontrado", tratada centralmente](#d-22-exceção-única-para-não-encontrado-tratada-centralmente)
+- [D-25. 409 para sessão inativa, e quando é aceitável evoluir o contrato](#d-25-409-para-sessão-inativa-e-quando-é-aceitável-evoluir-o-contrato)
 
 **Domínio**
 - [D-04. Entidades imutáveis por padrão](#d-04-entidades-imutáveis-por-padrão)
@@ -35,6 +36,7 @@
 - [D-17. Carrinho de roteiro sem limite de itens](#d-17-carrinho-de-roteiro-sem-limite-de-itens)
 - [D-18. Produto duplicado é ignorado no carrinho](#d-18-produto-duplicado-é-ignorado-no-carrinho)
 - [D-19. Coordenadas do seed seguem a planta real da loja](#d-19-coordenadas-do-seed-seguem-a-planta-real-da-loja)
+- [D-24. TTL da sessão é renovado a cada interação](#d-24-ttl-da-sessão-é-renovado-a-cada-interação)
 - [D-20. Google Gemini como provedor de LLM](#d-20-google-gemini-como-provedor-de-llm)
 - [D-21. Demo da banca por simulação animada, não posicionamento real](#d-21-demo-da-banca-por-simulação-animada-não-posicionamento-real)
 - [D-23. "Resolução síncrona de inventário" não é integração com ERP](#d-23-resolução-síncrona-de-inventário-não-é-integração-com-erp)
@@ -105,6 +107,24 @@ Uma classe de exceção por entidade (`ProdutoNaoEncontradoException`, `SessaoNa
 **Consequências.** Nenhum controller precisa tratar ausência de recurso: basta o caso de uso lançar. Se no futuro alguma resposta 404 precisar de corpo diferente, é um `@ExceptionHandler` novo, não uma mudança espalhada.
 
 **Onde no código.** `domain/exception/RecursoNaoEncontradoException.java`, `presentation/advice/GlobalExceptionHandler.java`.
+
+---
+
+### D-25. 409 para sessão inativa, e quando é aceitável evoluir o contrato
+
+**Contexto.** Adicionar ou remover produto do roteiro de uma sessão já encerrada ou expirada precisa falhar. Mas 404 seria mentira: a sessão existe, o que impede a operação é o **estado** dela.
+
+**Decisão.** Uma segunda exceção de domínio, `OperacaoNaoPermitidaException`, mapeada para HTTP 409 no `GlobalExceptionHandler`. O contrato OpenAPI ganhou uma resposta reutilizável `SessaoInativa` aplicada aos três endpoints de roteiro.
+
+A separação entre as duas exceções é semântica e vale registrar: **404 = o recurso não existe; 409 = existe, mas o estado atual não permite**. A distinção importa para o frontend, que deve reagir de formas diferentes (404: erro de navegação; 409: sessão precisa ser reiniciada no Totem).
+
+**Política sobre o contrato.** O contrato é fonte de verdade (padrão API-First), mas é um documento vivo. O critério adotado:
+- **Adicionar** uma resposta de erro ou um campo opcional é aceitável — não quebra quem já integra.
+- **Mudar ou remover** um campo existente exige combinar com a dupla de frontend antes.
+
+Foi por esse critério que no UC-003 optamos por **não** adicionar um campo `disponivel` ao `ProdutoDetalhado` (mudança sem necessidade real), mas aqui adicionamos o 409 (sem ele, o frontend receberia um status não documentado e não saberia tratar).
+
+**Onde no código.** `domain/exception/OperacaoNaoPermitidaException.java`, `presentation/advice/GlobalExceptionHandler.java`, `backend/src/main/resources/openapi/openapi.yaml`.
 
 ---
 
@@ -356,6 +376,22 @@ Efeito colateral positivo: por usar os ports de domínio, o seeder funciona como
 **Consequências.** As distâncias resultantes são realistas (Tintas → Materiais de construção dá 72 unidades num grid de 100), dando ao algoritmo de roteamento um problema de verdade para otimizar.
 
 **Onde no código.** `infrastructure/database/seed/CarregadorDadosIniciais.java`.
+
+---
+
+### D-24. TTL da sessão é renovado a cada interação
+
+**Contexto.** A sessão nasce com TTL de 30 minutos (card 4). Adicionar e remover itens são as ações que o cliente executa enquanto monta o roteiro no Totem.
+
+**Decisão.** Adicionar ou remover item chama `Sessao.renovarSessao()`, empurrando o TTL para 30 minutos à frente da interação. Consultar a lista **não** renova.
+
+**Motivo — e por que isso é obrigatório, não um extra.** Sem renovação, teríamos uma contradição silenciosa com a [D-17](#d-17-carrinho-de-roteiro-sem-limite-de-itens): removemos o limite de itens do carrinho justamente para atender o empreiteiro que monta uma lista grande para uma obra inteira, mas um TTL fixo de 30 minutos expulsaria exatamente esse cliente no meio da montagem. As duas decisões só funcionam juntas.
+
+**Por que consultar não renova.** Consulta é leitura; renovar exigiria gravar a cada `GET`, e listar a lista não é sinal forte de atividade (uma tela aberta e esquecida continuaria consultando). As ações de escrita são evidência real de que há alguém interagindo.
+
+**Consequências.** Uma sessão só expira após 30 minutos de **inatividade** real, não 30 minutos de duração total. O job de expiração da Fase 3 continua funcionando normalmente: ele varre por `expiracaoTtl` vencido, que agora reflete a última interação.
+
+**Onde no código.** `application/usecase/AdicionarProdutoAoRoteiroUseCase.java`, `RemoverProdutoDoRoteiroUseCase.java`, `domain/entity/Sessao.java`.
 
 ---
 

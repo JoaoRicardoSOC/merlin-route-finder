@@ -167,6 +167,8 @@ paths:
                 $ref: "#/components/schemas/ListaRoteiroResponse"
         "404":
           $ref: "#/components/responses/NaoEncontrado"
+        "409":
+          $ref: "#/components/responses/SessaoInativa"
 
   /sessoes/{sessaoId}/roteiro/itens:
     post:
@@ -190,6 +192,8 @@ paths:
                 $ref: "#/components/schemas/ItemRoteiroDetalhado"
         "404":
           $ref: "#/components/responses/NaoEncontrado"
+        "409":
+          $ref: "#/components/responses/SessaoInativa"
 
   /sessoes/{sessaoId}/roteiro/itens/{itemId}:
     delete:
@@ -203,6 +207,8 @@ paths:
           description: Item removido
         "404":
           $ref: "#/components/responses/NaoEncontrado"
+        "409":
+          $ref: "#/components/responses/SessaoInativa"
 
   /sessoes/{sessaoId}/roteiro/pontos-interesse:
     post:
@@ -403,6 +409,14 @@ components:
   responses:
     NaoEncontrado:
       description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/StandardError"
+    SessaoInativa:
+      description: >
+        A sessão existe mas não está mais ativa (encerrada, expirada ou abandonada), então a
+        operação não é permitida. Diferente do 404: o recurso existe, o estado é que impede.
       content:
         application/json:
           schema:

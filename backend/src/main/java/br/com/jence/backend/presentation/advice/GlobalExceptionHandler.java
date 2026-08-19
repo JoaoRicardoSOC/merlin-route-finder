@@ -1,5 +1,6 @@
 package br.com.jence.backend.presentation.advice;
 
+import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.presentation.response.StandardError;
 import br.com.jence.backend.presentation.response.StandardError.ValidationError;
@@ -50,6 +51,21 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(OperacaoNaoPermitidaException.class)
+    public ResponseEntity<StandardError> handleOperacaoNaoPermitida(OperacaoNaoPermitidaException ex, HttpServletRequest request) {
+
+        StandardError response = new StandardError(
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value(),
+                "Operacao Nao Permitida",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     @ExceptionHandler(Exception.class)
