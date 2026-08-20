@@ -314,6 +314,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StandardError"
+        "409":
+          $ref: "#/components/responses/SessaoInativa"
 
   /roteiro/itens/{itemId}/ruptura:
     post:

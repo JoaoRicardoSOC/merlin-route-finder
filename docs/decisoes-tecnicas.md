@@ -24,6 +24,7 @@
 - [D-08. O domínio registra o token de handoff, nunca o assina](#d-08-o-domínio-registra-o-token-de-handoff-nunca-o-assina)
 - [D-27. Segredo do JWT por ambiente, com chave aleatória em desenvolvimento](#d-27-segredo-do-jwt-por-ambiente-com-chave-aleatória-em-desenvolvimento)
 - [D-28. A rota parte do primeiro ponto do tipo TOTEM](#d-28-a-rota-parte-do-primeiro-ponto-do-tipo-totem)
+- [D-29. Uso único do token pela ausência no banco](#d-29-uso-único-do-token-pela-ausência-no-banco)
 - [D-09. Relação com a sessão é unidirecional](#d-09-relação-com-a-sessão-é-unidirecional)
 
 **Persistência**
@@ -260,6 +261,27 @@ Complementos: `isTokenValido()` e `invalidarToken()` — este último é o que v
 É uma limitação sem impacto no escopo atual (a massa de demonstração tem um totem) e de correção simples quando for necessário: acrescentar `totemId` opcional ao `HandoffRequest`.
 
 **Onde no código.** `application/usecase/GerarHandoffUseCase.java`.
+
+---
+
+### D-29. Uso único do token pela ausência no banco
+
+**Contexto.** O diagrama de sequência especifica que o token do QR Code é de **uso único**: escaneou uma vez, não vale mais. JWT é, por natureza, um token *stateless* — a assinatura continua válida até a expiração, e nada nele impede reutilização.
+
+**Decisão.** O uso único não vem do JWT, e sim da persistência. A validação tem duas camadas:
+
+1. **Criptográfica** — confere assinatura e prazo, sem tocar o banco (falha rápido e barato).
+2. **Persistência** — procura a lista **pelo token** (`buscarPorToken`). Depois de consumido, `invalidarToken()` zera o campo e a mesma consulta não encontra mais nada.
+
+A consequência é que mesmo um token criptograficamente perfeito — copiado da URL, por exemplo — só funciona uma vez.
+
+**Alternativas.** Manter uma tabela de tokens revogados — descartada por adicionar estrutura para resolver algo que a ausência do campo já resolve, com o agravante de exigir limpeza periódica dos registros vencidos. Confiar apenas na expiração do JWT — descartada por não atender o requisito de uso único.
+
+**Risco de UX assumido, e a saída que já existe.** Se o cliente fechar a aba sem querer, escanear o mesmo QR de novo não funciona — foi um dos riscos levantados na análise inicial do projeto.
+
+Mas existe um caminho de recuperação já disponível: a resposta traz o `sessaoId`, e `GET /sessoes/{id}/roteiro` devolve a lista **com a ordem da rota já calculada**, sem exigir token. O celular consegue se recuperar sozinho, sem o cliente refazer o planejamento no Totem. O hardening da Fase 3 (regeneração de QR) trata o caso mais grave, em que o próprio aparelho é trocado.
+
+**Onde no código.** `application/usecase/ValidarHandoffUseCase.java`, `domain/entity/ListaRoteiro.java`.
 
 ---
 
