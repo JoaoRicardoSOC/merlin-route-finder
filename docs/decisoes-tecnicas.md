@@ -15,6 +15,7 @@
 - [D-26. Nearest Neighbor como heurística de roteamento](#d-26-nearest-neighbor-como-heurística-de-roteamento)
 - [D-22. Exceção única para "não encontrado", tratada centralmente](#d-22-exceção-única-para-não-encontrado-tratada-centralmente)
 - [D-25. 409 para sessão inativa, e quando é aceitável evoluir o contrato](#d-25-409-para-sessão-inativa-e-quando-é-aceitável-evoluir-o-contrato)
+- [D-30. Dois artefatos de documentação de API, com propósitos diferentes](#d-30-dois-artefatos-de-documentação-de-api-com-propósitos-diferentes)
 
 **Domínio**
 - [D-04. Entidades imutáveis por padrão](#d-04-entidades-imutáveis-por-padrão)
@@ -129,6 +130,27 @@ A separação entre as duas exceções é semântica e vale registrar: **404 = o
 Foi por esse critério que no UC-003 optamos por **não** adicionar um campo `disponivel` ao `ProdutoDetalhado` (mudança sem necessidade real), mas aqui adicionamos o 409 (sem ele, o frontend receberia um status não documentado e não saberia tratar).
 
 **Onde no código.** `domain/exception/OperacaoNaoPermitidaException.java`, `presentation/advice/GlobalExceptionHandler.java`, `backend/src/main/resources/openapi/openapi.yaml`.
+
+---
+
+### D-30. Dois artefatos de documentação de API, com propósitos diferentes
+
+**Contexto.** O projeto tem um contrato OpenAPI escrito à mão (padrão API-First, card 1) **e** o springdoc, que gera documentação automaticamente a partir dos controllers. Ter duas fontes parece redundante e convida à divergência.
+
+**Decisão.** Manter os dois, com papéis distintos e explícitos:
+
+| Artefato | O que é | Para quê |
+|---|---|---|
+| `openapi/openapi.yaml` | escrito à mão | **o que prometemos** — fonte de verdade do design, base da integração do frontend |
+| `/swagger.html` (springdoc) | gerado do código | **o que o código faz** — permite testar endpoints interativamente |
+
+**Como isso é útil, e não apenas duplicado.** Comparar os dois é o mecanismo de detecção de divergência: se o gerado não bate com o escrito à mão, ou o código saiu do combinado, ou o contrato mudou sem ninguém avisar. Em ambos os casos, é conversa a ter — e a regra do card 1 permanece: **ajusta-se o código, não o contrato**, a menos que a mudança passe pela política da D-25.
+
+**Alternativas.** Servir o YAML estático dentro do Swagger UI, eliminando o gerado — descartada porque o frontend passaria a testar contra o que foi prometido, sem enxergar o que o código realmente responde. Reproduzir o contrato inteiro em anotações nos controllers — descartada por dobrar a manutenção do mesmo conteúdo.
+
+**Consequência prática.** Os controllers levam apenas `@Tag` e `@Operation`, o suficiente para a documentação gerada ficar legível.
+
+**Onde no código.** `presentation/controller/`, `backend/src/main/resources/openapi/openapi.yaml`.
 
 ---
 

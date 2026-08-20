@@ -12,6 +12,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,6 +38,26 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    /*
+     * Sem este handler, um UUID malformado na URL cai no handler generico e vira 500 com a
+     * mensagem "erro inesperado, equipe notificada" - culpando o servidor por um erro que e
+     * do cliente e disparando alarme falso.
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<StandardError> handleParametroInvalido(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+
+        StandardError response = new StandardError(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Parametro Invalido",
+                "O valor '%s' nao e valido para o parametro '%s'.".formatted(ex.getValue(), ex.getName()),
+                request.getRequestURI(),
+                null
+        );
+
+        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(RecursoNaoEncontradoException.class)
