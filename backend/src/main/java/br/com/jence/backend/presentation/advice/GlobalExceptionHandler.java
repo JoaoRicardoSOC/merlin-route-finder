@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -73,6 +74,26 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "Corpo da Requisicao Invalido",
                 "O corpo enviado nao pode ser lido. Verifique se e um JSON valido.",
+                request.getRequestURI(),
+                null
+        );
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    /*
+     * Terceiro caso da mesma familia (apos UUID malformado e corpo ilegivel): parametro
+     * obrigatorio ausente e erro do cliente, nao do servidor. A varredura completa das demais
+     * excecoes padrao do Spring MVC esta prevista para o card de prontidao de producao.
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<StandardError> handleParametroAusente(MissingServletRequestParameterException ex, HttpServletRequest request) {
+
+        StandardError response = new StandardError(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Parametro Obrigatorio Ausente",
+                "O parametro '%s' e obrigatorio.".formatted(ex.getParameterName()),
                 request.getRequestURI(),
                 null
         );
