@@ -1,9 +1,11 @@
 package br.com.jence.backend.presentation.controller;
 
 import br.com.jence.backend.application.dto.SessaoResponse;
+import br.com.jence.backend.application.usecase.ConcluirRotaUseCase;
 import br.com.jence.backend.application.usecase.ConsultarSessaoUseCase;
 import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
 import br.com.jence.backend.domain.entity.StatusSessao;
+import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,6 +34,7 @@ class SessaoControllerTest {
 
     @MockitoBean InicializarSessaoUseCase inicializarSessaoUseCase;
     @MockitoBean ConsultarSessaoUseCase consultarSessaoUseCase;
+    @MockitoBean ConcluirRotaUseCase concluirRotaUseCase;
 
     private SessaoResponse sessaoAtiva(UUID id) {
         LocalDateTime agora = LocalDateTime.now();
@@ -79,6 +82,33 @@ class SessaoControllerTest {
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Sessao")))
                 .andExpect(jsonPath("$.path").value("/api/v1/sessoes/" + id))
                 .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    @Test
+    @DisplayName("POST concluir devolve a sessao COMPLETED")
+    void concluirRota() throws Exception {
+        UUID id = UUID.randomUUID();
+        LocalDateTime agora = LocalDateTime.now();
+        when(concluirRotaUseCase.executar(id)).thenReturn(
+                new SessaoResponse(id, StatusSessao.COMPLETED, agora.minusMinutes(40), agora.plusMinutes(20)));
+
+        mockMvc.perform(post("/api/v1/sessoes/{id}/concluir", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
+    }
+
+    @Test
+    @DisplayName("concluir sessao ja encerrada devolve 409")
+    void concluirSessaoJaEncerrada() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(concluirRotaUseCase.executar(any()))
+                .thenThrow(new OperacaoNaoPermitidaException(
+                        "Sessao %s nao esta mais ativa (status COMPLETED)".formatted(id)));
+
+        mockMvc.perform(post("/api/v1/sessoes/{id}/concluir", id))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Operacao Nao Permitida"));
     }
 
     @Test

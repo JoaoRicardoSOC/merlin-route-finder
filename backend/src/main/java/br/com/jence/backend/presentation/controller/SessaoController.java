@@ -1,6 +1,7 @@
 package br.com.jence.backend.presentation.controller;
 
 import br.com.jence.backend.application.dto.SessaoResponse;
+import br.com.jence.backend.application.usecase.ConcluirRotaUseCase;
 import br.com.jence.backend.application.usecase.ConsultarSessaoUseCase;
 import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,6 +32,7 @@ public class SessaoController {
 
     private final InicializarSessaoUseCase inicializarSessaoUseCase;
     private final ConsultarSessaoUseCase consultarSessaoUseCase;
+    private final ConcluirRotaUseCase concluirRotaUseCase;
 
     @PostMapping
     @Operation(summary = "Inicializar sessao (UC-001)",
@@ -49,5 +51,13 @@ public class SessaoController {
             description = "Permite ao Totem ou ao celular verificar se a sessao ainda esta ativa.")
     public ResponseEntity<SessaoResponse> consultar(@PathVariable UUID sessaoId) {
         return ResponseEntity.ok(consultarSessaoUseCase.executar(sessaoId));
+    }
+
+    @PostMapping("/{sessaoId}/concluir")
+    @Operation(summary = "Concluir rota e encerrar sessao (UC-014)",
+            description = "Acionado pelo celular quando o cliente finaliza a caminhada. Nao exige "
+                    + "que todos os itens tenham sido coletados.")
+    public ResponseEntity<SessaoResponse> concluir(@PathVariable UUID sessaoId) {
+        return ResponseEntity.ok(concluirRotaUseCase.executar(sessaoId));
     }
 }

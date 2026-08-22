@@ -38,6 +38,12 @@ public class ListaRoteiroRepositoryAdapter implements ListaRoteiroRepository {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<ListaRoteiro> buscarPorItem(UUID itemId) {
+        return jpaRepository.findByItensId(itemId).map(listaRoteiroFactory::paraDominio);
+    }
+
+    @Override
     @Transactional
     public ListaRoteiro salvar(ListaRoteiro listaRoteiro) {
         ListaRoteiroEntity salva = jpaRepository.save(listaRoteiroFactory.paraPersistencia(listaRoteiro));

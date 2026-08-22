@@ -14,5 +14,11 @@ public interface ListaRoteiroRepository {
     /** Usado na validacao do handoff (UC-011), a partir do token lido do QR Code. */
     Optional<ListaRoteiro> buscarPorToken(String handoffToken);
 
+    /**
+     * Localiza a lista a partir de um item dela. Necessario porque o ItemRoteiro nao conhece
+     * a lista que o contem, e alteracoes precisam passar pela raiz do agregado.
+     */
+    Optional<ListaRoteiro> buscarPorItem(UUID itemId);
+
     ListaRoteiro salvar(ListaRoteiro listaRoteiro);
 }

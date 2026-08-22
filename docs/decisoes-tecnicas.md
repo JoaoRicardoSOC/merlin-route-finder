@@ -43,6 +43,7 @@
 - [D-19. Coordenadas do seed seguem a planta real da loja](#d-19-coordenadas-do-seed-seguem-a-planta-real-da-loja)
 - [D-31. Ponto de interesse não é persistido](#d-31-ponto-de-interesse-não-é-persistido)
 - [D-24. TTL da sessão é renovado a cada interação](#d-24-ttl-da-sessão-é-renovado-a-cada-interação)
+- [D-32. Coletar item passa pela raiz do agregado e não encerra a jornada](#d-32-coletar-item-passa-pela-raiz-do-agregado-e-não-encerra-a-jornada)
 - [D-20. Google Gemini como provedor de LLM](#d-20-google-gemini-como-provedor-de-llm)
 - [D-21. Demo da banca por simulação animada, não posicionamento real](#d-21-demo-da-banca-por-simulação-animada-não-posicionamento-real)
 - [D-23. "Resolução síncrona de inventário" não é integração com ERP](#d-23-resolução-síncrona-de-inventário-não-é-integração-com-erp)
@@ -514,6 +515,30 @@ Efeito colateral positivo: por usar os ports de domínio, o seeder funciona como
 **Consequências.** Uma sessão só expira após 30 minutos de **inatividade** real, não 30 minutos de duração total. O job de expiração da Fase 3 continua funcionando normalmente: ele varre por `expiracaoTtl` vencido, que agora reflete a última interação.
 
 **Onde no código.** `application/usecase/AdicionarProdutoAoRoteiroUseCase.java`, `RemoverProdutoDoRoteiroUseCase.java`, `domain/entity/Sessao.java`.
+
+---
+
+### D-32. Coletar item passa pela raiz do agregado e não encerra a jornada
+
+**Contexto.** No UC-014 o cliente confirma ter pego um produto da prateleira. O caminho direto seria carregar o `ItemRoteiro` pelo id, marcar e salvar — e existe até um `ItemRoteiroRepository` pronto para isso.
+
+**Decisão 1: carregar pela `ListaRoteiro`, não pelo item.** Um novo método `buscarPorItem(itemId)` no port devolve o agregado inteiro; o item é marcado dentro dele e a lista é salva.
+
+Dois motivos. O primeiro é de modelagem: alterações devem passar pela raiz do agregado. O segundo é prático — pela [D-09](#d-09-relação-com-a-sessão-é-unidirecional), o `ItemRoteiro` não conhece a lista que o contém, e sem chegar à lista não há como alcançar a sessão, necessária para a decisão 2.
+
+O `ItemRoteiroRepository` continua no projeto: o fluxo de ruptura de estoque (Fase 2) precisa localizar um item isolado.
+
+**Decisão 2: coletar renova o TTL da sessão.** Aplicação da [D-24](#d-24-ttl-da-sessão-é-renovado-a-cada-interação) ao trecho da caminhada, e aqui ela é ainda mais necessária.
+
+Sem isso havia um bug silencioso esperando: a sessão era renovada no handoff e **nada mais a renovava durante a caminhada**. Um cliente com lista grande numa loja de 10.000m² leva mais de 30 minutos com facilidade — a sessão morreria no meio da compra, quebrando a marcação dos itens seguintes e o tratamento de ruptura, sem nenhum erro aparente até o cliente tentar a próxima ação.
+
+**Decisão 3: marcar item já coletado é no-op com 200.** O cliente pode tocar duas vezes, ou a rede pode reenviar. Recusar não protege nada e atrapalha.
+
+**Decisão 4: coletar o último item NÃO encerra a sessão.** É tentador automatizar, mas erraria: depois de pegar tudo, o cliente ainda precisa chegar ao caixa, e encerrar ali mataria a navegação justamente no trecho final. Quem encerra é o cliente, pelo botão — o celular pode apenas sugerir quando perceber que tudo foi coletado.
+
+Pelo mesmo raciocínio, concluir **não exige** que todos os itens estejam coletados: desistir de um produto e ir ao caixa é comportamento normal.
+
+**Onde no código.** `application/usecase/MarcarItemColetadoUseCase.java`, `ConcluirRotaUseCase.java`, `domain/repository/ListaRoteiroRepository.java`.
 
 ---
 

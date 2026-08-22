@@ -18,4 +18,7 @@ public interface ListaRoteiroJpaRepository extends JpaRepository<ListaRoteiroEnt
 
     @EntityGraph(attributePaths = {"itens", "itens.produto", "itens.produto.pontoMapa"})
     Optional<ListaRoteiroEntity> findByHandoffToken(String handoffToken);
+
+    @EntityGraph(attributePaths = {"itens", "itens.produto", "itens.produto.pontoMapa"})
+    Optional<ListaRoteiroEntity> findByItensId(UUID itemId);
 }
