@@ -36,8 +36,11 @@ merlin:
     base-url: ${HANDOFF_BASE_URL:http://localhost:5173}
   ia:
     base-url: https://generativelanguage.googleapis.com
-    # gemini-2.5-flash foi descontinuado para chaves novas; a propria API indica o sucessor.
-    modelo: ${GEMINI_MODEL:gemini-3.6-flash}
+    # Modelo "lite" escolhido com medicao, nao por ser o mais capaz: responde em ~1s contra
+    # mais de 20s do gemini-3.6-flash (que raciocina antes de responder e estourava o tempo
+    # limite), e o topo de linha tem cota gratuita de apenas 20 requisicoes por DIA.
+    # Ver D-37. gemini-2.5-* estao indisponiveis para chaves novas.
+    modelo: ${GEMINI_MODEL:gemini-3.5-flash-lite}
     api-key: ${GEMINI_API_KEY:}
 
 springdoc:

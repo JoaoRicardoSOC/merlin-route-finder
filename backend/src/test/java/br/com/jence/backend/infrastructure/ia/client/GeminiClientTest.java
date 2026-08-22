@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.test.web.client.ExpectedCount.times;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
@@ -96,13 +97,31 @@ class GeminiClientTest {
     }
 
     @Test
-    @DisplayName("erro HTTP do provedor vira indisponibilidade, nao vaza detalhe")
+    @DisplayName("cota estourada e tentada de novo antes de desistir")
     void erroDoProvedor() {
-        servidor.expect(requestTo(URL)).andRespond(withTooManyRequests());
+        // O tier gratuito estoura cota com facilidade, e a falha costuma passar em segundos.
+        servidor.expect(times(3), requestTo(URL)).andRespond(withTooManyRequests());
 
         assertThatThrownBy(() -> cliente.conversar("instrucao", List.of(MensagemIA.doCliente("oi"))))
                 .isInstanceOf(AssistenteIAIndisponivelException.class)
                 .hasMessageContaining("indisponivel");
+
+        servidor.verify();
+    }
+
+    @Test
+    @DisplayName("falha transitoria seguida de sucesso devolve a resposta")
+    void recuperaDeFalhaTransitoria() {
+        servidor.expect(requestTo(URL)).andRespond(withServerError());
+        servidor.expect(requestTo(URL)).andRespond(withSuccess("""
+                {"candidates":[{"content":{"role":"model","parts":[
+                  {"text":"Resposta apos o provedor se recuperar."}]},"finishReason":"STOP"}]}
+                """, MediaType.APPLICATION_JSON));
+
+        String resposta = cliente.conversar("instrucao", List.of(MensagemIA.doCliente("oi")));
+
+        assertThat(resposta).isEqualTo("Resposta apos o provedor se recuperar.");
+        servidor.verify();
     }
 
     @Test

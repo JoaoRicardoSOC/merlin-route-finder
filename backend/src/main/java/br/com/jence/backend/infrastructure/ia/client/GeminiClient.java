@@ -9,8 +9,11 @@ import br.com.jence.backend.domain.service.PapelIA;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClient;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,6 +33,10 @@ public class GeminiClient implements AssistenteIA {
 
     /** Limite de idas e voltas com o modelo, para uma conversa nunca virar laco infinito. */
     private static final int MAXIMO_DE_CICLOS = 5;
+
+    /** Tentativas por chamada, para absorver falhas transitorias do tier gratuito. */
+    private static final int MAXIMO_DE_TENTATIVAS = 3;
+    private static final Duration ESPERA_ENTRE_TENTATIVAS = Duration.ofSeconds(2);
 
     private final RestClient restClient;
     private final String modelo;
@@ -100,25 +107,55 @@ public class GeminiClient implements AssistenteIA {
             corpo.put("tools", List.of(Map.of("function_declarations", declaracoesDe(ferramentas))));
         }
 
-        try {
-            Map<String, Object> resposta = restClient.post()
-                    .uri("/v1beta/models/{modelo}:generateContent?key={chave}", modelo, chave)
-                    .body(corpo)
-                    .retrieve()
-                    .body(Map.class);
+        /*
+         * O tier gratuito falha de forma transitoria com frequencia: cota por minuto estourada
+         * (429) e picos de demanda do proprio provedor (5xx). Ambos foram observados em uma
+         * unica sessao de testes. Sem esta tentativa extra, a demonstracao mostraria a
+         * mensagem de indisponibilidade por uma falha que se resolve sozinha em segundos.
+         */
+        Exception ultimaFalha = null;
 
-            if (resposta == null) {
-                throw new AssistenteIAIndisponivelException("Assistente devolveu resposta vazia");
+        for (int tentativa = 1; tentativa <= MAXIMO_DE_TENTATIVAS; tentativa++) {
+            try {
+                Map<String, Object> resposta = restClient.post()
+                        .uri("/v1beta/models/{modelo}:generateContent?key={chave}", modelo, chave)
+                        .body(corpo)
+                        .retrieve()
+                        .body(Map.class);
+
+                if (resposta == null) {
+                    throw new AssistenteIAIndisponivelException("Assistente devolveu resposta vazia");
+                }
+                return resposta;
+
+            } catch (AssistenteIAIndisponivelException e) {
+                throw e;
+            } catch (HttpClientErrorException.TooManyRequests | HttpServerErrorException e) {
+                ultimaFalha = e;
+                log.warn("Assistente indisponivel na tentativa {} de {}: {}",
+                        tentativa, MAXIMO_DE_TENTATIVAS, e.getMessage());
+                esperarAntesDeInsistir(tentativa);
+            } catch (Exception e) {
+                // Falhas que nao se resolvem sozinhas (rede, formato) nao merecem nova tentativa.
+                log.warn("Falha ao consultar o assistente de IA: {}", e.toString());
+                throw new AssistenteIAIndisponivelException("Assistente de IA indisponivel no momento", e);
             }
-            return resposta;
+        }
 
-        } catch (AssistenteIAIndisponivelException e) {
-            throw e;
-        } catch (Exception e) {
-            // Mensagem generica para fora, detalhe no log: o motivo da falha do provedor nao
-            // interessa ao cliente final, mas interessa muito a quem for investigar.
-            log.warn("Falha ao consultar o assistente de IA: {}", e.toString());
-            throw new AssistenteIAIndisponivelException("Assistente de IA indisponivel no momento", e);
+        // Mensagem generica para fora, detalhe no log: o motivo da falha do provedor nao
+        // interessa ao cliente final, mas interessa muito a quem for investigar.
+        throw new AssistenteIAIndisponivelException("Assistente de IA indisponivel no momento", ultimaFalha);
+    }
+
+    private void esperarAntesDeInsistir(int tentativa) {
+        if (tentativa >= MAXIMO_DE_TENTATIVAS) {
+            return;
+        }
+        try {
+            Thread.sleep(ESPERA_ENTRE_TENTATIVAS.toMillis() * tentativa);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AssistenteIAIndisponivelException("Consulta ao assistente interrompida", e);
         }
     }
 

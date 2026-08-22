@@ -26,6 +26,8 @@
 - [D-07. `ItemRoteiro.reconstituir` para leitura do banco](#d-07-itemroteiroreconstituir-para-leitura-do-banco)
 - [D-08. O domínio registra o token de handoff, nunca o assina](#d-08-o-domínio-registra-o-token-de-handoff-nunca-o-assina)
 - [D-35. O cliente de IA falha explicitamente; o fallback é de quem chama](#d-35-o-cliente-de-ia-falha-explicitamente-o-fallback-é-de-quem-chama)
+- [D-36. Assistente busca no catálogo por ferramenta, com escopo fechado](#d-36-assistente-busca-no-catálogo-por-ferramenta-com-escopo-fechado)
+- [D-37. Escolha do modelo por medição, e o limite do tier gratuito](#d-37-escolha-do-modelo-por-medição-e-o-limite-do-tier-gratuito)
 - [D-27. Segredo do JWT por ambiente, com chave aleatória em desenvolvimento](#d-27-segredo-do-jwt-por-ambiente-com-chave-aleatória-em-desenvolvimento)
 - [D-28. A rota parte do primeiro ponto do tipo TOTEM](#d-28-a-rota-parte-do-primeiro-ponto-do-tipo-totem)
 - [D-29. Uso único do token pela ausência no banco](#d-29-uso-único-do-token-pela-ausência-no-banco)
@@ -317,6 +319,51 @@ Um fallback genérico dentro do cliente teria que escolher um dos dois — e esc
 **Limite de ciclos.** O laço para em 5 idas e voltas. Sem isso, um modelo que insistisse em pedir ferramentas prenderia a requisição indefinidamente.
 
 **Onde no código.** `domain/service/AssistenteIA.java`, `infrastructure/ia/client/GeminiClient.java`, `infrastructure/web/RestClientConfig.java` (tempos limite).
+
+---
+
+### D-36. Assistente busca no catálogo por ferramenta, com escopo fechado
+
+**Contexto.** O card previa "um único prompt contendo o contexto do catálogo". Com 25 produtos, empurrar tudo no prompt caberia.
+
+**Decisão.** O assistente **consulta** o catálogo por ferramenta, em vez de recebê-lo pronto. Reaproveita a busca tolerante a erro de digitação do UC-002.
+
+**Motivo.** Escala para um catálogo real (milhares de SKUs não cabem num prompt), mantém o mesmo grounding da ruptura de estoque, e unifica a explicação dos dois recursos de IA na banca: *o modelo consulta nosso sistema*.
+
+**A ferramenta aceita vários termos numa chamada só** — e isso não é detalhe de estilo. O tier gratuito limita as requisições por minuto **e** por dia (ver [D-37](#d-37-escolha-do-modelo-por-medição-e-o-limite-do-tier-gratuito)), e cada ida e volta consome uma. Na primeira versão o assistente buscava produto por produto e **estourava o limite de ciclos numa única pergunta** ("o que preciso para pintar?" virava quatro buscas). Pedindo `"tinta, rolo, lixa, fita crepe"` de uma vez, a mesma pergunta custa duas requisições.
+
+**Escopo fechado por instrução, verificado por teste.** A decisão de refinamento falava em "conjunto fechado de projetos"; uma lista rígida de temas seria pior de usar do que um escopo bem descrito na instrução de sistema. O que protege a demonstração não é a forma da regra, é ela funcionar — então há teste de integração perguntando sobre futebol e verificando a recusa. Resposta real obtida: *"Não posso ajudar com assuntos de futebol ou eventos esportivos, pois meu foco é auxiliar no seu projeto de reforma, construção ou decoração."*
+
+**A falha da IA não entra no histórico.** O cliente vê a mensagem de indisponibilidade, mas ela não é persistida: o assistente não deveria "lembrar" de ter dito que estava fora do ar ao montar o contexto das próximas perguntas. A pergunta do cliente fica salva sem resposta, que é o que de fato aconteceu.
+
+**O assistente não altera o carrinho.** Ele sugere; adicionar produto continua sendo ação do cliente (UC-004). Dar poder de escrita ao modelo seria um salto de escopo com risco desproporcional.
+
+**Onde no código.** `application/usecase/ConversarComAssistenteUseCase.java`, `infrastructure/ia/factory/InstrucaoDoAssistente.java`.
+
+---
+
+### D-37. Escolha do modelo por medição, e o limite do tier gratuito
+
+**Contexto.** A escolha inicial (`gemini-3.6-flash`, o topo de linha disponível) parecia óbvia: mais capaz é melhor. Os testes de integração mostraram o contrário.
+
+**O que a medição revelou.**
+
+| Modelo | Tempo de resposta | Cota gratuita |
+|---|---|---|
+| `gemini-3.6-flash` | mais de 20s — estourava o tempo limite | **20 requisições por dia** |
+| `gemini-3.5-flash-lite` | ~1s | bem mais folgada |
+
+O modelo de topo **raciocina antes de responder** (centenas de tokens de "pensamento" por resposta), o que explica a lentidão. Para sugerir produtos de uma lista que nós fornecemos, esse raciocínio não agrega — só custa tempo e cota.
+
+**Decisão.** `gemini-3.5-flash-lite` como padrão, configurável por `GEMINI_MODEL`.
+
+**Consequência que o time precisa conhecer.** O tier gratuito tem limite **diário** por modelo, e ele é facilmente esgotado: uma sessão de testes de desenvolvimento consumiu as 20 requisições diárias do modelo de topo. Como a cota é por modelo, trocar de modelo dá cota nova — mas isso é contorno, não solução. Antes da gravação do vídeo e da banca, vale confirmar a cota do modelo em uso e considerar habilitar faturamento no Google Cloud (que mantém o uso gratuito, mas eleva os limites).
+
+**Mitigações já no código.** O cliente tenta novamente até três vezes em falhas transitórias (cota por minuto e picos de demanda do provedor, ambos observados), com espera crescente. E quando ainda assim falha, o caso de uso degrada com mensagem honesta em vez de erro — a demonstração não quebra.
+
+**Lição que vale para além deste card.** A listagem de modelos da API não indica disponibilidade, latência nem cota. `gemini-2.5-flash` aparece na lista e responde 404; `gemini-3.6-flash` responde mas é lento e tem cota diária baixa. Só a chamada real informa.
+
+**Onde no código.** `src/main/resources/application.yml`, `infrastructure/ia/client/GeminiClient.java`.
 
 ---
 
