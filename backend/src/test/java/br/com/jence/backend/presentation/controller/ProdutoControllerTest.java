@@ -6,6 +6,7 @@ import br.com.jence.backend.application.dto.ProdutoDetalhadoResponse;
 import br.com.jence.backend.application.dto.ProdutoResponse;
 import br.com.jence.backend.application.usecase.BuscarProdutosUseCase;
 import br.com.jence.backend.application.usecase.ConsultarProdutoUseCase;
+import br.com.jence.backend.application.usecase.SimularEstoqueUseCase;
 import br.com.jence.backend.domain.entity.TipoPonto;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
@@ -24,7 +25,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ProdutoController.class)
@@ -34,6 +38,7 @@ class ProdutoControllerTest {
 
     @MockitoBean BuscarProdutosUseCase buscarProdutosUseCase;
     @MockitoBean ConsultarProdutoUseCase consultarProdutoUseCase;
+    @MockitoBean SimularEstoqueUseCase simularEstoqueUseCase;
 
     private ProdutoResponse produto(UUID id) {
         return new ProdutoResponse(id, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L",
@@ -129,5 +134,74 @@ class ProdutoControllerTest {
         mockMvc.perform(get("/api/v1/produtos/{id}", "abc"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Parametro Invalido"));
+    }
+
+    // ---------------------------------------------------------------- simulacao de estoque
+
+    private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder ajustarEstoque(
+            UUID produtoId, String corpo) {
+        return patch("/api/v1/produtos/{p}/estoque", produtoId)
+                .contentType(APPLICATION_JSON)
+                .content(corpo);
+    }
+
+    @Test
+    @DisplayName("PATCH estoque zera o saldo e devolve o produto atualizado")
+    void zerarEstoque() throws Exception {
+        UUID produtoId = UUID.randomUUID();
+        when(simularEstoqueUseCase.executar(eq(produtoId), eq(0))).thenReturn(
+                new ProdutoResponse(produtoId, "SKU-TIN-003", "Lixa para Parede Grao 120",
+                        new BigDecimal("3.50"), 0, UUID.randomUUID()));
+
+        mockMvc.perform(ajustarEstoque(produtoId, """
+                        {"saldoEstoque": 0}"""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sku").value("SKU-TIN-003"))
+                .andExpect(jsonPath("$.saldoEstoque").value(0));
+    }
+
+    @Test
+    @DisplayName("PATCH estoque tambem restaura o saldo")
+    void restaurarEstoque() throws Exception {
+        UUID produtoId = UUID.randomUUID();
+        when(simularEstoqueUseCase.executar(eq(produtoId), eq(25))).thenReturn(
+                new ProdutoResponse(produtoId, "SKU-TIN-003", "Lixa para Parede Grao 120",
+                        new BigDecimal("3.50"), 25, UUID.randomUUID()));
+
+        mockMvc.perform(ajustarEstoque(produtoId, """
+                        {"saldoEstoque": 25}"""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.saldoEstoque").value(25));
+    }
+
+    @Test
+    @DisplayName("saldo negativo devolve 400 antes de chegar ao caso de uso")
+    void saldoNegativo() throws Exception {
+        mockMvc.perform(ajustarEstoque(UUID.randomUUID(), """
+                        {"saldoEstoque": -5}"""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.validationErrors[0].field").value("saldoEstoque"));
+
+        verify(simularEstoqueUseCase, org.mockito.Mockito.never()).executar(any(), org.mockito.ArgumentMatchers.anyInt());
+    }
+
+    @Test
+    @DisplayName("corpo sem saldoEstoque devolve 400")
+    void corpoIncompleto() throws Exception {
+        mockMvc.perform(ajustarEstoque(UUID.randomUUID(), "{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.validationErrors[0].field").value("saldoEstoque"));
+    }
+
+    @Test
+    @DisplayName("produto inexistente devolve 404 tambem na simulacao")
+    void simulacaoDeProdutoInexistente() throws Exception {
+        UUID produtoId = UUID.randomUUID();
+        when(simularEstoqueUseCase.executar(any(), org.mockito.ArgumentMatchers.anyInt()))
+                .thenThrow(new RecursoNaoEncontradoException("Produto", produtoId));
+
+        mockMvc.perform(ajustarEstoque(produtoId, """
+                        {"saldoEstoque": 0}"""))
+                .andExpect(status().isNotFound());
     }
 }

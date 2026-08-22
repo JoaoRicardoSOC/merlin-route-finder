@@ -1,16 +1,21 @@
 package br.com.jence.backend.presentation.controller;
 
+import br.com.jence.backend.application.dto.EstoqueUpdateRequest;
 import br.com.jence.backend.application.dto.PaginaResponse;
 import br.com.jence.backend.application.dto.ProdutoDetalhadoResponse;
 import br.com.jence.backend.application.dto.ProdutoResponse;
 import br.com.jence.backend.application.usecase.BuscarProdutosUseCase;
 import br.com.jence.backend.application.usecase.ConsultarProdutoUseCase;
+import br.com.jence.backend.application.usecase.SimularEstoqueUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,7 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 /**
- * Consulta do catalogo de produtos.
+ * Consulta do catalogo de produtos, mais a ferramenta de simulacao de estoque usada em
+ * demonstracao.
  * <p>
  * Segue o padrao do {@code SessaoController}: apenas recebe, delega e devolve. Os limites de
  * paginacao e o tratamento de termo em branco ficam no caso de uso, que ja e dono dessa regra.
@@ -31,6 +37,7 @@ public class ProdutoController {
 
     private final BuscarProdutosUseCase buscarProdutosUseCase;
     private final ConsultarProdutoUseCase consultarProdutoUseCase;
+    private final SimularEstoqueUseCase simularEstoqueUseCase;
 
     @GetMapping
     @Operation(summary = "Busca paginada e fuzzy de produtos (UC-002)",
@@ -50,5 +57,25 @@ public class ProdutoController {
             description = "Inclui o ponto de mapa onde o produto esta fisicamente na loja.")
     public ResponseEntity<ProdutoDetalhadoResponse> consultar(@PathVariable UUID produtoId) {
         return ResponseEntity.ok(consultarProdutoUseCase.executar(produtoId));
+    }
+
+    /*
+     * Unico endpoint do sistema que altera o catalogo, e o unico que nao serve a nenhum caso
+     * de uso do cliente final. Fica aqui, e nao num controller separado, porque o contrato o
+     * coloca sob /produtos - e um controller "interno" isolado daria a impressao de haver uma
+     * area protegida, que nao existe. O que protege este endpoint hoje e nada; ver D-40.
+     */
+    @PatchMapping("/{produtoId}/estoque")
+    @Operation(summary = "[Demonstracao] Simular alteracao de estoque",
+            description = "FERRAMENTA INTERNA - nao faz parte de nenhum caso de uso do cliente "
+                    + "final. Zera ou restaura o saldo de um produto sob demanda, para disparar "
+                    + "o fluxo de ruptura (UC-013) de forma confiavel durante uma gravacao ou "
+                    + "apresentacao ao vivo. Envie 0 para provocar a ruptura e qualquer valor "
+                    + "positivo para restaurar.")
+    public ResponseEntity<ProdutoResponse> simularEstoque(
+            @PathVariable UUID produtoId,
+            @Valid @RequestBody EstoqueUpdateRequest request) {
+
+        return ResponseEntity.ok(simularEstoqueUseCase.executar(produtoId, request.saldoEstoque()));
     }
 }

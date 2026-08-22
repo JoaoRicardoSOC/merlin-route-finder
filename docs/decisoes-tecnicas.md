@@ -56,6 +56,7 @@
 - [D-23. "Resolução síncrona de inventário" não é integração com ERP](#d-23-resolução-síncrona-de-inventário-não-é-integração-com-erp)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
+- [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
 
 ---
 
@@ -757,6 +758,34 @@ Há teste para exatamente isso: o assistente responde `SKU-MAT-999 | Leve a mass
 
 **Onde no código.** `domain/entity/RegistroRuptura.java`, `infrastructure/database/adapter/RegistroRupturaRepositoryAdapter.java`, `infrastructure/database/entity/RegistroRupturaEntity.java`.
 
+
+### D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido
+
+**Contexto.** O fluxo de ruptura (UC-013) é o momento mais forte da apresentação, e depende de um produto estar com saldo zero na hora certa. Deixar isso por conta do estado do banco significa que, na segunda gravação do vídeo — ou na segunda pergunta da banca —, o cenário já não está mais lá.
+
+**Decisão.** `PATCH /api/v1/produtos/{produtoId}/estoque` zera ou restaura o saldo de qualquer produto sob demanda. Não corresponde a nenhum caso de uso do cliente final e não existiria num sistema real, onde o saldo viria do ERP.
+
+**É o único endpoint que altera o catálogo**, e o único que não serve a um caso de uso. Fica no `ProdutoController` porque o contrato o coloca sob `/produtos`; um controller "interno" separado daria a impressão de existir uma área protegida, que **não existe**.
+
+**Sobre a proteção: não há nenhuma, e isso é uma escolha.** Qualquer pessoa com a URL da API publicada consegue zerar o estoque da loja inteira. Três motivos para aceitar:
+
+1. A API não tem autenticação em nenhum endpoint — sessões são apenas UUIDs. Este endpoint não abre uma categoria nova de exposição, embora seja o de maior impacto.
+2. Desligá-lo em produção derrotaria o propósito: **é justamente o ambiente publicado que será demonstrado**.
+3. O dano é reversível pelo próprio endpoint, e o catálogo é massa de demonstração.
+
+O que fizemos em vez de proteger: o endpoint está marcado como `[Demonstracao]` no Swagger, com a descrição dizendo explicitamente que é ferramenta interna, e a alteração é registrada em log de **nível WARN** — não `INFO`. É uma alteração manual de catálogo feita por fora de qualquer regra de negócio; se aparecer num log sem ninguém ter pedido, alguém precisa reparar.
+
+Registrado como limitação aceita em [`observacoes.md`](observacoes.md), para que a decisão não se perca caso o projeto ganhe autenticação depois.
+
+**Alternativas.** Proteger com um token próprio ou uma variável de ambiente — descartado por adicionar cerimônia justamente na hora da apresentação, que é quando o endpoint é usado. Uma tela administrativa — escopo de frontend que ninguém tem tempo de construir.
+
+**O saldo muda por cópia, não por mutação.** `Produto.comSaldoEstoque(int)` devolve um novo produto, preservando a imutabilidade da entidade ([D-04](#d-04-entidades-imutáveis-por-padrão)), e rejeita saldo negativo. A validação `@Min(0)` no corpo da requisição já barra isso com 400 antes de chegar lá; a guarda na entidade é a segunda linha, para o caso de alguém chamar o caso de uso por outro caminho no futuro.
+
+**Verificado sobre HTTP** contra Oracle e Gemini reais, no ciclo completo da demonstração: restaurar a lixa grão 120 (desfazendo o cenário plantado na massa), zerá-la de novo, relatar a ruptura e receber a lixa d'água eleita pelo assistente. O cenário deixou de depender do estado em que o banco por acaso está.
+
+**Onde no código.** `application/usecase/SimularEstoqueUseCase.java`, `presentation/controller/ProdutoController.java`, `domain/entity/Produto.java`.
+
+---
 
 ## Como manter este documento
 

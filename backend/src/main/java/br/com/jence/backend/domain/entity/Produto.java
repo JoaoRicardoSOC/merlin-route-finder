@@ -27,4 +27,20 @@ public class Produto {
     public boolean temDisponibilidade() {
         return saldoEstoque > 0;
     }
+
+    /**
+     * Devolve uma copia do produto com outro saldo em estoque.
+     * <p>
+     * Copia em vez de mutacao porque a entidade e imutavel por padrao (D-04). O ajuste de
+     * saldo existe apenas para a ferramenta de simulacao usada em demonstracao (D-40): o
+     * sistema nao movimenta estoque, e nenhum fluxo do cliente final chama este metodo.
+     *
+     * @throws IllegalArgumentException se o saldo for negativo
+     */
+    public Produto comSaldoEstoque(int novoSaldo) {
+        if (novoSaldo < 0) {
+            throw new IllegalArgumentException("Saldo em estoque nao pode ser negativo: " + novoSaldo);
+        }
+        return new Produto(id, sku, nome, preco, novoSaldo, pontoMapa);
+    }
 }
