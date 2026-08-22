@@ -4,6 +4,8 @@
 >
 > Complementa [`contexto-e-planejamento.md`](contexto-e-planejamento.md) (o que o projeto é) e [`planejamento-tecnico.md`](planejamento-tecnico.md) (como o trabalho foi organizado).
 >
+> O contrário deste documento é [`observacoes.md`](observacoes.md): aqui ficam as decisões **fechadas**; lá, o que ainda está em aberto.
+>
 > Cada decisão traz: **Contexto** (o problema), **Decisão** (o que foi feito), **Alternativas** (o que foi descartado e por quê), **Consequências** (o que isso custa) e **Onde no código**.
 
 ## Índice
