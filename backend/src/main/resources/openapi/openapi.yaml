@@ -359,19 +359,25 @@ paths:
         - $ref: "#/components/parameters/SessaoId"
       responses:
         "200":
-          description: Histórico de mensagens
+          description: >
+            Histórico da conversa em ordem cronológica, possivelmente vazio. Sessão
+            encerrada não impede a leitura: o histórico é registro do que já aconteceu.
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/ChatMensagem"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
     post:
       tags: [Chat]
       summary: Enviar mensagem ao assistente virtual (UC-007 a UC-009)
       description: >
-        O assistente tem escopo fechado (conjunto de "projetos"/categorias mapeados a
-        categorias de produto — não é um chat totalmente aberto).
+        O assistente consulta o catálogo real da loja por function calling antes de
+        responder, e tem escopo fechado: recusa assuntos fora de reforma, construção,
+        bricolagem, decoração e jardinagem. Ele sugere produtos, mas nunca altera o
+        roteiro - adicionar continua sendo ação do cliente (UC-004).
       parameters:
         - $ref: "#/components/parameters/SessaoId"
       requestBody:
@@ -382,13 +388,19 @@ paths:
               $ref: "#/components/schemas/EnviarMensagemRequest"
       responses:
         "201":
-          description: Resposta do assistente
+          description: >
+            Mensagem do assistente. Se o assistente estiver indisponível, a resposta é uma
+            mensagem honesta de indisponibilidade, que deliberadamente não entra no
+            histórico - a pergunta do cliente fica salva sem resposta, que é o que de fato
+            aconteceu.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ChatMensagem"
         "404":
           $ref: "#/components/responses/NaoEncontrado"
+        "409":
+          $ref: "#/components/responses/SessaoInativa"
 
 components:
   parameters:

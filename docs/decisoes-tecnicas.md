@@ -57,6 +57,7 @@
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
+- [D-41. Sessão encerrada continua legível, mas não gravável](#d-41-sessão-encerrada-continua-legível-mas-não-gravável)
 
 ---
 
@@ -784,6 +785,26 @@ Registrado como limitação aceita em [`observacoes.md`](observacoes.md), para q
 **Verificado sobre HTTP** contra Oracle e Gemini reais, no ciclo completo da demonstração: restaurar a lixa grão 120 (desfazendo o cenário plantado na massa), zerá-la de novo, relatar a ruptura e receber a lixa d'água eleita pelo assistente. O cenário deixou de depender do estado em que o banco por acaso está.
 
 **Onde no código.** `application/usecase/SimularEstoqueUseCase.java`, `presentation/controller/ProdutoController.java`, `domain/entity/Produto.java`.
+
+---
+
+### D-41. Sessão encerrada continua legível, mas não gravável
+
+**Contexto.** Ao expor o histórico do chat surgiu uma pergunta que vale para todo o sistema: depois que a jornada termina — cliente passou no caixa, sessão `COMPLETED` —, o que ainda pode ser feito com aquela sessão?
+
+**Decisão.** **Leitura sim, escrita não.** `GET /sessoes/{id}/chat/mensagens` devolve 200 numa sessão encerrada; `POST` na mesma URL devolve 409. Mesma regra já valia para a lista de roteiro.
+
+**Motivo.** As duas metades têm naturezas diferentes. O histórico é **registro do que já aconteceu** — negar acesso a ele depois do encerramento não protege nada e quebraria o celular do cliente que reabre a conversa no estacionamento para reler qual lixa o assistente recomendou. Já escrever numa sessão encerrada é incoerente: a jornada acabou, e uma nova pergunta pertence a uma nova sessão.
+
+Verificado sobre HTTP na jornada completa: depois de `POST /sessoes/{id}/concluir`, o `GET` do histórico segue em 200 e o `POST` passa a 409.
+
+**Consequência que vale conhecer.** Como não há autenticação, quem tiver o `sessaoId` lê o histórico daquela conversa para sempre. No escopo atual isso é aceitável — não há dado pessoal no chat, apenas perguntas sobre materiais de construção. Se o projeto passar a identificar clientes, esta decisão precisa ser revista junto com a autenticação.
+
+**Sessão inexistente devolve 404, não lista vazia.** O caso de uso verifica a sessão antes de buscar as mensagens, mesmo sem usá-la depois. Sem essa checagem, um id errado devolveria `[]` — indistinguível de uma conversa que ainda não começou, e o frontend não teria como perceber que estava perguntando pelo lugar errado.
+
+**Consultar não renova o TTL.** Mesma regra da [D-24](#d-24-ttl-da-sessão-é-renovado-a-cada-interação): leitura não deveria gravar nada. Quem renova é o envio de mensagem, que é a ação que de fato indica um cliente ativo.
+
+**Onde no código.** `application/usecase/ConsultarHistoricoChatUseCase.java`, `presentation/controller/ChatController.java`.
 
 ---
 
