@@ -16,6 +16,8 @@
 - [D-22. Exceção única para "não encontrado", tratada centralmente](#d-22-exceção-única-para-não-encontrado-tratada-centralmente)
 - [D-25. 409 para sessão inativa, e quando é aceitável evoluir o contrato](#d-25-409-para-sessão-inativa-e-quando-é-aceitável-evoluir-o-contrato)
 - [D-30. Dois artefatos de documentação de API, com propósitos diferentes](#d-30-dois-artefatos-de-documentação-de-api-com-propósitos-diferentes)
+- [D-33. Suíte de testes roda sem banco; integração fica separada por tag](#d-33-suíte-de-testes-roda-sem-banco-integração-fica-separada-por-tag)
+- [D-34. Swagger UI permanece exposto em produção](#d-34-swagger-ui-permanece-exposto-em-produção)
 
 **Domínio**
 - [D-04. Entidades imutáveis por padrão](#d-04-entidades-imutáveis-por-padrão)
@@ -153,6 +155,41 @@ Foi por esse critério que no UC-003 optamos por **não** adicionar um campo `di
 **Consequência prática.** Os controllers levam apenas `@Tag` e `@Operation`, o suficiente para a documentação gerada ficar legível.
 
 **Onde no código.** `presentation/controller/`, `backend/src/main/resources/openapi/openapi.yaml`.
+
+---
+
+### D-33. Suíte de testes roda sem banco; integração fica separada por tag
+
+**Contexto.** O `BackendApplicationTests`, herdado do esqueleto inicial, sobe o contexto Spring inteiro — inclusive a conexão com o Oracle. Com ele na execução padrão, `./mvnw test` **falhava** na máquina de quem ainda não tinha credencial configurada, e inviabilizaria qualquer CI.
+
+**Decisão.** Testes que exigem banco são marcados com `@Tag("integracao")` e excluídos por padrão pelo Surefire. Um profile Maven os reativa:
+
+```bash
+./mvnw test              # 52 testes, sem banco, em qualquer maquina
+./mvnw test -Pintegracao # 53 testes, exige DB_URL/DB_USER/DB_PASSWORD
+```
+
+**Motivo.** Um clone novo do repositório precisa passar nos testes sem configuração prévia. Se a suíte padrão exige credencial de um banco específico, ela deixa de ser rede de proteção e vira obstáculo: as pessoas param de rodá-la, ou pior, aprendem a ignorar build vermelho.
+
+A separação também deixa explícita uma distinção real: 52 testes verificam **lógica** (domínio, algoritmo, camada web com mocks) e não deveriam depender de infraestrutura; os de integração verificam **a costura com o banco**, e aí a dependência é legítima.
+
+**Consequência prática.** Rodar `./mvnw test` antes de commitar passou a ser viável para os cinco integrantes, independente de quem configurou o quê.
+
+**Onde no código.** `backend/pom.xml` (Surefire e profile), `BackendApplicationTests.java`, `PerfilProducaoTest.java`.
+
+---
+
+### D-34. Swagger UI permanece exposto em produção
+
+**Contexto.** A prática usual é desabilitar documentação interativa de API em produção: ela revela a superfície de ataque e facilita exploração.
+
+**Decisão.** Manter `/swagger.html` acessível no ambiente publicado.
+
+**Motivo.** O "produção" aqui é um deploy acadêmico de demonstração, e a rubrica avalia o MVP publicado. Poder abrir a API na banca e mostrar os endpoints funcionando é ganho concreto de apresentação. Do outro lado da balança: não há dado real de cliente, não há endpoint destrutivo, e o conteúdo já é público no repositório.
+
+**Quando esta decisão deveria ser revista.** Se o projeto for adiante com dados reais, integração com sistemas da Leroy Merlin, ou qualquer endpoint administrativo — aí o cálculo inverte e a documentação deve ser restrita a ambientes internos.
+
+**Onde no código.** `src/main/resources/application-prod.yml` (ausência deliberada de restrição).
 
 ---
 

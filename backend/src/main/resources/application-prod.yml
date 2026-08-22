@@ -1,0 +1,18 @@
+# Perfil de producao. Ativar com SPRING_PROFILES_ACTIVE=prod.
+#
+# Toda credencial continua vindo de variavel de ambiente, como no perfil padrao:
+# DB_URL, DB_USER, DB_PASSWORD, JWT_SECRET, GEMINI_API_KEY (Fase 2).
+# Alem delas, definir em producao: PORT e CORS_ALLOWED_ORIGINS.
+
+spring:
+  jpa:
+    # Log de SQL fica so em desenvolvimento: em producao vira ruido, custa desempenho e
+    # despeja conteudo de consultas em servicos de log de terceiros.
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+logging:
+  level:
+    org.hibernate.SQL: warn

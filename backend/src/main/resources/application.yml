@@ -18,9 +18,15 @@ spring:
         format_sql: true
 
 server:
-  port: 8080
+  # Provedores de hospedagem gratuitos injetam a porta em que a aplicacao deve escutar.
+  # Sem respeitar PORT, o deploy nao sobe.
+  port: ${PORT:8080}
 
 merlin:
+  cors:
+    # Origens do Totem e do Mobile. Em producao, definir CORS_ALLOWED_ORIGINS com as URLs
+    # publicadas, separadas por virgula.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
   jwt:
     # Sem valor configurado, a aplicacao gera uma chave aleatoria no startup e avisa no log.
     # Nunca definir um segredo padrao aqui: ver D-27 em docs/decisoes-tecnicas.md.

@@ -50,7 +50,32 @@ A API sobe em `http://localhost:8080`. Documentação interativa (Swagger UI) em
 ./mvnw test
 ```
 
-Stack de testes já disponível via `pom.xml`: JUnit 5, Mockito e AssertJ.
+Roda a suíte completa **sem precisar de banco nem de credencial** — funciona em qualquer máquina recém-clonada.
+
+Os testes que sobem o contexto contra o Oracle são marcados com `@Tag("integracao")` e ficam de fora dessa execução. Para incluí-los, com as variáveis de banco configuradas:
+
+```bash
+./mvnw test -Pintegracao
+```
+
+Stack de testes disponível via `pom.xml`: JUnit 5, Mockito e AssertJ.
+
+## Variáveis de ambiente
+
+| Variável | Obrigatória | Padrão | Para quê |
+|---|---|---|---|
+| `DB_URL`, `DB_USER`, `DB_PASSWORD` | sim | — | conexão com o Oracle da FIAP |
+| `PORT` | não | `8080` | porta HTTP (provedores de hospedagem injetam) |
+| `CORS_ALLOWED_ORIGINS` | não | `localhost:3000,localhost:5173` | origens do Totem e do Mobile, separadas por vírgula |
+| `JWT_SECRET` | não | chave aleatória por execução | assinatura do token de handoff |
+| `HANDOFF_BASE_URL` | não | `http://localhost:5173` | URL do PWA codificada no QR Code |
+| `GEMINI_API_KEY` | Fase 2 | — | integração com o assistente de IA |
+
+Nenhuma credencial é versionada. Ver [D-27](../docs/decisoes-tecnicas.md#d-27-segredo-do-jwt-por-ambiente-com-chave-aleatória-em-desenvolvimento) sobre o tratamento do segredo do JWT.
+
+## Produção
+
+Ativar o perfil `prod` (`SPRING_PROFILES_ACTIVE=prod`), que desliga o log de SQL. Todo o resto vem das variáveis acima.
 
 ## Arquitetura
 
