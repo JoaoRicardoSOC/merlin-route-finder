@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -53,6 +54,25 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "Parametro Invalido",
                 "O valor '%s' nao e valido para o parametro '%s'.".formatted(ex.getValue(), ex.getName()),
+                request.getRequestURI(),
+                null
+        );
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    /*
+     * Mesma familia do handler acima: corpo JSON malformado e erro do cliente. Sem isto vira
+     * 500 e o frontend nao consegue distinguir "eu mandei errado" de "o servidor caiu".
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<StandardError> handleCorpoIlegivel(HttpMessageNotReadableException ex, HttpServletRequest request) {
+
+        StandardError response = new StandardError(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Corpo da Requisicao Invalido",
+                "O corpo enviado nao pode ser lido. Verifique se e um JSON valido.",
                 request.getRequestURI(),
                 null
         );
