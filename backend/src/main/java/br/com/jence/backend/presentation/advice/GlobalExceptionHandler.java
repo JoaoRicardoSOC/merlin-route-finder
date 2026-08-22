@@ -2,6 +2,7 @@ package br.com.jence.backend.presentation.advice;
 
 import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
+import br.com.jence.backend.domain.exception.SubstitutoIndisponivelException;
 import br.com.jence.backend.domain.exception.TokenHandoffInvalidoException;
 import br.com.jence.backend.presentation.response.StandardError;
 import br.com.jence.backend.presentation.response.StandardError.ValidationError;
@@ -177,6 +178,26 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    /*
+     * 422 e nao 404: o item existe e a ruptura foi processada e registrada com sucesso - o
+     * que nao existe e um substituto a oferecer. O Mobile precisa distinguir os dois casos
+     * para mostrar "nao encontramos nada equivalente por perto" em vez de "item inexistente".
+     */
+    @ExceptionHandler(SubstitutoIndisponivelException.class)
+    public ResponseEntity<StandardError> handleSubstitutoIndisponivel(SubstitutoIndisponivelException ex, HttpServletRequest request) {
+
+        StandardError response = new StandardError(
+                LocalDateTime.now(),
+                HttpStatus.UNPROCESSABLE_ENTITY.value(),
+                "Substituto Indisponivel",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
     }
 
     @ExceptionHandler(TokenHandoffInvalidoException.class)

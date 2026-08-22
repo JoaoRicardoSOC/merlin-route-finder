@@ -1,5 +1,6 @@
 package br.com.jence.backend.infrastructure.database.adapter;
 
+import br.com.jence.backend.domain.entity.PontoMapa;
 import br.com.jence.backend.domain.entity.Produto;
 import br.com.jence.backend.domain.repository.Pagina;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -44,6 +46,23 @@ public class ProdutoRepositoryAdapter implements ProdutoRepository {
     @Transactional(readOnly = true)
     public Pagina<Produto> buscarPorTermo(String termo, int pagina, int tamanho) {
         return converter(jpaRepository.buscarPorTermo(termo, PageRequest.of(pagina, tamanho)));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Produto> buscarDisponiveisProximosDe(PontoMapa referencia, UUID excluido,
+                                                     double raio, int limite) {
+        return jpaRepository.buscarDisponiveisProximosDe(
+                        referencia.getCoordenadaX(),
+                        referencia.getCoordenadaY(),
+                        raio,
+                        // O id e gravado como varchar (ver ProdutoEntity); na query nativa a
+                        // comparacao precisa ser feita no mesmo tipo.
+                        excluido.toString(),
+                        PageRequest.of(0, limite))
+                .getContent().stream()
+                .map(produtoFactory::paraDominio)
+                .toList();
     }
 
     private Pagina<Produto> converter(Page<ProdutoEntity> page) {

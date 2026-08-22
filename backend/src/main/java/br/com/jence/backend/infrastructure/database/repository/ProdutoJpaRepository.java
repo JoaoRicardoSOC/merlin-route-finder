@@ -45,4 +45,37 @@ public interface ProdutoJpaRepository extends JpaRepository<ProdutoEntity, UUID>
             nativeQuery = true
     )
     Page<ProdutoEntity> buscarPorTermo(@Param("termo") String termo, Pageable pageable);
+
+    /*
+     * Pre-filtragem espacial da ruptura de estoque (UC-013). Distancia euclidiana no grid da
+     * loja, calculada no banco: nativa pelo mesmo motivo da consulta acima - JPQL nao tem
+     * sqrt/power, e ordenar por distancia em memoria exigiria carregar o catalogo inteiro.
+     *
+     * O produto em falta e excluido explicitamente. Ele esta a distancia zero de si mesmo e,
+     * como o saldo do sistema pode nao refletir a prateleira vazia, apareceria como o
+     * "melhor" candidato a substituir a si proprio.
+     */
+    @Query(
+            value = """
+                    select p.* from tb_produto p
+                    join tb_ponto_mapa m on m.id = p.ponto_mapa_id
+                    where p.saldo_estoque > 0
+                      and p.id <> :excluido
+                      and sqrt(power(m.coordenada_x - :x, 2) + power(m.coordenada_y - :y, 2)) <= :raio
+                    order by sqrt(power(m.coordenada_x - :x, 2) + power(m.coordenada_y - :y, 2)), p.nome
+                    """,
+            countQuery = """
+                    select count(*) from tb_produto p
+                    join tb_ponto_mapa m on m.id = p.ponto_mapa_id
+                    where p.saldo_estoque > 0
+                      and p.id <> :excluido
+                      and sqrt(power(m.coordenada_x - :x, 2) + power(m.coordenada_y - :y, 2)) <= :raio
+                    """,
+            nativeQuery = true
+    )
+    Page<ProdutoEntity> buscarDisponiveisProximosDe(@Param("x") int x,
+                                                    @Param("y") int y,
+                                                    @Param("raio") double raio,
+                                                    @Param("excluido") String excluido,
+                                                    Pageable pageable);
 }

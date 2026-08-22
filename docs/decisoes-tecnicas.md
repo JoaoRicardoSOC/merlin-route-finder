@@ -52,6 +52,8 @@
 - [D-20. Google Gemini como provedor de LLM](#d-20-google-gemini-como-provedor-de-llm)
 - [D-21. Demo da banca por simulação animada, não posicionamento real](#d-21-demo-da-banca-por-simulação-animada-não-posicionamento-real)
 - [D-23. "Resolução síncrona de inventário" não é integração com ERP](#d-23-resolução-síncrona-de-inventário-não-é-integração-com-erp)
+- [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
+- [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 
 ---
 
@@ -700,6 +702,59 @@ Optamos por manter o function calling porque é o que a documentação entregue 
 **Onde no código.** `application/usecase/ConsultarProdutoUseCase.java`.
 
 ---
+
+### D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco
+
+**Contexto.** O cliente chega à prateleira e ela está vazia (UC-013). O sistema tem segundos para transformar essa frustração numa venda de substituto, com o cliente parado ali. É a peça central da demonstração — e a que mais depende de a IA não inventar produto.
+
+**Decisão.** Três etapas encadeadas, cada uma restringindo a seguinte:
+
+1. **Pré-filtragem espacial no banco.** Uma query nativa devolve os produtos com saldo em estoque dentro de um raio do `PontoMapa` do produto em falta, ordenados por distância euclidiana. Nativa pelo mesmo motivo da [D-15](#d-15-query-nativa-com-utl_match-para-busca-tolerante-a-erro-de-digitação): JPQL não tem `sqrt`/`power`, e ordenar por distância em memória exigiria carregar o catálogo inteiro.
+2. **Eleição semântica pelo assistente**, por *function calling*, entre esses candidatos e somente eles.
+3. **Validação da escolha contra a lista de candidatos.**
+
+**O grounding está na etapa 3, não na 1 nem na 2.** O modelo responde em texto (`SKU-XXX-NNN | justificativa`), e o formato não garante nada sozinho — um modelo pode devolver um SKU inventado no formato certo. O que garante é a validação: o código só aceita o SKU se ele estiver entre os candidatos que **nós** oferecemos, e o produto entregue ao cliente é sempre o objeto vindo do nosso banco, resolvido por aquele SKU. Do texto do modelo sobrevive apenas a justificativa. Um código inventado — ou de um produto que existe mas não estava na lista — é descartado como se a IA não tivesse respondido.
+
+Há teste para exatamente isso: o assistente responde `SKU-MAT-999 | Leve a massa corrida premium`, e o teste verifica que o cliente recebe outro produto e que a frase inventada não chega até ele.
+
+**A ferramenta não recebe parâmetros, de propósito.** Quais produtos entram na lista é decisão do sistema. Se o modelo pudesse informar o corredor ou o termo de busca, estaria escolhendo o próprio universo de opções — justamente o que a pré-filtragem existe para impedir.
+
+**Fallback determinístico (aplicação da [D-35](#d-35-o-cliente-de-ia-falha-explicitamente-o-fallback-é-de-quem-chama)).** Assistente fora do ar, SKU inválido ou resposta ilegível → o sistema sugere o **disponível mais próximo**, calculado por nós, marcado como tal e com justificativa honesta: *"Este é o produto disponível mais próximo de onde você está. Confira na embalagem se ele atende ao seu caso antes de levar."* Dado o limite do tier gratuito ([D-37](#d-37-escolha-do-modelo-por-medição-e-o-limite-do-tier-gratuito)), é o que impede a demonstração de quebrar ao vivo se a cota estourar — e isso não é hipotético: aconteceu durante os próprios testes de integração, com o terceiro teste seguido caindo no fallback por limite por minuto.
+
+**Mas "nenhum serve" não cai no fallback.** Se o assistente avaliar os candidatos e concluir que nenhum cumpre a mesma função, a resposta é 422, não uma sugestão qualquer. Sugerir um disjuntor para quem procurava lixa é pior do que não sugerir nada. É um caso diferente de "não havia candidatos", e por isso são caminhos distintos no código.
+
+**A origem da sugestão vai no contrato.** O campo `origemSugestao` (`ASSISTENTE_IA` ou `PROXIMIDADE`) não estava no contrato original e foi acrescentado: sem ele, o frontend rotularia como recomendação inteligente o que foi apenas o item mais perto. Evolução de contrato pelo critério da [D-25](#d-25-409-para-sessão-inativa-e-quando-é-aceitável-evoluir-o-contrato).
+
+**Alternativas.** Saída estruturada em vez de function calling — já considerada e descartada na [D-20](#d-20-google-gemini-como-provedor-de-llm). Pedir ao modelo que chamasse uma segunda ferramenta para registrar a escolha, em vez de responder em texto: mais rigoroso na forma, mas custaria uma terceira ida e volta ao provedor sem melhorar a garantia real, que já está na validação.
+
+**Consequências.** Duas chamadas ao provedor por sugestão. E o raio de busca (25 unidades no grid 0–100 da planta) é um número escolhido por julgamento, não medido: é a ordem de grandeza de um desvio que o cliente aceita fazer a pé. Produtos isolados no mapa — o espelho de Decoração, por exemplo — não têm vizinho dentro do raio e caem em 422.
+
+**Onde no código.** `application/usecase/TratarRupturaEstoqueUseCase.java`, `infrastructure/ia/factory/InstrucaoDeRuptura.java`, `infrastructure/database/repository/ProdutoJpaRepository.java`.
+
+---
+
+### D-39. A ruptura vira registro no banco, e o relato não altera o estoque
+
+**Contexto.** O card pedia "registrar a ruptura", mas o DER entregue não tem tabela para isso. Duas saídas: log estruturado, ou uma entidade nova.
+
+**Decisão.** Entidade nova — `RegistroRuptura` / `TB_REGISTRO_RUPTURA`, com sessão, item, produto em falta, produto sugerido, justificativa, origem e data.
+
+**Motivo, que é de negócio e não técnico.** Sem persistir, a funcionalidade ajuda um cliente e a loja não aprende nada. Com o registro, o botão "Prateleira Vazia" vira um **relato contínuo de divergência entre o estoque do sistema e a gôndola, vindo de quem está olhando a prateleira** — que é exatamente o risco de "ruptura silenciosa" levantado no início do projeto ([D-23](#d-23-resolução-síncrona-de-inventário-não-é-integração-com-erp)). A leitura muda de "sugerimos um substituto" para "convertemos a falha em venda **e** entregamos à operação a lista do que está errado na prateleira".
+
+**Custo assumido.** O DER em PDF fica desatualizado e precisa de revisão (área do Vicentini). Não há trabalho de banco: `ddl-auto: update` cria a tabela.
+
+**O relato não zera o estoque do produto.** É tentador — inventário que se autocorrige soa muito bem numa apresentação. Mas um cliente olhando a gôndola errada zeraria estoque real, e um único relato equivocado passaria a mentir para todos os clientes seguintes. **O relato é evidência, não verdade.** O que o sistema faz é acumular as evidências num lugar onde a operação possa revisá-las; corrigir o saldo continua sendo decisão de quem foi conferir.
+
+**A ruptura é registrada mesmo sem substituto**, e só depois a requisição falha com 422. Para a loja, *"o cliente foi até a prateleira, não havia nada, e nem substituto por perto"* é justamente o relato mais grave a chegar — perdê-lo seria perder o caso mais importante.
+
+**Isso obrigou a uma transação própria.** O `salvar` do registro roda com `REQUIRES_NEW`: como o caso de uso registra o relato e só então lança a exceção que vira 422, o rollback dessa exceção levaria embora exatamente o registro que documenta a falha. O relato é um fato independente do desfecho da requisição. O teste de integração do produto isolado no mapa é o que prova que ele sobrevive.
+
+**Sem FK para `TB_ITEM_ROTEIRO`.** O `item_roteiro_id` é gravado como valor solto. O cliente pode remover o item do carrinho depois de relatar a ruptura, e o registro precisa sobreviver a isso: para a loja, a informação de que a gôndola estava vazia continua valendo.
+
+**O sistema não mexe no carrinho.** Ele sugere; aceitar o substituto é ação do cliente, pelos endpoints que já existem. Mesma linha da [D-36](#d-36-assistente-busca-no-catálogo-por-ferramenta-com-escopo-fechado).
+
+**Onde no código.** `domain/entity/RegistroRuptura.java`, `infrastructure/database/adapter/RegistroRupturaRepositoryAdapter.java`, `infrastructure/database/entity/RegistroRupturaEntity.java`.
+
 
 ## Como manter este documento
 

@@ -635,7 +635,16 @@ components:
           $ref: "#/components/schemas/ProdutoDetalhado"
         justificativa:
           type: string
-          description: Explicação em linguagem natural gerada pela IA para a sugestão
+          description: Explicação em linguagem natural para a sugestão
+        origemSugestao:
+          type: string
+          description: >
+            Quem elegeu o substituto. ASSISTENTE_IA quando o modelo escolheu entre os
+            candidatos pré-filtrados; PROXIMIDADE quando o assistente estava indisponível
+            e o sistema caiu para o produto disponível mais próximo, sem análise semântica.
+            O frontend deve usar este campo para não rotular como recomendação inteligente
+            o que foi apenas o item mais perto.
+          enum: [ASSISTENTE_IA, PROXIMIDADE]
 
     ChatMensagem:
       type: object
