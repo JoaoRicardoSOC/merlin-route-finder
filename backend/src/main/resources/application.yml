@@ -34,6 +34,11 @@ merlin:
   handoff:
     # URL base do PWA mobile, codificada no QR Code exibido no Totem.
     base-url: ${HANDOFF_BASE_URL:http://localhost:5173}
+  ia:
+    base-url: https://generativelanguage.googleapis.com
+    # gemini-2.5-flash foi descontinuado para chaves novas; a propria API indica o sucessor.
+    modelo: ${GEMINI_MODEL:gemini-3.6-flash}
+    api-key: ${GEMINI_API_KEY:}
 
 springdoc:
   swagger-ui:

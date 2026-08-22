@@ -25,6 +25,7 @@
 - [D-06. `encerrar()` desdobrado em três métodos nomeados por evento](#d-06-encerrar-desdobrado-em-três-métodos-nomeados-por-evento)
 - [D-07. `ItemRoteiro.reconstituir` para leitura do banco](#d-07-itemroteiroreconstituir-para-leitura-do-banco)
 - [D-08. O domínio registra o token de handoff, nunca o assina](#d-08-o-domínio-registra-o-token-de-handoff-nunca-o-assina)
+- [D-35. O cliente de IA falha explicitamente; o fallback é de quem chama](#d-35-o-cliente-de-ia-falha-explicitamente-o-fallback-é-de-quem-chama)
 - [D-27. Segredo do JWT por ambiente, com chave aleatória em desenvolvimento](#d-27-segredo-do-jwt-por-ambiente-com-chave-aleatória-em-desenvolvimento)
 - [D-28. A rota parte do primeiro ponto do tipo TOTEM](#d-28-a-rota-parte-do-primeiro-ponto-do-tipo-totem)
 - [D-29. Uso único do token pela ausência no banco](#d-29-uso-único-do-token-pela-ausência-no-banco)
@@ -294,6 +295,28 @@ Complementos: `isTokenValido()` e `invalidarToken()` — este último é o que v
 **Onde no código.** `domain/entity/ListaRoteiro.java`.
 
 **Implementação do lado da infraestrutura.** O contrato ficou em `domain/service/GeradorTokenHandoff` — uma interface escrita em termos de negócio ("produza um token de transição confiável"), que não menciona JWT. A implementação `infrastructure/security/GeradorTokenJwt` é a única classe do projeto que conhece a biblioteca `jjwt`. Mesmo arranjo dos repositórios: contrato no domínio, tecnologia na infraestrutura.
+
+---
+
+### D-35. O cliente de IA falha explicitamente; o fallback é de quem chama
+
+**Contexto.** A IA pode falhar de várias formas: cota esgotada, tempo esgotado, filtro de conteúdo do provedor, resposta em formato inesperado. Ficou decidido que o sistema deve **degradar** em vez de estourar erro na cara do cliente.
+
+**Decisão.** O cliente (`GeminiClient`) **não** implementa fallback: ele lança `AssistenteIAIndisponivelException` em qualquer falha. Cada caso de uso decide o que fazer.
+
+**Motivo.** O fallback correto depende do contexto e só quem conhece o negócio sabe escolher:
+- na ruptura de estoque, cair para "produto disponível mais próximo", calculado por nós;
+- no chat, uma mensagem honesta de indisponibilidade.
+
+Um fallback genérico dentro do cliente teria que escolher um dos dois — e esconderia a falha de quem precisava decidir.
+
+**Onde o ciclo de function calling é resolvido.** Dentro do cliente, não no caso de uso. A interface recebe um `ExecutorDeFerramenta`; quem chama informa apenas *como executar* a consulta, e o vai-e-vem com o provedor fica encapsulado. Falar o protocolo é responsabilidade do cliente; conhecer o negócio é do caso de uso.
+
+**Detalhe de implementação que não é óbvio.** O turno do modelo é devolvido **inteiro** no histórico da chamada seguinte, sem reconstrução. A resposta carrega campos próprios do provedor (assinatura de raciocínio, identificador da chamada) que precisam ser preservados para a conversa continuar. Reconstruir só os campos que entendemos quebraria o ciclo — e foi verificado por chamadas reais, não presumido.
+
+**Limite de ciclos.** O laço para em 5 idas e voltas. Sem isso, um modelo que insistisse em pedir ferramentas prenderia a requisição indefinidamente.
+
+**Onde no código.** `domain/service/AssistenteIA.java`, `infrastructure/ia/client/GeminiClient.java`, `infrastructure/web/RestClientConfig.java` (tempos limite).
 
 ---
 
@@ -589,9 +612,15 @@ Pelo mesmo raciocínio, concluir **não exige** que todos os itens estejam colet
 
 **Alternativas.** OpenAI (citada no C4 original) — sem tier gratuito adequado. Groq — também gratuito e mais rápido, mas com qualidade de resposta mais variável.
 
+**Alternativa considerada e descartada na implementação: saída estruturada.** Em vez de function calling, poderíamos fazer a pré-filtragem espacial e mandar os candidatos prontos, pedindo ao modelo apenas que escolhesse um id da lista em JSON. Daria a mesma garantia de não-alucinação com uma chamada só, mais barata e mais simples de testar.
+
+Optamos por manter o function calling porque é o que a documentação entregue descreve, e porque a diferença é relevante na explicação à banca: "o modelo consulta nosso sistema" é substancialmente mais forte que "o modelo escolhe de uma lista que já preparamos". O custo aceito são duas chamadas por sugestão e mais orquestração.
+
 **Consequências.** A chave de API vem de variável de ambiente (`GEMINI_API_KEY`), nunca versionada.
 
-**Status.** Decidido, ainda não implementado (Fase 2 do planejamento).
+**Modelo: `gemini-3.6-flash`.** O `gemini-2.5-flash` aparece na listagem de modelos da API, mas **não é utilizável por chaves novas** — a própria API responde 404 com a orientação de migrar. Descoberto ao testar; a lição é que a listagem de modelos não garante disponibilidade, e só a chamada real confirma. O modelo é configurável por `GEMINI_MODEL` para que a troca não exija recompilar.
+
+**Status.** Implementado e verificado com chamadas reais (Fase 2, card 1).
 
 ---
 

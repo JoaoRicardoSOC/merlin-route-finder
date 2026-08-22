@@ -69,7 +69,8 @@ Stack de testes disponível via `pom.xml`: JUnit 5, Mockito e AssertJ.
 | `CORS_ALLOWED_ORIGINS` | não | `localhost:3000,localhost:5173` | origens do Totem e do Mobile, separadas por vírgula |
 | `JWT_SECRET` | não | chave aleatória por execução | assinatura do token de handoff |
 | `HANDOFF_BASE_URL` | não | `http://localhost:5173` | URL do PWA codificada no QR Code |
-| `GEMINI_API_KEY` | Fase 2 | — | integração com o assistente de IA |
+| `GEMINI_API_KEY` | para a IA | — | assistente de IA; sem ela os recursos de IA ficam indisponíveis |
+| `GEMINI_MODEL` | não | `gemini-3.6-flash` | modelo usado (trocável sem recompilar) |
 
 Nenhuma credencial é versionada. Ver [D-27](../docs/decisoes-tecnicas.md#d-27-segredo-do-jwt-por-ambiente-com-chave-aleatória-em-desenvolvimento) sobre o tratamento do segredo do JWT.
 
