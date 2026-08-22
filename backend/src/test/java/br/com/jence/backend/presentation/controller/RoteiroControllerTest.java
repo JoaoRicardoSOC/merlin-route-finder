@@ -2,10 +2,15 @@ package br.com.jence.backend.presentation.controller;
 
 import br.com.jence.backend.application.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.application.dto.ListaRoteiroResponse;
+import br.com.jence.backend.application.dto.PontoMapaResponse;
+import br.com.jence.backend.application.dto.PontoRotaResponse;
 import br.com.jence.backend.application.dto.ProdutoResponse;
+import br.com.jence.backend.application.dto.RotaCalculadaResponse;
 import br.com.jence.backend.application.usecase.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.application.usecase.ConsultarListaRoteiroUseCase;
+import br.com.jence.backend.application.usecase.IncluirPontoDeInteresseUseCase;
 import br.com.jence.backend.application.usecase.RemoverProdutoDoRoteiroUseCase;
+import br.com.jence.backend.domain.entity.TipoPonto;
 import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
@@ -33,6 +38,7 @@ class RoteiroControllerTest {
     @MockitoBean ConsultarListaRoteiroUseCase consultarListaRoteiroUseCase;
     @MockitoBean AdicionarProdutoAoRoteiroUseCase adicionarProdutoAoRoteiroUseCase;
     @MockitoBean RemoverProdutoDoRoteiroUseCase removerProdutoDoRoteiroUseCase;
+    @MockitoBean IncluirPontoDeInteresseUseCase incluirPontoDeInteresseUseCase;
 
     private final UUID sessaoId = UUID.randomUUID();
 
@@ -124,6 +130,50 @@ class RoteiroControllerTest {
                 .andExpect(jsonPath("$.error").value("Operacao Nao Permitida"))
                 .andExpect(jsonPath("$.message")
                         .value(org.hamcrest.Matchers.containsString("nao esta mais ativa")));
+    }
+
+    @Test
+    @DisplayName("POST de ponto de interesse devolve a rota com o desvio")
+    void incluirPontoDeInteresse() throws Exception {
+        UUID pontoId = UUID.randomUUID();
+        when(incluirPontoDeInteresseUseCase.executar(sessaoId, TipoPonto.BANHEIRO))
+                .thenReturn(new RotaCalculadaResponse(sessaoId, UUID.randomUUID(), List.of(
+                        new PontoRotaResponse(1, null,
+                                new PontoMapaResponse(pontoId, TipoPonto.BANHEIRO, "Sanitarios", 52, 8)))));
+
+        mockMvc.perform(post("/api/v1/sessoes/{s}/roteiro/pontos-interesse", sessaoId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tipo\":\"BANHEIRO\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pontos[0].pontoMapa.tipo").value("BANHEIRO"))
+                .andExpect(jsonPath("$.pontos[0].pontoMapa.corredor").value("Sanitarios"))
+                .andExpect(jsonPath("$.pontos[0].item").doesNotExist());
+
+        verify(incluirPontoDeInteresseUseCase).executar(sessaoId, TipoPonto.BANHEIRO);
+    }
+
+    @Test
+    @DisplayName("ponto de interesse sem tipo devolve 400")
+    void incluirPontoSemTipo() throws Exception {
+        mockMvc.perform(post("/api/v1/sessoes/{s}/roteiro/pontos-interesse", sessaoId)
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.validationErrors[0].field").value("tipo"));
+
+        verifyNoInteractions(incluirPontoDeInteresseUseCase);
+    }
+
+    @Test
+    @DisplayName("tipo que nao e de apoio devolve 409")
+    void incluirPontoComTipoInvalido() throws Exception {
+        when(incluirPontoDeInteresseUseCase.executar(any(), any()))
+                .thenThrow(new OperacaoNaoPermitidaException(
+                        "Apenas BANHEIRO ou CAIXA podem ser incluidos como ponto de apoio, e nao PRATELEIRA"));
+
+        mockMvc.perform(post("/api/v1/sessoes/{s}/roteiro/pontos-interesse", sessaoId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tipo\":\"PRATELEIRA\"}"))
+                .andExpect(status().isConflict());
     }
 
     @Test

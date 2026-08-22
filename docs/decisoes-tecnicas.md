@@ -41,6 +41,7 @@
 - [D-17. Carrinho de roteiro sem limite de itens](#d-17-carrinho-de-roteiro-sem-limite-de-itens)
 - [D-18. Produto duplicado é ignorado no carrinho](#d-18-produto-duplicado-é-ignorado-no-carrinho)
 - [D-19. Coordenadas do seed seguem a planta real da loja](#d-19-coordenadas-do-seed-seguem-a-planta-real-da-loja)
+- [D-31. Ponto de interesse não é persistido](#d-31-ponto-de-interesse-não-é-persistido)
 - [D-24. TTL da sessão é renovado a cada interação](#d-24-ttl-da-sessão-é-renovado-a-cada-interação)
 - [D-20. Google Gemini como provedor de LLM](#d-20-google-gemini-como-provedor-de-llm)
 - [D-21. Demo da banca por simulação animada, não posicionamento real](#d-21-demo-da-banca-por-simulação-animada-não-posicionamento-real)
@@ -479,6 +480,24 @@ Efeito colateral positivo: por usar os ports de domínio, o seeder funciona como
 **Consequências.** As distâncias resultantes são realistas (Tintas → Materiais de construção dá 72 unidades num grid de 100), dando ao algoritmo de roteamento um problema de verdade para otimizar.
 
 **Onde no código.** `infrastructure/database/seed/CarregadorDadosIniciais.java`.
+
+---
+
+### D-31. Ponto de interesse não é persistido
+
+**Contexto.** O UC-012 permite ao cliente pedir um banheiro ou caixa durante a caminhada. Mas um ponto de apoio **não é um produto**: não cabe como `ItemRoteiro`, que exige um `Produto`, e o DER entregue à banca não tem tabela para esse conceito.
+
+**Decisão.** O ponto de apoio é inserido apenas na rota **devolvida** pelo endpoint. Nada é gravado no banco.
+
+**Alternativas.** Criar tabela e entidade próprias para pontos de interesse — a modelagem correta e duradoura, descartada por três motivos combinados: divergiria do DER já entregue na documentação (exigindo atualizar o diagrama), seria o card mais caro da fase, e o prazo do vídeo estava a três semanas. Guardar um campo na `ListaRoteiro` — descartada por poluir a entidade com um conceito que não é dela e suportar só um desvio por vez.
+
+**Custo assumido.** Se o app recarregar, o desvio some e o cliente precisa tocar de novo no botão. Aceitável porque o desvio é transitório por natureza — depois de passar no banheiro, ele deixa de importar — e porque o celular mantém a rota em cache (`sessionStorage`, conforme o diagrama de sequência).
+
+**O que mudaria para persistir no futuro.** Uma tabela `TB_PONTO_INTERESSE_ROTEIRO` com `lista_id`, `ponto_mapa_id` e a posição de inserção, mais entidade, mapper, repositório e atualização do DER. A lógica de inserção do caso de uso não mudaria.
+
+**Consequências no contrato.** `PontoRota.item` vem **nulo** para o ponto de apoio — o contrato já previa isso ("item de compra **ou ponto de interesse**"), e é por essa ausência que o celular distingue uma parada de compra de um desvio.
+
+**Onde no código.** `application/usecase/IncluirPontoDeInteresseUseCase.java`, `application/dto/PontoRotaResponse.java`.
 
 ---
 
