@@ -89,7 +89,7 @@ public class TratarRupturaEstoqueUseCase {
 
         if (candidatos.isEmpty()) {
             return recusar(sessao.getId(), item,
-                    "Nenhum produto disponivel foi encontrado nas proximidades.");
+                    "Nenhum produto com estoque esta num raio caminhavel deste ponto.");
         }
 
         Sugestao sugestao = eleger(emFalta, candidatos);

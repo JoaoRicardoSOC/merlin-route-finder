@@ -338,8 +338,14 @@ paths:
                 $ref: "#/components/schemas/RupturaEstoqueResponse"
         "404":
           $ref: "#/components/responses/NaoEncontrado"
+        "409":
+          $ref: "#/components/responses/SessaoInativa"
         "422":
-          description: Nenhum substituto plausível encontrado nas proximidades
+          description: >
+            Ruptura registrada, mas nenhum substituto plausível encontrado nas
+            proximidades - seja porque nenhum produto disponível está dentro do raio,
+            seja porque o assistente avaliou os candidatos e concluiu que nenhum cumpre
+            a mesma função.
           content:
             application/json:
               schema:
