@@ -187,10 +187,10 @@ O que existe no lugar de proteção: marcação explícita como `[Demonstracao]`
 
 ### O-13. A Fase 3 inteira continua planejada e não feita
 
-Dois cards restantes. O rumo definido em 22/08/2026 é **terminar o backlog primeiro e só então publicar** — o deploy ([O-03](#o-03-o-deploy-ainda-não-foi-feito-e-vale-5-pontos)) passou a ser o último card.
+Um card restante. O rumo definido em 22/08/2026 é **terminar o backlog primeiro e só então publicar** — o deploy ([O-03](#o-03-o-deploy-ainda-não-foi-feito-e-vale-5-pontos)) passou a ser o último card.
 
 1. ~~**Cron de TTL**~~ — concluído em 22/08/2026, ver [D-42](decisoes-tecnicas.md#d-42-a-varredura-de-ttl-distingue-carrinho-abandonado-de-quem-só-encostou-no-totem).
-2. **Refinamento 2-opt** — o Nearest Neighbor já entrega **38,6% de redução** contra a ordem de inserção, medido nas coordenadas reais. O 2-opt eliminaria cruzamentos óbvios e daria um argumento técnico a mais para a banca.
+2. ~~**Refinamento 2-opt**~~ — concluído em 22/08/2026, ver [D-43](decisoes-tecnicas.md#d-43-2-opt-sobre-o-nearest-neighbor-na-variante-de-caminho-aberto). A redução contra a ordem de inserção passou de 38,6% para **41,0%**.
 3. **Hardening do handoff** — o token viaja hoje na query string (`GET /api/v1/handoff/validate?token=...`), o que o expõe em histórico de navegador e em log de servidor. Movê-lo para header ou corpo, e criar um caminho de regeneração de QR quando expirar, também serviria de rede de segurança caso a câmera falhe numa demonstração ao vivo.
 
    **Atenção:** tirar o token da query string é uma mudança **quebrante** de contrato e colide com o que a dupla de frontend já tiver integrado — pela [D-25](decisoes-tecnicas.md#d-25-409-para-sessão-inativa-e-quando-é-aceitável-evoluir-o-contrato), precisa ser combinada antes. A regeneração de QR é aditiva e pode ser feita sem esperar.

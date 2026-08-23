@@ -15,6 +15,7 @@
 - [D-02. Casos de uso devolvem DTO, não entidade de domínio](#d-02-casos-de-uso-devolvem-dto-não-entidade-de-domínio)
 - [D-03. Tipo de paginação próprio em vez de `Page` do Spring](#d-03-tipo-de-paginação-próprio-em-vez-de-page-do-spring)
 - [D-26. Nearest Neighbor como heurística de roteamento](#d-26-nearest-neighbor-como-heurística-de-roteamento)
+- [D-43. 2-opt sobre o Nearest Neighbor, na variante de caminho aberto](#d-43-2-opt-sobre-o-nearest-neighbor-na-variante-de-caminho-aberto)
 - [D-22. Exceção única para "não encontrado", tratada centralmente](#d-22-exceção-única-para-não-encontrado-tratada-centralmente)
 - [D-25. 409 para sessão inativa, e quando é aceitável evoluir o contrato](#d-25-409-para-sessão-inativa-e-quando-é-aceitável-evoluir-o-contrato)
 - [D-30. Dois artefatos de documentação de API, com propósitos diferentes](#d-30-dois-artefatos-de-documentação-de-api-com-propósitos-diferentes)
@@ -215,9 +216,9 @@ A separação também deixa explícita uma distinção real: 52 testes verificam
 
 **Consequências assumidas.** Nearest Neighbor é guloso: decide o melhor passo imediato sem enxergar o todo, então pode "se pintar num canto" — deixar um item isolado para o fim e obrigar uma travessia longa. Não produz a rota ótima, e sim uma rota boa.
 
-Medido com as coordenadas reais da loja (6 itens, cenário de reforma de banheiro): **197 unidades contra 320 da ordem em que o cliente adicionou os itens — 38,6% de redução**. É esse o valor que o produto entrega.
+Medido com as coordenadas reais da loja (6 itens, cenário de reforma de banheiro), a heurística sozinha entregava **197 unidades contra 320 da ordem em que o cliente adicionou os itens — 38,6% de redução**.
 
-O refinamento 2-opt está planejado para a Fase 3 justamente para atacar a limitação acima: ele detecta e desfaz cruzamentos na rota gerada, sem o custo de um solver exato.
+**A limitação acima foi atacada na Fase 3.** O refinamento 2-opt entrou como segunda etapa e desfaz os cruzamentos que a heurística gulosa deixa para trás, sem o custo de um solver exato: o mesmo cenário passou a **189,2 unidades, 41,0% de redução**. Ver [D-43](#d-43-2-opt-sobre-o-nearest-neighbor-na-variante-de-caminho-aberto).
 
 **A origem é parâmetro, não constante.** `calcularRota(origem, itens)` — no handoff a origem é o totem da entrada; no tratamento de ruptura de estoque (UC-013) será a posição onde o cliente está naquele momento. Com origem fixa internamente, o segundo caso exigiria outro algoritmo.
 
@@ -841,6 +842,46 @@ Verificado sobre HTTP na jornada completa: depois de `POST /sessoes/{id}/conclui
 **O guard da D-06 sob teste.** Uma sessão `COMPLETED` com TTL vencido **não** é sobrescrita. Sem isso, o cliente que concluiu a rota às 10h00 viraria `ABANDONED` às 10h05, e o sistema perderia a informação de que a jornada foi completada — que é a métrica de sucesso do produto.
 
 **Onde no código.** `application/usecase/ExpirarSessoesInativasUseCase.java`, `infrastructure/scheduler/AgendadorDeExpiracao.java`, `infrastructure/config/AgendamentoConfig.java`.
+
+---
+
+### D-43. 2-opt sobre o Nearest Neighbor, na variante de caminho aberto
+
+**Contexto.** A [D-26](#d-26-nearest-neighbor-como-heurística-de-roteamento) já registrava a limitação do vizinho mais próximo: por ser guloso, ele decide o melhor passo imediato sem enxergar o todo e às vezes "se pinta num canto" — pega o item mais perto da entrada e depois precisa voltar por onde veio. O caminho se cruza.
+
+**Decisão.** Uma segunda etapa de **melhoria local 2-opt** sobre a rota construída: procurar dois trechos que se cruzam, inverter o pedaço entre eles — o que desfaz o cruzamento — e repetir enquanto houver ganho. É o par clássico *heurística construtiva + melhoria local*.
+
+**A variante importa, e não é a que se vê nos exemplos.** O 2-opt é quase sempre ilustrado sobre um **ciclo fechado**, em que o caixeiro volta ao ponto de partida. A nossa rota é um **caminho aberto**: o cliente parte de um ponto fixo — o totem — mas não precisa voltar até ele. Isso muda o cálculo do ganho: quando a inversão vai até o último item da rota, existe aresta de **entrada** no trecho mas não de saída, e só a primeira entra na conta.
+
+Tratar como ciclo faria o algoritmo otimizar um retorno à entrada da loja que ninguém vai percorrer — e, pior, rejeitar inversões boas no fim do caminho por causa de uma aresta imaginária.
+
+**Por que só duas arestas entram na conta.** Inverter o trecho `[i..j]` troca no máximo a aresta que entra nele e a que sai. Todas as arestas internas continuam existindo, apenas percorridas ao contrário — e como a distância é simétrica, elas se cancelam. É isso que torna cada avaliação O(1) em vez de exigir recalcular a rota inteira.
+
+**Medição, que é o que justifica o card.** Sobre 500 roteiros sorteados nas dez seções da planta real:
+
+| | |
+|---|---|
+| Roteiros em que o 2-opt encontrou ganho | **54%** |
+| Redução média quando encontra | **4,7%** |
+| Maior redução observada | **19,7%** |
+| Roteiros em que piorou | **0** |
+
+E o número de vitrine subiu: no cenário de reforma de banheiro, a redução contra a ordem em que o cliente adicionou os itens passou de **38,6% para 41,0%**.
+
+**O exemplo que explica o algoritmo em uma frase.** Com Jardim, Iluminação e Ferramentas no carrinho, o vizinho mais próximo começa por Jardim (36,50), o mais perto da entrada — e então precisa voltar para o oeste até Ferramentas (20,55) antes de atravessar a loja inteira até Iluminação (76,32). O 2-opt inverte o trecho: Ferramentas primeiro, Jardim de passagem a caminho do leste, Iluminação por último. **124,4 → 110,6 unidades, sem nenhuma volta.**
+
+**Duas guardas que não são detalhe.**
+
+1. **Limiar de ganho mínimo (`1e-9`).** As distâncias são raízes quadradas. Comparar dois `double` por "menor que" puro faria o algoritmo aceitar um ganho de `1e-15` e alternar para sempre entre dois caminhos de mesmo comprimento.
+2. **Teto de 50 passadas.** Cada passada é O(n²) e o laço só continua enquanto houver ganho, então na prática ele para sozinho em poucas rodadas. O teto existe para que o carrinho sem limite da [D-17](#d-17-carrinho-de-roteiro-sem-limite-de-itens) nunca prenda a geração do QR Code.
+
+**O agrupamento por corredor sobrevive.** Separar itens que dividem o mesmo `PontoMapa` sempre alonga o caminho — estão a distância zero entre si —, então o 2-opt nunca aceita essa inversão. É a propriedade que mais incomodaria o cliente se quebrasse: ele voltaria ao mesmo corredor duas vezes. Está sob teste, não deduzida.
+
+**A garantia sob teste.** O teste de 500 roteiros sorteados (semente fixa, reproduzível) verifica que a rota refinada **nunca** é mais longa que a gulosa. Uma única piora significaria erro no cálculo do ganho — e o cliente andaria mais por causa da "otimização".
+
+**Alternativa considerada.** Or-opt (mover um trecho para outra posição, sem inverter) resolveria casos que o 2-opt não alcança, como um item isolado que ficou no meio da rota. Descartada por ora: o card pedia 2-opt, a medição mostra que ele já entrega, e cada heurística a mais precisa ser justificada por um ganho medido, não por completude.
+
+**Onde no código.** `domain/service/CalculadoraRota.java` — `refinarCom2Opt` e `ganhoDaInversao`.
 
 ---
 
