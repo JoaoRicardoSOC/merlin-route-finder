@@ -8,6 +8,27 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: oracle.jdbc.OracleDriver
 
+    # Limites medidos no schema da FIAP (ver D-46): SESSIONS_PER_USER=20, IDLE_TIME=30min,
+    # CONNECT_TIME=240min. Os 20 sao POR USUARIO do banco - como o deploy usa a credencial de
+    # um integrante, a instancia publicada e a maquina dele dividem a mesma cota.
+    hikari:
+      # Padrao 3 para desenvolvimento; a instancia publicada define DB_POOL_SIZE=5. Nunca 1:
+      # o registro de ruptura roda em REQUIRES_NEW (D-39) e precisa de uma segunda conexao
+      # enquanto a transacao de fora ainda segura a primeira.
+      maximum-pool-size: ${DB_POOL_SIZE:3}
+
+      # Sem isto o Hikari mantem todas as conexoes vivas e nunca devolve as ociosas, porque o
+      # padrao de minimumIdle e igual ao tamanho do pool.
+      minimum-idle: 1
+
+      # 25 minutos, com margem antes do IDLE_TIME de 30: recicla a conexao do nosso lado antes
+      # que o Oracle a mate do lado dele. O padrao do Hikari sao exatamente 30 minutos, ou
+      # seja, empatado com o corte do servidor.
+      max-lifetime: 1500000
+
+      # Pool esgotado deve falhar rapido e legivel, nao deixar a tela pensando por meio minuto.
+      connection-timeout: 10000
+
   jpa:
     show-sql: true
 

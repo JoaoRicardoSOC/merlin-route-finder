@@ -22,6 +22,7 @@
 - [D-33. Suíte de testes roda sem banco; integração fica separada por tag](#d-33-suíte-de-testes-roda-sem-banco-integração-fica-separada-por-tag)
 - [D-34. Swagger UI permanece exposto em produção](#d-34-swagger-ui-permanece-exposto-em-produção)
 - [D-45. O deploy mudou quais avisos do Hibernate importavam](#d-45-o-deploy-mudou-quais-avisos-do-hibernate-importavam)
+- [D-46. O pool de conexões é dimensionado pelos limites reais do schema da FIAP](#d-46-o-pool-de-conexões-é-dimensionado-pelos-limites-reais-do-schema-da-fiap)
 
 **Domínio**
 - [D-04. Entidades imutáveis por padrão](#d-04-entidades-imutáveis-por-padrão)
@@ -967,6 +968,56 @@ O valor 100 não é arbitrário: é o teto de página que a busca de produtos pe
 **A lição que vale além destes três.** Aviso de framework não é lixo a ser silenciado, mas também não tem urgência fixa: **o mesmo aviso pode ser cosmético num ambiente e caro em outro.** Os três estavam no log desde o começo e só o deploy mostrou quais deles custavam dinheiro. Vale reler o log da aplicação publicada de vez em quando com esse olhar.
 
 **Onde no código.** `backend/src/main/resources/application.yml`.
+
+---
+
+### D-46. O pool de conexões é dimensionado pelos limites reais do schema da FIAP
+
+**Contexto.** O pool ficou no padrão do Hikari — **10 conexões** — até o primeiro deploy. Com a aplicação publicada usando a credencial de um integrante, passou a existir um segundo consumidor da mesma cota.
+
+**Os limites, medidos e não presumidos.** Consultando `user_resource_limits` no próprio schema:
+
+| Recurso | Limite |
+|---|---|
+| `SESSIONS_PER_USER` | **20** |
+| `IDLE_TIME` | **30 minutos** |
+| `CONNECT_TIME` | **240 minutos** |
+
+E, no momento da medição, `select count(*) from v$session where username = user` devolveu **20**. Ou seja: **o teto já estava estourado**, com a instância publicada segurando 10 e a máquina local outras 10. A conexão seguinte teria recebido `ORA-02391`.
+
+Não era risco futuro — era um defeito ativo, invisível porque ninguém tinha tentado usar as duas coisas ao mesmo tempo.
+
+**Os 20 são por usuário do banco, não por equipe.** Cada integrante tem a sua cota. Como o deploy usa a credencial de um deles, a instância publicada e a máquina daquela pessoa dividem os mesmos 20 — os outros quatro não são afetados.
+
+---
+
+**Decisão.**
+
+```yaml
+hikari:
+  maximum-pool-size: ${DB_POOL_SIZE:3}
+  minimum-idle: 1
+  max-lifetime: 1500000
+  connection-timeout: 10000
+```
+
+**`maximum-pool-size` com padrão 3 e sobreposição por ambiente.** A instância publicada define `DB_POOL_SIZE=5`; a máquina de desenvolvimento fica com 3. Total de 8 dos 20, com folga real.
+
+**Por que nunca 1.** O registro de ruptura roda em `REQUIRES_NEW` ([D-39](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)) e precisa de uma **segunda** conexão enquanto a transação de fora ainda segura a primeira. Com pool de 1, esse fluxo travaria esperando uma conexão que só seria liberada quando ele mesmo terminasse — um impasse silencioso até estourar o tempo limite. Verificado: quatro rupturas simultâneas contra um pool de 5, todas `200`.
+
+**`minimum-idle: 1`, e este é o ajuste menos óbvio.** No Hikari, `minimumIdle` vem por padrão **igual** ao tamanho do pool — o que significa que ele mantém todas as conexões vivas e **nunca devolve as ociosas**. Sem esta linha, uma máquina de desenvolvimento aberta durante o almoço continuaria segurando o pool inteiro.
+
+**`max-lifetime` em 25 minutos, e este é o que evitaria uma falha real.** O padrão do Hikari é **30 minutos — exatamente o `IDLE_TIME` do Oracle**. Dois prazos empatados significam que o servidor pode matar a sessão no mesmo instante em que o pool ainda a considera boa. O Hikari valida no momento do uso e se recupera, mas ao custo de uma requisição lenta — justamente a primeira depois de um período parado, que num tier gratuito já é a pior de todas ([D-42](#d-42-a-varredura-de-ttl-distingue-carrinho-abandonado-de-quem-só-encostou-no-totem)). Reciclar aos 25 garante que a conexão morra do nosso lado, de forma controlada.
+
+**`connection-timeout` em 10 segundos** contra os 30 do padrão: com o pool esgotado, é melhor a requisição falhar rápido e legível do que a tela do cliente ficar meio minuto pensando.
+
+---
+
+**Medido depois da mudança.** Com `DB_POOL_SIZE=5` e tráfego real, a aplicação segurava **3 sessões** — o pool cresce sob demanda em vez de reservar o teto. Antes, o padrão de 10 mantinha as 10 abertas independentemente de uso.
+
+**A lição.** O padrão de uma biblioteca é dimensionado para o caso comum dela, não para o nosso banco. Aqui bastavam três consultas ao próprio Oracle para trocar um chute por um número — e uma delas mostrou que o problema já estava acontecendo.
+
+**Onde no código.** `backend/src/main/resources/application.yml`; `DB_POOL_SIZE` na tabela de [`deploy.md`](deploy.md).
 
 ---
 

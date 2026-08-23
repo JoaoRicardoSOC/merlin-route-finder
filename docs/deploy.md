@@ -3,6 +3,8 @@
 > Guia para publicar a API do Merlin Route Finder. Quem executa é alguém do time — criar conta e informar credenciais em serviço externo é ação de pessoa, não de ferramenta.
 >
 > O que já está pronto no repositório: [`backend/Dockerfile`](../backend/Dockerfile), [`backend/.dockerignore`](../backend/.dockerignore) e [`render.yaml`](../render.yaml).
+>
+> **Publicado em 23/08/2026** em `https://merlin-route-finder-api.onrender.com`. O guia segue válido para recriar o serviço ou publicar a partir de outra credencial.
 
 ---
 
@@ -62,6 +64,7 @@ No painel do serviço, em *Environment*. As marcadas com `sync: false` no bluepr
 | `DB_PASSWORD` | sua senha | **ver [O-02](observacoes.md#o-02-senha-do-oracle-passou-por-canal-de-conversa)** — trocar antes de usar aqui |
 | `GEMINI_API_KEY` | chave do Google AI Studio | **usar a chave nova** ([O-01](observacoes.md#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada)) |
 | `SPRING_PROFILES_ACTIVE` | `prod` | já vem do blueprint |
+| `DB_POOL_SIZE` | `5` | o schema da FIAP permite **20 sessões por usuário**, divididas entre a instância publicada e a máquina de quem cedeu a credencial ([D-46](decisoes-tecnicas.md#d-46-o-pool-de-conexões-é-dimensionado-pelos-limites-reais-do-schema-da-fiap)) |
 | `JWT_SECRET` | gerado pelo Render | já vem do blueprint, com valor estável entre deploys |
 | `CORS_ALLOWED_ORIGINS` | deixar em branco por ora | preenchido quando o frontend for publicado |
 | `HANDOFF_BASE_URL` | deixar em branco por ora | idem |
@@ -80,7 +83,7 @@ The following 1 profile is active: "prod"
 HikariPool-1 - Start completed.
 Catalogo ja possui dados. Carga inicial ignorada.
 Tomcat started on port ...
-Started BackendApplication in ~20 seconds
+Started BackendApplication in 134.503 seconds
 ```
 
 `Catalogo ja possui dados` é a prova definitiva: a aplicação consultou a tabela `TB_PRODUTO` no Oracle da FIAP a partir do servidor.
@@ -106,9 +109,24 @@ Se ainda assim falhar, a causa mais provável é **filtro por país de origem**.
 
 ## Duas coisas a saber antes da apresentação
 
-**A instância dorme.** No plano gratuito, o serviço é suspenso após alguns minutos sem tráfego, e a requisição seguinte espera o processo subir — **cerca de 20 segundos só para o Spring iniciar**, medido localmente. Numa demonstração ao vivo, isso é a primeira tela travando.
+**A instância dorme, e acordar demora mais do que parece.** No plano gratuito o serviço é suspenso após alguns minutos sem tráfego, e a requisição seguinte espera o processo subir. Medido no primeiro deploy real:
 
-O contorno é simples: **abrir a aplicação alguns minutos antes de apresentar** e deixá-la aquecida.
+```
+Started BackendApplication in 134.503 seconds
+```
+
+**Dois minutos e quinze**, contra 21 segundos na máquina de desenvolvimento. A causa é o plano gratuito dar **0.1 CPU** — um décimo de núcleo — e o Spring inicializar na mesma proporção.
+
+Numa demonstração ao vivo isso é fatal se pegar de surpresa. **Abrir a aplicação pelo menos cinco minutos antes de gravar ou apresentar**, e deixá-la aquecida.
+
+A mesma CPU limitada aparece nas respostas. Medido contra a instância publicada:
+
+| | Local | Render (gratuito) |
+|---|---|---|
+| Busca no catálogo | ~30 ms | ~500 ms |
+| Chat com o assistente | ~1-2 s | ~8 s |
+
+O time decidiu (23/08/2026) seguir no plano gratuito e assumir o aquecimento manual. O plano pago mais barato resolveria as duas coisas — mais CPU e sem suspensão —, e a decisão pode ser revista mais perto de 13/09, já que 4,5 dos 5 pontos do item Deploy são pela usabilidade do MVP publicado.
 
 É também o que a [D-42](decisoes-tecnicas.md#d-42-a-varredura-de-ttl-distingue-carrinho-abandonado-de-quem-só-encostou-no-totem) já registrava sobre a varredura de sessões não rodar com a aplicação dormindo.
 
