@@ -5,6 +5,7 @@ import br.com.jence.backend.application.usecase.GerarHandoffUseCase;
 import br.com.jence.backend.application.usecase.ValidarHandoffUseCase;
 import br.com.jence.backend.domain.entity.TipoPonto;
 import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
+import br.com.jence.backend.domain.exception.TokenHandoffExpiradoException;
 import br.com.jence.backend.domain.exception.TokenHandoffInvalidoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -86,14 +87,20 @@ class HandoffControllerTest {
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("vazia")));
     }
 
+    private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder validar(String corpo) {
+        return post("/api/v1/handoff/validate")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(corpo);
+    }
+
     @Test
-    @DisplayName("GET /validate devolve a rota com pontos ordenados e coordenadas")
+    @DisplayName("POST /validate devolve a rota com pontos ordenados e coordenadas")
     void validarToken() throws Exception {
         when(validarHandoffUseCase.executar("jwt-fake")).thenReturn(new RotaCalculadaResponse(
                 sessaoId, UUID.randomUUID(),
                 List.of(ponto(1, "Materiais de construcao", 14, 80), ponto(2, "Tintas", 32, 10))));
 
-        mockMvc.perform(get("/api/v1/handoff/validate").param("token", "jwt-fake"))
+        mockMvc.perform(validar("{\"token\":\"jwt-fake\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.sessaoId").value(sessaoId.toString()))
                 .andExpect(jsonPath("$.pontos.length()").value(2))
@@ -111,7 +118,7 @@ class HandoffControllerTest {
         when(validarHandoffUseCase.executar(any()))
                 .thenThrow(new TokenHandoffInvalidoException("Token de handoff invalido ou ja utilizado"));
 
-        mockMvc.perform(get("/api/v1/handoff/validate").param("token", "qualquer"))
+        mockMvc.perform(validar("{\"token\":\"qualquer\"}"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401))
                 .andExpect(jsonPath("$.error").value("Token de Handoff Invalido"))
@@ -119,12 +126,46 @@ class HandoffControllerTest {
     }
 
     @Test
-    @DisplayName("GET /validate sem o parametro token devolve 400, nao 500")
+    @DisplayName("token expirado devolve 401 com rotulo proprio, para o Totem oferecer um QR novo")
+    void validarTokenExpirado() throws Exception {
+        when(validarHandoffUseCase.executar(any()))
+                .thenThrow(new TokenHandoffExpiradoException("Token de handoff expirado"));
+
+        mockMvc.perform(validar("{\"token\":\"jwt-vencido\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error")
+                        .value("Token de Handoff Expirado"))
+                .andExpect(jsonPath("$.message")
+                        .value(org.hamcrest.Matchers.containsString("sua lista continua montada")));
+    }
+
+    @Test
+    @DisplayName("POST /validate sem token no corpo devolve 400 apontando o campo")
     void validarSemToken() throws Exception {
-        mockMvc.perform(get("/api/v1/handoff/validate"))
+        mockMvc.perform(validar("{}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Parametro Obrigatorio Ausente"))
-                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("token")));
+                .andExpect(jsonPath("$.validationErrors[0].field").value("token"));
+
+        verifyNoInteractions(validarHandoffUseCase);
+    }
+
+    @Test
+    @DisplayName("token em branco devolve 400 sem chegar ao caso de uso")
+    void validarTokenEmBranco() throws Exception {
+        mockMvc.perform(validar("{\"token\":\"   \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.validationErrors[0].field").value("token"));
+
+        verifyNoInteractions(validarHandoffUseCase);
+    }
+
+    @Test
+    @DisplayName("o token nao e mais aceito na query string")
+    void tokenNaQueryStringNaoFuncionaMais() throws Exception {
+        // A garantia do hardening: o caminho antigo deixou de existir, em vez de continuar
+        // funcionando em paralelo - o que anularia o proposito da mudanca.
+        mockMvc.perform(get("/api/v1/handoff/validate").param("token", "jwt-fake"))
+                .andExpect(status().isMethodNotAllowed());
 
         verifyNoInteractions(validarHandoffUseCase);
     }

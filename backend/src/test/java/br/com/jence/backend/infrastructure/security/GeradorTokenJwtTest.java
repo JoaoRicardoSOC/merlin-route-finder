@@ -1,9 +1,15 @@
 package br.com.jence.backend.infrastructure.security;
 
+import br.com.jence.backend.domain.exception.TokenHandoffExpiradoException;
 import br.com.jence.backend.domain.exception.TokenHandoffInvalidoException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.Date;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -76,6 +82,36 @@ class GeradorTokenJwtTest {
         GeradorTokenJwt outro = new GeradorTokenJwt("");
         String token = gerador.gerar(listaId, UUID.randomUUID());
         assertThatThrownBy(() -> outro.extrairListaRoteiroId(token))
+                .isInstanceOf(TokenHandoffInvalidoException.class);
+    }
+
+    @Test
+    @DisplayName("token vencido e recusado como EXPIRADO, nao como invalido generico")
+    void distingueTokenExpirado() {
+        /*
+         * O gerador sempre assina com 5 minutos a frente, entao um token vencido precisa ser
+         * forjado aqui - com a MESMA chave, para que a assinatura confira e a unica coisa
+         * errada seja o prazo. E o que separa "peca um QR novo" de "esse token nao serve".
+         */
+        String vencido = Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .claim("listaRoteiroId", UUID.randomUUID().toString())
+                .claim("sessaoId", UUID.randomUUID().toString())
+                .issuedAt(Date.from(Instant.now().minusSeconds(600)))
+                .expiration(Date.from(Instant.now().minusSeconds(300)))
+                .signWith(Keys.hmacShaKeyFor(SEGREDO.getBytes(StandardCharsets.UTF_8)))
+                .compact();
+
+        assertThatThrownBy(() -> new GeradorTokenJwt(SEGREDO).extrairListaRoteiroId(vencido))
+                .isInstanceOf(TokenHandoffExpiradoException.class)
+                .hasMessageContaining("expirado");
+    }
+
+    @Test
+    @DisplayName("expirado continua sendo um caso de token invalido para quem nao distingue")
+    void expiradoEhUmTipoDeInvalido() {
+        // A hierarquia importa: quem so quer saber "o token nao serve" segue com um catch so.
+        assertThat(new TokenHandoffExpiradoException("x"))
                 .isInstanceOf(TokenHandoffInvalidoException.class);
     }
 }

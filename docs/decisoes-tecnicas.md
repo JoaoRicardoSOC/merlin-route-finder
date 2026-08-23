@@ -34,6 +34,7 @@
 - [D-27. Segredo do JWT por ambiente, com chave aleatória em desenvolvimento](#d-27-segredo-do-jwt-por-ambiente-com-chave-aleatória-em-desenvolvimento)
 - [D-28. A rota parte do primeiro ponto do tipo TOTEM](#d-28-a-rota-parte-do-primeiro-ponto-do-tipo-totem)
 - [D-29. Uso único do token pela ausência no banco](#d-29-uso-único-do-token-pela-ausência-no-banco)
+- [D-44. O token de handoff sai da URL, e o QR Code passa a ser regenerável](#d-44-o-token-de-handoff-sai-da-url-e-o-qr-code-passa-a-ser-regenerável)
 - [D-09. Relação com a sessão é unidirecional](#d-09-relação-com-a-sessão-é-unidirecional)
 
 **Persistência**
@@ -418,7 +419,9 @@ A consequência é que mesmo um token criptograficamente perfeito — copiado da
 
 **Risco de UX assumido, e a saída que já existe.** Se o cliente fechar a aba sem querer, escanear o mesmo QR de novo não funciona — foi um dos riscos levantados na análise inicial do projeto.
 
-Mas existe um caminho de recuperação já disponível: a resposta traz o `sessaoId`, e `GET /sessoes/{id}/roteiro` devolve a lista **com a ordem da rota já calculada**, sem exigir token. O celular consegue se recuperar sozinho, sem o cliente refazer o planejamento no Totem. O hardening da Fase 3 (regeneração de QR) trata o caso mais grave, em que o próprio aparelho é trocado.
+Mas existe um caminho de recuperação já disponível: a resposta traz o `sessaoId`, e `GET /sessoes/{id}/roteiro` devolve a lista **com a ordem da rota já calculada**, sem exigir token. O celular consegue se recuperar sozinho, sem o cliente refazer o planejamento no Totem.
+
+**O caso mais grave — a troca de aparelho — deixou de estar em aberto na Fase 3.** `POST /handoff` na mesma sessão regenera o QR Code, e o aparelho novo continua a jornada de onde ela parou. Ver [D-44](#d-44-o-token-de-handoff-sai-da-url-e-o-qr-code-passa-a-ser-regenerável).
 
 **Onde no código.** `application/usecase/ValidarHandoffUseCase.java`, `domain/entity/ListaRoteiro.java`.
 
@@ -882,6 +885,49 @@ E o número de vitrine subiu: no cenário de reforma de banheiro, a redução co
 **Alternativa considerada.** Or-opt (mover um trecho para outra posição, sem inverter) resolveria casos que o 2-opt não alcança, como um item isolado que ficou no meio da rota. Descartada por ora: o card pedia 2-opt, a medição mostra que ele já entrega, e cada heurística a mais precisa ser justificada por um ganho medido, não por completude.
 
 **Onde no código.** `domain/service/CalculadoraRota.java` — `refinarCom2Opt` e `ganhoDaInversao`.
+
+---
+
+### D-44. O token de handoff sai da URL, e o QR Code passa a ser regenerável
+
+**Contexto.** Último card do backlog. Duas fragilidades conhecidas desde a Fase 1, registradas em [D-29](#d-29-uso-único-do-token-pela-ausência-no-banco): o token viajava na query string, e um QR Code que expirasse antes de ser escaneado obrigava o cliente a recomeçar.
+
+---
+
+#### O token sai da URL
+
+**Decisão.** `GET /handoff/validate?token=...` virou `POST /handoff/validate` com o token no corpo. **Mudança quebrante**, combinada com a dupla de frontend antes de entrar, conforme a [D-25](#d-25-409-para-sessão-inativa-e-quando-é-aceitável-evoluir-o-contrato).
+
+**Duas razões que se somam** — e a segunda é a mais forte:
+
+1. URL fica gravada em histórico de navegador, em log de servidor e em cabeçalho `Referer`. Um token de 5 minutos ali é exposição desnecessária.
+2. **A operação consome o token e renova a sessão.** Um `GET` com efeito colateral está errado independentemente de segurança: qualquer *prefetch* do navegador, robô de indexação ou clique duplo queimaria o QR Code do cliente. Isso não é hipótese remota — é o comportamento padrão de navegadores móveis.
+
+**O caminho antigo foi retirado, não mantido em paralelo.** Deixar o `GET` funcionando "por compatibilidade" anularia o propósito: o token continuaria em URL sempre que alguém usasse a rota velha. Há teste verificando que a query string agora responde 405.
+
+**O que isto NÃO resolve, e precisa ser dito.** O QR Code codifica a URL do PWA — `https://.../rota?token=...` —, então o token continua na URL **do frontend**, no histórico do celular do cliente. Nosso lado ficou limpo; o do navegador não. A saída é o frontend limpar a URL logo após ler o token (`history.replaceState`), registrado como observação para a dupla. Eliminar de vez exigiria um código curto opaco com consulta separada — mais escopo do que o card pedia.
+
+---
+
+#### Regeneração do QR Code
+
+**Decisão.** Chamar `POST /handoff` de novo para a mesma sessão emite um token novo e invalida o anterior. Não foi preciso endpoint novo: `registrarTokenHandoff` já sobrescreve, e a busca por token deixa de encontrar o antigo. O que faltava era **tornar isso intencional, seguro e visível no contrato**.
+
+**A regra que impede a regeneração de estragar a jornada.** Se a caminhada já começou — algum item marcado como coletado —, a rota **não** é recalculada. Recalcular partindo do totem renumeraria paradas que o cliente já visitou e embaralharia a navegação em curso. Regenerar precisa devolver o **acesso**, não reiniciar o **percurso**.
+
+Verificado sobre HTTP: com o primeiro item já coletado, o QR regenerado devolve a mesma ordem e preserva o `coletado`. O cliente retoma exatamente de onde parou.
+
+**Isto fecha o caso que a D-29 deixou em aberto:** a troca de aparelho. O celular novo escaneia um QR novo e continua a jornada.
+
+**Expiração passa a ser distinguível.** `TokenHandoffExpiradoException` produz 401 com o rótulo `Token de Handoff Expirado`, separado de `Token de Handoff Invalido`. É o único modo de o Totem saber que basta gerar outro QR Code em vez de mandar o cliente montar a lista de novo.
+
+**Isso não contradiz a mensagem genérica da D-27.** Só um token **de verdade, assinado por nós**, chega a ser reconhecido como expirado — quem forja recebe a resposta indistinguível de sempre. O que se revela a um atacante que já possui um token legítimo vencido é que ele está vencido, o que ele descobriria de qualquer forma. As demais falhas — adulterado, malformado, já consumido — continuam sem distinção entre si, de propósito.
+
+---
+
+**Efeito colateral no varredor de erros.** Depois desta mudança nenhum endpoint usa parâmetro de query obrigatório, então o handler de `MissingServletRequestParameterException` ficou sem caso vivo para exercitar. Ele permanece no lugar como guarda para endpoints futuros, e o `ErrosDeRequisicaoTest` passou a cobrir o corpo sem campo obrigatório e o 405 da rota retirada.
+
+**Onde no código.** `presentation/controller/HandoffController.java`, `application/dto/ValidarHandoffRequest.java`, `application/usecase/GerarHandoffUseCase.java`, `infrastructure/security/GeradorTokenJwt.java`, `domain/exception/TokenHandoffExpiradoException.java`.
 
 ---
 

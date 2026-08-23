@@ -77,8 +77,15 @@ class ErrosDeRequisicaoTest {
                 post("/api/v1/handoff")
                         .contentType(MediaType.APPLICATION_JSON).content("{ nao e json }"), 400);
 
-        assertNaoEErroDeServidor("parametro obrigatorio ausente",
-                get("/api/v1/handoff/validate"), 400);
+        // Depois do hardening da Fase 3 (D-44), nenhum endpoint usa parametro de query
+        // obrigatorio - o handler de MissingServletRequestParameterException segue no lugar
+        // como guarda para os proximos.
+        assertNaoEErroDeServidor("corpo sem campo obrigatorio",
+                post("/api/v1/handoff/validate")
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"), 400);
+
+        assertNaoEErroDeServidor("token de handoff na query string, caminho retirado",
+                get("/api/v1/handoff/validate").param("token", "x"), 405);
 
         assertNaoEErroDeServidor("caminho inexistente",
                 get("/api/v1/caminho/que/nao/existe"), 404);

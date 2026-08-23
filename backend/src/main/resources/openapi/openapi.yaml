@@ -260,11 +260,19 @@ paths:
   /handoff:
     post:
       tags: [Handoff]
-      summary: Gerar handoff (concluir lista e transicionar para o Mobile) (UC-010)
+      summary: Gerar ou regerar handoff (concluir lista e transicionar para o Mobile) (UC-010)
       description: >
-        Valida a sessão, executa o algoritmo de roteamento (Nearest Neighbor, com
-        refinamento 2-opt na Fase 3), gera um JWT assinado com TTL de 5 minutos e uso
-        único, e persiste o token na ListaRoteiro.
+        Valida a sessão, executa o algoritmo de roteamento (Nearest Neighbor com
+        refinamento 2-opt), gera um JWT assinado com TTL de 5 minutos e uso único, e
+        persiste o token na ListaRoteiro.
+
+
+        **Regeneração:** chamar de novo para a mesma sessão emite um token novo e
+        invalida o anterior. É o caminho de recuperação quando o QR Code expira antes
+        de ser escaneado, ou quando o cliente troca de aparelho — a jornada continua de
+        onde estava, sem refazer a montagem da lista. Se a caminhada já tiver começado
+        (algum item coletado), a ordem das paradas é preservada em vez de recalculada,
+        para não embaralhar a navegação em curso.
       requestBody:
         required: true
         content:
@@ -288,19 +296,26 @@ paths:
                 $ref: "#/components/schemas/StandardError"
 
   /handoff/validate:
-    get:
+    post:
       tags: [Handoff]
       summary: Validar token de handoff e iniciar navegação (UC-011)
       description: >
         Acionado quando o Mobile escaneia o QR Code. Valida o JWT, invalida-o
         imediatamente após uso (uso único) e retorna a matriz de rota calculada,
         os itens e as coordenadas.
-      parameters:
-        - name: token
-          in: query
-          required: true
-          schema:
-            type: string
+
+
+        **O token vai no corpo, nunca na URL.** Era `GET .../validate?token=` até a
+        Fase 3; mudou por duas razões que se somam: URL fica gravada em histórico de
+        navegador e em log de servidor, e a operação **consome** o token e renova a
+        sessão — efeitos colaterais que um GET nunca deveria ter. Mudança quebrante,
+        combinada com a dupla de frontend antes de entrar (ver D-25 e D-44).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidarHandoffRequest"
       responses:
         "200":
           description: Token válido — rota liberada para navegação
@@ -308,8 +323,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RotaCalculada"
+        "400":
+          description: Token ausente ou em branco
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardError"
         "401":
-          description: Token inválido, expirado ou já utilizado
+          description: >
+            Token inválido, já utilizado ou expirado. O campo `error` distingue os dois
+            desfechos: `Token de Handoff Expirado` significa que basta o Totem gerar um
+            QR Code novo (POST /handoff na mesma sessão) e a jornada continua; qualquer
+            outro rótulo é `Token de Handoff Invalido`, sem recuperação automática.
           content:
             application/json:
               schema:
@@ -594,6 +619,14 @@ components:
         saldoEstoque:
           type: integer
           minimum: 0
+
+    ValidarHandoffRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          description: JWT lido do QR Code. Vai no corpo para não ficar gravado em URL.
 
     HandoffRequest:
       type: object

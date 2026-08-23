@@ -1,9 +1,11 @@
 package br.com.jence.backend.infrastructure.security;
 
 import br.com.jence.backend.domain.entity.ListaRoteiro;
+import br.com.jence.backend.domain.exception.TokenHandoffExpiradoException;
 import br.com.jence.backend.domain.exception.TokenHandoffInvalidoException;
 import br.com.jence.backend.domain.service.GeradorTokenHandoff;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -74,6 +76,15 @@ public class GeradorTokenJwt implements GeradorTokenHandoff {
                     .getPayload();
 
             return UUID.fromString(claims.get(CLAIM_LISTA, String.class));
+
+        } catch (ExpiredJwtException e) {
+            /*
+             * Unica falha que o sistema distingue, e a excecao a mensagem generica abaixo.
+             * Nao e vazamento relevante: so um token de verdade, assinado por nos, chega
+             * aqui - quem forja recebe a resposta indistinguivel. E e o que permite ao Totem
+             * oferecer um QR Code novo em vez de mandar o cliente recomecar. Ver D-44.
+             */
+            throw new TokenHandoffExpiradoException("Token de handoff expirado");
 
         } catch (JwtException | IllegalArgumentException e) {
             // Mensagem generica de proposito: detalhar por que falhou ajudaria quem tenta

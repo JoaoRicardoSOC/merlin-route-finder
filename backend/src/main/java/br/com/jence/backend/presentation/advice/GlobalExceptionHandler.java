@@ -3,6 +3,7 @@ package br.com.jence.backend.presentation.advice;
 import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.exception.SubstitutoIndisponivelException;
+import br.com.jence.backend.domain.exception.TokenHandoffExpiradoException;
 import br.com.jence.backend.domain.exception.TokenHandoffInvalidoException;
 import br.com.jence.backend.presentation.response.StandardError;
 import br.com.jence.backend.presentation.response.StandardError.ValidationError;
@@ -198,6 +199,26 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+    }
+
+    /*
+     * Mesmo status do handler abaixo, rotulo diferente: e o unico modo de o Totem saber que
+     * basta gerar um QR Code novo, em vez de mandar o cliente montar a lista outra vez. Ver
+     * D-44 sobre por que distinguir a expiracao nao ajuda quem tenta forjar um token.
+     */
+    @ExceptionHandler(TokenHandoffExpiradoException.class)
+    public ResponseEntity<StandardError> handleTokenExpirado(TokenHandoffExpiradoException ex, HttpServletRequest request) {
+
+        StandardError response = new StandardError(
+                LocalDateTime.now(),
+                HttpStatus.UNAUTHORIZED.value(),
+                "Token de Handoff Expirado",
+                "O QR Code expirou. Peca um novo no totem: sua lista continua montada.",
+                request.getRequestURI(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
     @ExceptionHandler(TokenHandoffInvalidoException.class)

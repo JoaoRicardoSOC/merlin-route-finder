@@ -6,7 +6,7 @@
 >
 > Cada item traz: **o quê**, **por que importa**, **de quem é** e o **prazo** que o pressiona, quando há.
 >
-> Última atualização: 22/08/2026 (Fase 2 concluída; Fase 3 em andamento).
+> Última atualização: 22/08/2026 (backlog concluído; resta o deploy).
 
 ---
 
@@ -29,6 +29,7 @@
 | [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita) | Fase 3 não iniciada | Time | Média |
 | [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido) | Massa com um único par de substitutos | Time | **Alta — 13/09** |
 | [O-15](#o-15-o-endpoint-de-simulação-de-estoque-não-tem-proteção-nenhuma) | Simulação de estoque sem proteção | — | Baixa |
+| [O-16](#o-16-o-token-continua-na-url-do-pwa-mesmo-fora-da-nossa-api) | Token na URL do PWA | Bielecky e Marcela | Média |
 
 ---
 
@@ -104,9 +105,11 @@ O terreno já está pronto: `application-prod.yml` existe, `PORT` e `CORS_ALLOWE
 
 **O quê.** Depois que o QR Code é lido, o token de handoff é consumido e **não vale uma segunda vez**. Mas `GET /api/v1/sessoes/{sessaoId}/roteiro` continua devolvendo a lista **com a ordem da rota já calculada**, e não exige token nenhum.
 
-**Por que importa.** Sem usar isso, um cliente que fecha a aba sem querer precisaria reiniciar o planejamento do zero — e ao vivo, na frente da banca, seria um desastre. Com isso, o app se recupera sozinho desde que tenha guardado o `sessaoId`. O único caso que continua sem saída é a troca de aparelho.
+**Por que importa.** Sem usar isso, um cliente que fecha a aba sem querer precisaria reiniciar o planejamento do zero — e ao vivo, na frente da banca, seria um desastre. Com isso, o app se recupera sozinho desde que tenha guardado o `sessaoId`.
 
-**De quem.** Bielecky e Marcela. Ver [D-29](decisoes-tecnicas.md#d-29-uso-único-do-token-pela-ausência-no-banco).
+**A segunda saída, para quando nem o `sessaoId` sobreviveu** (troca de aparelho, QR expirado antes de alguém escanear): o Totem chama `POST /api/v1/handoff` de novo para a mesma sessão e exibe um QR Code novo. O token anterior deixa de valer, e **se a caminhada já tiver começado a ordem das paradas e os itens coletados são preservados** — o cliente retoma de onde parou. Quando o erro do `POST /handoff/validate` vier com `error: "Token de Handoff Expirado"`, é exatamente esse o caminho a oferecer.
+
+**De quem.** Bielecky e Marcela. Ver [D-29](decisoes-tecnicas.md#d-29-uso-único-do-token-pela-ausência-no-banco) e [D-44](decisoes-tecnicas.md#d-44-o-token-de-handoff-sai-da-url-e-o-qr-code-passa-a-ser-regenerável).
 
 ---
 
@@ -129,6 +132,20 @@ O terreno já está pronto: `application-prod.yml` existe, `PORT` e `CORS_ALLOWE
 **Por que importa.** O DER é um dos artefatos entregues e serve de fonte de verdade para o time. Um diagrama que não bate com o banco confunde quem chega depois e é fácil de notar numa mentoria.
 
 **De quem.** Vicentini. **Prazo que pressiona:** 24/08 (mentoria com os representantes técnicos da Leroy Merlin).
+
+---
+
+### O-16. O token continua na URL do PWA, mesmo fora da nossa API
+
+**O quê.** Limpar a URL logo depois de ler o token, com `history.replaceState`.
+
+**Por que importa.** A Fase 3 tirou o token da URL **da nossa API** — ele agora vai no corpo de `POST /handoff/validate`. Mas o QR Code codifica a URL do PWA, `https://.../rota?token=...`, então o token continua na barra de endereço e no **histórico do navegador do cliente**, que é onde ele sobrevive por mais tempo.
+
+Nosso lado ficou limpo; o do navegador não. Como o token vale 5 minutos e é de uso único, o risco real é baixo — mas é uma linha de código no frontend, e sem ela metade do hardening fica pela metade.
+
+Eliminar de vez exigiria um código curto opaco com consulta separada, o que é mais escopo do que o card pedia.
+
+**De quem.** Bielecky e Marcela. Ver [D-44](decisoes-tecnicas.md#d-44-o-token-de-handoff-sai-da-url-e-o-qr-code-passa-a-ser-regenerável).
 
 ---
 
@@ -187,13 +204,11 @@ O que existe no lugar de proteção: marcação explícita como `[Demonstracao]`
 
 ### O-13. A Fase 3 inteira continua planejada e não feita
 
-Um card restante. O rumo definido em 22/08/2026 é **terminar o backlog primeiro e só então publicar** — o deploy ([O-03](#o-03-o-deploy-ainda-não-foi-feito-e-vale-5-pontos)) passou a ser o último card.
+**Fase 3 concluída em 22/08/2026.** O rumo definido no mesmo dia era terminar o backlog primeiro e só então publicar — resta apenas o deploy ([O-03](#o-03-o-deploy-ainda-não-foi-feito-e-vale-5-pontos)), que é o último card.
 
 1. ~~**Cron de TTL**~~ — concluído em 22/08/2026, ver [D-42](decisoes-tecnicas.md#d-42-a-varredura-de-ttl-distingue-carrinho-abandonado-de-quem-só-encostou-no-totem).
 2. ~~**Refinamento 2-opt**~~ — concluído em 22/08/2026, ver [D-43](decisoes-tecnicas.md#d-43-2-opt-sobre-o-nearest-neighbor-na-variante-de-caminho-aberto). A redução contra a ordem de inserção passou de 38,6% para **41,0%**.
-3. **Hardening do handoff** — o token viaja hoje na query string (`GET /api/v1/handoff/validate?token=...`), o que o expõe em histórico de navegador e em log de servidor. Movê-lo para header ou corpo, e criar um caminho de regeneração de QR quando expirar, também serviria de rede de segurança caso a câmera falhe numa demonstração ao vivo.
-
-   **Atenção:** tirar o token da query string é uma mudança **quebrante** de contrato e colide com o que a dupla de frontend já tiver integrado — pela [D-25](decisoes-tecnicas.md#d-25-409-para-sessão-inativa-e-quando-é-aceitável-evoluir-o-contrato), precisa ser combinada antes. A regeneração de QR é aditiva e pode ser feita sem esperar.
+3. ~~**Hardening do handoff**~~ — concluído em 22/08/2026, ver [D-44](decisoes-tecnicas.md#d-44-o-token-de-handoff-sai-da-url-e-o-qr-code-passa-a-ser-regenerável). `GET /handoff/validate?token=` virou `POST /handoff/validate` com o token no corpo (**mudança quebrante**, com o aval do time), e a regeneração de QR passou a ser um caminho intencional e documentado.
 
 **De quem.** Time, na priorização pós-13/09.
 
