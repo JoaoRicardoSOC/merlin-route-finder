@@ -31,6 +31,12 @@ merlin:
     # Sem valor configurado, a aplicacao gera uma chave aleatoria no startup e avisa no log.
     # Nunca definir um segredo padrao aqui: ver D-27 em docs/decisoes-tecnicas.md.
     secret: ${JWT_SECRET:}
+  agendador:
+    # Varredura de sessoes com TTL vencido. Nao protege regra de negocio - Sessao.isValida()
+    # ja compara com o relogio - apenas mantem o banco condizente com a realidade.
+    # Ver D-42. Desligavel com merlin.agendador.enabled=false.
+    intervalo-ms: ${AGENDADOR_INTERVALO_MS:300000}
+    atraso-inicial-ms: ${AGENDADOR_ATRASO_INICIAL_MS:60000}
   handoff:
     # URL base do PWA mobile, codificada no QR Code exibido no Totem.
     base-url: ${HANDOFF_BASE_URL:http://localhost:5173}

@@ -58,6 +58,7 @@
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
 - [D-41. Sessão encerrada continua legível, mas não gravável](#d-41-sessão-encerrada-continua-legível-mas-não-gravável)
+- [D-42. A varredura de TTL distingue carrinho abandonado de quem só encostou no totem](#d-42-a-varredura-de-ttl-distingue-carrinho-abandonado-de-quem-só-encostou-no-totem)
 
 ---
 
@@ -805,6 +806,41 @@ Verificado sobre HTTP na jornada completa: depois de `POST /sessoes/{id}/conclui
 **Consultar não renova o TTL.** Mesma regra da [D-24](#d-24-ttl-da-sessão-é-renovado-a-cada-interação): leitura não deveria gravar nada. Quem renova é o envio de mensagem, que é a ação que de fato indica um cliente ativo.
 
 **Onde no código.** `application/usecase/ConsultarHistoricoChatUseCase.java`, `presentation/controller/ChatController.java`.
+
+---
+
+### D-42. A varredura de TTL distingue carrinho abandonado de quem só encostou no totem
+
+**Contexto.** Nada varria as sessões vencidas: elas ficavam `ACTIVE` no banco para sempre. O card previa transicioná-las "para `ABANDONED` ou `EXPIRED`", sem dizer qual em cada caso — e a [D-06](#d-06-encerrar-desdobrado-em-três-métodos-nomeados-por-evento) já havia criado os dois métodos exatamente para este consumidor.
+
+**Decisão.**
+
+- **Lista com itens → `ABANDONED`.** É o carrinho abandonado no sentido clássico do varejo: o cliente montou a lista e não concluiu. Uma venda que quase aconteceu.
+- **Lista vazia ou inexistente → `EXPIRED`.** Alguém encostou no totem e foi embora sem adicionar nada. Nada estava em jogo.
+
+**Motivo.** Mandar tudo para `EXPIRED` seria mais simples, mas jogaria fora justamente a métrica que o produto promete melhorar. "Quantos clientes montaram uma lista e desistiram no meio" é um número que a loja quer ver; "quantos encostaram no totem" é outro, e misturá-los não ajuda ninguém.
+
+**A varredura não protege regra de negócio nenhuma.** `Sessao.isValida()` já compara com o relógio, então uma sessão vencida é recusada mesmo que ninguém a tenha varrido. O job existe para que o **banco reflita a realidade**: sem ele, qualquer contagem de jornadas em andamento seria ficção.
+
+**Regra no caso de uso, gatilho na infraestrutura.** `ExpirarSessoesInativasUseCase` decide o que fazer com cada sessão; `AgendadorDeExpiracao` apenas dispara. A regra fica testável sem envolver agendamento — é a mesma separação entre porta e adaptador usada no resto do projeto, só que aqui o "adaptador" é o relógio.
+
+**Três detalhes que não são óbvios:**
+
+1. **`fixedDelay`, não `fixedRate`.** O intervalo conta a partir do fim da execução anterior. Com `fixedRate`, uma varredura lenta começaria a se sobrepor à seguinte e duas passagens disputariam as mesmas sessões.
+2. **O agendador engole a exceção.** O Spring **aposenta** uma tarefa agendada que lança — as execuções seguintes simplesmente param. Como o motivo mais provável de falha aqui é o banco estar momentaneamente fora, deixar a exceção subir mataria a varredura até o próximo restart.
+3. **Cada sessão é tratada isoladamente**, com o `salvar` do adaptador abrindo a própria transação. Uma sessão problemática não impede a varredura das demais, e não há o que desfazer em bloco.
+
+**Duas limitações aceitas, e por quê.**
+
+**O job não roda com a aplicação dormindo.** Provedores gratuitos suspendem a instância por inatividade, então numa loja parada a varredura não acontece. É best-effort — e como o job não protege regra nenhuma, o custo é apenas o banco demorar mais para se acertar.
+
+**Há uma janela de corrida de milissegundos** entre a varredura ler as sessões vencidas e gravá-las: se o cliente renovar exatamente nesse intervalo, a renovação se perde e a próxima ação dele recebe 409. Para isso acontecer ele teria que estar inativo há 30 minutos e agir justo naquele milissegundo. Resolver exigiria bloqueio otimista — desproporcional ao risco.
+
+**A varredura é naturalmente idempotente**, porque a consulta filtra por `ACTIVE`: a segunda passagem não encontra o que a primeira já tratou. Verificado contra o Oracle real.
+
+**O guard da D-06 sob teste.** Uma sessão `COMPLETED` com TTL vencido **não** é sobrescrita. Sem isso, o cliente que concluiu a rota às 10h00 viraria `ABANDONED` às 10h05, e o sistema perderia a informação de que a jornada foi completada — que é a métrica de sucesso do produto.
+
+**Onde no código.** `application/usecase/ExpirarSessoesInativasUseCase.java`, `infrastructure/scheduler/AgendadorDeExpiracao.java`, `infrastructure/config/AgendamentoConfig.java`.
 
 ---
 

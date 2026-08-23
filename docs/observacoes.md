@@ -6,7 +6,7 @@
 >
 > Cada item traz: **o quê**, **por que importa**, **de quem é** e o **prazo** que o pressiona, quando há.
 >
-> Última atualização: 22/08/2026 (Fase 2, cards 1 a 5 concluídos).
+> Última atualização: 22/08/2026 (Fase 2 concluída; Fase 3 em andamento).
 
 ---
 
@@ -66,6 +66,8 @@ O fallback funcionou como projetado e o cliente recebeu resposta útil. Mas numa
 **Por que importa.** É o único card da Fase 1 que não é código: exige criar conta e publicar, o que ninguém além do time pode fazer. Foi adiado conscientemente para não travar o avanço nos diferenciais de IA, e nada no backend depende dele. Mas a rubrica dá **5 pontos ao item Deploy**, dos quais **4,5 são pela usabilidade do MVP publicado** — e o link do deploy é item obrigatório da entrega.
 
 O terreno já está pronto: `application-prod.yml` existe, `PORT` e `CORS_ALLOWED_ORIGINS` vêm de variável de ambiente, e o `backend/README.md` tem a tabela completa do que precisa ser configurado.
+
+**Ordem definida em 22/08/2026:** o deploy é o **último card**, feito depois de o backlog inteiro terminar.
 
 **De quem.** Time. **Prazo que pressiona:** 13/09.
 
@@ -185,11 +187,13 @@ O que existe no lugar de proteção: marcação explícita como `[Demonstracao]`
 
 ### O-13. A Fase 3 inteira continua planejada e não feita
 
-Três cards, todos deliberadamente adiáveis para depois de 13/09:
+Dois cards restantes. O rumo definido em 22/08/2026 é **terminar o backlog primeiro e só então publicar** — o deploy ([O-03](#o-03-o-deploy-ainda-não-foi-feito-e-vale-5-pontos)) passou a ser o último card.
 
-1. **Cron de TTL** — hoje nada varre sessões vencidas: elas ficam `ACTIVE` no banco para sempre, mesmo já inválidas na prática (`isValida()` compara com o relógio). Não quebra nada, mas suja o banco.
+1. ~~**Cron de TTL**~~ — concluído em 22/08/2026, ver [D-42](decisoes-tecnicas.md#d-42-a-varredura-de-ttl-distingue-carrinho-abandonado-de-quem-só-encostou-no-totem).
 2. **Refinamento 2-opt** — o Nearest Neighbor já entrega **38,6% de redução** contra a ordem de inserção, medido nas coordenadas reais. O 2-opt eliminaria cruzamentos óbvios e daria um argumento técnico a mais para a banca.
 3. **Hardening do handoff** — o token viaja hoje na query string (`GET /api/v1/handoff/validate?token=...`), o que o expõe em histórico de navegador e em log de servidor. Movê-lo para header ou corpo, e criar um caminho de regeneração de QR quando expirar, também serviria de rede de segurança caso a câmera falhe numa demonstração ao vivo.
+
+   **Atenção:** tirar o token da query string é uma mudança **quebrante** de contrato e colide com o que a dupla de frontend já tiver integrado — pela [D-25](decisoes-tecnicas.md#d-25-409-para-sessão-inativa-e-quando-é-aceitável-evoluir-o-contrato), precisa ser combinada antes. A regeneração de QR é aditiva e pode ser feita sem esperar.
 
 **De quem.** Time, na priorização pós-13/09.
 
