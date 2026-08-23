@@ -1,0 +1,21 @@
+# O que nao deve entrar no contexto enviado ao Docker.
+#
+# Alem de deixar o build mais rapido, isto e uma barreira de seguranca: arquivo de credencial
+# que por acaso exista na maquina de quem publica nao pode acabar dentro de uma imagem.
+
+.env
+.env.*
+application-local.yml
+src/main/resources/application-local.yml
+
+target/
+*.log
+
+.git/
+.gitignore
+.idea/
+.vscode/
+*.iml
+
+# O build acontece dentro da imagem; o wrapper e o codigo bastam.
+README.md

@@ -7,6 +7,7 @@ API do Merlin Route Finder (Java 21 + Spring Boot).
 - [`../docs/planejamento-tecnico.md`](../docs/planejamento-tecnico.md) — arquitetura, convenções de pacotes e organização do trabalho em fases
 - [`../docs/decisoes-tecnicas.md`](../docs/decisoes-tecnicas.md) — **por que** cada escolha não convencional foi feita (leitura recomendada antes de mexer no código)
 - [`../docs/observacoes.md`](../docs/observacoes.md) — pendências, limitações aceitas e avisos que precisam chegar a quem não escreveu o código
+- [`../docs/deploy.md`](../docs/deploy.md) — como publicar a API no Render, com a tabela de variáveis de ambiente
 - [`src/main/resources/openapi/openapi.yaml`](src/main/resources/openapi/openapi.yaml) — contrato REST completo (API-First)
 
 ## Pré-requisitos

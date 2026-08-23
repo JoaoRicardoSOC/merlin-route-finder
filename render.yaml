@@ -1,0 +1,47 @@
+# Blueprint do Render: descreve o servico para que ele nao precise ser montado a mao no
+# painel — e para que a configuracao fique versionada, revisavel e reproduzivel por qualquer
+# integrante do time.
+#
+# Nenhum segredo mora aqui. As variaveis marcadas com `sync: false` sao preenchidas no painel
+# do Render, por quem publica, e nunca chegam ao repositorio.
+#
+# Passo a passo em docs/deploy.md.
+
+services:
+  - type: web
+    name: merlin-route-finder-api
+    runtime: docker
+    plan: free
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+
+    # Responde sem tocar no banco: serve para o provedor saber que a aplicacao subiu, sem
+    # gastar uma conexao Oracle a cada verificacao.
+    healthCheckPath: /v3/api-docs
+
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+
+      # --- credenciais: definir no painel, nunca aqui ---
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+
+      # Sem valor definido, a aplicacao gera uma chave aleatoria a cada inicializacao e todo
+      # QR Code emitido antes de um restart deixa de valer (ver D-27). O Render gera um valor
+      # forte automaticamente e o mantem estavel entre deploys.
+      - key: JWT_SECRET
+        generateValue: true
+
+      # Preenchidas quando o frontend for publicado. Ate la, o backend responde normalmente a
+      # qualquer cliente que nao seja navegador (Swagger, curl, Postman).
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: HANDOFF_BASE_URL
+        sync: false

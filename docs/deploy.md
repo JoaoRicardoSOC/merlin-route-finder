@@ -1,0 +1,143 @@
+# Publicação do backend no Render
+
+> Guia para publicar a API do Merlin Route Finder. Quem executa é alguém do time — criar conta e informar credenciais em serviço externo é ação de pessoa, não de ferramenta.
+>
+> O que já está pronto no repositório: [`backend/Dockerfile`](../backend/Dockerfile), [`backend/.dockerignore`](../backend/.dockerignore) e [`render.yaml`](../render.yaml).
+
+---
+
+## Por que container, e por que separado do frontend
+
+O backend é uma **aplicação Spring Boot: um processo Java que fica de pé o tempo todo**, mantendo um pool de conexões com o Oracle e rodando o agendador de TTL. Isso não cabe no modelo serverless da Vercel, que liga e desliga a cada requisição — por isso o backend vai para o Render e o frontend (build estático do Vite) para a Vercel.
+
+Não é gambiarra: **frontend e backend já são dois programas separados hoje**, conversando por HTTP em `localhost:5173` e `localhost:8080`. O deploy só troca `localhost` por URLs públicas.
+
+O que liga os dois são duas variáveis apontando uma para a outra:
+
+| Quem | Variável | Aponta para |
+|---|---|---|
+| Frontend | a variável de API do Vite (definida pela dupla de frontend) | URL pública da API |
+| Backend | `CORS_ALLOWED_ORIGINS` | URL pública do frontend |
+
+Sem a segunda, o navegador **bloqueia** as respostas da API mesmo com o backend funcionando — é a causa nº 1 de "funciona no Postman mas não no site".
+
+**Container em vez do runtime Java do Render:** o ambiente do servidor passa a ser o mesmo da máquina de qualquer integrante, e a versão do Java e do Maven vem do que o repositório declara.
+
+---
+
+## Passo a passo
+
+### 1. Criar a conta e conectar o repositório
+
+Criar conta em [render.com](https://render.com) (o plano gratuito basta) e conectar a conta do GitHub onde o repositório está.
+
+### 2. Criar o serviço a partir do blueprint
+
+O `render.yaml` na raiz descreve o serviço inteiro. No Render, criar um **Blueprint** apontando para o repositório — ele lê o arquivo e monta o serviço sozinho, sem preenchimento manual.
+
+Se preferir criar como **Web Service** avulso, os valores são:
+
+| Campo | Valor |
+|---|---|
+| Runtime | Docker |
+| Root Directory | `backend` |
+| Dockerfile Path | `./Dockerfile` |
+| Health Check Path | `/v3/api-docs` |
+| Plan | Free |
+
+### 3. Escolher a região
+
+**Escolha a região mais próxima do Brasil que aparecer** — normalmente uma das opções do leste dos Estados Unidos, não Oregon.
+
+Isso não é preciosismo. A latência medida daqui até o Oracle da FIAP é de **~30 ms**; de um datacenter no exterior ela sobe para algo entre 130 e 190 ms, e **cada consulta ao banco paga esse pedágio**. Uma requisição que monta a rota faz várias consultas.
+
+### 4. Definir as variáveis de ambiente
+
+No painel do serviço, em *Environment*. As marcadas com `sync: false` no blueprint aparecem em branco esperando valor.
+
+| Variável | Valor | Observação |
+|---|---|---|
+| `DB_URL` | `jdbc:oracle:thin:@oracle.fiap.com.br:1521:orcl` | igual para todo mundo; não é segredo |
+| `DB_USER` | seu RM | credencial pessoal da FIAP |
+| `DB_PASSWORD` | sua senha | **ver [O-02](observacoes.md#o-02-senha-do-oracle-passou-por-canal-de-conversa)** — trocar antes de usar aqui |
+| `GEMINI_API_KEY` | chave do Google AI Studio | **usar a chave nova** ([O-01](observacoes.md#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada)) |
+| `SPRING_PROFILES_ACTIVE` | `prod` | já vem do blueprint |
+| `JWT_SECRET` | gerado pelo Render | já vem do blueprint, com valor estável entre deploys |
+| `CORS_ALLOWED_ORIGINS` | deixar em branco por ora | preenchido quando o frontend for publicado |
+| `HANDOFF_BASE_URL` | deixar em branco por ora | idem |
+| `PORT` | **não definir** | o Render injeta sozinho |
+
+Nenhum desses valores vai para o repositório. O `render.yaml` declara apenas os nomes.
+
+### 5. Ler o log do primeiro deploy
+
+É aqui que se responde a pergunta que motivou publicar cedo: **o Oracle da FIAP aceita conexão de fora do Brasil?**
+
+**Deu certo** — o log traz, nesta ordem:
+
+```
+The following 1 profile is active: "prod"
+HikariPool-1 - Start completed.
+Catalogo ja possui dados. Carga inicial ignorada.
+Tomcat started on port ...
+Started BackendApplication in ~20 seconds
+```
+
+`Catalogo ja possui dados` é a prova definitiva: a aplicação consultou a tabela `TB_PRODUTO` no Oracle da FIAP a partir do servidor.
+
+**Não deu** — o log fica preso em erro de conexão (`IO Error`, `Connection refused`, `ORA-12170`) e a aplicação não sobe. Ver a seção seguinte.
+
+### 6. Confirmar pelo navegador
+
+Com a URL que o Render atribuir (algo como `https://merlin-route-finder-api.onrender.com`):
+
+- `/swagger.html` — a documentação navegável da API
+- `/api/v1/produtos?query=tinta` — deve devolver a Tinta Acrílica da massa de demonstração
+
+---
+
+## Se o Oracle não conectar do servidor
+
+O que já foi verificado, e que torna esse cenário improvável: `oracle.fiap.com.br` resolve para **187.8.12.142**, um IP público, e o acesso local sai de uma conexão residencial comum, sem VPN. Não há lista de IPs autorizados — se houvesse, a máquina de casa também não entraria.
+
+Se ainda assim falhar, a causa mais provável é **filtro por país de origem**. Nesse caso a saída é um provedor com região no Brasil: o **Fly.io tem São Paulo (`gru`)**. O `Dockerfile` serve igual, muda só o provedor — e a latência inclusive melhora.
+
+---
+
+## Duas coisas a saber antes da apresentação
+
+**A instância dorme.** No plano gratuito, o serviço é suspenso após alguns minutos sem tráfego, e a requisição seguinte espera o processo subir — **cerca de 20 segundos só para o Spring iniciar**, medido localmente. Numa demonstração ao vivo, isso é a primeira tela travando.
+
+O contorno é simples: **abrir a aplicação alguns minutos antes de apresentar** e deixá-la aquecida.
+
+É também o que a [D-42](decisoes-tecnicas.md#d-42-a-varredura-de-ttl-distingue-carrinho-abandonado-de-quem-só-encostou-no-totem) já registrava sobre a varredura de sessões não rodar com a aplicação dormindo.
+
+**O QR Code aponta para onde `HANDOFF_BASE_URL` mandar.** Enquanto essa variável estiver vazia, o valor padrão é `http://localhost:5173` — ou seja, os QR Codes gerados em produção levam a lugar nenhum. Só passam a funcionar depois do passo abaixo.
+
+---
+
+## Depois que o frontend for publicado
+
+Dois valores no painel do Render, sem recompilar nada:
+
+| Variável | Valor |
+|---|---|
+| `CORS_ALLOWED_ORIGINS` | a URL do frontend, sem barra no fim — ex.: `https://merlin-route-finder.vercel.app` |
+| `HANDOFF_BASE_URL` | a mesma URL |
+
+Se Totem e Mobile forem publicados separadamente, `CORS_ALLOWED_ORIGINS` aceita as duas separadas por vírgula.
+
+Salvar reinicia o serviço. **Este é o passo que fecha a integração** — antes dele o navegador bloqueia as chamadas do frontend, mesmo com a API respondendo normalmente.
+
+---
+
+## O que foi verificado antes de escrever este guia
+
+Sem Docker nesta máquina, a imagem em si só será construída pelo Render. O que dava para verificar localmente foi verificado:
+
+- `./mvnw clean package -DskipTests` gera `target/backend-0.0.1-SNAPSHOT.jar`, que casa com o `backend-*.jar` que o `Dockerfile` copia;
+- `./mvnw dependency:go-offline`, a camada de cache do build, funciona;
+- o jar empacotado sobe com **os mesmos parâmetros de JVM do container** (`-XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC`), respeita `PORT`, ativa o perfil `prod`, não emite log de SQL e lê o `JWT_SECRET` em vez de gerar chave aleatória;
+- `/v3/api-docs`, o caminho do health check, responde `200`.
+
+O que só o build do Render confirma: disponibilidade das imagens base e a conexão com o Oracle a partir de fora do país.

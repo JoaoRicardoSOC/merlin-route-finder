@@ -66,7 +66,9 @@ O fallback funcionou como projetado e o cliente recebeu resposta útil. Mas numa
 
 **Por que importa.** É o único card da Fase 1 que não é código: exige criar conta e publicar, o que ninguém além do time pode fazer. Foi adiado conscientemente para não travar o avanço nos diferenciais de IA, e nada no backend depende dele. Mas a rubrica dá **5 pontos ao item Deploy**, dos quais **4,5 são pela usabilidade do MVP publicado** — e o link do deploy é item obrigatório da entrega.
 
-O terreno já está pronto: `application-prod.yml` existe, `PORT` e `CORS_ALLOWED_ORIGINS` vêm de variável de ambiente, e o `backend/README.md` tem a tabela completa do que precisa ser configurado.
+**Tudo do lado do código está pronto** (23/08/2026): `Dockerfile`, `.dockerignore`, `render.yaml` e o guia passo a passo em [`deploy.md`](deploy.md), com a tabela exata de variáveis. Falta a ação que só uma pessoa pode fazer: criar a conta no Render e informar as credenciais lá.
+
+**Verificado antes:** `oracle.fiap.com.br` resolve para um IP público (187.8.12.142) e o acesso local sai de conexão residencial sem VPN — ou seja, **não há lista de IPs autorizados**. Resta uma única incógnita, que só um servidor no exterior resolve: filtro por país de origem. Se aparecer, o plano B é o Fly.io, que tem região em São Paulo.
 
 **Ordem definida em 22/08/2026:** o deploy é o **último card**, feito depois de o backlog inteiro terminar.
 
