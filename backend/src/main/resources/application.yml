@@ -10,12 +10,27 @@ spring:
 
   jpa:
     show-sql: true
+
+    # Desligado explicitamente. A sessao do JPA ficava aberta ate a resposta ser serializada,
+    # segurando a conexao com o banco por mais tempo do que o necessario - o que pesa numa
+    # instancia pequena com pool limitado. Aqui isso nunca serviu para nada: os adaptadores
+    # ja convertem entidade JPA em objeto de dominio dentro da propria transacao, e nenhuma
+    # entidade gerenciada chega a camada web. Ver D-45.
+    open-in-view: false
+
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.OracleDialect
+        # O dialeto NAO e declarado: o Hibernate o descobre pela conexao e escolhe a variante
+        # da versao real do banco (Oracle 19), que gera SQL melhor que o dialeto generico.
         format_sql: true
+        jdbc:
+          # O padrao e 10: o driver busca de dez em dez linhas, e cada busca e uma ida e volta
+          # ate o banco. Com a aplicacao publicada nos EUA e o Oracle da FIAP no Brasil, cada
+          # ida custa mais de 100ms - uma pagina de 25 produtos pagava tres. 100 cobre a maior
+          # pagina que a busca permite (D-45).
+          fetch_size: 100
 
 server:
   # Provedores de hospedagem gratuitos injetam a porta em que a aplicacao deve escutar.

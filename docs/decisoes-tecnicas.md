@@ -21,6 +21,7 @@
 - [D-30. Dois artefatos de documentação de API, com propósitos diferentes](#d-30-dois-artefatos-de-documentação-de-api-com-propósitos-diferentes)
 - [D-33. Suíte de testes roda sem banco; integração fica separada por tag](#d-33-suíte-de-testes-roda-sem-banco-integração-fica-separada-por-tag)
 - [D-34. Swagger UI permanece exposto em produção](#d-34-swagger-ui-permanece-exposto-em-produção)
+- [D-45. O deploy mudou quais avisos do Hibernate importavam](#d-45-o-deploy-mudou-quais-avisos-do-hibernate-importavam)
 
 **Domínio**
 - [D-04. Entidades imutáveis por padrão](#d-04-entidades-imutáveis-por-padrão)
@@ -928,6 +929,44 @@ Verificado sobre HTTP: com o primeiro item já coletado, o QR regenerado devolve
 **Efeito colateral no varredor de erros.** Depois desta mudança nenhum endpoint usa parâmetro de query obrigatório, então o handler de `MissingServletRequestParameterException` ficou sem caso vivo para exercitar. Ele permanece no lugar como guarda para endpoints futuros, e o `ErrosDeRequisicaoTest` passou a cobrir o corpo sem campo obrigatório e o 405 da rota retirada.
 
 **Onde no código.** `presentation/controller/HandoffController.java`, `application/dto/ValidarHandoffRequest.java`, `application/usecase/GerarHandoffUseCase.java`, `infrastructure/security/GeradorTokenJwt.java`, `domain/exception/TokenHandoffExpiradoException.java`.
+
+---
+
+### D-45. O deploy mudou quais avisos do Hibernate importavam
+
+**Contexto.** Três avisos apareciam no log desde a Fase 0 e eram ruído tolerável enquanto tudo rodava na mesma máquina. O primeiro deploy mudou a topologia — **aplicação em Ohio, banco em São Paulo, ~130 ms por ida e volta, e um décimo de núcleo de CPU** — e dois deles deixaram de ser cosméticos.
+
+```
+HHH90000025: OracleDialect does not need to be specified explicitly
+spring.jpa.open-in-view is enabled by default
+HHH100123: Low default JDBC fetch size: 10
+```
+
+---
+
+**1. `open-in-view` desligado explicitamente.**
+
+O padrão do Spring mantém a sessão do JPA aberta até a resposta ser serializada, para que carregamento preguiçoso ainda funcione na camada web. **Nesta arquitetura isso nunca serviu para nada:** os adaptadores convertem entidade JPA em objeto de domínio dentro da própria transação, com `@EntityGraph` trazendo o grafo completo, e **nenhuma entidade gerenciada chega à camada web** — o que sai do caso de uso é DTO montado a partir do domínio ([D-02](#d-02-casos-de-uso-devolvem-dto-não-entidade-de-domínio), [D-10](#d-10-entidades-jpa-espelho-separadas-das-de-domínio)).
+
+Ou seja, o único efeito de deixá-lo ligado era **segurar a conexão com o banco por mais tempo do que o necessário** — o que numa instância de 512 MB com pool limitado é desperdício real.
+
+Foi verificado, não deduzido: com a opção desligada, os DTOs mais aninhados do sistema foram exercitados sobre HTTP — detalhe de produto, lista de roteiro, rota do handoff, sugestão de ruptura e histórico do chat. Todos `200`, nenhum `LazyInitializationException`, nenhum `500`.
+
+**2. O dialeto deixou de ser declarado.**
+
+Declarar `org.hibernate.dialect.OracleDialect` fixa a variante genérica. Sem a propriedade, o Hibernate descobre o dialeto pela conexão e escolhe a **variante da versão real do banco** — Oracle 19.3, no nosso caso —, que gera SQL melhor. Tirar a linha não é só calar um aviso: é deixar o Hibernate usar a informação que ele já tem.
+
+**3. `fetch_size` de 10 para 100.**
+
+O padrão do driver Oracle faz o cursor buscar de dez em dez linhas, e **cada busca é uma ida e volta até o banco**. Localmente, com ~30 ms de latência, ninguém percebia. Com a aplicação publicada, uma página de 25 produtos passou a custar **três viagens de mais de 100 ms cada** em vez de uma.
+
+O valor 100 não é arbitrário: é o teto de página que a busca de produtos permite ([D-03](#d-03-tipo-de-paginação-próprio-em-vez-de-page-do-spring)), então uma página cheia cabe numa viagem só.
+
+---
+
+**A lição que vale além destes três.** Aviso de framework não é lixo a ser silenciado, mas também não tem urgência fixa: **o mesmo aviso pode ser cosmético num ambiente e caro em outro.** Os três estavam no log desde o começo e só o deploy mostrou quais deles custavam dinheiro. Vale reler o log da aplicação publicada de vez em quando com esse olhar.
+
+**Onde no código.** `backend/src/main/resources/application.yml`.
 
 ---
 
