@@ -47,6 +47,7 @@
 - [D-14. Salvar item carrega a entidade gerenciada em vez de remapear](#d-14-salvar-item-carrega-a-entidade-gerenciada-em-vez-de-remapear)
 - [D-15. Query nativa com `UTL_MATCH` para busca tolerante a erro de digitação](#d-15-query-nativa-com-utl_match-para-busca-tolerante-a-erro-de-digitação)
 - [D-16. Carga inicial em Java em vez de SQL](#d-16-carga-inicial-em-java-em-vez-de-sql)
+- [D-47. A massa ganhou pares de substituição, e a carga passou a ser incremental](#d-47-a-massa-ganhou-pares-de-substituição-e-a-carga-passou-a-ser-incremental)
 
 **Produto e negócio**
 - [D-17. Carrinho de roteiro sem limite de itens](#d-17-carrinho-de-roteiro-sem-limite-de-itens)
@@ -548,7 +549,7 @@ O limiar de 70 foi calibrado empiricamente: mais alto perde `"furadera"` → `"F
 
 **Contexto.** O esqueleto do repositório tem uma pasta `database/seeds/`, sugerindo scripts SQL. Mas o projeto usa `ddl-auto: update` (sem Flyway), e cada integrante tem seu próprio schema Oracle.
 
-**Decisão.** Um `ApplicationRunner` que verifica se o catálogo está vazio e só então popula, usando os ports de domínio.
+**Decisão.** Um `ApplicationRunner` que popula o banco usando os ports de domínio. Na Fase 0 ele só agia com o catálogo **vazio**; desde 23/08/2026 a carga é **incremental**, item a item, para que produtos acrescentados depois cheguem aos bancos que já tinham a massa antiga — ver [D-47](#d-47-a-massa-ganhou-pares-de-substituição-e-a-carga-passou-a-ser-incremental).
 
 **Alternativas.** `data.sql` — descartada porque roda a cada inicialização e, para não falhar com chave duplicada no Oracle, exigiria `MERGE INTO`, bem mais verboso que `INSERT`. Script SQL manual em `database/seeds/` — descartada porque exigiria cada integrante rodar à mão em seu schema.
 
@@ -1018,6 +1019,65 @@ hikari:
 **A lição.** O padrão de uma biblioteca é dimensionado para o caso comum dela, não para o nosso banco. Aqui bastavam três consultas ao próprio Oracle para trocar um chute por um número — e uma delas mostrou que o problema já estava acontecendo.
 
 **Onde no código.** `backend/src/main/resources/application.yml`; `DB_POOL_SIZE` na tabela de [`deploy.md`](deploy.md).
+
+---
+
+### D-47. A massa ganhou pares de substituição, e a carga passou a ser incremental
+
+**Contexto.** A ferramenta de simulação ([D-40](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)) permite zerar o estoque de **qualquer** produto, mas a massa tinha **um único par realmente substituível** — as duas lixas. Zerar qualquer outro item fazia o assistente recusar e devolver 422.
+
+A recusa está correta: verificado zerando o Cano PVC, ele respondeu *"Nenhum dos produtos disponíveis na proximidade cumpre a função do cano de PVC para instalação hidráulica"* — sifão e torneira não substituem um cano. Certo pelo desenho, **mas não é a cena que se quer gravar**, e a demonstração ficava presa a um único produto.
+
+---
+
+#### Os pares acrescentados
+
+Quatro produtos, cada um cumprindo a **mesma função** de um item já existente **na mesma seção**, variando só em especificação — que é como a substituição acontece numa loja de verdade:
+
+| Produto em falta | Substituto acrescentado | Seção |
+|---|---|---|
+| Lâmpada LED 9W - kit 3 | **Lâmpada LED 12W - kit 3** | Iluminação |
+| Sifão Sanfonado Universal | **Sifão Copo Cromado Universal** | Encanamento |
+| Trena 5m | **Trena 7,5m** | Ferramentas |
+| Argamassa AC-II 20kg | **Argamassa AC-III 20kg** | Materiais de construção |
+
+Quatro seções espalhadas pela loja, para a demonstração poder partir de qualquer canto do mapa — somadas ao par original em Tintas, são **cinco cenários**.
+
+**O que faz o cenário valer a pena não é o par existir, é ter concorrência.** Se o substituto fosse o único candidato no raio, o modelo não estaria escolhendo nada. Medido contra o Oracle real:
+
+| Cenário | Candidatos no raio |
+|---|---|
+| Sifão Sanfonado | 10 |
+| Lixa Grão 120 | 9 |
+| Trena 5m | 6 |
+| Lâmpada LED 9W | 4 |
+| Argamassa AC-II | 2 |
+
+Confirmado com o Gemini real, na instância publicada: *"A trena de 7,5 metros cumpre perfeitamente a mesma função de medição, oferece um alcance ainda maior e está bem aqui na mesma prateleira."*
+
+---
+
+#### A carga precisou virar incremental
+
+**O obstáculo.** O carregador só rodava com o catálogo **vazio** ([D-16](#d-16-carga-inicial-em-java-em-vez-de-sql)). Isso significava que os quatro produtos novos **nunca chegariam** aos bancos que já tinham a massa antiga — inclusive o da instância publicada. O card entregaria nada.
+
+**Decisão.** Cada seção e cada produto passa a ser criado **apenas se ainda não existir**, em vez de tudo-ou-nada:
+
+- **Produtos:** uma única leitura paginada do catálogo monta o conjunto de SKUs existentes, e só os ausentes são inseridos. Uma consulta a mais no startup, não uma por produto — o que importa agora que aplicação e banco estão a 5.000 km ([D-45](#d-45-o-deploy-mudou-quais-avisos-do-hibernate-importavam)).
+- **Seções:** resolvidas pelo corredor entre os `PontoMapa` do tipo `PRATELEIRA` que já existem. Sem isso, cada reinício criaria dez seções novas e os produtos de um corredor ficariam divididos entre dois pontos do mapa.
+- **Pontos de serviço:** criados só se não houver nenhum daquele tipo. Um totem duplicado mudaria a origem da rota ([D-28](#d-28-a-rota-parte-do-primeiro-ponto-do-tipo-totem)).
+
+**A guarda contra o caso que quebraria tudo.** A leitura tem teto de 1000 produtos. Se o catálogo passar disso, o conjunto de SKUs conhecidos ficaria incompleto e a carga tentaria inserir SKU que já existe, violando a chave única. Então ela **se recusa a rodar** e avisa no log, em vez de arriscar.
+
+**Consequência boa, além do card:** acrescentar produto à massa passou a ser uma linha, e ela chega sozinha a todos os bancos no próximo restart. Antes exigiria cada integrante apagar o catálogo.
+
+---
+
+**Um defeito que o teste encontrou.** Os contadores do log viviam em campos do componente — que é um *singleton* do Spring. Rodando a carga uma segunda vez, eles se somavam e o log dizia *"4 produtos criados"* quando não havia criado nenhum. O banco estava certo; o relato, não. Agora a contagem vive numa instância por execução.
+
+Não teria aparecido em produção, onde o `ApplicationRunner` roda uma vez só — apareceu porque o teste de idempotência chama a carga de novo, que é exatamente o tipo de uso que estado mutável compartilhado não suporta.
+
+**Onde no código.** `infrastructure/database/seed/CarregadorDadosIniciais.java`, `src/test/java/.../CargaDeDadosIntegracaoTest.java`.
 
 ---
 

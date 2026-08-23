@@ -27,7 +27,7 @@
 | [O-11](#o-11-o-swagger-fica-exposto-no-ambiente-publicado) | Swagger em produção | — | Baixa |
 | [O-12](#o-12-o-raio-de-busca-da-ruptura-é-um-palpite-informado) | Raio de 25 unidades | — | Baixa |
 | [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita) | Fase 3 não iniciada | Time | Média |
-| [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido) | Massa com um único par de substitutos | Time | **Alta — 13/09** |
+| [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) | ~~Massa com um único par de substitutos~~ | — | resolvida |
 | [O-15](#o-15-o-endpoint-de-simulação-de-estoque-não-tem-proteção-nenhuma) | Simulação de estoque sem proteção | — | Baixa |
 | [O-16](#o-16-o-token-continua-na-url-do-pwa-mesmo-fora-da-nossa-api) | Token na URL do PWA | Bielecky e Marcela | Média |
 
@@ -153,22 +153,21 @@ Eliminar de vez exigiria um código curto opaco com consulta separada, o que é 
 
 ## Para a demonstração
 
-### O-14. A massa de dados só tem um par de substitutos que faz sentido
+### O-14. ~~A massa de dados só tem um par de substitutos que faz sentido~~ — resolvida
 
-**O quê.** Definir se o roteiro da demonstração vai usar apenas o cenário plantado, ou se vale enriquecer a massa com mais pares de produtos substituíveis.
+**Resolvida em 23/08/2026.** A massa passou a ter **cinco cenários de ruptura** em cinco seções espalhadas pela loja, e não mais um só. Ver [D-47](decisoes-tecnicas.md#d-47-a-massa-ganhou-pares-de-substituição-e-a-carga-passou-a-ser-incremental).
 
-**Por que importa.** A ferramenta de simulação ([D-40](decisoes-tecnicas.md#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)) permite zerar o estoque de **qualquer** produto, mas em quase todos os casos o assistente vai responder — corretamente — que nenhum candidato próximo serve, e o endpoint devolve 422.
+| Produto a zerar | Substituto esperado | Seção |
+|---|---|---|
+| Lixa para Parede Grão 120 | Lixa d'Água Grão 150 | Tintas |
+| Lâmpada LED 9W - kit 3 | Lâmpada LED 12W - kit 3 | Iluminação |
+| Sifão Sanfonado Universal | Sifão Copo Cromado Universal | Encanamento |
+| Trena 5m | Trena 7,5m | Ferramentas |
+| Argamassa AC-II 20kg | Argamassa AC-III 20kg | Materiais de construção |
 
-Isso foi verificado na prática: zerando o Cano PVC Soldável, o assistente respondeu *"Nenhum dos produtos disponíveis na proximidade cumpre a função do cano de PVC para instalação hidráulica."* Está certo — sifão e torneira não substituem um cano. Mas não é a cena que se quer gravar.
+Qualquer um deles pode ser disparado pela ferramenta de simulação ([D-40](decisoes-tecnicas.md#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)), inclusive ao vivo, se alguém da banca pedir para tentar com outro produto.
 
-Hoje o único par com substituto plausível no catálogo é **lixa grão 120 → lixa d'água grão 150**, ambas em Tintas. Duas saídas:
-
-1. **Roteirizar a demonstração em torno desse par** — custo zero, e é o que já funciona.
-2. **Acrescentar dois ou três pares à massa** (por exemplo, duas bitolas do mesmo cano, dois tamanhos da mesma lâmpada) — dá um card pequeno e torna a demonstração resistente a improviso, se alguém da banca pedir para tentar com outro produto.
-
-Vale notar que o 422 **não é um defeito** — é a recusa correta, e defendê-la ao vivo é até um bom argumento. Mas é melhor decidir isso antes da gravação do que descobrir durante.
-
-**De quem.** Time. **Prazo que pressiona:** 13/09 (gravação do vídeo da seletiva).
+**O que continua valendo:** zerar um produto **fora** desta lista provavelmente resulta em 422, porque o assistente recusa corretamente quando nada por perto cumpre a mesma função. Isso não é defeito — é o comportamento que a [D-38](decisoes-tecnicas.md#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco) descreve, e defendê-lo ao vivo é um bom argumento. Só convém escolher da tabela acima na hora de gravar.
 
 ---
 
