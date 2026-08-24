@@ -30,6 +30,7 @@
 | [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) | ~~Massa com um único par de substitutos~~ | — | resolvida |
 | [O-15](#o-15-o-endpoint-de-simulação-de-estoque-não-tem-proteção-nenhuma) | Simulação de estoque sem proteção | — | Baixa |
 | [O-16](#o-16-o-token-continua-na-url-do-pwa-mesmo-fora-da-nossa-api) | Token na URL do PWA | Bielecky e Marcela | Média |
+| [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final) | Limpar documentos de trabalho | Time | fim do ano |
 
 ---
 
@@ -148,6 +149,22 @@ Nosso lado ficou limpo; o do navegador não. Como o token vale 5 minutos e é de
 Eliminar de vez exigiria um código curto opaco com consulta separada, o que é mais escopo do que o card pedia.
 
 **De quem.** Bielecky e Marcela. Ver [D-44](decisoes-tecnicas.md#d-44-o-token-de-handoff-sai-da-url-e-o-qr-code-passa-a-ser-regenerável).
+
+---
+
+### O-17. Documentos de trabalho precisam sair antes da entrega final
+
+**O quê.** Apagar [`perguntas-mentoria.md`](perguntas-mentoria.md) — e qualquer arquivo da mesma natureza que venha a existir — antes de enviar o repositório ao portal da faculdade.
+
+**Por que importa.** Nem tudo que ajuda o time a trabalhar pertence à documentação do produto. O arquivo de perguntas foi escrito para preparar **uma reunião específica**, em uma data específica; passada ela, só acrescenta ruído a quem for avaliar o projeto.
+
+A distinção vale a pena manter em mente conforme o repositório cresce:
+
+- **Permanece:** `contexto-e-planejamento.md`, `planejamento-tecnico.md`, `decisoes-tecnicas.md`, `deploy.md`, `backlog-trello-revisado.md`, os diagramas, os READMEs. Explicam o que o projeto é e por que ficou assim.
+- **Sai:** artefatos amarrados a um evento pontual — roteiro de reunião, lista de perguntas, anotações de preparação.
+- **Caso à parte:** este próprio `observacoes.md`. As pendências resolvidas até lá devem ter saído da lista; o que sobrar são limitações assumidas conscientemente, e **isso conta a favor** — mostra que o time sabia onde estavam os limites.
+
+**De quem.** Time. **Quando:** antes do envio ao portal, no fim do ano.
 
 ---
 
