@@ -44,6 +44,7 @@
 - [D-11. UUID gravado como `varchar2(36)`, não `raw(16)`](#d-11-uuid-gravado-como-varchar236-não-raw16)
 - [D-12. `sessao_id` mapeado duas vezes na mesma entidade](#d-12-sessao_id-mapeado-duas-vezes-na-mesma-entidade)
 - [D-13. Cascata e remoção de órfãos no agregado da lista](#d-13-cascata-e-remoção-de-órfãos-no-agregado-da-lista)
+- [D-48. Gravar pelo agregado é seguro aqui — e a investigação que provou isso](#d-48-gravar-pelo-agregado-é-seguro-aqui--e-a-investigação-que-provou-isso-depois-de-duas-hipóteses-erradas)
 - [D-14. Salvar item carrega a entidade gerenciada em vez de remapear](#d-14-salvar-item-carrega-a-entidade-gerenciada-em-vez-de-remapear)
 - [D-15. Query nativa com `UTL_MATCH` para busca tolerante a erro de digitação](#d-15-query-nativa-com-utl_match-para-busca-tolerante-a-erro-de-digitação)
 - [D-16. Carga inicial em Java em vez de SQL](#d-16-carga-inicial-em-java-em-vez-de-sql)
@@ -1078,6 +1079,60 @@ Confirmado com o Gemini real, na instância publicada: *"A trena de 7,5 metros c
 Não teria aparecido em produção, onde o `ApplicationRunner` roda uma vez só — apareceu porque o teste de idempotência chama a carga de novo, que é exatamente o tipo de uso que estado mutável compartilhado não suporta.
 
 **Onde no código.** `infrastructure/database/seed/CarregadorDadosIniciais.java`, `src/test/java/.../CargaDeDadosIntegracaoTest.java`.
+
+---
+
+### D-48. Gravar pelo agregado é seguro aqui — e a investigação que provou isso depois de duas hipóteses erradas
+
+**Contexto.** `ListaRoteiroRepositoryAdapter.salvar` recebe um `ListaRoteiro` de domínio, **reconstrói o grafo de entidades JPA inteiro** e faz `merge`. Com `orphanRemoval` ligado ([D-13](#d-13-cascata-e-remoção-de-órfãos-no-agregado-da-lista)), essa forma parece perigosa: bastaria o objeto de domínio estar desatualizado para que o `merge` sobrescrevesse valores novos e o `orphanRemoval` apagasse itens que aquela visão não conhecia.
+
+Numa revisão de código, essa leitura levou à conclusão de que havia um defeito real de perda de dado sob concorrência. **A conclusão estava errada**, e a investigação que mostrou isso vale mais registrada do que a hipótese.
+
+---
+
+#### Por que a escrita é segura
+
+**Leitura e gravação acontecem na mesma transação.** Todo caso de uso que grava o roteiro carrega o agregado logo antes, dentro do próprio `@Transactional`. As entidades ficam **gerenciadas** no mesmo contexto de persistência.
+
+E o Hibernate, ao decidir o que escrever, **não compara com o banco** — compara com o *snapshot* tirado no momento em que carregou. Um campo que não mudou em memória simplesmente não entra no `UPDATE`. Logo, um item que outra requisição alterou nesse intervalo **nunca é tocado**, porque para esta transação ele nunca mudou.
+
+O `merge` do grafo reconstruído também não estraga isso: as entidades já estão no contexto, então ele copia valores idênticos sobre elas e nada fica sujo.
+
+**Onde o perigo seria real:** fazer `merge` de um grafo remontado num contexto de persistência **vazio** — quando ninguém carregou o agregado antes na mesma transação. Aí o `merge` dispara um `SELECT`, encontra o estado atual do banco e o sobrescreve com os valores da visão velha. Nenhum caso de uso faz isso hoje. O [`open-in-view: false`](#d-45-o-deploy-mudou-quais-avisos-do-hibernate-importavam) ajuda a manter assim, ao impedir que um agregado sobreviva fora da transação que o carregou.
+
+---
+
+#### As duas hipóteses que não sobreviveram à medição
+
+A exigência do time foi explícita: *provar que a mudança melhorou algo, ou reconhecer que foi placebo*. Foram necessárias três tentativas para chegar a uma medição que separasse um comportamento do outro.
+
+**1. Sondas no nível do repositório — falharam, mas provavam a coisa errada.** Carregar o agregado duas vezes em objetos separados e salvar em sequência de fato destrói dados: a segunda gravação desfaz a primeira e apaga o que a primeira inseriu. Só que **cada `salvar` ali abria a própria transação, com o contexto vazio** — a situação que nenhum caso de uso produz. As sondas confirmaram uma propriedade do repositório isolado, não um defeito do sistema.
+
+**2. Concorrência com *threads* — passou dos dois lados.** Duas requisições disparando juntas contra um banco local raramente se sobrepõem na janela exata. **Corrida não é prova reproduzível**: um teste que passa com e sem a mudança não mede a mudança.
+
+**3. Contagem de linhas escritas — idêntica dos dois lados.** A hipótese era que gravar pelo agregado reescrevia todos os irmãos. Medido com as estatísticas do Hibernate: **1 update em ambos**, tanto num roteiro de 3 itens quanto num de 8. O *dirty checking* já evitava o excesso.
+
+**4. O teste que finalmente distinguiu.** Forçar a obsolescência sem depender de sorte: a operação externa roda numa transação que o teste controla e ainda não confirmou, enquanto uma segunda operação roda e confirma numa transação própria. Quando a externa grava, o banco já mudou embaixo dela. Resultado: **nada se perde** — e a explicação está na seção acima.
+
+---
+
+#### O que foi feito, e o que foi desfeito
+
+A correção proposta — estreitar as escritas para item a item, em vez de gravar o agregado — **foi implementada e depois revertida**. Ela não mudava nenhum comportamento observável, acrescentava dois métodos a uma porta de domínio e, no caminho, introduziu um defeito próprio: apagar a linha do item diretamente não funciona quando o agregado já está carregado na mesma transação, porque no *flush* o Hibernate encontra o filho ainda na coleção do pai gerenciado e o **ressuscita**. Mudança sem ganho medido é risco sem contrapartida.
+
+**O que ficou** foram os testes, que passaram a fixar o comportamento verificado:
+
+| Teste | O que protege |
+|---|---|
+| `EscritaObsoletaIntegracaoTest` | gravação com visão desatualizada não perde nada |
+| `AmplitudeDeEscritaIntegracaoTest` | cada operação escreve uma linha, independente do tamanho do roteiro |
+| `ConcorrenciaNoRoteiroIntegracaoTest` | duas requisições simultâneas no mesmo roteiro |
+| `ContratoOpenApiIntegracaoTest` | o contrato escrito à mão descreve o que a API expõe |
+| `FalhaDeInfraestruturaTest` | banco fora do ar não vaza detalhe interno ao cliente |
+
+**A lição.** Ler o código e concluir que há um defeito não é o mesmo que demonstrar o defeito. Aqui a inferência era plausível, o mecanismo perigoso existe de verdade — e mesmo assim o sistema estava correto, por uma razão que só apareceu ao medir. **Sem a exigência de prova, teríamos commitado uma correção elegante para um problema inexistente, com uma justificativa bem escrita para acompanhá-la.**
+
+**Onde no código.** `infrastructure/database/adapter/ListaRoteiroRepositoryAdapter.java`, `infrastructure/database/factory/ListaRoteiroFactory.java`, e os cinco testes acima.
 
 ---
 
