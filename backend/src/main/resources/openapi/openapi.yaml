@@ -27,7 +27,16 @@ paths:
     post:
       tags: [Sessao]
       summary: Inicializar sessão (UC-001)
-      description: Acionado quando o cliente inicia interação no Totem. Cria uma Sessao ACTIVE com uma ListaRoteiro vazia.
+      description: |
+        Acionado quando o cliente entra pela placa de localização — escaneando o QR Code (que já traz o código na URL) ou digitando o código quando escanear não deu certo.
+
+        Cria uma Sessao ACTIVE com uma ListaRoteiro vazia. O corpo é **opcional**: sem código, ou com um código desconhecido, a sessão nasce sem `posicaoAtual` e continua utilizável.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IniciarSessaoRequest"
       responses:
         "201":
           description: Sessão criada
@@ -384,6 +393,14 @@ components:
         expiracaoTtl:
           type: string
           format: date-time
+        posicaoAtual:
+          allOf:
+            - $ref: "#/components/schemas/PontoMapa"
+          nullable: true
+          description: |
+            Onde o cliente provavelmente está: a mais recente entre a placa lida e a prateleira do último item coletado.
+
+            Nulo quando não há pista nenhuma — sessão iniciada sem código válido e sem nada coletado ainda.
 
     PontoMapa:
       type: object
@@ -484,6 +501,15 @@ components:
           description: Agrupados por seção da loja e, dentro dela, por nome. Não é uma rota — o cliente escolhe o caminho.
           items:
             $ref: "#/components/schemas/ItemRoteiroDetalhado"
+
+    IniciarSessaoRequest:
+      type: object
+      properties:
+        codigoPonto:
+          type: string
+          nullable: true
+          description: Código de localização impresso na placa, em qualquer grafia — `TIN-02`, `tin02` e `TIN 02` são equivalentes.
+          example: TIN-02
 
     AdicionarItemRequest:
       type: object

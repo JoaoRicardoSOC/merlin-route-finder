@@ -39,6 +39,7 @@ public class ItemRoteiroRepositoryAdapter implements ItemRoteiroRepository {
                                 .formatted(item.getId())));
 
         entity.setColetado(item.isColetado());
+        entity.setColetadoEm(item.getColetadoEm());
 
         return itemRoteiroFactory.paraDominio(jpaRepository.save(entity));
     }

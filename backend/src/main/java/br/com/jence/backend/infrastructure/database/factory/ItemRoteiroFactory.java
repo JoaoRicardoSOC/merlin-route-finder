@@ -19,7 +19,7 @@ public class ItemRoteiroFactory {
         return ItemRoteiro.reconstituir(
                 entity.getId(),
                 produtoFactory.paraDominio(entity.getProduto()),
-                entity.isColetado()
+                entity.getColetadoEm()
         );
     }
 
@@ -35,7 +35,8 @@ public class ItemRoteiroFactory {
                 item.getId(),
                 listaRoteiro,
                 produtoFactory.paraPersistencia(item.getProduto()),
-                item.isColetado()
+                item.isColetado(),
+                item.getColetadoEm()
         );
     }
 }

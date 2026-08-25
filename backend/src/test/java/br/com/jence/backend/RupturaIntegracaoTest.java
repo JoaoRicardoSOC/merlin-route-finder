@@ -59,7 +59,7 @@ class RupturaIntegracaoTest {
     @BeforeEach
     void criarSessao() throws InterruptedException {
         Thread.sleep(5_000);
-        sessaoId = inicializar.executar().id();
+        sessaoId = inicializar.executar(null).id();
     }
 
     @AfterEach

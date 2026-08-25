@@ -5,7 +5,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -39,4 +42,15 @@ public class SessaoEntity {
 
     @Column(name = "expiracao_ttl", nullable = false)
     private LocalDateTime expiracaoTtl;
+
+    /*
+     * A placa lida. ManyToOne e nao um UUID solto porque o ponto e sempre carregado junto com
+     * a sessao - toda resposta de sessao mostra onde o cliente esta.
+     */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "ponto_escaneado_id")
+    private PontoMapaEntity pontoEscaneado;
+
+    @Column(name = "escaneado_em")
+    private LocalDateTime escaneadoEm;
 }

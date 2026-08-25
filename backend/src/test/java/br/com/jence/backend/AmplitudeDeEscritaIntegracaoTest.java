@@ -60,7 +60,7 @@ class AmplitudeDeEscritaIntegracaoTest {
 
     @BeforeEach
     void montarRoteiro() {
-        sessaoId = inicializar.executar().id();
+        sessaoId = inicializar.executar(null).id();
         adicionarAoRoteiro("SKU-TIN-001");
         adicionarAoRoteiro("SKU-ENC-001");
         adicionarAoRoteiro("SKU-JAR-001");

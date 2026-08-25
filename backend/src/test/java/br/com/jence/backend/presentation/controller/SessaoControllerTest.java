@@ -38,14 +38,14 @@ class SessaoControllerTest {
 
     private SessaoResponse sessaoAtiva(UUID id) {
         LocalDateTime agora = LocalDateTime.now();
-        return new SessaoResponse(id, StatusSessao.ACTIVE, agora, agora.plusMinutes(30));
+        return new SessaoResponse(id, StatusSessao.ACTIVE, agora, agora.plusMinutes(30), null);
     }
 
     @Test
     @DisplayName("POST /sessoes devolve 201 com Location e corpo da sessao")
     void criarSessao() throws Exception {
         UUID id = UUID.randomUUID();
-        when(inicializarSessaoUseCase.executar()).thenReturn(sessaoAtiva(id));
+        when(inicializarSessaoUseCase.executar(null)).thenReturn(sessaoAtiva(id));
 
         mockMvc.perform(post("/api/v1/sessoes"))
                 .andExpect(status().isCreated())
@@ -90,7 +90,7 @@ class SessaoControllerTest {
         UUID id = UUID.randomUUID();
         LocalDateTime agora = LocalDateTime.now();
         when(concluirRotaUseCase.executar(id)).thenReturn(
-                new SessaoResponse(id, StatusSessao.COMPLETED, agora.minusMinutes(40), agora.plusMinutes(20)));
+                new SessaoResponse(id, StatusSessao.COMPLETED, agora.minusMinutes(40), agora.plusMinutes(20), null));
 
         mockMvc.perform(post("/api/v1/sessoes/{id}/concluir", id))
                 .andExpect(status().isOk())

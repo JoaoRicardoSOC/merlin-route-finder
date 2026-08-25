@@ -32,6 +32,7 @@
 | [O-16](#o-16-o-token-continua-na-url-do-pwa-mesmo-fora-da-nossa-api) | Token na URL do PWA | Bielecky e Marcela | Média |
 | [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final) | Limpar documentos de trabalho | Time | fim do ano |
 | [O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca) | Catálogo pequeno para a banca | Time | **Alta — 21/09** |
+| [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | Tela de código manual e arte da placa | Bielecky, Marcela e time | Alta |
 
 ---
 
@@ -89,6 +90,22 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 
 ## Para a dupla de frontend (Bielecky e Marcela)
 
+### O-19. A entrada tem um plano B, e ele é uma tela que ainda não existe
+
+**O quê.** Duas coisas, decididas em 25/08/2026:
+
+1. **uma tela de entrada manual** — o cliente digita o código de localização quando escanear o QR não deu certo;
+2. **a arte da placa** precisa trazer **três** elementos: o QR Code, uma **URL curta e legível**, e o **código de localização** (`TIN-02`). Isso tem custo de impressão e é decisão do time, não só do frontend.
+
+**Por que importa.** O QR Code é o único acesso ao sistema. Se o cliente não consegue escanear — câmera ruim, leitor que não abre, permissão negada, adesivo sujo — ele fica sem nada. O código curto sozinho **não resolvia**: sem a URL impressa, não havia onde digitá-lo. Os dois planos precisam existir juntos ou nenhum funciona.
+
+**O que o backend já entrega.** `POST /api/v1/sessoes` recebe `{"codigoPonto": "TIN-02"}`, num campo só — os dois planos chegam pelo mesmo endpoint. A grafia não importa: `TIN-02`, `tin02` e `TIN 02` são equivalentes.
+
+**Cuidado com o caso de código errado.** A API **não** devolve erro para código desconhecido: a sessão é criada com `posicaoAtual` nula. Isso é proposital ([D-54](decisoes-tecnicas.md#d-54-a-entrada-aceita-o-código-da-placa-num-campo-só-e-código-desconhecido-não-recusa-a-sessão)) — barrar a entrada por causa de um adesivo seria pior. **Mas a tela precisa perceber isso e avisar**, algo como "não encontramos essa localização; você pode continuar e tentar de novo depois". Se o frontend ignorar, o cliente digita errado, entra sem posição e não entende por que o mapa não mostra onde ele está.
+
+**De quem.** Bielecky e Marcela (a tela); time (a arte da placa).
+
+---
 ### O-04. `origemSugestao` não pode ser rotulado como IA quando for `PROXIMIDADE`
 
 **O quê.** A resposta de `POST /api/v1/roteiro/itens/{itemId}/ruptura` traz o campo `origemSugestao`, com dois valores possíveis:

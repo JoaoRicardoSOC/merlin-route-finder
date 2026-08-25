@@ -56,15 +56,29 @@ Cada passo traz o que o cliente faz, o que a tela mostra e o que o backend preci
 
 ---
 
-### 1. Entrada pelo QR Code 🆕
+### 1. Entrada pela placa de localização 🆕
 
-O cliente escaneia um QR colado num corredor de passagem ou num cruzamento entre corredores. O celular abre a página, já sabendo de onde ele partiu.
+O cliente entra por uma placa afixada num corredor de passagem ou num cruzamento. A placa traz **três coisas**, e cada uma existe por um motivo:
 
-**Tela:** carregamento breve e a home do catálogo, com um "você está em: *Corredor central, próximo a Tintas*".
+| Na placa | Para quê |
+|---|---|
+| **QR Code** | o caminho normal — escaneou, abriu, pronto |
+| **URL curta e legível** | quando escanear não dá: câmera ruim, leitor que não abre, permissão negada |
+| **Código de localização** (`TIN-02`) | diz ao sistema **em qual placa** o cliente está, quando ele chegou pela URL |
 
-**Backend:** `POST /sessoes` passa a receber **qual ponto foi escaneado**. A sessão nasce sabendo a posição inicial. Isso exige um tipo novo de ponto no mapa — os pontos de QR — e a `Sessao` passa a guardar onde começou.
+**Plano A — escanear.** O QR codifica a URL já com o código do ponto. O celular abre a página sabendo de onde o cliente partiu, sem ele digitar nada.
 
-> **Em aberto:** quantos QR Codes e onde exatamente. A definição é do time, e a massa de demonstração acompanha.
+**Plano B — digitar.** O cliente digita a URL da placa, e a página pergunta o código de localização. O código está ali ao lado, na mesma placa. O resultado é idêntico ao plano A.
+
+**Por que o plano B precisou da URL na placa.** O código curto sozinho não resolvia nada: se o único caminho para o sistema fosse o QR, quem não conseguisse escanear não teria onde digitar o código. A URL impressa é o que torna o código alcançável.
+
+**Tela:** carregamento breve e a home do catálogo, com um "você está em: *Corredor central, próximo a Tintas*". No plano B, antes disso, uma tela pedindo o código.
+
+**Backend:** `POST /sessoes` passa a receber **o código do ponto**, num campo só — os dois planos chegam pelo mesmo caminho. A sessão nasce sabendo a posição inicial.
+
+**Se o código não existir** — placa velha, loja remanejada, erro de digitação — a sessão nasce **assim mesmo, sem posição**, e continua utilizável. Melhor um mapa sem "você está aqui" do que nenhum sistema.
+
+> **Em aberto:** quantos QR Codes e onde exatamente, e a arte da placa. A definição é do time, e a massa de demonstração acompanha.
 
 ---
 

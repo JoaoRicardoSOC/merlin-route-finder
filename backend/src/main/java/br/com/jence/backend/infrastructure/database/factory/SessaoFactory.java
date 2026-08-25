@@ -2,10 +2,14 @@ package br.com.jence.backend.infrastructure.database.factory;
 
 import br.com.jence.backend.domain.entity.Sessao;
 import br.com.jence.backend.infrastructure.database.entity.SessaoEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class SessaoFactory {
+
+    private final PontoMapaFactory pontoMapaFactory;
 
     public Sessao paraDominio(SessaoEntity entity) {
         if (entity == null) {
@@ -15,7 +19,9 @@ public class SessaoFactory {
                 entity.getId(),
                 entity.getStatus(),
                 entity.getCriadoEm(),
-                entity.getExpiracaoTtl()
+                entity.getExpiracaoTtl(),
+                pontoMapaFactory.paraDominio(entity.getPontoEscaneado()),
+                entity.getEscaneadoEm()
         );
     }
 
@@ -27,7 +33,9 @@ public class SessaoFactory {
                 sessao.getId(),
                 sessao.getStatus(),
                 sessao.getCriadoEm(),
-                sessao.getExpiracaoTtl()
+                sessao.getExpiracaoTtl(),
+                pontoMapaFactory.paraPersistencia(sessao.getPontoEscaneado()),
+                sessao.getEscaneadoEm()
         );
     }
 }

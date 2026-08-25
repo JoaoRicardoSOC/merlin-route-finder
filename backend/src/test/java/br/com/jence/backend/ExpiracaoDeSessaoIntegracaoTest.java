@@ -54,7 +54,7 @@ class ExpiracaoDeSessaoIntegracaoTest {
 
     /** Sessao real, com o TTL empurrado para o passado como se o cliente tivesse sumido. */
     private UUID sessaoAbandonadaHaUmaHora(boolean comItem) {
-        UUID sessaoId = inicializar.executar().id();
+        UUID sessaoId = inicializar.executar(null).id();
         criadas.add(sessaoId);
 
         if (comItem) {
@@ -65,7 +65,7 @@ class ExpiracaoDeSessaoIntegracaoTest {
         // Depois de adicionar, porque adicionar renova o TTL (D-24).
         LocalDateTime passado = LocalDateTime.now().minusHours(1);
         sessaoRepository.salvar(Sessao.reconstituir(
-                sessaoId, StatusSessao.ACTIVE, passado.minusHours(1), passado));
+                sessaoId, StatusSessao.ACTIVE, passado.minusHours(1), passado, null, null));
 
         return sessaoId;
     }
@@ -96,7 +96,7 @@ class ExpiracaoDeSessaoIntegracaoTest {
 
     @Test
     void sessaoAindaValidaNaoEVarrida() {
-        UUID ativa = inicializar.executar().id();
+        UUID ativa = inicializar.executar(null).id();
         criadas.add(ativa);
 
         expirar.executar();

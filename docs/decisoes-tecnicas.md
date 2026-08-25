@@ -65,6 +65,9 @@
 - [D-51. Um valor de enum removido precisa sumir também do banco](#d-51-um-valor-de-enum-removido-precisa-sumir-também-do-banco)
 - [D-52. O código curto do QR Code é normalizado na gravação, não só na busca](#d-52-o-código-curto-do-qr-code-é-normalizado-na-gravação-não-só-na-busca)
 - [D-53. A aplicação repara a restrição de enum que o `ddl-auto: update` deixa envelhecer](#d-53-a-aplicação-repara-a-restrição-de-enum-que-o-ddl-auto-update-deixa-envelhecer)
+- [D-54. A entrada aceita o código da placa num campo só, e código desconhecido não recusa a sessão](#d-54-a-entrada-aceita-o-código-da-placa-num-campo-só-e-código-desconhecido-não-recusa-a-sessão)
+- [D-55. A posição do cliente vem de duas pistas, e vale a mais recente](#d-55-a-posição-do-cliente-vem-de-duas-pistas-e-vale-a-mais-recente)
+- [D-56. A coluna `coletado` continua sendo gravada, mesmo redundante](#d-56-a-coluna-coletado-continua-sendo-gravada-mesmo-redundante)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -1313,6 +1316,59 @@ Para uma coluna `@Enumerated(EnumType.STRING)`, o Hibernate **cria** uma restri�
 **A ordem em relação à [D-51](#d-51-um-valor-de-enum-removido-precisa-sumir-também-do-banco) não é acidental.** As linhas de tipo aposentado são apagadas **antes**: uma linha com valor fora do enum faria o `add check` ser recusado.
 
 **Onde no código.** `infrastructure/database/schema/RestricaoDeEnumNoBanco.java`.
+
+---
+
+### D-54. A entrada aceita o código da placa num campo só, e código desconhecido não recusa a sessão
+
+**Contexto.** O cliente entra pela placa afixada no corredor. Existem dois caminhos até a mesma tela: escanear o QR — que já leva o código na URL — ou digitar a URL impressa e informar o código à mão, quando escanear não dá certo.
+
+**A razão de a URL estar impressa na placa.** O código curto sozinho não resolvia nada. Se o único acesso ao sistema fosse o QR Code, quem não conseguisse escanear não teria **onde** digitar o código — o plano B só funcionaria para quem já tinha executado o plano A. A URL legível é o que torna o código alcançável.
+
+**Decisão.** `POST /sessoes` recebe um corpo opcional com **um campo só**, `codigoPonto`. Os dois planos chegam pelo mesmo caminho, e o backend não sabe — nem precisa saber — qual deles o cliente usou.
+
+**Alternativa considerada.** Aceitar o identificador do ponto **ou** o código curto, em dois campos. Descartada: dois caminhos para a mesma coisa, dois conjuntos de erro possíveis, e nenhum ganho — o QR pode perfeitamente codificar o código curto, que é mais legível na URL e ainda serve para quem digita.
+
+**Código desconhecido não é erro de cliente.** Placa velha, loja remanejada, erro de digitação. A sessão nasce **sem posição** e continua inteiramente utilizável: catálogo, lista, assistente e coleta funcionam. Devolver 404 aqui barraria a entrada no sistema por causa de um adesivo — o cliente ficaria sem nada, quando poderia ficar apenas sem o "você está aqui".
+
+Fica um `INFO` no log com o código recusado, que é o que permite descobrir uma placa arrancada sem depender de alguém reclamar.
+
+**Onde no código.** `application/usecase/InicializarSessaoUseCase.java`, `application/dto/IniciarSessaoRequest.java`.
+
+---
+
+### D-55. A posição do cliente vem de duas pistas, e vale a mais recente
+
+**Contexto.** Sem GPS dentro da loja, a posição nunca é medida — é sempre deduzida de algo que o cliente fez. Existem duas pistas, e o sistema não tem outra:
+
+- **a placa lida** — ele estava ali quando escaneou ou digitou o código;
+- **o último item coletado** — ele esteve na prateleira daquele produto.
+
+**Decisão.** Vale a **mais recente das duas**, comparadas por data. `PosicaoDoCliente.estimar(sessao, lista)` faz essa escolha, no domínio, sem conhecer banco nem HTTP.
+
+**Por que comparar, em vez de eleger uma preferida.** Dar preferência fixa à coleta quebraria o recentrar: quem se perdeu e leu uma placa nova veria o marcador de volta na prateleira do último item que pegou. Dar preferência fixa à placa quebraria o caso normal: o cliente andaria a loja inteira e continuaria marcado na entrada.
+
+**O que isso exigiu de `ItemRoteiro`.** O campo `coletado` era um booleano, e "o **último** item coletado" precisa de ordem. Até a Fase 3 essa ordem vinha de `ordemCaminho`, que saiu junto com o cálculo de rota ([D-50](#d-50-sem-rota-a-lista-passa-a-ser-agrupada-por-seção)). O booleano virou **`coletadoEm`**, um instante — e `isColetado()` passou a ser derivado dele. O contrato não mudou: continua expondo apenas `coletado`, porque o cliente precisa saber se já pegou, não quando.
+
+**A marcação é idempotente pela primeira confirmação.** Tocar duas vezes, ou a rede reenviar, não pode mover a posição do cliente — nem para frente nem para trás. `marcarComoColetado` só grava quando o campo ainda está nulo.
+
+**Consequência assumida.** A posição é uma estimativa, e pode estar velha: o cliente que pegou a tinta e caminhou dez metros continua marcado em Tintas até fazer outra coisa. É o limite honesto do que se sabe sem hardware de posicionamento. O sistema autoral de posicionamento por bússola e acelerômetro continua reservado para o NEXT, como a [D-21](#d-21-demo-da-banca-por-simulação-animada-não-posicionamento-real) registrou — e o que existe hoje é justamente o que torna a demonstração possível sem ele.
+
+**Onde no código.** `domain/service/PosicaoDoCliente.java`, `domain/entity/ItemRoteiro.java`, `domain/entity/Sessao.java`.
+
+---
+
+### D-56. A coluna `coletado` continua sendo gravada, mesmo redundante
+
+**Contexto.** Com `coletadoEm` no domínio ([D-55](#d-55-a-posição-do-cliente-vem-de-duas-pistas-e-vale-a-mais-recente)), a coluna booleana `coletado` passou a ser dedutível: basta olhar se o instante é nulo.
+
+**Decisão.** A entidade JPA grava **as duas colunas**. O domínio continua sendo fonte única — as duas saem do mesmo `ItemRoteiro`.
+
+**Por que não simplesmente remover a coluna antiga.** Ela nasceu `NOT NULL` e sem valor padrão. Como `ddl-auto: update` nunca remove nada, parar de gravá-la faria **todo insert de item falhar** nos bancos que já existem — o de cada integrante e o publicado. O erro apareceria como violação de restrição no primeiro produto adicionado à lista, longe da mudança que o causou.
+
+**É a terceira vez que o mesmo mecanismo cobra.** Linhas de tipo aposentado ([D-51](#d-51-um-valor-de-enum-removido-precisa-sumir-também-do-banco)), restrição de enum congelada ([D-53](#d-53-a-aplicação-repara-a-restrição-de-enum-que-o-ddl-auto-update-deixa-envelhecer)) e agora uma coluna que não dá para aposentar. O padrão vale registrar: **com `ddl-auto: update`, o esquema só cresce** — toda mudança precisa ser pensada como adição, ou vir com uma reparação explícita.
+
+**Onde no código.** `infrastructure/database/entity/ItemRoteiroEntity.java`.
 
 ---
 

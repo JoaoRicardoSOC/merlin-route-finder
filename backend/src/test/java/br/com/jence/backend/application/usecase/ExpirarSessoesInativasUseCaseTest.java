@@ -43,7 +43,7 @@ class ExpirarSessoesInativasUseCaseTest {
     /** Sessao ACTIVE cujo TTL venceu ha meia hora. */
     private Sessao sessaoVencida() {
         return Sessao.reconstituir(UUID.randomUUID(), StatusSessao.ACTIVE,
-                AGORA.minusHours(2), AGORA.minusMinutes(30));
+                AGORA.minusHours(2), AGORA.minusMinutes(30), null, null);
     }
 
     private void aVarreduraEncontra(Sessao... sessoes) {
@@ -136,7 +136,7 @@ class ExpirarSessoesInativasUseCaseTest {
          * jornada foi completada - que e a metrica de sucesso do produto.
          */
         Sessao concluida = Sessao.reconstituir(UUID.randomUUID(), StatusSessao.COMPLETED,
-                AGORA.minusHours(2), AGORA.minusMinutes(30));
+                AGORA.minusHours(2), AGORA.minusMinutes(30), null, null);
         aVarreduraEncontra(concluida);
         comCarrinhoMontado(concluida);
 

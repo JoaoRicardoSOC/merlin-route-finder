@@ -10,13 +10,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
  * UC-014 (parte 1): o cliente confirma ter pego um produto da prateleira.
  * <p>
- * E o que faz o marcador avancar na navegacao do celular, e tambem o que informa ao UC-012
- * onde o cliente esta quando ele pede um ponto de apoio.
+ * E o que faz o marcador do item mudar de aparencia no mapa, e tambem <b>a principal pista de
+ * onde o cliente esta</b>: quem acabou de pegar um produto esta na prateleira dele. Ver
+ * {@link br.com.jence.backend.domain.service.PosicaoDoCliente}.
  */
 @Service
 @RequiredArgsConstructor
@@ -39,8 +41,9 @@ public class MarcarItemColetadoUseCase {
                 .findFirst()
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Item do roteiro", itemId));
 
-        // Idempotente: tocar duas vezes, ou a rede reenviar, nao e erro.
-        item.marcarComoColetado();
+        // Idempotente: tocar duas vezes, ou a rede reenviar, nao e erro - e a hora que vale
+        // continua sendo a da primeira confirmacao, para nao mover a posicao do cliente.
+        item.marcarComoColetado(LocalDateTime.now());
         listaRoteiroRepository.salvar(lista);
 
         /*
