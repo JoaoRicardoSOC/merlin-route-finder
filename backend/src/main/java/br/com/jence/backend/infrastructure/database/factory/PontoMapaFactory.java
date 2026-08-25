@@ -16,7 +16,8 @@ public class PontoMapaFactory {
                 entity.getTipo(),
                 entity.getCorredor(),
                 entity.getCoordenadaX(),
-                entity.getCoordenadaY()
+                entity.getCoordenadaY(),
+                entity.getCodigoCurto()
         );
     }
 
@@ -28,6 +29,7 @@ public class PontoMapaFactory {
                 pontoMapa.getId(),
                 pontoMapa.getTipo(),
                 pontoMapa.getCorredor(),
+                pontoMapa.getCodigoCurto(),
                 pontoMapa.getCoordenadaX(),
                 pontoMapa.getCoordenadaY()
         );

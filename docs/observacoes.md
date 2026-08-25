@@ -14,7 +14,7 @@
 
 | # | Observação | De quem | Urgência |
 |---|---|---|---|
-| [O-01](#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada) | Chave do Gemini e cota gratuita | João Ricardo | **Alta — 13/09** |
+| [O-01](#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada) | Chave do Gemini e cota gratuita (afeta a suíte de testes) | João Ricardo | **Alta — 13/09** |
 | [O-02](#o-02-senha-do-oracle-passou-por-canal-de-conversa) | Senha do Oracle exposta | João Ricardo | Média |
 | [O-03](#o-03-o-deploy-ainda-não-foi-feito-e-vale-5-pontos) | Deploy pendente | Time | **Alta — 13/09** |
 | [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade) | `origemSugestao` na tela | Bielecky e Marcela | Alta |
@@ -43,10 +43,19 @@
 
 **Por que importa.** Dois motivos somados:
 
-1. A chave atual passou por conversa e teve a cota diária consumida durante o desenvolvimento.
+1. A chave atual passou por conversa e teve a cota diária consumida durante o desenvolvimento — e a substituta, gerada em 24/08, passou pelo mesmo canal em 25/08. A troca continua pendente.
 2. O tier gratuito limita **por dia e por minuto**. No modelo de topo são **20 requisições por dia** — uma única sessão de testes esgotou. Trocamos para o `gemini-3.5-flash-lite`, que tem folga maior e responde em ~1s, mas o limite por minuto continua valendo: durante os testes de integração da ruptura, o terceiro teste seguido **caiu no fallback determinístico** por causa dele.
 
 O fallback funcionou como projetado e o cliente recebeu resposta útil. Mas numa apresentação ao vivo, cair para "produto disponível mais próximo" justamente no momento mais forte da demonstração seria uma pena evitável.
+
+**Isso já atrapalha a verificação, e não só a demonstração.** Confirmado em 25/08/2026: com `GEMINI_API_KEY` definida, a suíte de integração completa **não fecha verde de forma confiável** — os testes que conversam com o modelo falham em sequência e passam quando rodados isoladamente. Não é defeito do código; é o limite por minuto sendo atingido por uma suíte que dispara várias chamadas seguidas.
+
+Enquanto a cota não subir, valem dois cuidados:
+
+- a suíte **sem** `GEMINI_API_KEY` é determinística — os testes de IA são pulados e o resto fecha verde. É a forma de verificar um card;
+- os testes de IA precisam ser rodados **por classe**, e não junto com o resto.
+
+Habilitar o faturamento resolveria os dois problemas de uma vez.
 
 **De quem.** João Ricardo. **Prazo que pressiona:** 13/09 (vídeo da seletiva, com o MVP funcionando).
 

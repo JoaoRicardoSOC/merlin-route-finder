@@ -9,11 +9,14 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface PontoMapaJpaRepository extends JpaRepository<PontoMapaEntity, UUID> {
 
     List<PontoMapaEntity> findByTipo(TipoPonto tipo);
+
+    Optional<PontoMapaEntity> findByCodigoCurto(String codigoCurto);
 
     /*
      * Apaga pontos gravados com um tipo que TipoPonto nao tem mais.

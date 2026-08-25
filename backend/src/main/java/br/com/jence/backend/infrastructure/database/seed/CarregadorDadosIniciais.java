@@ -7,6 +7,7 @@ import br.com.jence.backend.domain.repository.Pagina;
 import br.com.jence.backend.domain.repository.PontoMapaRepository;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import br.com.jence.backend.infrastructure.database.repository.PontoMapaJpaRepository;
+import br.com.jence.backend.infrastructure.database.schema.RestricaoDeEnumNoBanco;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -61,6 +62,7 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
     private final ProdutoRepository produtoRepository;
     private final PontoMapaRepository pontoMapaRepository;
     private final PontoMapaJpaRepository pontoMapaJpaRepository;
+    private final RestricaoDeEnumNoBanco restricaoDeEnum;
 
     /*
      * O que esta execucao criou. Vive numa instancia propria por chamada, e nao em campo do
@@ -68,11 +70,11 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
      * execucoes e o log passaria a mentir a partir da segunda - foi o que um teste flagrou.
      */
     private static final class Contagem {
-        private int secoes;
+        private int pontos;
         private int produtos;
 
         private boolean nadaFeito() {
-            return secoes == 0 && produtos == 0;
+            return pontos == 0 && produtos == 0;
         }
     }
 
@@ -92,16 +94,23 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
                 .collect(Collectors.toSet());
 
         Contagem contagem = new Contagem();
+        /*
+          * A ordem importa: apagar as linhas de tipo aposentado antes de refazer a restricao,
+          * porque uma linha com valor fora do enum faria o "add check" ser recusado.
+          */
         apagarPontosDeTipoAposentado();
+        restricaoDeEnum.sincronizar();
+
         Map<String, PontoMapa> secoes = carregarOuCriarSecoes(contagem);
         criarPontosDeServicoQueFaltam(contagem);
+        criarPontosDeQrCodeQueFaltam(contagem);
         criarCatalogo(secoes, skusExistentes, contagem);
 
         if (contagem.nadaFeito()) {
             log.info("Massa de demonstracao ja esta completa. Nada a carregar.");
         } else {
-            log.info("Carga incremental: {} secao(oes) e {} produto(s) criados.",
-                    contagem.secoes, contagem.produtos);
+            log.info("Carga incremental: {} ponto(s) do mapa e {} produto(s) criados.",
+                    contagem.pontos, contagem.produtos);
         }
     }
 
@@ -142,7 +151,7 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         if (ponto == null) {
             ponto = pontoMapaRepository.salvar(
                     new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, corredor, x, y));
-            contagem.secoes++;
+            contagem.pontos++;
         }
         secoes.put(corredor, ponto);
     }
@@ -154,10 +163,39 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         criarSeNaoHouver(contagem, TipoPonto.BANHEIRO, "Sanitarios", 52, 8);
     }
 
+    /*
+     * Onde os adesivos ficam colados: corredores de passagem e cruzamentos, nao dentro das
+     * secoes - o cliente escaneia enquanto anda, nao quando ja chegou onde queria.
+     *
+     * O codigo impresso no adesivo leva hifen (ENT-01) porque e mais facil de ler e de ditar;
+     * o banco guarda a forma canonica (ENT01) e a busca normaliza a digitacao, entao o hifen e
+     * so tipografia. Ver D-52.
+     *
+     * Quantos e exatamente onde ainda e decisao do time (O-18): trocar as coordenadas aqui nao
+     * afeta nenhuma outra parte do sistema.
+     */
+    private void criarPontosDeQrCodeQueFaltam(Contagem contagem) {
+        criarQrCodeSeNaoHouver(contagem, "ENT-01", "Entrada da loja", 50, 92);
+        criarQrCodeSeNaoHouver(contagem, "TIN-02", "Corredor de Tintas", 32, 18);
+        criarQrCodeSeNaoHouver(contagem, "CEN-03", "Cruzamento central", 41, 40);
+        criarQrCodeSeNaoHouver(contagem, "ILU-04", "Corredor leste, junto a Iluminacao", 76, 42);
+        criarQrCodeSeNaoHouver(contagem, "FER-05", "Corredor oeste, junto a Ferramentas", 20, 65);
+        criarQrCodeSeNaoHouver(contagem, "CAI-06", "Frente de loja, antes dos caixas", 62, 80);
+    }
+
+    private void criarQrCodeSeNaoHouver(Contagem contagem, String codigo, String corredor,
+                                        int x, int y) {
+        if (pontoMapaRepository.buscarPorCodigoCurto(codigo).isEmpty()) {
+            pontoMapaRepository.salvar(
+                    new PontoMapa(UUID.randomUUID(), TipoPonto.QR_CODE, corredor, x, y, codigo));
+            contagem.pontos++;
+        }
+    }
+
     private void criarSeNaoHouver(Contagem contagem, TipoPonto tipo, String corredor, int x, int y) {
         if (pontoMapaRepository.buscarPorTipo(tipo).isEmpty()) {
             pontoMapaRepository.salvar(new PontoMapa(UUID.randomUUID(), tipo, corredor, x, y));
-            contagem.secoes++;
+            contagem.pontos++;
         }
     }
 

@@ -36,6 +36,13 @@ public class PontoMapaEntity {
     @Column(name = "corredor", length = 100)
     private String corredor;
 
+    /*
+     * Unique com nulo permitido: no Oracle o indice unico ignora as linhas nulas, entao os
+     * pontos que nao sao QR Code convivem sem codigo na mesma coluna.
+     */
+    @Column(name = "codigo_curto", unique = true, length = 20)
+    private String codigoCurto;
+
     @Column(name = "coordenada_x", nullable = false)
     private int coordenadaX;
 

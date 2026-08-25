@@ -10,6 +10,7 @@ public record PontoMapaResponse(
         UUID id,
         TipoPonto tipo,
         String corredor,
+        String codigoCurto,
         int coordenadaX,
         int coordenadaY
 ) {
@@ -21,6 +22,7 @@ public record PontoMapaResponse(
                 pontoMapa.getId(),
                 pontoMapa.getTipo(),
                 pontoMapa.getCorredor(),
+                pontoMapa.getCodigoCurto(),
                 pontoMapa.getCoordenadaX(),
                 pontoMapa.getCoordenadaY()
         );

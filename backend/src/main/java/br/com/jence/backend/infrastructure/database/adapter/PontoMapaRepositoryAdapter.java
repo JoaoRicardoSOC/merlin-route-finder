@@ -36,6 +36,16 @@ public class PontoMapaRepositoryAdapter implements PontoMapaRepository {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<PontoMapa> buscarPorCodigoCurto(String codigoCurto) {
+        String canonico = PontoMapa.normalizarCodigo(codigoCurto);
+        if (canonico == null) {
+            return Optional.empty();
+        }
+        return jpaRepository.findByCodigoCurto(canonico).map(pontoMapaFactory::paraDominio);
+    }
+
+    @Override
     @Transactional
     public PontoMapa salvar(PontoMapa pontoMapa) {
         PontoMapaEntity salvo = jpaRepository.save(pontoMapaFactory.paraPersistencia(pontoMapa));

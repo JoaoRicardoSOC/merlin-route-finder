@@ -102,7 +102,7 @@ class ProdutoControllerTest {
         UUID pontoId = UUID.randomUUID();
         when(consultarProdutoUseCase.executar(id)).thenReturn(new ProdutoDetalhadoResponse(
                 id, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L", new BigDecimal("289.90"), 12,
-                pontoId, new PontoMapaResponse(pontoId, TipoPonto.PRATELEIRA, "Tintas", 32, 10)));
+                pontoId, new PontoMapaResponse(pontoId, TipoPonto.PRATELEIRA, "Tintas", null, 32, 10)));
 
         mockMvc.perform(get("/api/v1/produtos/{id}", id))
                 .andExpect(status().isOk())

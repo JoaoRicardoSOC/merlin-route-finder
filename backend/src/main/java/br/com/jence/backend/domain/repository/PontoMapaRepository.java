@@ -13,5 +13,12 @@ public interface PontoMapaRepository {
 
     List<PontoMapa> buscarPorTipo(TipoPonto tipo);
 
+    /**
+     * Resolve o codigo digitado pelo cliente, em qualquer grafia.
+     *
+     * @see PontoMapa#normalizarCodigo(String)
+     */
+    Optional<PontoMapa> buscarPorCodigoCurto(String codigoCurto);
+
     PontoMapa salvar(PontoMapa pontoMapa);
 }

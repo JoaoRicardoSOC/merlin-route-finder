@@ -365,7 +365,7 @@ components:
       enum: [ACTIVE, COMPLETED, EXPIRED, ABANDONED]
     TipoPonto:
       type: string
-      enum: [PRATELEIRA, BANHEIRO, CAIXA]
+      enum: [PRATELEIRA, BANHEIRO, CAIXA, QR_CODE]
     Remetente:
       type: string
       enum: [USER, ASSISTANT]
@@ -395,6 +395,11 @@ components:
           $ref: "#/components/schemas/TipoPonto"
         corredor:
           type: string
+        codigoCurto:
+          type: string
+          nullable: true
+          description: Código digitável do adesivo, na forma canônica (sem hífen). Preenchido apenas em pontos QR_CODE.
+          example: TIN02
         coordenadaX:
           type: integer
         coordenadaY:

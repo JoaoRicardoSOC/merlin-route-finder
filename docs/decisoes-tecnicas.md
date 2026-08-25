@@ -63,6 +63,8 @@
 - [D-49. O escopo revisado retirou o totem e a rota calculada](#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada)
 - [D-50. Sem rota, a lista passa a ser agrupada por seção](#d-50-sem-rota-a-lista-passa-a-ser-agrupada-por-seção)
 - [D-51. Um valor de enum removido precisa sumir também do banco](#d-51-um-valor-de-enum-removido-precisa-sumir-também-do-banco)
+- [D-52. O código curto do QR Code é normalizado na gravação, não só na busca](#d-52-o-código-curto-do-qr-code-é-normalizado-na-gravação-não-só-na-busca)
+- [D-53. A aplicação repara a restrição de enum que o `ddl-auto: update` deixa envelhecer](#d-53-a-aplicação-repara-a-restrição-de-enum-que-o-ddl-auto-update-deixa-envelhecer)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -1262,6 +1264,55 @@ Hoje nada a alcança: os pontos só são lidos por id ou por tipo, e nenhum dos 
 **O `@Transactional` fica no repositório, não no chamador.** Uma consulta `@Modifying` exige transação, e a carga chama o método de dentro da própria classe — auto-invocação não passa pelo proxy do Spring, então a anotação no `ApplicationRunner` seria silenciosamente ignorada e a operação falharia por falta de transação.
 
 **Onde no código.** `infrastructure/database/repository/PontoMapaJpaRepository.java` e `infrastructure/database/seed/CarregadorDadosIniciais.java`.
+
+---
+
+### D-52. O código curto do QR Code é normalizado na gravação, não só na busca
+
+**Contexto.** Cada QR Code afixado na loja carrega a posição onde está colado. Mas o adesivo rasga, a câmera falha e nem todo cliente sabe usar leitor de QR — daí o **código curto digitável** ao lado, no formato `TIN-02`.
+
+**Decisão.** O código vive em `PontoMapa`, como coluna própria: nulo em prateleira, caixa e banheiro; preenchido só em pontos `QR_CODE`. E o `PontoMapa` **normaliza no construtor** — maiúsculas, sem separadores — de modo que o banco guarda `TIN02` e a busca normaliza a digitação antes de consultar.
+
+**Por que normalizar na entrada, e não só na consulta.** Normalizar apenas ao buscar deixaria o banco aceitar `TIN-02` e `tin 02` como linhas diferentes, e a constraint `unique` da coluna passaria a não garantir nada — dois adesivos poderiam existir com o "mesmo" código. Normalizando na construção, **a unicidade da coluna é a unicidade do código.**
+
+O hífen do adesivo vira, então, pura tipografia: existe para o código ser legível e ditável, e o sistema não depende dele.
+
+**Por que em `PontoMapa` e não numa entidade própria.** Um ponto de QR Code é um ponto do mapa com coordenada, como qualquer outro — reaproveita a busca, a resposta REST e o desenho do mapa inteiros. Uma entidade separada duplicaria coordenada e rótulo para ganhar apenas um campo obrigatório.
+
+**Alternativa considerada.** Guardar a forma impressa (`TIN-02`) e normalizar na consulta com `regexp_replace`. Descartada por perder a unicidade real e por impedir o uso do índice.
+
+**Consequência assumida.** Trocar o formato impresso depois exige recarregar os códigos. Aceitável: os adesivos são físicos e trocá-los já é trabalho de campo.
+
+**Onde no código.** `domain/entity/PontoMapa.java` — `normalizarCodigo`; `infrastructure/database/adapter/PontoMapaRepositoryAdapter.java`.
+
+---
+
+### D-53. A aplicação repara a restrição de enum que o `ddl-auto: update` deixa envelhecer
+
+**Contexto.** Trocar `TOTEM` por `QR_CODE` no enum `TipoPonto` fez o banco recusar toda gravação de ponto de QR Code, com `ORA-02290`. A causa levou um tempo para aparecer:
+
+```
+SYS_C006965723  C  (tipo in ('PRATELEIRA','BANHEIRO','CAIXA','TOTEM'))
+```
+
+Para uma coluna `@Enumerated(EnumType.STRING)`, o Hibernate **cria** uma restrição de verificação com os valores do enum. Mas `ddl-auto: update` só acrescenta: nunca altera nem remove o que já existe. A restrição congela no dia da criação da tabela, e no dia em que um valor entra ou sai do enum o banco passa a recusar gravações perfeitamente válidas — com um erro que não diz qual coluna nem por quê.
+
+**Isso não era um problema do card.** Era uma armadilha para **toda** mudança futura de enum, em cada schema do time e na instância publicada.
+
+**Decisão.** Um componente compara, no startup, os literais da restrição com `values()` do enum. Se divergirem, ele derruba a restrição e a recria a partir do enum.
+
+**Por que refazer em vez de apenas apagar.** Apagar resolveria o erro e perderia a garantia. Refazer mantém a proteção no banco e faz a próxima mudança de enum se resolver sozinha — que é o ponto: o problema não é este valor, é o mecanismo.
+
+**Por que na aplicação, e não num `ALTER` combinado com o time.** Sem Flyway ([D-16](#d-16-carga-inicial-em-java-em-vez-de-sql)) não há migração onde pendurar isso. Cada integrante tem o próprio schema, e há ainda o publicado — pedir que cada um rode o comando à mão deixaria o ambiente de alguém quebrado sem aviso, e o do Render quebrado no deploy seguinte.
+
+**Duas guardas.**
+
+1. **Só age quando diverge.** Comparar antes evita DDL a cada inicialização, que seria ruído no log e tempo a mais num cold start que já leva mais de dois minutos ([D-45](#d-45-o-deploy-mudou-quais-avisos-do-hibernate-importavam)).
+2. **Falhar aqui não derruba a aplicação.** Se o `ALTER` for recusado — permissão, lock —, fica um aviso no log e a subida continua. O erro reapareceria na primeira gravação de qualquer forma, e agora com uma pista.
+
+**A ordem em relação à [D-51](#d-51-um-valor-de-enum-removido-precisa-sumir-também-do-banco) não é acidental.** As linhas de tipo aposentado são apagadas **antes**: uma linha com valor fora do enum faria o `add check` ser recusado.
+
+**Onde no código.** `infrastructure/database/schema/RestricaoDeEnumNoBanco.java`.
 
 ---
 
