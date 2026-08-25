@@ -115,6 +115,10 @@ Started BackendApplication in 134.503 seconds
 
 **Dois minutos e quinze**, contra 21 segundos na máquina de desenvolvimento. A causa é o plano gratuito dar **0.1 CPU** — um décimo de núcleo — e o Spring inicializar na mesma proporção.
 
+> **Medido de novo em 25/08/2026, depois de o catálogo crescer: 176 segundos** — quase três minutos até a primeira resposta. A carga inicial passou a percorrer 111 produtos em vez de 29, e cada verificação é uma ida ao Oracle a 5.000 km.
+>
+> **Para a demonstração, isso é o número que importa.** Acordar a instância três minutos antes de começar deixou de ser recomendação e virou obrigação — e vale acordá-la de novo se a apresentação atrasar, porque o Render suspende após 15 minutos parado.
+
 Numa demonstração ao vivo isso é fatal se pegar de surpresa. **Abrir a aplicação pelo menos cinco minutos antes de gravar ou apresentar**, e deixá-la aquecida.
 
 A mesma CPU limitada aparece nas respostas. Medido contra a instância publicada:

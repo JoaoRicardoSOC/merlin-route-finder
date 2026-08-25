@@ -14,26 +14,23 @@
 
 | # | Observação | De quem | Urgência |
 |---|---|---|---|
-| [O-01](#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada) | Chave do Gemini e cota gratuita (afeta a suíte de testes) | João Ricardo | **Alta — 13/09** |
+| [O-01](#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada) | Chave do Gemini e cota gratuita (afeta a suíte) | João Ricardo | **Alta — 13/09** |
 | [O-02](#o-02-senha-do-oracle-passou-por-canal-de-conversa) | Senha do Oracle exposta | João Ricardo | Média |
-| [O-03](#o-03-o-deploy-ainda-não-foi-feito-e-vale-5-pontos) | Deploy pendente | Time | **Alta — 13/09** |
 | [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade) | `origemSugestao` na tela | Bielecky e Marcela | Alta |
 | [O-05](#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição) | Botão de ruptura sem trava | Bielecky e Marcela | Alta |
-| [O-06](#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar) | Recuperação do handoff | Bielecky e Marcela | Média |
-| [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar) | POI não persistido | Bielecky e Marcela | Média |
-| [O-08](#o-08-o-der-não-tem-a-tabela-de-registro-de-ruptura) | DER desatualizado | Vicentini | **Alta — 24/08** |
-| [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado) | Limitação multi-totem | — | Baixa |
-| [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP | Time (discurso) | Média |
-| [O-11](#o-11-o-swagger-fica-exposto-no-ambiente-publicado) | Swagger em produção | — | Baixa |
-| [O-12](#o-12-o-raio-de-busca-da-ruptura-é-um-palpite-informado) | Raio de 25 unidades | — | Baixa |
-| [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita) | Fase 3 não iniciada | Time | Média |
-| [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) | ~~Massa com um único par de substitutos~~ | — | resolvida |
-| [O-15](#o-15-o-endpoint-de-simulação-de-estoque-não-tem-proteção-nenhuma) | Simulação de estoque sem proteção | — | Baixa |
-| [O-16](#o-16-o-token-continua-na-url-do-pwa-mesmo-fora-da-nossa-api) | Token na URL do PWA | Bielecky e Marcela | Média |
-| [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final) | Limpar documentos de trabalho | Time | fim do ano |
-| [O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens) | ~~Catálogo pequeno~~ — falta coletar imagens | Time | Média |
+| [O-06](#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar) | Retomar a sessão pelo `localStorage` | Bielecky e Marcela | Alta |
+| [O-08](#o-08-o-der-não-tem-a-tabela-de-registro-de-ruptura) | DER desatualizado | Vicentini | **Alta** |
 | [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | Tela de código manual e arte da placa | Bielecky, Marcela e time | Alta |
-| [O-20](#o-20-a-limpeza-dos-testes-de-integração-falha-em-silêncio-quando-há-ruptura) | Limpeza de teste deixa sessão órfã | Backend | Baixa |
+| [O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens) | Coletar as imagens dos produtos | Time | Média |
+| [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
+| [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final) | Limpar documentos de trabalho | Time | fim do ano |
+| [O-20](#o-20-rodar-a-suíte-deixa-um-resto-de-sessões-no-banco-de-demonstração) | Limpar sessões de teste antes da banca | Backend | Baixa |
+| [O-21](#o-21-desenvolvimento-testes-e-demonstração-usam-o-mesmo-schema) | Um schema só para tudo | Time | Média |
+| [O-11](#o-11-o-swagger-fica-exposto-no-ambiente-publicado) | Swagger em produção | — | aceita |
+| [O-12](#o-12-o-raio-de-busca-da-ruptura-é-um-palpite-informado--agora-medido) | Raio de 25 unidades — medido | — | aceita |
+| [O-15](#o-15-o-endpoint-de-simulação-de-estoque-não-tem-proteção-nenhuma) | Simulação de estoque sem proteção | — | aceita |
+
+**Encerradas:** [O-03](#o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado) (deploy no ar) · [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar--sem-objeto) · [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado--sem-objeto) · [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo) · [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) · [O-16](#o-16-o-token-continua-na-url-do-pwa--a-preocupação-deixou-de-existir)
 
 ---
 
@@ -73,23 +70,16 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 
 ---
 
-### O-03. O deploy ainda não foi feito, e vale 5 pontos
+### O-03. ~~O deploy ainda não foi feito~~ — no ar, e verificado
 
-**O quê.** Publicar a API num provedor gratuito compatível com Java — Render, Railway ou Fly.io. Vercel, sugerido pela FIAP, não hospeda bem uma aplicação Java de longa duração.
+> [!NOTE]
+> **Encerrada em 25/08/2026.** A API está publicada no Render e **respondendo com o código atual** — verificado por chamada real: `GET /api/v1/produtos/secoes` devolveu as dez seções com os 111 produtos, e o contrato publicado já traz `/mapa`, `desmarcar`, `posicao` e `substituir`.
+>
+> O receio de que a instância estivesse rodando código anterior à virada de escopo **não se confirmou**: o repositório vinha sendo empurrado ao longo do caminho e o Render acompanhou.
 
-**Por que importa.** É o único card da Fase 1 que não é código: exige criar conta e publicar, o que ninguém além do time pode fazer. Foi adiado conscientemente para não travar o avanço nos diferenciais de IA, e nada no backend depende dele. Mas a rubrica dá **5 pontos ao item Deploy**, dos quais **4,5 são pela usabilidade do MVP publicado** — e o link do deploy é item obrigatório da entrega.
+**O que sobrou de aprendizado, e continua valendo.** O plano gratuito dá 0,1 CPU, e a partida a frio **subiu de 134 para 176 segundos** com o catálogo maior — quase três minutos até a primeira resposta. Acordar a instância antes de qualquer demonstração deixou de ser recomendação e virou obrigação; ver [`deploy.md`](deploy.md).
 
-**Tudo do lado do código está pronto** (23/08/2026): `Dockerfile`, `.dockerignore`, `render.yaml` e o guia passo a passo em [`deploy.md`](deploy.md), com a tabela exata de variáveis. Falta a ação que só uma pessoa pode fazer: criar a conta no Render e informar as credenciais lá.
-
-**Verificado antes:** `oracle.fiap.com.br` resolve para um IP público (187.8.12.142) e o acesso local sai de conexão residencial sem VPN — ou seja, **não há lista de IPs autorizados**. Resta uma única incógnita, que só um servidor no exterior resolve: filtro por país de origem. Se aparecer, o plano B é o Fly.io, que tem região em São Paulo.
-
-**Ordem definida em 22/08/2026:** o deploy é o **último card**, feito depois de o backlog inteiro terminar.
-
-**De quem.** Time. **Prazo que pressiona:** 13/09.
-
----
-
-## Para a dupla de frontend (Bielecky e Marcela)
+**Verificado antes de escolher o provedor:** `oracle.fiap.com.br` resolve para IP público e aceita conexão de fora sem VPN — não há lista de IPs autorizados. O plano B era Fly.io, com região em São Paulo, caso houvesse filtro por país. Não houve.
 
 ### O-19. A entrada tem um plano B, e ele é uma tela que ainda não existe
 
@@ -134,25 +124,31 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 
 ### O-06. O celular tem um caminho de recuperação se a aba fechar
 
-**O quê.** Depois que o QR Code é lido, o token de handoff é consumido e **não vale uma segunda vez**. Mas `GET /api/v1/sessoes/{sessaoId}/roteiro` continua devolvendo a lista **com a ordem da rota já calculada**, e não exige token nenhum.
+> [!NOTE]
+> **Reescrita em 25/08/2026.** A versão anterior descrevia a recuperação via token de handoff, que não existe mais. **O problema continua real** — a aba fecha, o cliente perde o contexto —, só que a saída mudou.
 
-**Por que importa.** Sem usar isso, um cliente que fecha a aba sem querer precisaria reiniciar o planejamento do zero — e ao vivo, na frente da banca, seria um desastre. Com isso, o app se recupera sozinho desde que tenha guardado o `sessaoId`.
+**O quê.** Guardar o `sessaoId` no `localStorage` assim que a sessão nasce, e tentar retomá-la ao abrir a página.
 
-**A segunda saída, para quando nem o `sessaoId` sobreviveu** (troca de aparelho, QR expirado antes de alguém escanear): o Totem chama `POST /api/v1/handoff` de novo para a mesma sessão e exibe um QR Code novo. O token anterior deixa de valer, e **se a caminhada já tiver começado a ordem das paradas e os itens coletados são preservados** — o cliente retoma de onde parou. Quando o erro do `POST /handoff/validate` vier com `error: "Token de Handoff Expirado"`, é exatamente esse o caminho a oferecer.
+**Por que importa.** A sessão agora guarda **a lista inteira**. Um cliente que fecha a aba sem querer, ou cujo navegador descarta a página por falta de memória, precisaria montar tudo de novo — e ao vivo, na frente da banca, seria um desastre.
 
-**De quem.** Bielecky e Marcela. Ver [D-29](decisoes-tecnicas.md#d-29-uso-único-do-token-pela-ausência-no-banco) e [D-44](decisoes-tecnicas.md#d-44-o-token-de-handoff-sai-da-url-e-o-qr-code-passa-a-ser-regenerável).
+**Como retomar.** `GET /api/v1/sessoes/{sessaoId}` devolve o status e a `posicaoAtual`; `GET /api/v1/sessoes/{sessaoId}/roteiro` devolve a lista com o que já foi coletado. Nada disso exige token.
+
+**Se a sessão não valer mais** — status diferente de `ACTIVE`, ou TTL vencido —, a tela precisa perceber e oferecer começar de novo, em vez de deixar o cliente batendo em 409 sem entender. Com o TTL em 4 horas ([D-24](decisoes-tecnicas.md#d-24-ttl-da-sessão-é-renovado-a-cada-interação)) isso ficou raro, mas não impossível.
+
+**E se nem o `sessaoId` sobreviveu** — troca de aparelho, navegador anônimo —, não há recuperação: é começar do zero escaneando uma placa. Aceito: guardar mais que isso exigiria identificar o cliente, o que o projeto deliberadamente não faz.
+
+**De quem.** Bielecky e Marcela.
+
+
+### O-07. ~~Ponto de interesse some se a página recarregar~~ — sem objeto
+
+> [!NOTE]
+> **Encerrada em 25/08/2026.** O recurso foi removido junto com a rota calculada: sem rota, não existe posição em que inserir um desvio. O banheiro virou apenas mais um ponto do mapa, e `GET /mapa` o devolve sem depender de sessão — não há estado a perder num reload.
+>
+> Ver [D-49](decisoes-tecnicas.md#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada).
 
 ---
 
-### O-07. Ponto de interesse some se a página recarregar
-
-**O quê.** O desvio para o banheiro (UC-012) é calculado e devolvido, mas **não é persistido** — não existe tabela para ele no DER entregue, e ele não é um produto que caiba em `ItemRoteiro`.
-
-**Por que importa.** Um reload da página perde o desvio. Se isso incomodar na prática, o app pode guardar o estado localmente; alternativamente, a [D-31](decisoes-tecnicas.md#d-31-ponto-de-interesse-não-é-persistido) descreve exatamente o que uma tabela `TB_PONTO_INTERESSE_ROTEIRO` exigiria, caso o time decida pagar esse custo.
-
-**De quem.** Bielecky e Marcela (decidir se compensa tratar no cliente).
-
----
 
 ## Para o banco e os diagramas (Vicentini)
 
@@ -166,19 +162,15 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 
 ---
 
-### O-16. O token continua na URL do PWA, mesmo fora da nossa API
+### O-16. ~~O token continua na URL do PWA~~ — a preocupação deixou de existir
 
-**O quê.** Limpar a URL logo depois de ler o token, com `history.replaceState`.
+> [!NOTE]
+> **Encerrada em 25/08/2026.** Não há mais token: o handoff foi removido com o totem.
+>
+> **O sucessor não tem o mesmo problema, e vale entender por quê.** O QR Code hoje codifica algo como `.../?p=TIN-02` — o código da placa. Ele é **público por natureza**: está impresso na parede da loja, ao lado do próprio QR, justamente para quem não consegue escanear poder digitá-lo.
+>
+> Ficar no histórico do navegador não expõe nada, porque ele não autoriza nada: informar uma placa não dá acesso a sessão alguma, apenas diz onde a pessoa está. **Limpar a URL deixou de ser hardening e virou preferência estética.**
 
-**Por que importa.** A Fase 3 tirou o token da URL **da nossa API** — ele agora vai no corpo de `POST /handoff/validate`. Mas o QR Code codifica a URL do PWA, `https://.../rota?token=...`, então o token continua na barra de endereço e no **histórico do navegador do cliente**, que é onde ele sobrevive por mais tempo.
-
-Nosso lado ficou limpo; o do navegador não. Como o token vale 5 minutos e é de uso único, o risco real é baixo — mas é uma linha de código no frontend, e sem ela metade do hardening fica pela metade.
-
-Eliminar de vez exigiria um código curto opaco com consulta separada, o que é mais escopo do que o card pedia.
-
-**De quem.** Bielecky e Marcela. Ver [D-44](decisoes-tecnicas.md#d-44-o-token-de-handoff-sai-da-url-e-o-qr-code-passa-a-ser-regenerável).
-
----
 
 ### O-17. Documentos de trabalho precisam sair antes da entrega final
 
@@ -257,25 +249,30 @@ Qualquer um deles pode ser disparado pela ferramenta de simulação ([D-40](deci
 
 > Estas não são pendências. São escolhas de escopo que valem ser lembradas — principalmente porque é melhor citá-las antes que alguém as descubra.
 
-### O-20. A limpeza dos testes de integração falha em silêncio quando há ruptura
+### O-20. Rodar a suíte deixa um resto de sessões no banco de demonstração
 
-**O quê.** Vários testes de integração apagam a sessão que criaram no `@AfterEach`. Quando o teste dispara uma ruptura, essa limpeza **falha**: `TB_REGISTRO_RUPTURA` aponta para a sessão por chave estrangeira, e o Oracle recusa o delete com `ORA-02292`.
+> [!NOTE]
+> **Corrigida em 25/08/2026.** A versão original afirmava que a limpeza de vários testes falhava e que sessões órfãs iam se acumulando. **Isso foi escrito sem verificação, e a medição não sustenta.** Os testes que geram ruptura já apagavam os registros antes da sessão; o erro observado veio de um teste que falhou no meio, não do caminho normal.
 
-**Por que passa despercebido.** O erro acontece *depois* das asserções, dentro do `@AfterEach`. Na maioria das execuções ele aparece apenas como exceção suprimida no relatório — o teste continua verde, e ninguém olha.
+**O que a medição mostra.** Depois de um dia inteiro de execuções da suíte completa, o schema tinha **23 sessões, nenhuma lista órfã e nenhuma sessão `ACTIVE` vencida**. A limpeza funciona e a varredura de TTL faz o resto.
 
-**O efeito.** Sessões órfãs vão se acumulando nos schemas do time e no publicado, cada uma com sua lista e seus registros de ruptura. Não quebra nada hoje. Mas suja a massa, e uma varredura que conte sessões por status passa a mentir.
+**O que sobra, e por que importa mesmo sendo pouco.** Das 23, **17 estão `ABANDONED`** — sessões que vazaram de execuções interrompidas e que a varredura classificou como carrinho abandonado, exatamente como faria com um cliente real.
 
-**Onde já está resolvido.** O [`SubstituicaoDeItemIntegracaoTest`](../backend/src/test/java/br/com/jence/backend/SubstituicaoDeItemIntegracaoTest.java) apaga os registros de ruptura antes da sessão. O mesmo ajuste serve para os outros — é uma linha em cada `@AfterEach`.
+`ABANDONED` é a métrica de negócio que o projeto usa para dizer que uma venda quase aconteceu ([D-42](decisoes-tecnicas.md#d-42-a-varredura-de-ttl-distingue-carrinho-abandonado-de-quem-só-encostou-no-totem)). **Misturada com resíduo de teste, ela deixa de significar o que promete** — e é justamente o tipo de número que se cita numa banca.
 
-**Por que não foi feito junto.** Sairia do escopo do card e mexeria em testes que não têm nada a ver com a troca de item. Vale um card pequeno, ou o próximo que tocar em cada arquivo.
+**O que fazer.** Nada urgente no código. Antes da gravação do vídeo e da banca, vale **limpar as sessões de teste** para que qualquer número citado seja verdade. Um `delete` das sessões finalizadas resolve, respeitando a ordem das chaves estrangeiras: registros de ruptura, mensagens de chat, itens, lista, sessão.
 
-**De quem.** Backend. **Urgência:** baixa — nada quebra, mas quanto mais tempo passa, mais lixo acumula.
+**De quem.** Backend. **Urgência:** baixa até a véspera da demonstração.
 
 ---
 
-### O-09. A rota sempre parte do primeiro totem encontrado
+### O-09. ~~A rota sempre parte do primeiro totem encontrado~~ — sem objeto
 
-O ponto de origem é o primeiro `TipoPonto.TOTEM` do banco. Numa loja com vários totens, o cliente receberia uma rota partindo do totem errado. Resolver exigiria o totem se identificar ao abrir a sessão — mudança de contrato e de UI que não se justifica no escopo atual. Ver [D-28](decisoes-tecnicas.md#d-28-a-rota-parte-do-primeiro-ponto-do-tipo-totem).
+> [!NOTE]
+> **Encerrada em 25/08/2026.** Não há totem nem rota calculada. A origem deixou de ser um ponto fixo do banco e passou a ser a placa que o cliente leu, informada por ele na entrada — "qual totem" não tem mais como ser uma pergunta.
+>
+> Ver [D-54](decisoes-tecnicas.md#d-54-a-entrada-aceita-o-código-da-placa-num-campo-só-e-código-desconhecido-não-recusa-a-sessão).
+
 
 ### O-10. O estoque exibido é o do nosso banco, e só
 
@@ -285,9 +282,23 @@ Não há integração com ERP ou WMS — não temos acesso a sistema real da Ler
 
 Decisão deliberada: a documentação navegável é o que permite ao time e aos avaliadores explorarem a API sem cliente HTTP, e não há dado sensível atrás dela. Num sistema real com dados de cliente, seria fechado. Ver [D-34](decisoes-tecnicas.md#d-34-swagger-ui-permanece-exposto-em-produção).
 
-### O-12. O raio de busca da ruptura é um palpite informado
+### O-12. O raio de busca da ruptura é um palpite informado — agora medido
 
-As 25 unidades do grid 0–100 da planta foram escolhidas por julgamento — é a ordem de grandeza de um desvio que um cliente aceita fazer a pé —, não medidas. Na massa de demonstração o valor funciona: alcança Ferragens e Elétrica a partir de Tintas, e não alcança o outro extremo da loja. Produtos isolados no mapa, como o espelho de Decoração, ficam sem vizinho e devolvem 422.
+As 25 unidades do grid 0–100 foram escolhidas por julgamento: é a ordem de grandeza de um desvio que um cliente aceita fazer a pé.
+
+**Medido em 25/08/2026, com o catálogo de 111 produtos**, o alcance por seção é bem desigual:
+
+| Seção | Produtos vizinhos ao alcance | Corredores alcançados |
+|---|---|---|
+| Elétrica, Ferragens, Jardim | 45–46 | 4 |
+| Encanamento | 32 | 3 |
+| Cozinhas, Ferramentas, Tintas | 22–23 | 2 |
+| Iluminação | 10 | 1 |
+| Decoração, Materiais de construção | **0** | **0** |
+
+**A boa notícia é que a preocupação original se dissolveu sozinha.** A versão anterior desta observação dizia que produtos isolados — o espelho de Decoração era o exemplo — ficavam sem vizinho e devolviam 422. Com o catálogo maior, **Decoração tem dez produtos próprios**, e a busca não exclui a própria seção: um espelho em falta agora tem nove candidatos plausíveis. **Não há mais beco sem saída.**
+
+**Por que o raio fica em 25 mesmo assim.** Aumentá-lo faria Elétrica alcançar quase a loja inteira, e "perto" deixaria de significar perto. O teto de 20 candidatos ordenados por distância ([D-67](decisoes-tecnicas.md#d-67-o-teto-de-candidatos-da-ruptura-envelheceu-com-o-catalogo)) já garante que os mais próximos venham primeiro — e sem nenhum beco sem saída para corrigir, mexer no valor seria mudar código sem causa.
 
 ### O-15. O endpoint de simulação de estoque não tem proteção nenhuma
 
@@ -299,17 +310,38 @@ O que existe no lugar de proteção: marcação explícita como `[Demonstracao]`
 
 ---
 
-## Planejado e ainda não feito
+## Riscos de ambiente
 
-### O-13. A Fase 3 inteira continua planejada e não feita
+### O-21. Desenvolvimento, testes e demonstração usam o mesmo schema
 
-**Fase 3 concluída em 22/08/2026.** O rumo definido no mesmo dia era terminar o backlog primeiro e só então publicar — resta apenas o deploy ([O-03](#o-03-o-deploy-ainda-não-foi-feito-e-vale-5-pontos)), que é o último card.
+**O quê.** Não existe separação entre "banco de desenvolvimento" e "banco de produção": a instância publicada no Render e a suíte de testes de integração apontam para o **mesmo schema Oracle da FIAP**.
 
-1. ~~**Cron de TTL**~~ — concluído em 22/08/2026, ver [D-42](decisoes-tecnicas.md#d-42-a-varredura-de-ttl-distingue-carrinho-abandonado-de-quem-só-encostou-no-totem).
-2. ~~**Refinamento 2-opt**~~ — concluído em 22/08/2026, ver [D-43](decisoes-tecnicas.md#d-43-2-opt-sobre-o-nearest-neighbor-na-variante-de-caminho-aberto). A redução contra a ordem de inserção passou de 38,6% para **41,0%**.
-3. ~~**Hardening do handoff**~~ — concluído em 22/08/2026, ver [D-44](decisoes-tecnicas.md#d-44-o-token-de-handoff-sai-da-url-e-o-qr-code-passa-a-ser-regenerável). `GET /handoff/validate?token=` virou `POST /handoff/validate` com o token no corpo (**mudança quebrante**, com o aval do time), e a regeneração de QR passou a ser um caminho intencional e documentado.
+**Como isso ficou evidente.** Ao verificar o deploy em 25/08, a API publicada respondeu com **111 produtos** — embora o código que ela roda declare 29. Ela estava lendo a massa que as execuções da suíte tinham gravado.
 
-**De quem.** Time, na priorização pós-13/09.
+**Por que é estrutural, e não descuido.** A FIAP dá **um schema por aluno**. Criar um segundo banco exigiria outro provedor, e a restrição de custo zero fecha essa porta.
+
+**O que de fato pode dar errado.** Menos do que parece, e vale ser preciso:
+
+- **estoque** — o teste que zera a trena restaura em `finally`, e isso está no código desde o começo;
+- **sessões** — sobra um resto, tratado na [O-20](#o-20-rodar-a-suíte-deixa-um-resto-de-sessões-no-banco-de-demonstração);
+- **catálogo** — a carga é incremental e idempotente, e produtos que ela não conhece são deixados em paz.
+
+**O risco real é de momento, não de dados.** Rodar a suíte completa **durante** a gravação do vídeo ou a banca mexeria na massa que está sendo demonstrada — e a partida a frio de 176 segundos já torna a instância sensível a qualquer sobressalto.
+
+**O que fazer.** Combinar uma regra simples: **ninguém roda a suíte de integração enquanto alguém estiver gravando ou apresentando.** Não custa nada e elimina o único cenário que machuca.
+
+**De quem.** Time. **Urgência:** média — até a gravação de 13/09.
+
+---
+
+## Planejamento superado
+
+### O-13. ~~A Fase 3 inteira continua planejada e não feita~~ — superada pela virada de escopo
+
+> [!NOTE]
+> **Encerrada em 25/08/2026.** A Fase 3 foi concluída em 22/08 e, dois dias depois, **dois dos seus três itens deixaram de existir**: o refinamento 2-opt saiu com a rota calculada, e o hardening do handoff saiu com o totem. Só a varredura de TTL sobreviveu — e foi reajustada desde então ([D-24](decisoes-tecnicas.md#d-24-ttl-da-sessão-é-renovado-a-cada-interação)).
+>
+> O planejamento por fases foi substituído pelo [`backlog-escopo-revisado.md`](backlog-escopo-revisado.md), cujos treze cards estão concluídos. **Manter esta observação viva sugeriria um trabalho pendente que não existe.**
 
 ---
 
