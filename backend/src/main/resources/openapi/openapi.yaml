@@ -147,7 +147,11 @@ paths:
   /produtos:
     get:
       tags: [Catalogo]
-      summary: Busca paginada e fuzzy de produtos (UC-002)
+      summary: Busca e filtragem do catálogo (UC-002)
+      description: |
+        Sem termo, navega o catálogo em ordem alfabética. Com termo, filtra por nome tolerando busca parcial e pequenos erros de digitação, ordenando por similaridade.
+
+        Os filtros **combinam entre si e com o termo**. Combinação sem resultado devolve **página vazia, não erro** — o cliente filtrou demais, não pediu um recurso inexistente.
       parameters:
         - name: query
           in: query
@@ -155,6 +159,23 @@ paths:
           schema:
             type: string
           description: Termo de busca (tolerante a pequenos erros de digitação)
+        - name: secao
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Corredor da loja, como devolvido por `/produtos/secoes`. Ausente significa todas.
+          example: Tintas
+        - name: apenasDisponiveis
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: |
+            Esconde os produtos com saldo zerado.
+
+            **O padrão é `false` de propósito:** o catálogo mostra produto sem estoque, porque a ruptura tem tratamento próprio no produto. O filtro serve a quem quer só o que dá para levar hoje.
         - name: page
           in: query
           required: false
@@ -174,6 +195,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProdutoPage"
+
+  /produtos/secoes:
+    get:
+      tags: [Catalogo]
+      summary: Listar as seções do catálogo
+      description: |
+        O menu de navegação por corredor, com a quantidade de produtos de cada seção.
+
+        **Só aparecem seções que têm produto.** Uma seção vazia seria um beco sem saída no menu. Os nomes são os mesmos `rotulo` dos blocos devolvidos por `/mapa`.
+      responses:
+        "200":
+          description: Seções com produto
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Secao"
 
   /produtos/{produtoId}:
     get:
@@ -479,6 +518,16 @@ components:
           type: integer
         coordenadaY:
           type: integer
+
+    Secao:
+      type: object
+      properties:
+        nome:
+          type: string
+          example: Tintas
+        quantidadeProdutos:
+          type: integer
+          example: 5
 
     Produto:
       type: object

@@ -19,6 +19,24 @@ public interface ProdutoRepository {
     Pagina<Produto> buscarPorTermo(String termo, int pagina, int tamanho);
 
     /**
+     * A busca do catalogo, com todos os filtros da tela combinados.
+     * <p>
+     * E a unica implementacao de busca que existe: {@link #buscarPaginado} e
+     * {@link #buscarPorTermo} delegam para ca com o filtro correspondente. Os dois continuam
+     * na porta porque expressam intencoes diferentes - listar tudo para a carga, e buscar sem
+     * filtro para fundamentar o assistente de IA.
+     */
+    Pagina<Produto> buscar(FiltroDeProdutos filtro, int pagina, int tamanho);
+
+    /**
+     * As secoes que tem produto hoje, com a contagem de cada uma.
+     * <p>
+     * Sai do catalogo, e nao da planta da loja: uma secao sem produto e um beco sem saida num
+     * menu de navegacao, entao ela simplesmente nao aparece.
+     */
+    List<SecaoDoCatalogo> listarSecoes();
+
+    /**
      * Pre-filtragem espacial do tratamento de ruptura (UC-013): produtos com saldo em estoque
      * dentro de um raio do ponto informado, do mais proximo para o mais distante.
      * <p>

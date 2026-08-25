@@ -2,6 +2,7 @@ package br.com.jence.backend.presentation;
 
 import br.com.jence.backend.application.usecase.BuscarProdutosUseCase;
 import br.com.jence.backend.application.usecase.ConsultarProdutoUseCase;
+import br.com.jence.backend.application.usecase.ListarSecoesUseCase;
 import br.com.jence.backend.application.usecase.SimularEstoqueUseCase;
 import br.com.jence.backend.presentation.controller.ProdutoController;
 import org.junit.jupiter.api.DisplayName;
@@ -37,9 +38,10 @@ class FalhaDeInfraestruturaTest {
     @MockitoBean BuscarProdutosUseCase buscarProdutosUseCase;
     @MockitoBean ConsultarProdutoUseCase consultarProdutoUseCase;
     @MockitoBean SimularEstoqueUseCase simularEstoqueUseCase;
+    @MockitoBean ListarSecoesUseCase listarSecoesUseCase;
 
     private MvcResult quandoOBancoFalhaCom(RuntimeException falha) throws Exception {
-        when(buscarProdutosUseCase.executar(any(), any(), any())).thenThrow(falha);
+        when(buscarProdutosUseCase.executar(any(), any(), any(), any(), any())).thenThrow(falha);
         return mockMvc.perform(get("/api/v1/produtos").param("query", "tinta")).andReturn();
     }
 

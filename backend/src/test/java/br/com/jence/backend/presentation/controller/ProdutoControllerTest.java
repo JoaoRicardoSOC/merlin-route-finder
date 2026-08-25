@@ -4,8 +4,10 @@ import br.com.jence.backend.application.dto.PaginaResponse;
 import br.com.jence.backend.application.dto.PontoMapaResponse;
 import br.com.jence.backend.application.dto.ProdutoDetalhadoResponse;
 import br.com.jence.backend.application.dto.ProdutoResponse;
+import br.com.jence.backend.application.dto.SecaoResponse;
 import br.com.jence.backend.application.usecase.BuscarProdutosUseCase;
 import br.com.jence.backend.application.usecase.ConsultarProdutoUseCase;
+import br.com.jence.backend.application.usecase.ListarSecoesUseCase;
 import br.com.jence.backend.application.usecase.SimularEstoqueUseCase;
 import br.com.jence.backend.domain.entity.TipoPonto;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
@@ -39,6 +41,7 @@ class ProdutoControllerTest {
     @MockitoBean BuscarProdutosUseCase buscarProdutosUseCase;
     @MockitoBean ConsultarProdutoUseCase consultarProdutoUseCase;
     @MockitoBean SimularEstoqueUseCase simularEstoqueUseCase;
+    @MockitoBean ListarSecoesUseCase listarSecoesUseCase;
 
     private ProdutoResponse produto(UUID id) {
         return new ProdutoResponse(id, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L", null, null,
@@ -48,40 +51,64 @@ class ProdutoControllerTest {
     @Test
     @DisplayName("busca sem parametros repassa nulos para o caso de uso decidir os padroes")
     void buscaSemParametros() throws Exception {
-        when(buscarProdutosUseCase.executar(any(), any(), any()))
+        when(buscarProdutosUseCase.executar(any(), any(), any(), any(), any()))
                 .thenReturn(new PaginaResponse<>(List.of(produto(UUID.randomUUID())), 0, 20, 1L, 1));
 
         mockMvc.perform(get("/api/v1/produtos"))
                 .andExpect(status().isOk());
 
-        verify(buscarProdutosUseCase).executar(null, null, null);
+        verify(buscarProdutosUseCase).executar(null, null, null, null, null);
     }
 
     @Test
-    @DisplayName("busca repassa query, page e size exatamente como recebidos")
+    @DisplayName("busca repassa todos os filtros exatamente como recebidos")
     void buscaComParametros() throws Exception {
-        when(buscarProdutosUseCase.executar(any(), any(), any()))
+        when(buscarProdutosUseCase.executar(any(), any(), any(), any(), any()))
                 .thenReturn(new PaginaResponse<>(List.of(), 1, 5, 0L, 0));
 
         mockMvc.perform(get("/api/v1/produtos")
-                        .param("query", "tinta").param("page", "1").param("size", "5"))
+                        .param("query", "tinta").param("secao", "Tintas")
+                        .param("apenasDisponiveis", "true")
+                        .param("page", "1").param("size", "5"))
                 .andExpect(status().isOk());
 
         ArgumentCaptor<String> termo = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> secao = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Boolean> disponiveis = ArgumentCaptor.forClass(Boolean.class);
         ArgumentCaptor<Integer> pagina = ArgumentCaptor.forClass(Integer.class);
         ArgumentCaptor<Integer> tamanho = ArgumentCaptor.forClass(Integer.class);
-        verify(buscarProdutosUseCase).executar(termo.capture(), pagina.capture(), tamanho.capture());
+        verify(buscarProdutosUseCase).executar(termo.capture(), secao.capture(),
+                disponiveis.capture(), pagina.capture(), tamanho.capture());
 
         assertThat(termo.getValue()).isEqualTo("tinta");
+        assertThat(secao.getValue()).isEqualTo("Tintas");
+        assertThat(disponiveis.getValue()).isTrue();
         assertThat(pagina.getValue()).isEqualTo(1);
         assertThat(tamanho.getValue()).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("GET /produtos/secoes nao e confundido com o detalhe de um produto")
+    void secoesNaoColideComDetalhe() throws Exception {
+        /*
+         * As duas rotas convivem sob /produtos: uma literal e outra com variavel. Se o Spring
+         * casasse "secoes" com {produtoId}, a resposta seria 400 por UUID malformado.
+         */
+        when(listarSecoesUseCase.executar())
+                .thenReturn(List.of(new SecaoResponse("Tintas", 5), new SecaoResponse("Jardim", 2)));
+
+        mockMvc.perform(get("/api/v1/produtos/secoes"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].nome").value("Tintas"))
+                .andExpect(jsonPath("$[0].quantidadeProdutos").value(5))
+                .andExpect(jsonPath("$[1].nome").value("Jardim"));
     }
 
     @Test
     @DisplayName("resposta da busca usa o formato de pagina do contrato")
     void formatoDaPagina() throws Exception {
         UUID id = UUID.randomUUID();
-        when(buscarProdutosUseCase.executar(any(), any(), any()))
+        when(buscarProdutosUseCase.executar(any(), any(), any(), any(), any()))
                 .thenReturn(new PaginaResponse<>(List.of(produto(id)), 0, 10, 25L, 3));
 
         mockMvc.perform(get("/api/v1/produtos"))

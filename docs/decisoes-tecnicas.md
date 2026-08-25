@@ -71,6 +71,8 @@
 - [D-57. O mesmo código inválido é aceito na entrada e recusado no recentrar](#d-57-o-mesmo-código-inválido-é-aceito-na-entrada-e-recusado-no-recentrar)
 - [D-58. A planta da loja não vive no banco, e é dela que saem as coordenadas das seções](#d-58-a-planta-da-loja-não-vive-no-banco-e-é-dela-que-saem-as-coordenadas-das-seções)
 - [D-59. A carga completa a apresentação de produtos que já estavam gravados](#d-59-a-carga-completa-a-apresentação-de-produtos-que-já-estavam-gravados)
+- [D-60. Uma consulta montada substitui as duas buscas de catálogo](#d-60-uma-consulta-montada-substitui-as-duas-buscas-de-catálogo)
+- [D-61. As seções do menu saem do catálogo, não da planta](#d-61-as-seções-do-menu-saem-do-catálogo-não-da-planta)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -1441,6 +1443,46 @@ Aqui a mesma regra vira armadilha: os 29 produtos criados antes destes campos **
 **Imagem nula é estado normal, não defeito.** As URLs vêm do site público da Leroy e são coletadas à mão pelo time ([O-18](observacoes.md#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca)), de forma incremental. O contrato marca o campo como anulável e o teste verifica que um produto sem foto continua respondendo nome, descrição e localização. A coleta está organizada em [`imagens-dos-produtos.md`](imagens-dos-produtos.md).
 
 **Onde no código.** `infrastructure/database/seed/CarregadorDadosIniciais.java` — `completarApresentacoes`; `domain/entity/Produto.java` — `comApresentacao`.
+
+---
+
+### D-60. Uma consulta montada substitui as duas buscas de catálogo
+
+**Contexto.** Existiam dois caminhos de busca: `buscarPaginado` (JPA, para navegar) e `buscarPorTermo` (nativa com `UTL_MATCH`, para buscar por nome). O card dos filtros pedia **seção** e **disponibilidade** — e a decisão do time foi ir mais longe, até atributos por categoria.
+
+Com `@Query` fixas, cada filtro novo **dobra** o número de variantes: dois filtros já dariam quatro consultas, e cada faceta dobraria de novo.
+
+**Decisão.** Uma implementação só, montada em SQL nativo no adaptador, com predicados acrescentados conforme o filtro. `buscarPaginado` e `buscarPorTermo` **continuam na porta** e delegam para ela — os dois expressam intenções diferentes (listar tudo para a carga, buscar sem filtro para fundamentar o assistente de IA), e mantê-los evitou mexer no caminho da IA, cujos testes já são frágeis por causa da cota ([O-01](observacoes.md#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada)).
+
+**Montar SQL exige dizer o que protege contra injeção.** Nenhum valor vindo do cliente entra na string: o SQL só cresce com trechos **constantes**, decididos por `if`, e todo valor vai como parâmetro nomeado. O que varia é a forma da consulta, nunca o conteúdo dela.
+
+**Três detalhes do Oracle que viraram teste.**
+
+1. **`''` é `NULL` no Oracle.** Usar string vazia como sentinela de "sem filtro" funcionaria aqui por acidente e quebraria em qualquer outro banco. `FiltroDeProdutos` normaliza branco para `null` **no domínio**, e o predicado simplesmente não é montado.
+2. **Sem termo não há similaridade a ordenar.** Chamar `UTL_MATCH` com nulo não significa nada, então a ordenação alterna: por similaridade quando há termo, alfabética quando não há — que é o que se espera ao navegar.
+3. **A paginação passou a ser aplicada pelo Hibernate** sobre a consulta montada, em vez de vir do `Pageable` do Spring Data. Está sob teste que a segunda página não repete a primeira e que o total de páginas bate.
+
+**Combinação sem resultado devolve página vazia, não 404.** O cliente filtrou demais; ele não pediu um recurso inexistente. A tela mostra "nenhum produto encontrado" com os filtros ainda ali para ele afrouxar um.
+
+**O filtro de disponibilidade tem padrão falso.** O catálogo mostra produto zerado de propósito: a ruptura tem tratamento próprio no produto, e escondê-la apagaria o cenário que a demonstração encena. O filtro serve a quem quer só o que dá para levar hoje.
+
+**Onde no código.** `infrastructure/database/adapter/ProdutoRepositoryAdapter.java` — `buscar`; `domain/repository/FiltroDeProdutos.java`.
+
+---
+
+### D-61. As seções do menu saem do catálogo, não da planta
+
+**Contexto.** `GET /produtos/secoes` alimenta a navegação por corredor. Os nomes existem em dois lugares: os blocos de `PlantaDaLoja` ([D-58](#d-58-a-planta-da-loja-não-vive-no-banco-e-é-dela-que-saem-as-coordenadas-das-seções)) e o campo `corredor` dos pontos de prateleira.
+
+**Decisão.** A lista é derivada dos **produtos**, agrupando por corredor, com a contagem de cada seção.
+
+**Por quê.** Uma seção sem produto é um beco sem saída num menu: o cliente toca, espera ver algo e encontra vazio. Derivando do catálogo, ela simplesmente não aparece — sem precisar de regra para isso.
+
+Não há risco de divergir da planta: o teste do mapa já garante que os dois conjuntos de nomes são iguais.
+
+**A contagem não estava no card, e vale o custo.** É ela que faz um menu de navegação valer: *"Tintas (5)"* diz ao cliente se vale entrar antes de ele gastar um toque para descobrir. Sai de graça, na mesma consulta agrupada.
+
+**Onde no código.** `application/usecase/ListarSecoesUseCase.java`, `domain/repository/SecaoDoCatalogo.java`.
 
 ---
 

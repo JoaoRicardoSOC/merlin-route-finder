@@ -4,8 +4,10 @@ import br.com.jence.backend.application.dto.EstoqueUpdateRequest;
 import br.com.jence.backend.application.dto.PaginaResponse;
 import br.com.jence.backend.application.dto.ProdutoDetalhadoResponse;
 import br.com.jence.backend.application.dto.ProdutoResponse;
+import br.com.jence.backend.application.dto.SecaoResponse;
 import br.com.jence.backend.application.usecase.BuscarProdutosUseCase;
 import br.com.jence.backend.application.usecase.ConsultarProdutoUseCase;
+import br.com.jence.backend.application.usecase.ListarSecoesUseCase;
 import br.com.jence.backend.application.usecase.SimularEstoqueUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -38,18 +41,33 @@ public class ProdutoController {
     private final BuscarProdutosUseCase buscarProdutosUseCase;
     private final ConsultarProdutoUseCase consultarProdutoUseCase;
     private final SimularEstoqueUseCase simularEstoqueUseCase;
+    private final ListarSecoesUseCase listarSecoesUseCase;
 
     @GetMapping
-    @Operation(summary = "Busca paginada e fuzzy de produtos (UC-002)",
+    @Operation(summary = "Busca e filtragem do catalogo (UC-002)",
             description = "Sem termo, navega o catalogo. Com termo, filtra por nome tolerando "
-                    + "busca parcial e pequenos erros de digitacao.")
+                    + "busca parcial e pequenos erros de digitacao. Os filtros de secao e de "
+                    + "disponibilidade combinam com o termo e entre si. Combinacao sem "
+                    + "resultado devolve pagina vazia, nao erro.")
     public ResponseEntity<PaginaResponse<ProdutoResponse>> buscar(
             @RequestParam(required = false) String query,
+            @RequestParam(required = false) String secao,
+            @RequestParam(required = false) Boolean apenasDisponiveis,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size) {
 
         // 'query' e o nome publico no contrato; 'termo' e o vocabulario interno.
-        return ResponseEntity.ok(buscarProdutosUseCase.executar(query, page, size));
+        return ResponseEntity.ok(
+                buscarProdutosUseCase.executar(query, secao, apenasDisponiveis, page, size));
+    }
+
+    @GetMapping("/secoes")
+    @Operation(summary = "Listar as secoes do catalogo",
+            description = "O menu de navegacao por corredor, com a quantidade de produtos de "
+                    + "cada secao. So aparecem secoes que tem produto: uma secao vazia seria "
+                    + "um beco sem saida no menu.")
+    public ResponseEntity<List<SecaoResponse>> listarSecoes() {
+        return ResponseEntity.ok(listarSecoesUseCase.executar());
     }
 
     @GetMapping("/{produtoId}")
