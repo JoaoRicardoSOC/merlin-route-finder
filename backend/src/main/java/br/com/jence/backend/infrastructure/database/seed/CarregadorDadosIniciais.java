@@ -1,5 +1,7 @@
 package br.com.jence.backend.infrastructure.database.seed;
 
+import br.com.jence.backend.domain.entity.BlocoMapa;
+import br.com.jence.backend.domain.entity.PlantaDaLoja;
 import br.com.jence.backend.domain.entity.PontoMapa;
 import br.com.jence.backend.domain.entity.Produto;
 import br.com.jence.backend.domain.entity.TipoPonto;
@@ -132,28 +134,26 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
                 .collect(Collectors.toMap(PontoMapa::getCorredor, Function.identity(), (a, b) -> a));
 
         Map<String, PontoMapa> secoes = new LinkedHashMap<>();
-        registrar(secoes, existentes, contagem, "Tintas", 32, 10);
-        registrar(secoes, existentes, contagem, "Ferragens", 22, 32);
-        registrar(secoes, existentes, contagem, "Eletrica", 34, 30);
-        registrar(secoes, existentes, contagem, "Encanamento", 48, 30);
-        registrar(secoes, existentes, contagem, "Cozinhas", 62, 30);
-        registrar(secoes, existentes, contagem, "Iluminacao", 76, 32);
-        registrar(secoes, existentes, contagem, "Jardim", 36, 50);
-        registrar(secoes, existentes, contagem, "Ferramentas", 20, 55);
-        registrar(secoes, existentes, contagem, "Decoracao", 88, 55);
-        registrar(secoes, existentes, contagem, "Materiais de construcao", 14, 80);
+        /*
+         * A coordenada vem do centro do bloco, e nao de um numero digitado aqui: e o que
+         * garante que um produto nunca apareca fora do proprio corredor no mapa. Acrescentar
+         * uma secao comeca por acrescentar um bloco em PlantaDaLoja. Ver D-58.
+         */
+        for (BlocoMapa bloco : PlantaDaLoja.blocos()) {
+            registrar(secoes, existentes, contagem, bloco);
+        }
         return secoes;
     }
 
     private void registrar(Map<String, PontoMapa> secoes, Map<String, PontoMapa> existentes,
-                           Contagem contagem, String corredor, int x, int y) {
-        PontoMapa ponto = existentes.get(corredor);
+                           Contagem contagem, BlocoMapa bloco) {
+        PontoMapa ponto = existentes.get(bloco.rotulo());
         if (ponto == null) {
-            ponto = pontoMapaRepository.salvar(
-                    new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, corredor, x, y));
+            ponto = pontoMapaRepository.salvar(new PontoMapa(UUID.randomUUID(),
+                    TipoPonto.PRATELEIRA, bloco.rotulo(), bloco.centroX(), bloco.centroY()));
             contagem.pontos++;
         }
-        secoes.put(corredor, ponto);
+        secoes.put(bloco.rotulo(), ponto);
     }
 
     /* Nao vendem nada, mas precisam aparecer no mapa: o cliente vai ate os caixas para

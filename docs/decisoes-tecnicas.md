@@ -69,6 +69,7 @@
 - [D-55. A posição do cliente vem de duas pistas, e vale a mais recente](#d-55-a-posição-do-cliente-vem-de-duas-pistas-e-vale-a-mais-recente)
 - [D-56. A coluna `coletado` continua sendo gravada, mesmo redundante](#d-56-a-coluna-coletado-continua-sendo-gravada-mesmo-redundante)
 - [D-57. O mesmo código inválido é aceito na entrada e recusado no recentrar](#d-57-o-mesmo-código-inválido-é-aceito-na-entrada-e-recusado-no-recentrar)
+- [D-58. A planta da loja não vive no banco, e é dela que saem as coordenadas das seções](#d-58-a-planta-da-loja-não-vive-no-banco-e-é-dela-que-saem-as-coordenadas-das-seções)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -1395,6 +1396,32 @@ No recentrar, ele **já tem** uma sessão funcionando. Dizer "não encontramos e
 **Por que `PUT` e não `POST`.** A operação define o valor de um recurso — onde o cliente está —, e reenviar "estou em CEN-03" duas vezes leva ao mesmo lugar. Cliente ou proxy podem repetir sem risco, que é o que se quer de alguém andando por uma loja com sinal ruim.
 
 **Onde no código.** `application/usecase/RecentrarSessaoUseCase.java`, `application/usecase/InicializarSessaoUseCase.java`.
+
+---
+
+### D-58. A planta da loja não vive no banco, e é dela que saem as coordenadas das seções
+
+**Contexto.** A tela de mapa é o centro do produto revisado, e o frontend não tem como construí-la sozinho: ninguém no time desenha planta em SVG. O backend precisa servir a geometria — cada corredor como um retângulo, no mesmo grid `0..100` em que já vivem os produtos, as placas e a posição do cliente.
+
+**Decisão 1: a planta é código, não tabela.** `PlantaDaLoja` é uma lista constante de `BlocoMapa` no domínio.
+
+O reflexo seria criar `TB_BLOCO_MAPA`, porque todo o resto do mapa está no banco. Mas **a planta descreve um prédio, não um dado de aplicação**: não muda em execução, nada a referencia por chave estrangeira e nenhum caso de uso a escreve. Persisti-la custaria entidade de domínio, entidade JPA, factory, porta, adapter, repositório e carga — mais uma quarta oportunidade de esbarrar nas armadilhas do `ddl-auto: update` ([D-51](#d-51-um-valor-de-enum-removido-precisa-sumir-também-do-banco), [D-53](#d-53-a-aplicação-repara-a-restrição-de-enum-que-o-ddl-auto-update-deixa-envelhecer), [D-56](#d-56-a-coluna-coletado-continua-sendo-gravada-mesmo-redundante)) — para entregar exatamente o mesmo conteúdo. E mudar a planta continuaria sendo mudar código, porque a carga é código.
+
+**Decisão 2, que é a que importa: a carga deriva as seções da planta.** A coordenada de cada ponto de prateleira é o **centro do bloco** correspondente, e não um número digitado ao lado.
+
+A promessa do card era "mapa e produtos não podem divergir". Escrever as duas listas em paralelo e verificar que batem seria uma promessa mantida por disciplina — alguém acrescenta uma seção, esquece o bloco, e o teste avisa depois. Derivando, **a divergência deixa de ser possível**: o ponto da seção *é* o centro do bloco, e acrescentar uma seção começa por acrescentar um bloco.
+
+**Os blocos foram desenhados em volta das coordenadas que a massa já tinha**, e não o contrário. Assim a carga incremental continua não tocando no que existe, e nenhum banco do time muda de estado por causa deste card.
+
+**Decisão 3: o endpoint não conhece sessão.** `GET /mapa` devolve a mesma coisa para todo mundo. O que varia entre um cliente e outro — onde ele está, o que escolheu — vem das respostas de sessão e de lista.
+
+Isso não é purismo: é o que permite ao frontend buscar o mapa uma vez e guardar no aparelho. Dentro de uma loja de 10.000 m², a conexão cai — e a tela mais importante do produto continuar desenhando é a diferença entre um app inútil e um app com dado velho.
+
+**O que os testes protegem.** Sobreposição entre blocos é o defeito mais traiçoeiro: dois corredores desenhados um sobre o outro fazem o produto de um aparecer visualmente dentro do outro, e o cliente procura na seção errada — exatamente o problema que o produto existe para resolver. Também está sob teste que **nenhuma placa de QR cai dentro de um bloco**, porque a decisão do [card dos QR Codes](#d-52-o-código-curto-do-qr-code-é-normalizado-na-gravação-não-só-na-busca) é que elas ficam em corredor de passagem.
+
+**Consequência assumida.** Blocos são retângulos alinhados aos eixos. Uma loja real tem recortes, corredores diagonais e ilhas — nada disso é representável. É deliberado: retângulos com rótulo bastam para o cliente reconhecer onde está, e polígonos arbitrários custariam trabalho de frontend que o time não tem para dar.
+
+**Onde no código.** `domain/entity/PlantaDaLoja.java`, `domain/entity/BlocoMapa.java`, `application/usecase/ConsultarMapaUseCase.java`.
 
 ---
 

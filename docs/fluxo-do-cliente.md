@@ -52,7 +52,9 @@ Isso importa porque o cliente real vai e volta: escolhe três itens, caminha, le
 
 ## O fluxo, ação por ação
 
-Cada passo traz o que o cliente faz, o que a tela mostra e o que o backend precisa ter. **Marcado com 🆕 o que ainda não existe.**
+Cada passo traz o que o cliente faz, o que a tela mostra e o que o backend precisa ter.
+
+> **Sobre o 🆕.** Ele marca o que não existia **quando este documento foi escrito**, em 24/08/2026 — serve para mostrar o tamanho da virada, não o estado de hoje. Boa parte já foi construída desde então. **Para saber o que está pronto, o histórico do repositório é a fonte**; o [`backlog-escopo-revisado.md`](backlog-escopo-revisado.md) diz o que falta.
 
 ---
 
@@ -176,7 +178,13 @@ A tela central do produto.
 
 **Tela:** a planta da loja com o marcador do cliente e um marcador por item da lista. Tocar num marcador mostra qual produto é. Item já coletado aparece diferente.
 
-**Backend:** a **geometria da loja** é o que falta. As coordenadas dos produtos e do cliente já existem.
+**Backend:** `GET /mapa` devolve a planta pronta para desenhar — os corredores como retângulos com rótulo, e os pontos que não são prateleira (caixas, banheiro e as placas de QR), cada um com seu tipo.
+
+Tudo no mesmo grid `0..100` das coordenadas dos produtos e da posição do cliente, então as três camadas se desenham na mesma escala sem conversão nenhuma.
+
+**Não depende de sessão**, de propósito: o mapa é igual para todo cliente, e o frontend pode buscá-lo uma vez e guardar no aparelho — inclusive para sobreviver a uma queda de conexão dentro da loja.
+
+**A garantia que vale conhecer:** as coordenadas das seções são **derivadas** dos blocos, e não escritas ao lado deles. Um produto não tem como aparecer fora do próprio corredor, porque o ponto da seção **é** o centro do bloco.
 
 ---
 

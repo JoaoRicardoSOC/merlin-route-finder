@@ -21,8 +21,28 @@ tags:
     description: Tratamento de ruptura física e sugestão de substituto por IA
   - name: Chat
     description: Assistente conversacional (RAG)
+  - name: Mapa
+    description: Planta da loja para desenhar a tela de mapa
 
 paths:
+  /mapa:
+    get:
+      tags: [Mapa]
+      summary: Consultar a planta da loja
+      description: |
+        Devolve os corredores como retângulos e os pontos que não são prateleira — caixas, banheiro e as placas de QR Code —, todos no grid `0..100`.
+
+        **Não depende de sessão.** O mapa é igual para todo cliente: o que varia entre um e outro (onde ele está, o que ele escolheu) vem das respostas de sessão e de lista. Por isso pode ser buscado uma vez e guardado no aparelho, inclusive para sobreviver a uma queda de conexão dentro da loja.
+      responses:
+        "200":
+          description: Planta da loja
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mapa"
+        "500":
+          $ref: "#/components/responses/ErroInterno"
+
   /sessoes:
     post:
       tags: [Sessao]
@@ -539,6 +559,43 @@ components:
           description: Agrupados por seção da loja e, dentro dela, por nome. Não é uma rota — o cliente escolhe o caminho.
           items:
             $ref: "#/components/schemas/ItemRoteiroDetalhado"
+
+    BlocoMapa:
+      type: object
+      description: Um corredor da loja, como retângulo. `x` e `y` são o canto superior esquerdo.
+      properties:
+        rotulo:
+          type: string
+          description: Nome da seção, igual ao `corredor` dos pontos de prateleira.
+          example: Tintas
+        x:
+          type: integer
+        y:
+          type: integer
+        largura:
+          type: integer
+        altura:
+          type: integer
+
+    Mapa:
+      type: object
+      properties:
+        largura:
+          type: integer
+          description: Lado do grid em que todas as coordenadas do sistema são expressas.
+          example: 100
+        altura:
+          type: integer
+          example: 100
+        blocos:
+          type: array
+          items:
+            $ref: "#/components/schemas/BlocoMapa"
+        pontos:
+          type: array
+          description: Tudo que não é prateleira, com o tipo para o frontend escolher o que desenhar.
+          items:
+            $ref: "#/components/schemas/PontoMapa"
 
     IniciarSessaoRequest:
       type: object
