@@ -325,6 +325,10 @@ Já devolve erro limpo, sem vazar detalhe interno — está sob teste. Falta o f
 
 Nenhum destes é trabalho grande. O que eles têm em comum é que **o backend já entrega a informação certa** — falta a tela usá-la em vez de repassar o erro cru.
 
+**A forma do erro é sempre a mesma.** Auditado por teste em 25/08/2026: todo erro da API — de 400 a 500, em qualquer endpoint — devolve os mesmos seis campos, com `status` repetido no corpo, o `path` que falhou, e **nunca detalhe interno**. Um tratamento só resolve todos.
+
+> **Decida pelo `status`, não pelo texto de `error`.** O status é contrato; o texto é para humano ler e pode ser reescrito.
+
 **Erros que não são erros.** Três respostas que a tela precisa traduzir em vez de mostrar:
 
 | Resposta | O que significa | O que mostrar |

@@ -104,7 +104,7 @@ class RoteiroControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ isso nao e json }"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Corpo da Requisicao Invalido"));
+                .andExpect(jsonPath("$.error").value("Corpo da Requisição Inválido"));
 
         verifyNoInteractions(adicionarProdutoAoRoteiroUseCase);
     }
@@ -122,7 +122,7 @@ class RoteiroControllerTest {
                         .content("{\"produtoId\":\"" + UUID.randomUUID() + "\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
-                .andExpect(jsonPath("$.error").value("Operacao Nao Permitida"))
+                .andExpect(jsonPath("$.error").value("Operação Não Permitida"))
                 .andExpect(jsonPath("$.message")
                         .value(org.hamcrest.Matchers.containsString("nao esta mais ativa")));
     }
@@ -148,6 +148,6 @@ class RoteiroControllerTest {
 
         mockMvc.perform(delete("/api/v1/sessoes/{s}/roteiro/itens/{i}", sessaoId, itemId))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Recurso Nao Encontrado"));
+                .andExpect(jsonPath("$.error").value("Recurso Não Encontrado"));
     }
 }

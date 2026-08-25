@@ -83,7 +83,7 @@ class SessaoControllerTest {
         mockMvc.perform(get("/api/v1/sessoes/{id}", id))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.error").value("Recurso Nao Encontrado"))
+                .andExpect(jsonPath("$.error").value("Recurso Não Encontrado"))
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Sessao")))
                 .andExpect(jsonPath("$.path").value("/api/v1/sessoes/" + id))
                 .andExpect(jsonPath("$.timestamp").exists());
@@ -113,7 +113,7 @@ class SessaoControllerTest {
 
         mockMvc.perform(post("/api/v1/sessoes/{id}/concluir", id))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Operacao Nao Permitida"));
+                .andExpect(jsonPath("$.error").value("Operação Não Permitida"));
     }
 
     // ---------------------------------------------------------------- recentrar
@@ -166,7 +166,7 @@ class SessaoControllerTest {
         mockMvc.perform(get("/api/v1/sessoes/{id}", "nao-e-um-uuid"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Parametro Invalido"))
+                .andExpect(jsonPath("$.error").value("Parâmetro Inválido"))
                 .andExpect(jsonPath("$.message")
                         .value(org.hamcrest.Matchers.containsString("nao-e-um-uuid")));
     }

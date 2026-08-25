@@ -56,8 +56,8 @@ public class GlobalExceptionHandler {
         StandardError response = new StandardError(
                 LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
-                "Parametro Invalido",
-                "O valor '%s' nao e valido para o parametro '%s'.".formatted(ex.getValue(), ex.getName()),
+                "Parâmetro Inválido",
+                "O valor '%s' não é válido para o parâmetro '%s'.".formatted(ex.getValue(), ex.getName()),
                 request.getRequestURI(),
                 null
         );
@@ -75,8 +75,8 @@ public class GlobalExceptionHandler {
         StandardError response = new StandardError(
                 LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
-                "Corpo da Requisicao Invalido",
-                "O corpo enviado nao pode ser lido. Verifique se e um JSON valido.",
+                "Corpo da Requisição Inválido",
+                "O corpo enviado não pode ser lido. Verifique se é um JSON válido.",
                 request.getRequestURI(),
                 null
         );
@@ -95,8 +95,8 @@ public class GlobalExceptionHandler {
         StandardError response = new StandardError(
                 LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
-                "Parametro Obrigatorio Ausente",
-                "O parametro '%s' e obrigatorio.".formatted(ex.getParameterName()),
+                "Parâmetro Obrigatório Ausente",
+                "O parâmetro '%s' é obrigatório.".formatted(ex.getParameterName()),
                 request.getRequestURI(),
                 null
         );
@@ -110,8 +110,8 @@ public class GlobalExceptionHandler {
         StandardError response = new StandardError(
                 LocalDateTime.now(),
                 HttpStatus.METHOD_NOT_ALLOWED.value(),
-                "Metodo Nao Suportado",
-                "O metodo %s nao e aceito neste endereco.".formatted(ex.getMethod()),
+                "Método Não Suportado",
+                "O método %s não é aceito neste endereço.".formatted(ex.getMethod()),
                 request.getRequestURI(),
                 null
         );
@@ -125,8 +125,8 @@ public class GlobalExceptionHandler {
         StandardError response = new StandardError(
                 LocalDateTime.now(),
                 HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(),
-                "Formato Nao Suportado",
-                "O formato %s nao e aceito. Envie application/json.".formatted(ex.getContentType()),
+                "Formato Não Suportado",
+                "O formato %s não é aceito. Envie application/json.".formatted(ex.getContentType()),
                 request.getRequestURI(),
                 null
         );
@@ -140,8 +140,8 @@ public class GlobalExceptionHandler {
         StandardError response = new StandardError(
                 LocalDateTime.now(),
                 HttpStatus.NOT_FOUND.value(),
-                "Endereco Nao Encontrado",
-                "Nao existe endpoint em %s.".formatted(request.getRequestURI()),
+                "Endereço Não Encontrado",
+                "Não existe endpoint em %s.".formatted(request.getRequestURI()),
                 request.getRequestURI(),
                 null
         );
@@ -155,7 +155,7 @@ public class GlobalExceptionHandler {
         StandardError response = new StandardError(
                 LocalDateTime.now(),
                 HttpStatus.NOT_FOUND.value(),
-                "Recurso Nao Encontrado",
+                "Recurso Não Encontrado",
                 ex.getMessage(),
                 request.getRequestURI(),
                 null
@@ -170,7 +170,7 @@ public class GlobalExceptionHandler {
         StandardError response = new StandardError(
                 LocalDateTime.now(),
                 HttpStatus.CONFLICT.value(),
-                "Operacao Nao Permitida",
+                "Operação Não Permitida",
                 ex.getMessage(),
                 request.getRequestURI(),
                 null
@@ -190,7 +190,7 @@ public class GlobalExceptionHandler {
         StandardError response = new StandardError(
                 LocalDateTime.now(),
                 HttpStatus.UNPROCESSABLE_ENTITY.value(),
-                "Substituto Indisponivel",
+                "Substituto Indisponível",
                 ex.getMessage(),
                 request.getRequestURI(),
                 null
@@ -205,7 +205,7 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Erro Interno do Servidor",
-                "Ocorreu um erro inesperado. Nossa equipe técnica já foi notificada.",
+                "Ocorreu um erro inesperado. Tente novamente em instantes.",
                 request.getRequestURI(),
                 null
         );

@@ -124,7 +124,7 @@ class ChatControllerTest {
         mockMvc.perform(enviar("""
                         {"conteudo": "oi"}"""))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Operacao Nao Permitida"));
+                .andExpect(jsonPath("$.error").value("Operação Não Permitida"));
     }
 
     @Test
@@ -184,7 +184,7 @@ class ChatControllerTest {
 
         mockMvc.perform(get("/api/v1/sessoes/{s}/chat/mensagens", sessaoId))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Recurso Nao Encontrado"));
+                .andExpect(jsonPath("$.error").value("Recurso Não Encontrado"));
     }
 
     @Test
@@ -192,6 +192,6 @@ class ChatControllerTest {
     void sessaoIdMalformado() throws Exception {
         mockMvc.perform(get("/api/v1/sessoes/{s}/chat/mensagens", "nao-e-uuid"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Parametro Invalido"));
+                .andExpect(jsonPath("$.error").value("Parâmetro Inválido"));
     }
 }

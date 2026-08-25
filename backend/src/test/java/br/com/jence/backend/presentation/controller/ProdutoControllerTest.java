@@ -209,7 +209,7 @@ class ProdutoControllerTest {
         mockMvc.perform(get("/api/v1/produtos/{id}", id))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.error").value("Recurso Nao Encontrado"))
+                .andExpect(jsonPath("$.error").value("Recurso Não Encontrado"))
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Produto")));
     }
 
@@ -218,7 +218,7 @@ class ProdutoControllerTest {
     void idMalformado() throws Exception {
         mockMvc.perform(get("/api/v1/produtos/{id}", "abc"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Parametro Invalido"));
+                .andExpect(jsonPath("$.error").value("Parâmetro Inválido"));
     }
 
     // ---------------------------------------------------------------- simulacao de estoque

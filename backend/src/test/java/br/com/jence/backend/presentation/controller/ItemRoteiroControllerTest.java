@@ -153,7 +153,7 @@ class ItemRoteiroControllerTest {
 
         mockMvc.perform(patch("/api/v1/roteiro/itens/{i}/coletar", itemId))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Recurso Nao Encontrado"));
+                .andExpect(jsonPath("$.error").value("Recurso Não Encontrado"));
     }
 
     @Test
@@ -224,7 +224,7 @@ class ItemRoteiroControllerTest {
 
         mockMvc.perform(post("/api/v1/roteiro/itens/{i}/ruptura", itemId))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.error").value("Substituto Indisponivel"))
+                .andExpect(jsonPath("$.error").value("Substituto Indisponível"))
                 .andExpect(jsonPath("$.message").value(
                         org.hamcrest.Matchers.containsString("Espelho Redondo 60cm")));
     }
@@ -238,7 +238,7 @@ class ItemRoteiroControllerTest {
 
         mockMvc.perform(post("/api/v1/roteiro/itens/{i}/ruptura", itemId))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Operacao Nao Permitida"));
+                .andExpect(jsonPath("$.error").value("Operação Não Permitida"));
     }
 
     @Test
@@ -257,7 +257,7 @@ class ItemRoteiroControllerTest {
     void rupturaComIdMalformado() throws Exception {
         mockMvc.perform(post("/api/v1/roteiro/itens/{i}/ruptura", "nao-e-uuid"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Parametro Invalido"));
+                .andExpect(jsonPath("$.error").value("Parâmetro Inválido"));
     }
 
     @Test

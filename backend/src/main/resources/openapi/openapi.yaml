@@ -887,22 +887,33 @@ components:
 
     StandardError:
       type: object
-      description: Espelha br.com.jence.backend.presentation.response.StandardError
+      description: |
+        **Todo erro da API tem esta forma, sem excecão.** Os seis campos estão sempre presentes — `validationErrors` vem nulo quando não há campo a apontar.
+
+        A tela deve decidir o que fazer pelo **`status`**, não pelo texto de `error`: o status é contrato, o texto é para humano ler.
       properties:
         timestamp:
           type: string
           format: date-time
         status:
           type: integer
+          description: O mesmo código HTTP da resposta. Repetido no corpo para sobreviver a logs e capturas de tela.
         error:
           type: string
+          description: Rótulo curto do tipo de erro, em português, para exibição.
+          example: Recurso Não Encontrado
         message:
           type: string
+          description: Explicação em uma frase, escrita para o cliente e não para o desenvolvedor. **Nunca contém detalhe interno** — nome de classe, pacote ou pilha.
+          example: Produto com identificador 7f3a... não foi encontrado.
         path:
           type: string
+          description: A rota que falhou, para o log do frontend não ficar cego.
+          example: /api/v1/produtos/7f3a1b2c-0000-0000-0000-000000000000
         validationErrors:
           type: array
           nullable: true
+          description: Preenchida apenas no 400 de validação. Nos demais erros vem nula.
           items:
             $ref: "#/components/schemas/ValidationError"
 
