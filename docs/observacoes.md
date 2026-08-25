@@ -31,6 +31,7 @@
 | [O-15](#o-15-o-endpoint-de-simulação-de-estoque-não-tem-proteção-nenhuma) | Simulação de estoque sem proteção | — | Baixa |
 | [O-16](#o-16-o-token-continua-na-url-do-pwa-mesmo-fora-da-nossa-api) | Token na URL do PWA | Bielecky e Marcela | Média |
 | [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final) | Limpar documentos de trabalho | Time | fim do ano |
+| [O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca) | Catálogo pequeno para a banca | Time | **Alta — 21/09** |
 
 ---
 
@@ -169,6 +170,32 @@ A distinção vale a pena manter em mente conforme o repositório cresce:
 ---
 
 ## Para a demonstração
+
+### O-18. O catálogo de 29 produtos é pequeno demais para a banca
+
+**O quê.** Ampliar a massa de demonstração para algumas centenas de produtos, antes da banca final.
+
+**Por que importa.** Na banca não se controla o que os avaliadores vão querer ver. Com 29 produtos, qualquer busca fora do roteiro ensaiado devolve pouco ou nada, e a navegação por seção mostra três itens por corredor — o que passa a impressão de projeto inacabado, não de protótipo enxuto.
+
+Um catálogo maior também melhora o produto de graça:
+
+- **a busca passa a valer** — paginação, filtros e tolerância a erro de digitação só ficam convincentes com volume;
+- **os pares de substituição aparecem sozinhos** — hoje há cinco, plantados à mão ([O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida)); com trezentos produtos, quase todo item passa a ter vizinho plausível;
+- **o mapa fica com densidade de loja de verdade.**
+
+**A tensão que precisa ser resolvida junto.** O escopo revisado ([`fluxo-do-cliente.md`](fluxo-do-cliente.md)) decidiu que cada produto ganha **descrição e imagem**, e que as URLs de imagem seriam coletadas manualmente do site da Leroy. **Isso não escala para trezentos produtos** — são trezentas buscas manuais.
+
+Três saídas, e vale escolher antes de começar:
+
+1. **Catálogo grande, imagens só nos produtos do roteiro da demonstração** — os outros usam uma imagem genérica por seção. Barato, e ninguém percebe numa vitrine.
+2. **Catálogo médio, umas 60 a 80 unidades**, todas com imagem própria. Já dá densidade e a coleta manual continua viável.
+3. **Catálogo grande com imagens todas genéricas por seção.** O mais rápido, e o que menos ajuda no vídeo.
+
+A opção 1 é a que eu recomendaria: dá volume onde ele conta e concentra o trabalho manual onde a câmera vai olhar.
+
+**De quem.** Time. **Prazo que pressiona:** 21/09 (banca final), mas convém antes de 13/09 para o vídeo já mostrar densidade.
+
+---
 
 ### O-14. ~~A massa de dados só tem um par de substitutos que faz sentido~~ — resolvida
 
