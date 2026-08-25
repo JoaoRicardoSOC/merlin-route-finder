@@ -22,7 +22,7 @@ import java.util.UUID;
  * Acoes sobre um item durante a caminhada pela loja.
  * <p>
  * Controller separado do de roteiro porque estas rotas nao levam a sessao no caminho: o
- * celular ja tem o id do item vindo da rota recebida no handoff.
+ * celular ja tem o id do item vindo da lista de compras.
  */
 @RestController
 @RequestMapping("/api/v1/roteiro/itens")

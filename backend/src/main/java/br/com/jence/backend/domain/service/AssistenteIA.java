@@ -10,7 +10,7 @@ import java.util.Map;
  * <p>
  * Declarado em termos de conversa e ferramentas, sem mencionar Gemini, HTTP ou JSON: o
  * dominio precisa de "alguem que responde e sabe consultar nossos dados", nao de um provedor
- * especifico. Mesmo arranjo da {@link GeradorTokenHandoff}.
+ * especifico: o contrato fala de negocio, a tecnologia fica na infraestrutura.
  */
 public interface AssistenteIA {
 

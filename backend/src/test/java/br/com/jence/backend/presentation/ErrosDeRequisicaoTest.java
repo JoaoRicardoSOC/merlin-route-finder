@@ -1,11 +1,12 @@
 package br.com.jence.backend.presentation;
 
+import br.com.jence.backend.application.usecase.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.application.usecase.ConcluirRotaUseCase;
+import br.com.jence.backend.application.usecase.ConsultarListaRoteiroUseCase;
 import br.com.jence.backend.application.usecase.ConsultarSessaoUseCase;
-import br.com.jence.backend.application.usecase.GerarHandoffUseCase;
 import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
-import br.com.jence.backend.application.usecase.ValidarHandoffUseCase;
-import br.com.jence.backend.presentation.controller.HandoffController;
+import br.com.jence.backend.application.usecase.RemoverProdutoDoRoteiroUseCase;
+import br.com.jence.backend.presentation.controller.RoteiroController;
 import br.com.jence.backend.presentation.controller.SessaoController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  * problema que nao e dele - o que polui monitoramento e impede o frontend de distinguir "eu
  * mandei errado" de "o servidor caiu".
  */
-@WebMvcTest({SessaoController.class, HandoffController.class})
+@WebMvcTest({SessaoController.class, RoteiroController.class})
 class ErrosDeRequisicaoTest {
 
     @Autowired MockMvc mockMvc;
@@ -38,8 +39,9 @@ class ErrosDeRequisicaoTest {
     @MockitoBean InicializarSessaoUseCase inicializarSessaoUseCase;
     @MockitoBean ConsultarSessaoUseCase consultarSessaoUseCase;
     @MockitoBean ConcluirRotaUseCase concluirRotaUseCase;
-    @MockitoBean GerarHandoffUseCase gerarHandoffUseCase;
-    @MockitoBean ValidarHandoffUseCase validarHandoffUseCase;
+    @MockitoBean ConsultarListaRoteiroUseCase consultarListaRoteiroUseCase;
+    @MockitoBean AdicionarProdutoAoRoteiroUseCase adicionarProdutoAoRoteiroUseCase;
+    @MockitoBean RemoverProdutoDoRoteiroUseCase removerProdutoDoRoteiroUseCase;
 
     private int statusDe(RequestBuilder request) throws Exception {
         MvcResult resultado = mockMvc.perform(request).andReturn();
@@ -70,22 +72,18 @@ class ErrosDeRequisicaoTest {
         // Precisa ser um endpoint que consome JSON: onde nao ha corpo, o content-type e
         // irrelevante e responder 200 esta correto.
         assertNaoEErroDeServidor("content-type nao suportado",
-                post("/api/v1/handoff")
+                post("/api/v1/sessoes/{id}/roteiro/itens", id)
                         .contentType(MediaType.APPLICATION_XML).content("<xml/>"), 415);
 
         assertNaoEErroDeServidor("corpo JSON malformado",
-                post("/api/v1/handoff")
+                post("/api/v1/sessoes/{id}/roteiro/itens", id)
                         .contentType(MediaType.APPLICATION_JSON).content("{ nao e json }"), 400);
 
-        // Depois do hardening da Fase 3 (D-44), nenhum endpoint usa parametro de query
-        // obrigatorio - o handler de MissingServletRequestParameterException segue no lugar
-        // como guarda para os proximos.
+        // Nenhum endpoint usa parametro de query obrigatorio; o handler de
+        // MissingServletRequestParameterException segue no lugar como guarda para os proximos.
         assertNaoEErroDeServidor("corpo sem campo obrigatorio",
-                post("/api/v1/handoff/validate")
+                post("/api/v1/sessoes/{id}/roteiro/itens", id)
                         .contentType(MediaType.APPLICATION_JSON).content("{}"), 400);
-
-        assertNaoEErroDeServidor("token de handoff na query string, caminho retirado",
-                get("/api/v1/handoff/validate").param("token", "x"), 405);
 
         assertNaoEErroDeServidor("caminho inexistente",
                 get("/api/v1/caminho/que/nao/existe"), 404);

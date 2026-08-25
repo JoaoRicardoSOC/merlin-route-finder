@@ -44,7 +44,7 @@ public class MarcarItemColetadoUseCase {
         listaRoteiroRepository.salvar(lista);
 
         /*
-         * Sem renovar aqui, a sessao so seria renovada ate o handoff e morreria no meio da
+         * Sem renovar aqui, a sessao morreria no meio da
          * caminhada de quem tem lista grande numa loja de 10.000m2, quebrando a marcacao dos
          * itens seguintes e o tratamento de ruptura.
          */

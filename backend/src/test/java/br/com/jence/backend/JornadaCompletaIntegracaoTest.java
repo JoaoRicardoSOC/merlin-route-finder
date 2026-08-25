@@ -25,17 +25,17 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * A jornada do cliente percorrida por HTTP, do totem ao caixa.
+ * A jornada do cliente percorrida por HTTP, da entrada na loja ao encerramento.
  * <p>
- * Ate agora esse percurso so tinha sido verificado a mao, com {@code curl} digitado durante o
- * desenvolvimento - o que provava que funcionava naquele momento, na maquina de uma pessoa, e
- * nao deixava nada para tras. Aqui ele vira ativo: roda em qualquer maquina com banco, e
- * quebra se alguem desalinhar dois passos que os testes de unidade veem separados.
+ * Ate ser escrito, esse percurso so tinha sido verificado a mao, com {@code curl} digitado
+ * durante o desenvolvimento - o que provava que funcionava naquele momento, na maquina de uma
+ * pessoa, e nao deixava nada para tras. Aqui ele vira ativo: roda em qualquer maquina com
+ * banco, e quebra se alguem desalinhar dois passos que os testes de unidade veem separados.
  * <p>
  * <b>E o nivel que importa para a integracao com o frontend.</b> Os testes de {@code @WebMvcTest}
  * exercitam um controller com casos de uso simulados; aqui sobe a aplicacao inteira e as
  * chamadas passam por serializacao, status HTTP, tratamento de erro e banco real - exatamente
- * o que o Totem e o Mobile vao encontrar.
+ * o que o celular do cliente vai encontrar.
  * <p>
  * Nao exige {@code GEMINI_API_KEY}: o passo da ruptura aceita tanto a escolha do assistente
  * quanto o substituto por proximidade, que e o fallback da D-38. Assim o teste roda para
@@ -133,20 +133,13 @@ class JornadaCompletaIntegracaoTest {
         return corpoDe(r);
     }
 
-    private String gerarHandoff(UUID sessaoId) {
-        ResponseEntity<String> r = chamar(HttpMethod.POST, "/handoff",
-                "{\"sessaoId\":\"" + sessaoId + "\"}");
-        assertThat(r.getStatusCode().value()).isEqualTo(201);
-        return corpoDe(r).get("token").asText();
-    }
-
     // ---------------------------------------------------------------- a jornada
 
     @Test
-    @DisplayName("do totem ao caixa: montar, roteirizar, passar para o celular, caminhar e concluir")
-    void jornadaDoClienteDoTotemAoCaixa() {
+    @DisplayName("da entrada ao encerramento: montar a lista, caminhar, coletar e concluir")
+    void jornadaDoClienteNaLoja() {
         UUID sessao = novaSessao();
-        passo("sessao aberta no totem: " + sessao);
+        passo("sessao aberta: " + sessao);
 
         // --- busca tolerante a erro de digitacao (UC-002)
         JsonNode busca = get("/produtos?query=tnta");
@@ -172,36 +165,16 @@ class JornadaCompletaIntegracaoTest {
                 .as("adicionar o mesmo produto duas vezes nao pode criar duas paradas")
                 .hasSize(4);
 
-        // --- handoff (UC-010)
-        String token = gerarHandoff(sessao);
-        passo("QR gerado, token de " + token.length() + " caracteres");
-
-        // --- celular le o QR (UC-011)
-        ResponseEntity<String> validacao = chamar(HttpMethod.POST, "/handoff/validate",
-                "{\"token\":\"" + token + "\"}");
-        assertThat(validacao.getStatusCode().value()).isEqualTo(200);
-
-        JsonNode rota = corpoDe(validacao);
-        List<Integer> ordens = new ArrayList<>();
-        passo("rota entregue ao celular:");
-        for (JsonNode ponto : rota.get("pontos")) {
-            ordens.add(ponto.get("ordem").asInt());
-            System.out.printf("    %d. %-32s %s%n", ponto.get("ordem").asInt(),
-                    ponto.get("item").get("produto").get("nome").asText(),
-                    ponto.get("pontoMapa").get("corredor").asText());
+        // --- caminhada: o cliente escolhe por onde ir e marca o que pegou (UC-014)
+        passo("itens a coletar:");
+        for (JsonNode item : get("/sessoes/" + sessao + "/roteiro").get("itens")) {
+            System.out.printf("    %-32s %s%n",
+                    item.get("produto").get("nome").asText(),
+                    item.get("produto").get("pontoMapaId").asText().substring(0, 8));
         }
-        assertThat(ordens)
-                .as("a rota precisa vir numerada em sequencia, sem buraco nem repeticao")
-                .containsExactly(1, 2, 3, 4);
 
-        // --- o mesmo QR nao vale duas vezes (D-29)
-        assertThat(chamar(HttpMethod.POST, "/handoff/validate",
-                "{\"token\":\"" + token + "\"}").getStatusCode().value())
-                .as("token de handoff e de uso unico")
-                .isEqualTo(401);
-
-        // --- caminhada: marca o primeiro item (UC-014)
-        String primeiroItem = rota.get("pontos").get(0).get("item").get("id").asText();
+        String primeiroItem = get("/sessoes/" + sessao + "/roteiro")
+                .get("itens").get(0).get("id").asText();
         ResponseEntity<String> coleta = chamar(HttpMethod.PATCH,
                 "/roteiro/itens/" + primeiroItem + "/coletar", null);
         assertThat(coleta.getStatusCode().value()).isEqualTo(200);
@@ -271,58 +244,27 @@ class JornadaCompletaIntegracaoTest {
     // ---------------------------------------------------------------- recuperacao
 
     @Test
-    @DisplayName("celular que perdeu a aba recupera a rota so com o id da sessao")
-    void celularSeRecuperaSemToken() {
+    @DisplayName("celular que perdeu a aba recupera a lista so com o id da sessao")
+    void celularSeRecuperaComOIdDaSessao() {
         UUID sessao = novaSessao();
         adicionar(sessao, idDoProduto("SKU-MAT-002", "Cimento"));
-        adicionar(sessao, idDoProduto("SKU-ILU-001", "Lampada"));
+        String lampada = adicionar(sessao, idDoProduto("SKU-ILU-001", "Lampada")).get("id").asText();
 
-        String token = gerarHandoff(sessao);
-        chamar(HttpMethod.POST, "/handoff/validate", "{\"token\":\"" + token + "\"}");
+        chamar(HttpMethod.PATCH, "/roteiro/itens/" + lampada + "/coletar", null);
 
-        // O token ja foi consumido; o celular so tem o id da sessao.
+        /*
+         * O identificador da sessao vive no localStorage do navegador e sobrevive a fechar a
+         * aba. Ao voltar, o celular so precisa dele para reencontrar tudo - inclusive o que
+         * ja tinha sido coletado.
+         */
         JsonNode roteiro = get("/sessoes/" + sessao + "/roteiro");
 
-        passo("recuperacao sem token: " + roteiro.get("itens").size() + " itens");
+        passo("recuperacao pelo id da sessao: " + roteiro.get("itens").size() + " itens");
 
         assertThat(roteiro.get("itens")).hasSize(2);
-        for (JsonNode item : roteiro.get("itens")) {
-            assertThat(item.get("ordemCaminho").isNull())
-                    .as("a rota ja calculada precisa vir junto, senao nao e recuperacao (O-06)")
-                    .isFalse();
-        }
-    }
-
-    @Test
-    @DisplayName("QR regerado no meio da caminhada devolve o acesso sem reiniciar o percurso")
-    void qrRegeneradoPreservaOProgresso() {
-        UUID sessao = novaSessao();
-        adicionar(sessao, idDoProduto("SKU-MAT-002", "Cimento"));
-        adicionar(sessao, idDoProduto("SKU-ILU-001", "Lampada"));
-
-        JsonNode rota = corpoDe(chamar(HttpMethod.POST, "/handoff/validate",
-                "{\"token\":\"" + gerarHandoff(sessao) + "\"}"));
-
-        String primeiro = rota.get("pontos").get(0).get("item").get("id").asText();
-        chamar(HttpMethod.PATCH, "/roteiro/itens/" + primeiro + "/coletar", null);
-
-        // Cliente perde o acesso no meio da loja; o totem emite um QR novo.
-        JsonNode novaRota = corpoDe(chamar(HttpMethod.POST, "/handoff/validate",
-                "{\"token\":\"" + gerarHandoff(sessao) + "\"}"));
-
-        passo("apos regerar o QR:");
-        for (JsonNode ponto : novaRota.get("pontos")) {
-            System.out.printf("    %d. %-32s coletado=%s%n", ponto.get("ordem").asInt(),
-                    ponto.get("item").get("produto").get("nome").asText(),
-                    ponto.get("item").get("coletado").asText());
-        }
-
-        assertThat(novaRota.get("pontos").get(0).get("item").get("id").asText())
-                .as("renumerar paradas ja visitadas embaralharia a navegacao em curso (D-44)")
-                .isEqualTo(primeiro);
-        assertThat(novaRota.get("pontos").get(0).get("item").get("coletado").asBoolean())
-                .as("o progresso do cliente precisa sobreviver")
-                .isTrue();
+        assertThat(roteiro.get("itens").findValuesAsText("coletado"))
+                .as("o progresso do cliente precisa sobreviver a fechar a aba")
+                .contains("true");
     }
 
     // ---------------------------------------------------------------- ferramenta de demo

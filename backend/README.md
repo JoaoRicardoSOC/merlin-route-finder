@@ -79,14 +79,12 @@ Stack de testes disponível via `pom.xml`: JUnit 5, Mockito e AssertJ.
 | `DB_URL`, `DB_USER`, `DB_PASSWORD` | sim | — | conexão com o Oracle da FIAP |
 | `PORT` | não | `8080` | porta HTTP (provedores de hospedagem injetam) |
 | `CORS_ALLOWED_ORIGINS` | não | `localhost:3000,localhost:5173` | origens do Totem e do Mobile, separadas por vírgula |
-| `JWT_SECRET` | não | chave aleatória por execução | assinatura do token de handoff |
-| `HANDOFF_BASE_URL` | não | `http://localhost:5173` | URL do PWA codificada no QR Code |
 | `GEMINI_API_KEY` | para a IA | — | assistente de IA; sem ela os recursos de IA ficam indisponíveis |
 | `GEMINI_MODEL` | não | `gemini-3.5-flash-lite` | modelo usado (trocável sem recompilar; ver [D-37](../docs/decisoes-tecnicas.md#d-37-escolha-do-modelo-por-medição-e-o-limite-do-tier-gratuito)) |
 | `DB_POOL_SIZE` | não | `3` | tamanho máximo do pool; o schema da FIAP permite 20 sessões por usuário (ver [D-46](../docs/decisoes-tecnicas.md#d-46-o-pool-de-conexões-é-dimensionado-pelos-limites-reais-do-schema-da-fiap)) |
 | `AGENDADOR_INTERVALO_MS` | não | `300000` (5 min) | intervalo da varredura de sessões vencidas; `merlin.agendador.enabled=false` desliga o job |
 
-Nenhuma credencial é versionada. Ver [D-27](../docs/decisoes-tecnicas.md#d-27-segredo-do-jwt-por-ambiente-com-chave-aleatória-em-desenvolvimento) sobre o tratamento do segredo do JWT.
+Nenhuma credencial é versionada: todas vêm de variável de ambiente, inclusive em produção.
 
 ## Produção
 

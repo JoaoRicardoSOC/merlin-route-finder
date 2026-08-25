@@ -33,12 +33,6 @@ public class ListaRoteiroRepositoryAdapter implements ListaRoteiroRepository {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<ListaRoteiro> buscarPorToken(String handoffToken) {
-        return jpaRepository.findByHandoffToken(handoffToken).map(listaRoteiroFactory::paraDominio);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Optional<ListaRoteiro> buscarPorItem(UUID itemId) {
         return jpaRepository.findByItensId(itemId).map(listaRoteiroFactory::paraDominio);
     }

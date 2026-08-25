@@ -13,7 +13,7 @@ public record ListaRoteiroResponse(
         List<ItemRoteiroDetalhadoResponse> itens
 ) {
     public static ListaRoteiroResponse de(ListaRoteiro lista) {
-        // Usa a ordem de caminho quando ja existe (pos-handoff); antes disso, os itens vem
+        // Usa a ordem de caminho quando ja existe; antes disso, os itens vem
         // com ordem nula e getItensOrdenados os mantem no fim sem quebrar.
         List<ItemRoteiroDetalhadoResponse> itens = lista.getItensOrdenados().stream()
                 .map(ItemRoteiroDetalhadoResponse::de)

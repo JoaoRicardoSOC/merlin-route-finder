@@ -51,9 +51,4 @@ public class ListaRoteiroEntity {
     @OneToMany(mappedBy = "listaRoteiro", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemRoteiroEntity> itens = new ArrayList<>();
 
-    @Column(name = "handoff_token", length = 1000)
-    private String handoffToken;
-
-    @Column(name = "token_expiracao")
-    private LocalDateTime tokenExpiracao;
 }

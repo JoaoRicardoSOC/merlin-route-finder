@@ -17,8 +17,6 @@ tags:
     description: Busca e detalhamento de produtos
   - name: Roteiro
     description: Montagem da lista de compras (Totem) e execução da rota (Mobile)
-  - name: Handoff
-    description: Transição de dispositivo Totem -> Mobile via QR Code/JWT
   - name: RupturaEstoque
     description: Tratamento de ruptura física e sugestão de substituto por IA
   - name: Chat
@@ -229,91 +227,6 @@ paths:
                 $ref: "#/components/schemas/ItemRoteiroDetalhado"
         "404":
           $ref: "#/components/responses/NaoEncontrado"
-
-  /handoff:
-    post:
-      tags: [Handoff]
-      summary: Gerar ou regerar handoff (concluir lista e transicionar para o Mobile) (UC-010)
-      description: >
-        Valida a sessão, executa o algoritmo de roteamento (Nearest Neighbor com
-        refinamento 2-opt), gera um JWT assinado com TTL de 5 minutos e uso único, e
-        persiste o token na ListaRoteiro.
-
-
-        **Regeneração:** chamar de novo para a mesma sessão emite um token novo e
-        invalida o anterior. É o caminho de recuperação quando o QR Code expira antes
-        de ser escaneado, ou quando o cliente troca de aparelho — a jornada continua de
-        onde estava, sem refazer a montagem da lista. Se a caminhada já tiver começado
-        (algum item coletado), a ordem das paradas é preservada em vez de recalculada,
-        para não embaralhar a navegação em curso.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/HandoffRequest"
-      responses:
-        "201":
-          description: Handoff gerado
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HandoffResponse"
-        "404":
-          $ref: "#/components/responses/NaoEncontrado"
-        "409":
-          description: Lista de roteiro vazia ou sessão inválida
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardError"
-
-  /handoff/validate:
-    post:
-      tags: [Handoff]
-      summary: Validar token de handoff e iniciar navegação (UC-011)
-      description: >
-        Acionado quando o Mobile escaneia o QR Code. Valida o JWT, invalida-o
-        imediatamente após uso (uso único) e retorna a matriz de rota calculada,
-        os itens e as coordenadas.
-
-
-        **O token vai no corpo, nunca na URL.** Era `GET .../validate?token=` até a
-        Fase 3; mudou por duas razões que se somam: URL fica gravada em histórico de
-        navegador e em log de servidor, e a operação **consome** o token e renova a
-        sessão — efeitos colaterais que um GET nunca deveria ter. Mudança quebrante,
-        combinada com a dupla de frontend antes de entrar (ver D-25 e D-44).
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ValidarHandoffRequest"
-      responses:
-        "200":
-          description: Token válido — rota liberada para navegação
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/RotaCalculada"
-        "400":
-          description: Token ausente ou em branco
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardError"
-        "401":
-          description: >
-            Token inválido, já utilizado ou expirado. O campo `error` distingue os dois
-            desfechos: `Token de Handoff Expirado` significa que basta o Totem gerar um
-            QR Code novo (POST /handoff na mesma sessão) e a jornada continua; qualquer
-            outro rótulo é `Token de Handoff Invalido`, sem recuperação automática.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardError"
-        "409":
-          $ref: "#/components/responses/SessaoInativa"
 
   /roteiro/itens/{itemId}/ruptura:
     post:
@@ -583,34 +496,6 @@ components:
         saldoEstoque:
           type: integer
           minimum: 0
-
-    ValidarHandoffRequest:
-      type: object
-      required: [token]
-      properties:
-        token:
-          type: string
-          description: JWT lido do QR Code. Vai no corpo para não ficar gravado em URL.
-
-    HandoffRequest:
-      type: object
-      required: [sessaoId]
-      properties:
-        sessaoId:
-          type: string
-          format: uuid
-
-    HandoffResponse:
-      type: object
-      properties:
-        handoffUrl:
-          type: string
-          description: URL a ser codificada no QR Code exibido no Totem
-        token:
-          type: string
-        tokenExpiracao:
-          type: string
-          format: date-time
 
     PontoRota:
       type: object

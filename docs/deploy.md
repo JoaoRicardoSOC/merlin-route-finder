@@ -65,9 +65,7 @@ No painel do serviço, em *Environment*. As marcadas com `sync: false` no bluepr
 | `GEMINI_API_KEY` | chave do Google AI Studio | **usar a chave nova** ([O-01](observacoes.md#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada)) |
 | `SPRING_PROFILES_ACTIVE` | `prod` | já vem do blueprint |
 | `DB_POOL_SIZE` | `5` | o schema da FIAP permite **20 sessões por usuário**, divididas entre a instância publicada e a máquina de quem cedeu a credencial ([D-46](decisoes-tecnicas.md#d-46-o-pool-de-conexões-é-dimensionado-pelos-limites-reais-do-schema-da-fiap)) |
-| `JWT_SECRET` | gerado pelo Render | já vem do blueprint, com valor estável entre deploys |
 | `CORS_ALLOWED_ORIGINS` | deixar em branco por ora | preenchido quando o frontend for publicado |
-| `HANDOFF_BASE_URL` | deixar em branco por ora | idem |
 | `PORT` | **não definir** | o Render injeta sozinho |
 
 Nenhum desses valores vai para o repositório. O `render.yaml` declara apenas os nomes.
@@ -130,8 +128,6 @@ O time decidiu (23/08/2026) seguir no plano gratuito e assumir o aquecimento man
 
 É também o que a [D-42](decisoes-tecnicas.md#d-42-a-varredura-de-ttl-distingue-carrinho-abandonado-de-quem-só-encostou-no-totem) já registrava sobre a varredura de sessões não rodar com a aplicação dormindo.
 
-**O QR Code aponta para onde `HANDOFF_BASE_URL` mandar.** Enquanto essa variável estiver vazia, o valor padrão é `http://localhost:5173` — ou seja, os QR Codes gerados em produção levam a lugar nenhum. Só passam a funcionar depois do passo abaixo.
-
 ---
 
 ## Depois que o frontend for publicado
@@ -141,7 +137,6 @@ Dois valores no painel do Render, sem recompilar nada:
 | Variável | Valor |
 |---|---|
 | `CORS_ALLOWED_ORIGINS` | a URL do frontend, sem barra no fim — ex.: `https://merlin-route-finder.vercel.app` |
-| `HANDOFF_BASE_URL` | a mesma URL |
 
 Se Totem e Mobile forem publicados separadamente, `CORS_ALLOWED_ORIGINS` aceita as duas separadas por vírgula.
 
@@ -155,7 +150,7 @@ Sem Docker nesta máquina, a imagem em si só será construída pelo Render. O q
 
 - `./mvnw clean package -DskipTests` gera `target/backend-0.0.1-SNAPSHOT.jar`, que casa com o `backend-*.jar` que o `Dockerfile` copia;
 - `./mvnw dependency:go-offline`, a camada de cache do build, funciona;
-- o jar empacotado sobe com **os mesmos parâmetros de JVM do container** (`-XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC`), respeita `PORT`, ativa o perfil `prod`, não emite log de SQL e lê o `JWT_SECRET` em vez de gerar chave aleatória;
+- o jar empacotado sobe com **os mesmos parâmetros de JVM do container** (`-XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC`), respeita `PORT`, ativa o perfil `prod`, e não emite log de SQL;
 - `/v3/api-docs`, o caminho do health check, responde `200`.
 
 O que só o build do Render confirma: disponibilidade das imagens base e a conexão com o Oracle a partir de fora do país.

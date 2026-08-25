@@ -58,7 +58,7 @@ class ExpirarSessoesInativasUseCaseTest {
 
         when(listaRoteiroRepository.buscarPorSessao(sessao.getId())).thenReturn(
                 Optional.of(ListaRoteiro.reconstituir(
-                        UUID.randomUUID(), sessao.getId(), List.of(item), null, null)));
+                        UUID.randomUUID(), sessao.getId(), List.of(item))));
     }
 
     private void comCarrinhoVazio(Sessao sessao) {

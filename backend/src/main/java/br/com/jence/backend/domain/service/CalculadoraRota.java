@@ -41,7 +41,7 @@ public final class CalculadoraRota {
      * {@code ordemCaminho} (comecando em 1).
      * <p>
      * A origem e parametro em vez de constante porque o ponto de partida muda conforme o
-     * contexto: no handoff e o totem da entrada; no tratamento de ruptura de estoque, sera a
+     * contexto: na montagem da rota e o ponto de partida; no tratamento de ruptura, e a
      * posicao onde o cliente esta naquele momento.
      *
      * @return os itens na ordem em que devem ser visitados

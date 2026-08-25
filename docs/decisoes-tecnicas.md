@@ -312,6 +312,11 @@ Medido com as coordenadas reais da loja (6 itens, cenário de reforma de banheir
 
 ### D-08. O domínio registra o token de handoff, nunca o assina
 
+> [!NOTE]
+> **Superada em 25/08/2026.** O handoff entre dispositivos foi removido: sem totem, a jornada inteira acontece no celular do cliente e nao ha transicao a autorizar. Ver [D-49](#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada).
+>
+> O registro abaixo fica porque descreve raciocinio que continua valendo — a separacao entre contrato de negocio no dominio e tecnologia na infraestrutura, que segue viva no `AssistenteIA`.
+
 **Contexto.** O DER define `handoff_token` como um JWT assinado. Assinar JWT exige a biblioteca `jjwt` — que é infraestrutura.
 
 **Decisão.** `ListaRoteiro.registrarTokenHandoff(String tokenAssinado)` recebe o token já pronto e apenas o guarda, calculando a expiração (5 minutos). A assinatura acontece na camada de infraestrutura.
@@ -397,6 +402,11 @@ O modelo de topo **raciocina antes de responder** (centenas de tokens de "pensam
 
 ### D-27. Segredo do JWT por ambiente, com chave aleatória em desenvolvimento
 
+> [!NOTE]
+> **Superada em 25/08/2026.** O handoff entre dispositivos foi removido: sem totem, a jornada inteira acontece no celular do cliente e nao ha transicao a autorizar. Ver [D-49](#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada).
+>
+> O registro abaixo fica porque descreve raciocinio que continua valendo — nunca commitar segredo padrao, e preferir falhar visivelmente a ter um valor embutido no codigo.
+
 **Contexto.** Assinar o token de handoff exige uma chave secreta. Cada integrante roda a aplicação na própria máquina, e o projeto vai para deploy público.
 
 **Decisão.** A chave vem de `JWT_SECRET` (via `merlin.jwt.secret`). Se estiver ausente ou vazia, a aplicação **gera uma chave aleatória no startup** e registra um aviso no log.
@@ -424,6 +434,11 @@ O modelo de topo **raciocina antes de responder** (centenas de tokens de "pensam
 ---
 
 ### D-29. Uso único do token pela ausência no banco
+
+> [!NOTE]
+> **Superada em 25/08/2026.** O handoff entre dispositivos foi removido: sem totem, a jornada inteira acontece no celular do cliente e nao ha transicao a autorizar. Ver [D-49](#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada).
+>
+> O registro abaixo fica porque descreve raciocinio que continua valendo — resolver revogacao pela ausencia do dado em vez de criar estrutura para isso.
 
 **Contexto.** O diagrama de sequência especifica que o token do QR Code é de **uso único**: escaneou uma vez, não vale mais. JWT é, por natureza, um token *stateless* — a assinatura continua válida até a expiração, e nada nele impede reutilização.
 
@@ -913,6 +928,11 @@ E o número de vitrine subiu: no cenário de reforma de banheiro, a redução co
 ---
 
 ### D-44. O token de handoff sai da URL, e o QR Code passa a ser regenerável
+
+> [!NOTE]
+> **Superada em 25/08/2026.** O handoff entre dispositivos foi removido: sem totem, a jornada inteira acontece no celular do cliente e nao ha transicao a autorizar. Ver [D-49](#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada).
+>
+> O registro abaixo fica porque descreve raciocinio que continua valendo — e principalmente a licao de que **uma operacao com efeito colateral nao pode ser um GET**, que vale para qualquer endpoint futuro.
 
 **Contexto.** Último card do backlog. Duas fragilidades conhecidas desde a Fase 1, registradas em [D-29](#d-29-uso-único-do-token-pela-ausência-no-banco): o token viajava na query string, e um QR Code que expirasse antes de ser escaneado obrigava o cliente a recomeçar.
 

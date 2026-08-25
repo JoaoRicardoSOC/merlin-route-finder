@@ -27,9 +27,7 @@ public class ListaRoteiroFactory {
         return ListaRoteiro.reconstituir(
                 entity.getId(),
                 entity.getSessaoId(),
-                itens,
-                entity.getHandoffToken(),
-                entity.getTokenExpiracao()
+                itens
         );
     }
 
@@ -40,8 +38,6 @@ public class ListaRoteiroFactory {
         ListaRoteiroEntity entity = new ListaRoteiroEntity();
         entity.setId(lista.getId());
         entity.setSessaoId(lista.getSessaoId());
-        entity.setHandoffToken(lista.getHandoffToken());
-        entity.setTokenExpiracao(lista.getTokenExpiracao());
 
         // Os itens so podem ser mapeados depois que a entity existe, porque cada um precisa
         // apontar de volta para ela (lado proprietario da relacao).
