@@ -182,12 +182,26 @@ Foi por esse critério que no UC-003 optamos por **não** adicionar um campo `di
 
 ```bash
 ./mvnw test              # 52 testes, sem banco, em qualquer maquina
-./mvnw test -Pintegracao # 53 testes, exige DB_URL/DB_USER/DB_PASSWORD
+./mvnw test -Pintegracao # 174 testes, exige DB_URL/DB_USER/DB_PASSWORD
 ```
 
 **Motivo.** Um clone novo do repositório precisa passar nos testes sem configuração prévia. Se a suíte padrão exige credencial de um banco específico, ela deixa de ser rede de proteção e vira obstáculo: as pessoas param de rodá-la, ou pior, aprendem a ignorar build vermelho.
 
-A separação também deixa explícita uma distinção real: 52 testes verificam **lógica** (domínio, algoritmo, camada web com mocks) e não deveriam depender de infraestrutura; os de integração verificam **a costura com o banco**, e aí a dependência é legítima.
+A separação também deixa explícita uma distinção real: os testes da execução padrão verificam **lógica** (domínio, algoritmo, camada web com casos de uso simulados) e não deveriam depender de infraestrutura; os de integração verificam **a costura com o banco**, e aí a dependência é legítima.
+
+**Três níveis, com papéis distintos** — a suíte cresceu e a divisão ficou mais nítida:
+
+| Nível | Como roda | O que pega |
+|---|---|---|
+| Unidade e `@WebMvcTest` | sem banco | regra de negócio, status HTTP, validação, tratamento de erro |
+| Integração por caso de uso | com Oracle | a costura com o banco: consultas nativas, transação, agregado |
+| **Jornada por HTTP** | com Oracle, aplicação de pé | os passos **entre si**: serialização, ordem, estado que atravessa requisições |
+
+O terceiro nível existe porque os dois primeiros são cegos ao que acontece **entre** os passos. Nenhum teste de unidade percebe que o campo devolvido pelo handoff não é o que o passo seguinte espera receber — e é exatamente esse tipo de desencontro que trava uma integração de frontend.
+
+**Por que a jornada é um método só, e não vários.** Os passos dependem uns dos outros: não existe "validar handoff" sem antes montar o roteiro e gerar o token. Quebrar em métodos independentes obrigaria cada um a refazer o percurso inteiro no preparo, o que multiplica o custo e esconde justamente a sequência que se quer proteger. O método imprime cada etapa, então quando falha o log mostra até onde a jornada chegou.
+
+**A jornada não exige `GEMINI_API_KEY`.** O passo da ruptura aceita tanto a escolha do assistente quanto o substituto por proximidade — o fallback da [D-38](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco). Um teste que só roda para quem tem chave de IA acaba não sendo rodado por ninguém.
 
 **Consequência prática.** Rodar `./mvnw test` antes de commitar passou a ser viável para os cinco integrantes, independente de quem configurou o quê.
 

@@ -60,6 +60,16 @@ Os testes que sobem o contexto contra o Oracle são marcados com `@Tag("integrac
 ./mvnw test -Pintegracao
 ```
 
+A suíte tem três níveis, com papéis diferentes — ver [D-33](../docs/decisoes-tecnicas.md#d-33-suíte-de-testes-roda-sem-banco-integração-fica-separada-por-tag):
+
+| Nível | Precisa de | O que verifica |
+|---|---|---|
+| Unidade e camada web | nada | regra de negócio, status HTTP, validação, erros |
+| Integração por caso de uso | Oracle | consultas nativas, transação, agregado |
+| Jornada por HTTP | Oracle | os passos entre si, do totem ao caixa |
+
+`JornadaCompletaIntegracaoTest` percorre a jornada inteira por HTTP com a aplicação de pé, e imprime cada etapa — é também a forma mais rápida de ver o sistema funcionando ponta a ponta. Alguns testes exigem `GEMINI_API_KEY` e são pulados sem ela; a jornada não exige.
+
 Stack de testes disponível via `pom.xml`: JUnit 5, Mockito e AssertJ.
 
 ## Variáveis de ambiente
