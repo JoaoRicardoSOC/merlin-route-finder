@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -88,36 +89,66 @@ class AtributosEFacetasIntegracaoTest {
     // ---------------------------------------------------------------- filtro por caracteristica
 
     @Test
-    @DisplayName("um valor filtra para os produtos que o tem")
+    @DisplayName("um valor filtra para os produtos que o tem, e so para eles")
     void umValor() {
+        /*
+         * A verificacao e da propriedade, e nao de uma lista fixa de SKUs: uma lista fixa
+         * quebra a cada produto acrescentado a massa, sem que nada de errado tenha acontecido
+         * - foi o que aconteceu quando o catalogo passou de 29 para 111.
+         */
         List<String> tigre = skus(comAtributos(Map.of(AtributoProduto.MARCA, List.of("Tigre"))));
 
-        assertThat(tigre).containsExactly("SKU-ENC-001", "SKU-ENC-002");
+        assertThat(tigre).isNotEmpty().contains("SKU-ENC-001");
+        assertThat(tigre).allSatisfy(sku ->
+                assertThat(marcasDe(sku)).contains("Tigre"));
     }
 
     @Test
-    @DisplayName("dois valores da mesma chave sao OU")
+    @DisplayName("dois valores da mesma chave sao OU: o resultado e a uniao dos dois")
     void doisValoresDaMesmaChave() {
+        List<String> tigre = skus(comAtributos(Map.of(AtributoProduto.MARCA, List.of("Tigre"))));
+        List<String> docol = skus(comAtributos(Map.of(AtributoProduto.MARCA, List.of("Docol"))));
+
         List<String> tigreOuDocol = skus(comAtributos(
                 Map.of(AtributoProduto.MARCA, List.of("Tigre", "Docol"))));
 
         assertThat(tigreOuDocol)
                 .as("marcar duas marcas mostra as duas, e nao a intersecao vazia entre elas")
-                .containsExactly("SKU-COZ-002", "SKU-ENC-001", "SKU-ENC-002", "SKU-ENC-003");
+                .containsExactlyInAnyOrderElementsOf(
+                        Stream.concat(tigre.stream(), docol.stream()).distinct().toList());
+        assertThat(tigreOuDocol).hasSizeGreaterThan(tigre.size());
     }
 
     @Test
-    @DisplayName("chaves diferentes sao E")
+    @DisplayName("chaves diferentes sao E: o resultado e a intersecao")
     void chavesDiferentes() {
         /*
          * O erro que um JOIN unico com todos os valores num IN cometeria: devolver tudo que
          * fosse Tigre OU 25 mm, quando o cliente pediu o cano da Tigre de 25 mm.
          */
+        List<String> tigre = skus(comAtributos(Map.of(AtributoProduto.MARCA, List.of("Tigre"))));
+        List<String> de25mm = skus(comAtributos(Map.of(AtributoProduto.BITOLA, List.of("25 mm"))));
+
         List<String> tigreDe25mm = skus(comAtributos(Map.of(
                 AtributoProduto.MARCA, List.of("Tigre"),
                 AtributoProduto.BITOLA, List.of("25 mm"))));
 
-        assertThat(tigreDe25mm).containsExactly("SKU-ENC-001");
+        assertThat(tigreDe25mm)
+                .isNotEmpty()
+                .containsExactlyInAnyOrderElementsOf(
+                        tigre.stream().filter(de25mm::contains).toList());
+        assertThat(tigreDe25mm)
+                .as("a intersecao precisa ser menor que cada filtro isolado, ou o E virou OU")
+                .hasSizeLessThan(tigre.size())
+                .hasSizeLessThan(de25mm.size());
+    }
+
+    private List<String> marcasDe(String sku) {
+        return produtoRepository.buscarAtributosDe(
+                        produtoRepository.buscarPorSku(sku).orElseThrow().getId()).stream()
+                .filter(atributo -> atributo.atributo() == AtributoProduto.MARCA)
+                .map(ValorDeAtributo::valor)
+                .toList();
     }
 
     @Test
@@ -127,8 +158,9 @@ class AtributosEFacetasIntegracaoTest {
                 Map.of(AtributoProduto.MARCA, List.of("Norton"))));
 
         assertThat(lixaNorton)
-                .as("a lixa grao 120 e Norton, mas esta zerada")
-                .containsExactly("SKU-TIN-004");
+                .as("a lixa grao 120 tambem e Norton, mas esta zerada")
+                .contains("SKU-TIN-004")
+                .doesNotContain("SKU-TIN-003");
     }
 
     @Test

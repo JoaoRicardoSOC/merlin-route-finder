@@ -77,6 +77,8 @@
 - [D-63. As facetas ignoram a escolha do cliente sobre elas mesmas](#d-63-as-facetas-ignoram-a-escolha-do-cliente-sobre-elas-mesmas)
 - [D-64. Desmarcar um item não precisa mexer na posição do cliente](#d-64-desmarcar-um-item-não-precisa-mexer-na-posição-do-cliente)
 - [D-65. Aceitar o substituto é uma ação só, e o substituto entra não coletado](#d-65-aceitar-o-substituto-e-uma-acao-so-e-o-substituto-entra-nao-coletado)
+- [D-66. Cada produto da massa é declarado uma vez, inteiro](#d-66-cada-produto-da-massa-e-declarado-uma-vez-inteiro)
+- [D-67. O teto de candidatos da ruptura envelheceu com o catálogo](#d-67-o-teto-de-candidatos-da-ruptura-envelheceu-com-o-catalogo)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -1456,7 +1458,7 @@ Aqui a mesma regra vira armadilha: os 29 produtos criados antes destes campos **
 
 **A quarta vez que o mesmo padrão aparece.** [D-51](#d-51-um-valor-de-enum-removido-precisa-sumir-também-do-banco), [D-53](#d-53-a-aplicação-repara-a-restrição-de-enum-que-o-ddl-auto-update-deixa-envelhecer), [D-56](#d-56-a-coluna-coletado-continua-sendo-gravada-mesmo-redundante) e agora esta. Sem Flyway e com `ddl-auto: update`, **a carga inicial é o único lugar do sistema que pode reconciliar banco e código** — e toda mudança em dado existente precisa passar por ela explicitamente.
 
-**Imagem nula é estado normal, não defeito.** As URLs vêm do site público da Leroy e são coletadas à mão pelo time ([O-18](observacoes.md#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca)), de forma incremental. O contrato marca o campo como anulável e o teste verifica que um produto sem foto continua respondendo nome, descrição e localização. A coleta está organizada em [`imagens-dos-produtos.md`](imagens-dos-produtos.md).
+**Imagem nula é estado normal, não defeito.** As URLs vêm do site público da Leroy e são coletadas à mão pelo time ([O-18](observacoes.md#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens)), de forma incremental. O contrato marca o campo como anulável e o teste verifica que um produto sem foto continua respondendo nome, descrição e localização. A coleta está organizada em [`imagens-dos-produtos.md`](imagens-dos-produtos.md).
 
 **Onde no código.** `infrastructure/database/seed/CarregadorDadosIniciais.java` — `completarApresentacoes`; `domain/entity/Produto.java` — `comApresentacao`.
 
@@ -1524,7 +1526,7 @@ Diferente das descricoes ([D-59](#d-59-a-carga-completa-a-apresentação-de-prod
 
 **As marcas sao reais**, e coerentes com o produto. A Leroy vende essas marcas, e um catalogo com marca inventada nao se parece com uma loja — pelo mesmo motivo de os precos serem plausiveis.
 
-**O que isso cobra.** Cada produto novo passa a exigir caracteristicas junto, o que agrava o esforco de massa que a [O-18](observacoes.md#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca) ja registrava como apertado.
+**O que isso cobra.** Cada produto novo passa a exigir caracteristicas junto, o que agrava o esforco de massa que a [O-18](observacoes.md#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens) ja registrava como apertado.
 
 **Onde no codigo.** `domain/entity/AtributoProduto.java`, `infrastructure/database/seed/AtributosDaMassa.java`, `infrastructure/database/adapter/ProdutoRepositoryAdapter.java`.
 
@@ -1589,6 +1591,46 @@ O card previa o cuidado: *"a posicao vem do ultimo item coletado; desmarcar prec
 **Uma guarda que evita apagar um item em silencio.** Trocar um produto por ele mesmo devolve 409. Sem ela, o `adicionarProduto` devolveria o item existente ([D-18](#d-18-produto-duplicado-é-ignorado-no-carrinho)) e o `removerProduto` o apagaria em seguida — o cliente ficaria sem o produto sem ter pedido isso.
 
 **Onde no codigo.** `application/usecase/SubstituirItemDoRoteiroUseCase.java`.
+
+---
+
+### D-66. Cada produto da massa e declarado uma vez, inteiro
+
+**Contexto.** O catalogo passou de 29 para **111 produtos**, cerca de onze por secao. Com cinco por corredor, paginacao nao paginava, faceta nao filtrava e corredor nao parecia corredor.
+
+**O problema que aparecia ao acrescentar em escala.** A massa estava espalhada: nome e preco no carregador, descricao ao lado deles, caracteristicas noutro arquivo. Acrescentar oitenta produtos assim seria editar dois lugares em paralelo — e **esquecer as caracteristicas de um produto nao daria erro nenhum**: ele simplesmente sumiria do filtro no dia em que alguem escolhesse qualquer marca.
+
+**Decisao.** `CatalogoDaMassa` declara cada produto numa entrada so, com SKU, nome, secao, preco, estoque, descricao e caracteristicas juntos. A carga le dessa fonte unica para criar, completar apresentacao e sincronizar atributos.
+
+**O que isso torna impossivel.** Produto sem descricao ou sem caracteristica deixa de ser um esquecimento silencioso e passa a ser visivel na propria entrada — e ha teste exigindo que todo produto tenha ao menos marca e tipo.
+
+**Uma guarda na carga.** Produto que declara uma secao inexistente na planta ([D-58](#d-58-a-planta-da-loja-não-vive-no-banco-e-é-dela-que-saem-as-coordenadas-das-seções)) e ignorado com aviso no log, em vez de estourar. A massa de demonstracao nao pode impedir a aplicacao de subir.
+
+**Um unico produto continua nascendo com estoque zero** — a lixa grao 120 —, e e ele que encena a ruptura. Manter esse cenario intacto ao ampliar o catalogo foi a parte dificil, e esta na [D-67](#d-67-o-teto-de-candidatos-da-ruptura-envelheceu-com-o-catalogo).
+
+**As marcas sao reais**, decidido com o time: a Leroy vende essas marcas, e um catalogo com marca inventada nao se parece com uma loja — pelo mesmo motivo de os precos serem plausiveis.
+
+**Onde no codigo.** `infrastructure/database/seed/CatalogoDaMassa.java`, `ProdutoDaMassa.java`.
+
+---
+
+### D-67. O teto de candidatos da ruptura envelheceu com o catalogo
+
+**Contexto.** A pre-filtragem espacial da ruptura ([D-38](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)) manda ao assistente os produtos disponiveis mais proximos, limitados a um teto. Ele era **10**, dimensionado quando uma secao tinha de dois a cinco produtos — nessa escala, dez candidatos naturalmente atravessavam varios corredores.
+
+**O que quebrou.** Ao passar para onze produtos por secao, um teste falhou: **a trena de 7,5 m saiu da lista de candidatos da trena de 5 m**.
+
+O motivo e sutil e vale entender. Todos os produtos de uma secao compartilham a coordenada do bloco, entao **empatam em distancia** — e o desempate acaba sendo o nome. "Trena" esta no fim do alfabeto de Ferramentas, e caiu fora do top 10.
+
+**O diagnostico e maior que o sintoma.** Com uma dezena de produtos por corredor, um teto de 10 **nunca sai do corredor atual**. Isso anula a razao de existir da pre-filtragem espacial: ela passaria a oferecer o que esta ao lado na prateleira, e nao o que esta perto na loja — que e outra coisa.
+
+**Decisao.** Teto de **20**. Cobre a secao inteira com folga e ainda deixa entrar o corredor vizinho, que e exatamente o que a busca por proximidade promete.
+
+**Sob teste, e nao por confianca.** Entrou uma verificacao de que os candidatos alcancam **mais de um corredor** — a propriedade que se perdeu, e nao o numero que a restaurou. Medido a partir de Tintas: os candidatos chegam a Eletrica.
+
+**O que isso ensina sobre constantes dimensionadas.** O 10 nao estava errado quando foi escolhido; ele envelheceu com o dado. Uma constante que depende do tamanho da massa merece um teste que verifique a **propriedade** que ela deveria garantir, e nao o valor dela.
+
+**Onde no codigo.** `application/usecase/TratarRupturaEstoqueUseCase.java` — `LIMITE_DE_CANDIDATOS`.
 
 ---
 

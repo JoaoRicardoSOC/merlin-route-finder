@@ -54,8 +54,19 @@ public class TratarRupturaEstoqueUseCase {
      */
     public static final double RAIO_DE_BUSCA = 25.0;
 
-    /** Teto de candidatos enviados ao assistente, para o julgamento nao virar um catalogo. */
-    public static final int LIMITE_DE_CANDIDATOS = 10;
+    /**
+     * Teto de candidatos enviados ao assistente, para o julgamento nao virar um catalogo.
+     * <p>
+     * <b>Subiu de 10 para 20 quando o catalogo cresceu, e o motivo nao e folga.</b> Todos os
+     * produtos de uma secao compartilham a coordenada do bloco, entao empatam em distancia e o
+     * desempate acaba sendo o nome. Com 12 produtos por corredor, um teto de 10 <b>nunca sai
+     * do corredor atual</b> - o que anula a razao de existir da pre-filtragem espacial, que e
+     * oferecer o que esta perto, e nao o que esta ao lado na prateleira.
+     * <p>
+     * Foi um teste que flagrou: a trena de 7,5 m saiu da lista de candidatos da trena de 5 m
+     * por ficar no fim do alfabeto de Ferramentas. Ver D-67.
+     */
+    public static final int LIMITE_DE_CANDIDATOS = 20;
 
     private final ItemRoteiroRepository itemRoteiroRepository;
     private final ListaRoteiroRepository listaRoteiroRepository;

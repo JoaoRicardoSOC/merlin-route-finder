@@ -4,6 +4,7 @@ import br.com.jence.backend.application.usecase.TratarRupturaEstoqueUseCase;
 import br.com.jence.backend.domain.entity.Produto;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -87,5 +88,38 @@ class PreFiltragemEspacialIntegracaoTest {
                 emFalta.getPontoMapa(), emFalta.getId(), TratarRupturaEstoqueUseCase.RAIO_DE_BUSCA, 2);
 
         assertThat(apenasDois).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("o teto precisa alcancar outro corredor, e nao so a propria secao")
+    void oTetoAlcancaOutroCorredor() {
+        /*
+         * A regressao que o catalogo maior revelou, e a razao de o teto ter subido para 20.
+         *
+         * Todos os produtos de uma secao compartilham a coordenada do bloco (D-58), entao
+         * empatam em distancia e o desempate acaba sendo o nome. Com uma dezena de produtos
+         * por corredor, um teto baixo NUNCA sai do corredor atual - e a pre-filtragem
+         * espacial deixa de oferecer o que esta perto para oferecer o que esta ao lado na
+         * prateleira, que e outra coisa.
+         *
+         * Foi assim que a trena de 7,5 m saiu da lista de candidatos da trena de 5 m: ficou no
+         * fim do alfabeto de Ferramentas.
+         */
+        Produto emFalta = lixaEmFalta();
+
+        List<String> corredores = produtoRepository.buscarDisponiveisProximosDe(
+                        emFalta.getPontoMapa(), emFalta.getId(),
+                        TratarRupturaEstoqueUseCase.RAIO_DE_BUSCA,
+                        TratarRupturaEstoqueUseCase.LIMITE_DE_CANDIDATOS)
+                .stream()
+                .map(produto -> produto.getPontoMapa().getCorredor())
+                .distinct()
+                .toList();
+
+        System.out.println(">>> corredores alcancados: " + corredores);
+
+        assertThat(corredores)
+                .as("com o teto atual, os candidatos ficaram presos a uma unica secao")
+                .hasSizeGreaterThan(1);
     }
 }

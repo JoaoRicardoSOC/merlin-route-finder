@@ -104,7 +104,7 @@ A tela de detalhe hoje mostraria nome e preço num espaço vazio.
 
 **Verificar:** os dois campos chegam ao detalhe e à listagem; produto sem imagem não quebra a resposta.
 
-> **Combinado:** as URLs vêm do site público da Leroy, coletadas pelo time. Ver [O-18](observacoes.md#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca) — o volume dessa coleta depende do tamanho que o catálogo vai ter.
+> **Combinado:** as URLs vêm do site público da Leroy, coletadas pelo time. Ver [O-18](observacoes.md#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens) — o volume dessa coleta depende do tamanho que o catálogo vai ter.
 
 ### Card 9. Navegação por seção e filtros
 
@@ -152,7 +152,7 @@ Hoje a ruptura sugere, e trocar exigiria do cliente duas ações — adicionar u
 
 ### Card 13. Ampliar o catálogo
 
-Vinte e nove produtos deixam a busca sem sentido, a navegação por seção vazia e o mapa ralo. Ver [O-18](observacoes.md#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca).
+Vinte e nove produtos deixam a busca sem sentido, a navegação por seção vazia e o mapa ralo. Ver [O-18](observacoes.md#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens).
 
 **Entra:** produtos suficientes para cada seção parecer uma seção de verdade, com descrição, e imagem ao menos nos que aparecem no roteiro da demonstração.
 

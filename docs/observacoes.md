@@ -31,7 +31,7 @@
 | [O-15](#o-15-o-endpoint-de-simulação-de-estoque-não-tem-proteção-nenhuma) | Simulação de estoque sem proteção | — | Baixa |
 | [O-16](#o-16-o-token-continua-na-url-do-pwa-mesmo-fora-da-nossa-api) | Token na URL do PWA | Bielecky e Marcela | Média |
 | [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final) | Limpar documentos de trabalho | Time | fim do ano |
-| [O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca) | Catálogo pequeno para a banca | Time | **Alta — 21/09** |
+| [O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens) | ~~Catálogo pequeno~~ — falta coletar imagens | Time | Média |
 | [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | Tela de código manual e arte da placa | Bielecky, Marcela e time | Alta |
 | [O-20](#o-20-a-limpeza-dos-testes-de-integração-falha-em-silêncio-quando-há-ruptura) | Limpeza de teste deixa sessão órfã | Backend | Baixa |
 
@@ -198,9 +198,12 @@ A distinção vale a pena manter em mente conforme o repositório cresce:
 
 ## Para a demonstração
 
-### O-18. O catálogo de 29 produtos é pequeno demais para a banca
+### O-18. O catálogo de 29 produtos é pequeno demais para a banca — ~~resolvido no volume~~, pendente nas imagens
 
-**O quê.** Ampliar a massa de demonstração para algumas centenas de produtos, antes da banca final.
+> [!NOTE]
+> **Volume resolvido em 25/08/2026: o catálogo passou de 29 para 111 produtos**, cerca de onze por seção. O que continua aberto é a **coleta das imagens**, e ela ficou maior junto.
+
+**O quê.** Ampliar a massa de demonstração, e coletar as URLs das imagens.
 
 **Por que importa.** Na banca não se controla o que os avaliadores vão querer ver. Com 29 produtos, qualquer busca fora do roteiro ensaiado devolve pouco ou nada, e a navegação por seção mostra três itens por corredor — o que passa a impressão de projeto inacabado, não de protótipo enxuto.
 
@@ -212,11 +215,13 @@ Um catálogo maior também melhora o produto de graça:
 
 **A descrição já está resolvida.** Os 29 produtos atuais têm descrição escrita, e a carga completa quem já estava gravado ([D-59](decisoes-tecnicas.md#d-59-a-carga-completa-a-apresentação-de-produtos-que-já-estavam-gravados)). Produtos novos entram com a sua junto.
 
-**A tensão que continua de pé é a imagem.** As URLs vêm do site público da Leroy, coletadas à mão — a lista está pronta para preencher em [`imagens-dos-produtos.md`](imagens-dos-produtos.md). Para 29 produtos é uma tarde; **para trezentos, não escala**.
+**A tensão que continua de pé é a imagem.** As URLs vêm do site público da Leroy, coletadas à mão — a lista está pronta para preencher em [`imagens-dos-produtos.md`](imagens-dos-produtos.md), agora com as 111 linhas.
 
-**E agora há um custo a mais por produto.** Desde 25/08 cada produto carrega também **características** — marca, medida, amperagem —, que são o que alimenta os filtros ([D-62](decisoes-tecnicas.md#d-62-as-caracteristicas-dos-produtos-vivem-numa-tabela-nao-em-colunas)). Um produto sem marca some do catálogo assim que o cliente filtra por qualquer marca, então não dá para deixar em branco como se faz com a imagem.
+**Coletar 111 à mão não é razoável, e não precisa ser.** Imagem nula é estado normal e testado. A recomendação está no próprio documento: as duas lixas primeiro, porque encenam a ruptura; depois o resto de Tintas, que é a seção do roteiro ensaiado; depois um punhado em cada outra seção, para a navegação não parecer vazia. O restante pode ficar sem foto indefinidamente.
 
-Isso muda a conta de ampliar o catálogo: **cada produto novo custa descrição, imagem e características**, não só nome e preço. Vale considerar concentrar o volume nas seções que aparecem na demonstração, em vez de espalhar por todas.
+**Descrição e características dos 111 já estão escritas**, e cada produto é declarado numa entrada só ([D-66](decisoes-tecnicas.md#d-66-cada-produto-da-massa-e-declarado-uma-vez-inteiro)) — acrescentar mais produtos continua barato do lado do código.
+
+**Um efeito colateral que o volume revelou** e vale lembrar: ampliar o catálogo quebrou a pré-filtragem da ruptura, porque o teto de candidatos tinha sido dimensionado para uma massa pequena ([D-67](decisoes-tecnicas.md#d-67-o-teto-de-candidatos-da-ruptura-envelheceu-com-o-catalogo)). Se o catálogo crescer de novo, vale rodar a suíte inteira e olhar esse teste em particular.
 
 Três saídas, e vale escolher antes de começar:
 

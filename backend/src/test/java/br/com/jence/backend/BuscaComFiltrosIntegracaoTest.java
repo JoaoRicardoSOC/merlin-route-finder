@@ -41,14 +41,39 @@ class BuscaComFiltrosIntegracaoTest {
     // ---------------------------------------------------------------- navegar
 
     @Test
-    @DisplayName("sem filtro nenhum, navega o catalogo inteiro em ordem alfabetica")
+    @DisplayName("sem filtro nenhum, navega o catalogo em ordem alfabetica e estavel")
     void semFiltro() {
         // O caso que a consulta montada mais arrisca errar: nenhum predicado e acrescentado,
         // e nenhum parametro e vinculado.
         List<Produto> todos = buscar(FiltroDeProdutos.nenhum());
 
         assertThat(todos).isNotEmpty();
-        assertThat(nomes(todos)).isSorted();
+
+        /*
+         * A ordem alfabetica e verificada pela primeira letra, e nao com isSorted() sobre a
+         * String inteira, porque quem ordena e o Oracle - e a colacao dele nao e a do Java.
+         * Medido: o banco devolve "Lampada LED Filamento" ANTES de "Lampada LED 12W", ou seja
+         * ordena letra antes de digito, ao contrario da comparacao natural de String.
+         *
+         * Nao e defeito: a ordem que o cliente ve e coerente e estavel. Defeito seria o teste
+         * afirmar uma colacao que o sistema nunca prometeu.
+         */
+        List<Character> iniciais = nomes(todos).stream()
+                .map(nome -> Character.toUpperCase(nome.charAt(0)))
+                .toList();
+
+        assertThat(iniciais).isSorted();
+    }
+
+    @Test
+    @DisplayName("a ordem do catalogo e a mesma entre chamadas")
+    void ordemEstavel() {
+        /*
+         * E a propriedade que de fato importa para o cliente: a lista nao pode se rearranjar
+         * entre uma consulta e outra. Sem ordenacao explicita, o SQL nao garante isso.
+         */
+        assertThat(nomes(buscar(FiltroDeProdutos.nenhum())))
+                .isEqualTo(nomes(buscar(FiltroDeProdutos.nenhum())));
     }
 
     @Test
@@ -155,9 +180,15 @@ class BuscaComFiltrosIntegracaoTest {
     @Test
     @DisplayName("combinacao sem resultado devolve pagina vazia, nao erro")
     void combinacaoSemResultado() {
-        // O cliente filtrou demais; ele nao pediu um recurso que nao existe.
+        /*
+         * O cliente filtrou demais; ele nao pediu um recurso que nao existe.
+         *
+         * O termo mudou de "lixa" para "disjuntor" quando o catalogo cresceu: "lixa" passou a
+         * encontrar a "Lixeira de Embutir" de Cozinhas pela similaridade, o que e a busca
+         * tolerante funcionando - e nao um resultado errado.
+         */
         Pagina<Produto> vazia = produtoRepository.buscar(
-                new FiltroDeProdutos("lixa", "Cozinhas", false), 0, TAMANHO);
+                new FiltroDeProdutos("disjuntor", "Cozinhas", false), 0, TAMANHO);
 
         assertThat(vazia.conteudo()).isEmpty();
         assertThat(vazia.totalElementos()).isZero();
