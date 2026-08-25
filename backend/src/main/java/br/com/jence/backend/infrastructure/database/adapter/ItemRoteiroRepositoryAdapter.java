@@ -38,7 +38,6 @@ public class ItemRoteiroRepositoryAdapter implements ItemRoteiroRepository {
                         "ItemRoteiro %s nao encontrado. Itens novos devem ser gravados pela ListaRoteiro."
                                 .formatted(item.getId())));
 
-        entity.setOrdemCaminho(item.getOrdemCaminho());
         entity.setColetado(item.isColetado());
 
         return itemRoteiroFactory.paraDominio(jpaRepository.save(entity));

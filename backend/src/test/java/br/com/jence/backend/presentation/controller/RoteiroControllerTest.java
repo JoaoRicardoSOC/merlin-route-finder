@@ -3,7 +3,6 @@ package br.com.jence.backend.presentation.controller;
 import br.com.jence.backend.application.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.application.dto.ListaRoteiroResponse;
 import br.com.jence.backend.application.dto.PontoMapaResponse;
-import br.com.jence.backend.application.dto.PontoRotaResponse;
 import br.com.jence.backend.application.dto.ProdutoResponse;
 import br.com.jence.backend.application.usecase.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.application.usecase.ConsultarListaRoteiroUseCase;
@@ -40,7 +39,7 @@ class RoteiroControllerTest {
     private final UUID sessaoId = UUID.randomUUID();
 
     private ItemRoteiroDetalhadoResponse item(UUID itemId, UUID produtoId) {
-        return new ItemRoteiroDetalhadoResponse(itemId, produtoId, null, false,
+        return new ItemRoteiroDetalhadoResponse(itemId, produtoId, false,
                 new ProdutoResponse(produtoId, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L",
                         new BigDecimal("289.90"), 12, UUID.randomUUID()));
     }
@@ -76,7 +75,6 @@ class RoteiroControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(itemId.toString()))
                 .andExpect(jsonPath("$.produtoId").value(produtoId.toString()))
-                .andExpect(jsonPath("$.ordemCaminho").doesNotExist())
                 .andExpect(jsonPath("$.produto.sku").value("SKU-TIN-001"));
 
         verify(adicionarProdutoAoRoteiroUseCase).executar(sessaoId, produtoId);

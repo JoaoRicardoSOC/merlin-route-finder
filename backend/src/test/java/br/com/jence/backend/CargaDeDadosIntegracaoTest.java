@@ -101,9 +101,9 @@ class CargaDeDadosIntegracaoTest {
                 .as("secao repetida dividiria os produtos de um corredor em dois pontos do mapa")
                 .allMatch(quantidade -> quantidade == 1);
 
-        for (TipoPonto tipo : List.of(TipoPonto.TOTEM, TipoPonto.CAIXA, TipoPonto.BANHEIRO)) {
+        for (TipoPonto tipo : List.of(TipoPonto.CAIXA, TipoPonto.BANHEIRO)) {
             assertThat(pontoMapaRepository.buscarPorTipo(tipo))
-                    .as("ponto de servico %s duplicado mudaria a origem da rota (D-28)", tipo)
+                    .as("ponto de servico %s duplicado apareceria duas vezes no mapa", tipo)
                     .hasSize(1);
         }
     }
@@ -122,7 +122,7 @@ class CargaDeDadosIntegracaoTest {
     }
 
     private List<PontoMapa> todosOsPontos() {
-        return List.of(TipoPonto.PRATELEIRA, TipoPonto.TOTEM, TipoPonto.CAIXA, TipoPonto.BANHEIRO)
+        return List.of(TipoPonto.PRATELEIRA, TipoPonto.CAIXA, TipoPonto.BANHEIRO)
                 .stream()
                 .flatMap(tipo -> pontoMapaRepository.buscarPorTipo(tipo).stream())
                 .collect(Collectors.collectingAndThen(Collectors.toMap(

@@ -46,10 +46,22 @@ public class ListaRoteiro {
         return List.copyOf(itens);
     }
 
-    public List<ItemRoteiro> getItensOrdenados() {
+    /**
+     * Os itens na ordem em que a lista deve ser exibida: agrupados por secao e, dentro dela,
+     * por nome.
+     * <p>
+     * Nao e uma rota - o cliente escolhe o caminho dele. E agrupamento de exibicao, que serve
+     * a quem esta decidindo por onde passar: ver "tres itens em Tintas" junto ajuda, e ver os
+     * mesmos tres espalhados pela lista, nao. A ordenacao tambem precisa ser estavel, porque
+     * a colecao vem do banco sem ordem garantida e a lista mudaria de posicao a cada consulta.
+     */
+    public List<ItemRoteiro> getItensParaExibicao() {
         return itens.stream()
-                .sorted(Comparator.comparing(ItemRoteiro::getOrdemCaminho,
-                        Comparator.nullsLast(Comparator.naturalOrder())))
+                .sorted(Comparator
+                        .comparing((ItemRoteiro item) -> item.getProduto().getPontoMapa().getCorredor(),
+                                Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(item -> item.getProduto().getNome(),
+                                Comparator.nullsLast(Comparator.naturalOrder())))
                 .toList();
     }
 

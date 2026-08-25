@@ -37,9 +37,6 @@ public class ItemRoteiroEntity {
     @JoinColumn(name = "produto_id", nullable = false)
     private ProdutoEntity produto;
 
-    @Column(name = "ordem_caminho")
-    private Integer ordemCaminho;
-
     @Column(name = "coletado", nullable = false)
     private boolean coletado;
 }

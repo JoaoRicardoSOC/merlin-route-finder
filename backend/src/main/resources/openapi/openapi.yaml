@@ -12,11 +12,11 @@ servers:
 
 tags:
   - name: Sessao
-    description: Ciclo de vida da sessão do cliente (Totem e Mobile)
+    description: Ciclo de vida da sessão do cliente
   - name: Catalogo
     description: Busca e detalhamento de produtos
   - name: Roteiro
-    description: Montagem da lista de compras (Totem) e execução da rota (Mobile)
+    description: Montagem da lista de compras e coleta dos itens
   - name: RupturaEstoque
     description: Tratamento de ruptura física e sugestão de substituto por IA
   - name: Chat
@@ -57,8 +57,8 @@ paths:
   /sessoes/{sessaoId}/concluir:
     post:
       tags: [Sessao]
-      summary: Concluir rota e encerrar sessão (UC-014)
-      description: Acionado pelo Mobile quando o cliente finaliza a caminhada (manualmente ou após coletar todos os itens). Transiciona StatusSessao para COMPLETED.
+      summary: Encerrar a sessão (UC-014)
+      description: Acionado quando o cliente finaliza a compra (manualmente ou após coletar todos os itens). Transiciona StatusSessao para COMPLETED.
       parameters:
         - $ref: "#/components/parameters/SessaoId"
       responses:
@@ -365,7 +365,7 @@ components:
       enum: [ACTIVE, COMPLETED, EXPIRED, ABANDONED]
     TipoPonto:
       type: string
-      enum: [PRATELEIRA, BANHEIRO, CAIXA, TOTEM]
+      enum: [PRATELEIRA, BANHEIRO, CAIXA]
     Remetente:
       type: string
       enum: [USER, ASSISTANT]
@@ -452,8 +452,6 @@ components:
         produtoId:
           type: string
           format: uuid
-        ordemCaminho:
-          type: integer
         coletado:
           type: boolean
 
@@ -478,6 +476,7 @@ components:
           type: integer
         itens:
           type: array
+          description: Agrupados por seção da loja e, dentro dela, por nome. Não é uma rota — o cliente escolhe o caminho.
           items:
             $ref: "#/components/schemas/ItemRoteiroDetalhado"
 
@@ -496,31 +495,6 @@ components:
         saldoEstoque:
           type: integer
           minimum: 0
-
-    PontoRota:
-      type: object
-      description: Um ponto na sequência de navegação calculada (item de compra ou ponto de interesse)
-      properties:
-        ordem:
-          type: integer
-        item:
-          $ref: "#/components/schemas/ItemRoteiroDetalhado"
-        pontoMapa:
-          $ref: "#/components/schemas/PontoMapa"
-
-    RotaCalculada:
-      type: object
-      properties:
-        sessaoId:
-          type: string
-          format: uuid
-        listaRoteiroId:
-          type: string
-          format: uuid
-        pontos:
-          type: array
-          items:
-            $ref: "#/components/schemas/PontoRota"
 
     RupturaEstoqueResponse:
       type: object

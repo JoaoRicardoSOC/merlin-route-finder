@@ -6,6 +6,7 @@ import br.com.jence.backend.domain.entity.TipoPonto;
 import br.com.jence.backend.domain.repository.Pagina;
 import br.com.jence.backend.domain.repository.PontoMapaRepository;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
+import br.com.jence.backend.infrastructure.database.repository.PontoMapaJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -26,8 +28,8 @@ import java.util.stream.Collectors;
  * <p>
  * As coordenadas seguem aproximadamente a planta real compartilhada pela Leroy no kickoff,
  * num grid 0-100 (x da esquerda para a direita, y de cima para baixo). Isso importa para a
- * demonstracao: com coordenadas aleatorias a rota calculada nao faria sentido visual quando
- * o mapa fosse desenhado na tela.
+ * demonstracao: e sobre esse grid que o mapa e desenhado, e com coordenadas aleatorias os
+ * produtos apareceriam em lugares que nao correspondem a loja.
  * <p>
  * <b>A carga e incremental</b>, nao tudo-ou-nada: cada secao e cada produto so e criado se
  * ainda nao existir. Assim um produto novo acrescentado aqui chega tambem aos bancos que ja
@@ -48,8 +50,17 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
      */
     private static final int LIMITE_DE_LEITURA = 1000;
 
+    /*
+     * Tipos de ponto que existiram no banco e sairam do enum. Enquanto a linha continuar la,
+     * qualquer leitura que traga todos os pontos - a planta da loja, por exemplo - quebra na
+     * conversao para TipoPonto. Como a carga e incremental e nunca apaga nada, este e o unico
+     * lugar que pode limpar a massa de quem ja rodou a versao anterior.
+     */
+    private static final List<String> TIPOS_APOSENTADOS = List.of("TOTEM");
+
     private final ProdutoRepository produtoRepository;
     private final PontoMapaRepository pontoMapaRepository;
+    private final PontoMapaJpaRepository pontoMapaJpaRepository;
 
     /*
      * O que esta execucao criou. Vive numa instancia propria por chamada, e nao em campo do
@@ -81,6 +92,7 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
                 .collect(Collectors.toSet());
 
         Contagem contagem = new Contagem();
+        apagarPontosDeTipoAposentado();
         Map<String, PontoMapa> secoes = carregarOuCriarSecoes(contagem);
         criarPontosDeServicoQueFaltam(contagem);
         criarCatalogo(secoes, skusExistentes, contagem);
@@ -94,6 +106,16 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
     }
 
     // ---------------------------------------------------------------- pontos do mapa
+
+    private void apagarPontosDeTipoAposentado() {
+        for (String tipo : TIPOS_APOSENTADOS) {
+            int apagados = pontoMapaJpaRepository.apagarPorTipoBruto(tipo);
+            if (apagados > 0) {
+                log.info("Ponto de tipo {}, aposentado pelo escopo revisado: {} linha(s) apagada(s).",
+                        tipo, apagados);
+            }
+        }
+    }
 
     private Map<String, PontoMapa> carregarOuCriarSecoes(Contagem contagem) {
         Map<String, PontoMapa> existentes = pontoMapaRepository.buscarPorTipo(TipoPonto.PRATELEIRA)
@@ -125,10 +147,9 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         secoes.put(corredor, ponto);
     }
 
-    /* Nao vendem nada, mas aparecem na navegacao: o totem e a origem da rota, o caixa o
-     * destino final, e o banheiro atende o UC-012 (inclusao de ponto de interesse). */
+    /* Nao vendem nada, mas precisam aparecer no mapa: o cliente vai ate os caixas para
+     * fechar a compra, e o banheiro e uma parada que ele pode querer localizar. */
     private void criarPontosDeServicoQueFaltam(Contagem contagem) {
-        criarSeNaoHouver(contagem, TipoPonto.TOTEM, "Entrada", 50, 95);
         criarSeNaoHouver(contagem, TipoPonto.CAIXA, "Frente de loja", 62, 88);
         criarSeNaoHouver(contagem, TipoPonto.BANHEIRO, "Sanitarios", 52, 8);
     }

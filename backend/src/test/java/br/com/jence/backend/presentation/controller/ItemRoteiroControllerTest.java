@@ -43,7 +43,7 @@ class ItemRoteiroControllerTest {
         UUID itemId = UUID.randomUUID();
         UUID produtoId = UUID.randomUUID();
         when(marcarItemColetadoUseCase.executar(itemId)).thenReturn(
-                new ItemRoteiroDetalhadoResponse(itemId, produtoId, 2, true,
+                new ItemRoteiroDetalhadoResponse(itemId, produtoId, true,
                         new ProdutoResponse(produtoId, "SKU-ENC-001", "Cano PVC Soldavel 25mm 6m",
                                 new BigDecimal("28.90"), 35, UUID.randomUUID())));
 
@@ -51,7 +51,6 @@ class ItemRoteiroControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(itemId.toString()))
                 .andExpect(jsonPath("$.coletado").value(true))
-                .andExpect(jsonPath("$.ordemCaminho").value(2))
                 .andExpect(jsonPath("$.produto.nome").value("Cano PVC Soldavel 25mm 6m"));
     }
 

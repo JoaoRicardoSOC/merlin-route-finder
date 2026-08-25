@@ -11,7 +11,6 @@ import java.util.UUID;
 public record ItemRoteiroDetalhadoResponse(
         UUID id,
         UUID produtoId,
-        Integer ordemCaminho,
         boolean coletado,
         ProdutoResponse produto
 ) {
@@ -19,7 +18,6 @@ public record ItemRoteiroDetalhadoResponse(
         return new ItemRoteiroDetalhadoResponse(
                 item.getId(),
                 item.getProduto().getId(),
-                item.getOrdemCaminho(),
                 item.isColetado(),
                 ProdutoResponse.de(item.getProduto())
         );

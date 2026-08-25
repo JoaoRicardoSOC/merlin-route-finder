@@ -61,6 +61,8 @@
 - [D-21. Demo da banca por simulação animada, não posicionamento real](#d-21-demo-da-banca-por-simulação-animada-não-posicionamento-real)
 - [D-23. "Resolução síncrona de inventário" não é integração com ERP](#d-23-resolução-síncrona-de-inventário-não-é-integração-com-erp)
 - [D-49. O escopo revisado retirou o totem e a rota calculada](#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada)
+- [D-50. Sem rota, a lista passa a ser agrupada por seção](#d-50-sem-rota-a-lista-passa-a-ser-agrupada-por-seção)
+- [D-51. Um valor de enum removido precisa sumir também do banco](#d-51-um-valor-de-enum-removido-precisa-sumir-também-do-banco)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -225,6 +227,11 @@ O terceiro nível existe porque os dois primeiros são cegos ao que acontece **e
 ---
 
 ### D-26. Nearest Neighbor como heurística de roteamento
+
+> [!NOTE]
+> **Superada em 25/08/2026.** A rota calculada foi removida: a orientação da Leroy é mostrar apenas onde o cliente está e onde está cada produto, deixando o caminho por conta dele. Ver [D-49](#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada).
+>
+> O registro abaixo fica porque descreve a análise que sustentou a escolha — reconhecer o problema como uma instância do TSP, e recusar tanto a força bruta quanto uma biblioteca de otimização por desproporção ao ganho.
 
 **Contexto.** Ordenar as paradas de uma lista de compras para minimizar o percurso é uma instância do Problema do Caixeiro Viajante (TSP), que é NP-difícil: não existe algoritmo exato eficiente conhecido para o caso geral.
 
@@ -420,6 +427,11 @@ O modelo de topo **raciocina antes de responder** (centenas de tokens de "pensam
 ---
 
 ### D-28. A rota parte do primeiro ponto do tipo TOTEM
+
+> [!NOTE]
+> **Superada em 25/08/2026.** A rota calculada foi removida: a orientação da Leroy é mostrar apenas onde o cliente está e onde está cada produto, deixando o caminho por conta dele. Ver [D-49](#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada).
+>
+> Sem totem e sem rota, some tanto a origem quanto o que ela originava. O tipo `TOTEM` saiu do enum `TipoPonto` e as linhas gravadas com ele são apagadas na carga — ver [D-51](#d-51-um-valor-de-enum-removido-precisa-sumir-também-do-banco).
 
 **Contexto.** O algoritmo de roteamento precisa de uma origem (D-26). No handoff, a origem natural é o totem onde o cliente está montando a lista.
 
@@ -889,6 +901,11 @@ Verificado sobre HTTP na jornada completa: depois de `POST /sessoes/{id}/conclui
 
 ### D-43. 2-opt sobre o Nearest Neighbor, na variante de caminho aberto
 
+> [!NOTE]
+> **Superada em 25/08/2026.** A rota calculada foi removida: a orientação da Leroy é mostrar apenas onde o cliente está e onde está cada produto, deixando o caminho por conta dele. Ver [D-49](#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada).
+>
+> O registro abaixo fica porque é o trabalho técnico mais denso da Fase 3, e porque a medição que o justificou — 500 roteiros sorteados, ganho em 54% deles, piora em nenhum — é o exemplo de como o time decidiu tratar otimização: medindo antes de afirmar.
+
 **Contexto.** A [D-26](#d-26-nearest-neighbor-como-heurística-de-roteamento) já registrava a limitação do vizinho mais próximo: por ser guloso, ele decide o melhor passo imediato sem enxergar o todo e às vezes "se pinta num canto" — pega o item mais perto da entrada e depois precisa voltar por onde veio. O caminho se cruza.
 
 **Decisão.** Uma segunda etapa de **melhoria local 2-opt** sobre a rota construída: procurar dois trechos que se cruzam, inverter o pedaço entre eles — o que desfaz o cruzamento — e repetir enquanto houver ganho. É o par clássico *heurística construtiva + melhoria local*.
@@ -1209,6 +1226,42 @@ No escopo novo essa regra vale igual, com uma origem a mais: **a posição atual
 **O que sobrevive inteiro.** Busca tolerante a erro de digitação, detalhe de produto, lista de compras sem limite, assistente de IA, tratamento de ruptura com substituto, marcação de coletado, ciclo de vida da sessão e toda a infraestrutura publicada.
 
 **Onde no código.** As remoções acontecem nos três primeiros cards de [`backlog-escopo-revisado.md`](backlog-escopo-revisado.md). O escopo novo está descrito em [`fluxo-do-cliente.md`](fluxo-do-cliente.md).
+
+---
+
+### D-50. Sem rota, a lista passa a ser agrupada por seção
+
+**Contexto.** A ordem dos itens da lista vinha do campo `ordemCaminho`, gravado pelo algoritmo de rota. Removido o algoritmo, o campo perde sentido — mas a lista não pode simplesmente **ficar sem ordem**: a coleção vem do banco por um `@OneToMany` sem `@OrderBy`, e o SQL não garante ordem nenhuma. Na prática, a lista de compras do cliente poderia se rearranjar a cada consulta.
+
+**Decisão.** `ListaRoteiro.getItensParaExibicao()` ordena por **seção da loja** e, dentro dela, por **nome do produto**.
+
+O nome do método mudou de propósito: `getItensOrdenados` sugeria uma ordem de percurso, que é justamente o que deixou de existir.
+
+**Por que agrupar por seção, e não por ordem de inclusão.** O cliente agora monta o próprio caminho, e para isso ele precisa enxergar o que está junto. Ver *três itens em Tintas* numa linha só é o que permite decidir passar por Tintas; os mesmos três espalhados pela lista escondem exatamente a informação que ele usaria.
+
+**Alternativa considerada.** Ordem de inclusão, que é o comportamento clássico de lista de compras. Descartada por dois motivos: exigiria uma coluna nova de timestamp (os UUIDs são aleatórios, não guardam sequência), e ordenaria pelo que o cliente fez **antes** de entrar na loja, quando o que importa agora é onde as coisas estão.
+
+**Consequência assumida.** Dois produtos da mesma seção com o mesmo nome ficariam em ordem indefinida entre si. Irrelevante: o SKU é único e a massa não tem nomes repetidos.
+
+**Onde no código.** `domain/entity/ListaRoteiro.java`.
+
+---
+
+### D-51. Um valor de enum removido precisa sumir também do banco
+
+**Contexto.** `TipoPonto.TOTEM` saiu do enum junto com a rota. Mas `PontoMapaEntity.tipo` é `@Enumerated(EnumType.STRING)`: a linha `tipo = 'TOTEM'` continua gravada nos bancos de quem já rodou a versão anterior — incluindo o da instância publicada — e **qualquer leitura que a alcance falha na conversão para o enum**.
+
+Hoje nada a alcança: os pontos só são lidos por id ou por tipo, e nenhum dos dois chega até ela. A armadilha estouraria no card da geometria da loja, que precisa listar todos os pontos para desenhar o mapa — longe daqui, e sem pista de onde veio.
+
+**Decisão.** A carga inicial apaga, a cada execução, os pontos gravados com tipo aposentado. A lista de tipos vive numa constante (`TIPOS_APOSENTADOS`) e a remoção é feita por **consulta nativa**.
+
+**Por que nativa, e não pelo JPA.** Qualquer leitura via JPA tentaria converter a coluna para o enum e falharia justamente nas linhas que precisam ser removidas. O `delete` acontece pelo nome da coluna, sem passar pelo mapeamento.
+
+**Por que na carga inicial.** Ela é o único lugar do sistema que já tem a responsabilidade de deixar o banco compatível com o código atual, e roda em todos os ambientes — o de cada integrante e o publicado. Com `ddl-auto: update` e sem Flyway ([D-16](#d-16-carga-inicial-em-java-em-vez-de-sql)), não existe migração onde pendurar uma limpeza como esta.
+
+**O `@Transactional` fica no repositório, não no chamador.** Uma consulta `@Modifying` exige transação, e a carga chama o método de dentro da própria classe — auto-invocação não passa pelo proxy do Spring, então a anotação no `ApplicationRunner` seria silenciosamente ignorada e a operação falharia por falta de transação.
+
+**Onde no código.** `infrastructure/database/repository/PontoMapaJpaRepository.java` e `infrastructure/database/seed/CarregadorDadosIniciais.java`.
 
 ---
 

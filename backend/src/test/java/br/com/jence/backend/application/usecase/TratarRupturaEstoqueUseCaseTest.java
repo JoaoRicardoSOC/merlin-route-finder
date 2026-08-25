@@ -86,7 +86,7 @@ class TratarRupturaEstoqueUseCaseTest {
 
     /** Roteiro contendo apenas o item cuja prateleira o cliente encontrou vazia. */
     private ItemRoteiro comItemNoRoteiro(Sessao sessao) {
-        ItemRoteiro item = ItemRoteiro.reconstituir(itemId, lixaEmFalta, 1, false);
+        ItemRoteiro item = ItemRoteiro.reconstituir(itemId, lixaEmFalta, false);
         ListaRoteiro lista = ListaRoteiro.reconstituir(UUID.randomUUID(), sessaoId, List.of(item));
 
         when(itemRoteiroRepository.buscarPorId(itemId)).thenReturn(Optional.of(item));
@@ -298,8 +298,8 @@ class TratarRupturaEstoqueUseCaseTest {
     @Test
     @DisplayName("produto que o cliente ja vai levar nao entra como candidato")
     void ignoraCandidatoQueJaEstaNoRoteiro() {
-        ItemRoteiro item = ItemRoteiro.reconstituir(itemId, lixaEmFalta, 1, false);
-        ItemRoteiro jaNoCarrinho = ItemRoteiro.reconstituir(UUID.randomUUID(), lixaDagua, 2, false);
+        ItemRoteiro item = ItemRoteiro.reconstituir(itemId, lixaEmFalta, false);
+        ItemRoteiro jaNoCarrinho = ItemRoteiro.reconstituir(UUID.randomUUID(), lixaDagua, false);
         ListaRoteiro lista = ListaRoteiro.reconstituir(
                 UUID.randomUUID(), sessaoId, List.of(item, jaNoCarrinho));
 
