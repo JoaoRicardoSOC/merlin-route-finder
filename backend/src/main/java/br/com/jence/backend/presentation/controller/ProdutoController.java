@@ -1,5 +1,6 @@
 package br.com.jence.backend.presentation.controller;
 
+import br.com.jence.backend.application.dto.CatalogoResponse;
 import br.com.jence.backend.application.dto.EstoqueUpdateRequest;
 import br.com.jence.backend.application.dto.PaginaResponse;
 import br.com.jence.backend.application.dto.ProdutoDetalhadoResponse;
@@ -9,10 +10,12 @@ import br.com.jence.backend.application.usecase.BuscarProdutosUseCase;
 import br.com.jence.backend.application.usecase.ConsultarProdutoUseCase;
 import br.com.jence.backend.application.usecase.ListarSecoesUseCase;
 import br.com.jence.backend.application.usecase.SimularEstoqueUseCase;
+import br.com.jence.backend.domain.entity.AtributoProduto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,7 +25,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -35,6 +41,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/produtos")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Catalogo", description = "Busca e detalhamento de produtos")
 public class ProdutoController {
 
@@ -47,18 +54,56 @@ public class ProdutoController {
     @Operation(summary = "Busca e filtragem do catalogo (UC-002)",
             description = "Sem termo, navega o catalogo. Com termo, filtra por nome tolerando "
                     + "busca parcial e pequenos erros de digitacao. Os filtros de secao e de "
-                    + "disponibilidade combinam com o termo e entre si. Combinacao sem "
-                    + "resultado devolve pagina vazia, nao erro.")
-    public ResponseEntity<PaginaResponse<ProdutoResponse>> buscar(
+                    + "disponibilidade combinam com o termo e entre si, e cada parametro "
+                    + "'atributo' vem no formato CHAVE:valor. Valores da mesma chave sao 'ou', "
+                    + "chaves diferentes sao 'e'. A resposta traz as facetas disponiveis para o "
+                    + "recorte atual. Combinacao sem resultado devolve pagina vazia, nao erro.")
+    public ResponseEntity<CatalogoResponse> buscar(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String secao,
             @RequestParam(required = false) Boolean apenasDisponiveis,
+            @RequestParam(required = false) List<String> atributo,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size) {
 
         // 'query' e o nome publico no contrato; 'termo' e o vocabulario interno.
-        return ResponseEntity.ok(
-                buscarProdutosUseCase.executar(query, secao, apenasDisponiveis, page, size));
+        return ResponseEntity.ok(buscarProdutosUseCase.executar(
+                query, secao, apenasDisponiveis, interpretarAtributos(atributo), page, size));
+    }
+
+    /*
+     * Cada 'atributo' chega como "CHAVE:valor", e a chave pode se repetir - e assim que o
+     * cliente marca duas marcas de uma vez.
+     *
+     * Entrada que nao da para interpretar e IGNORADA, nao recusada: chave desconhecida vem de
+     * um link antigo ou de uma caracteristica que saiu do sistema, e o cliente nao tem o que
+     * fazer a respeito. Ignorar apenas alarga o resultado; um 400 deixaria a tela em branco
+     * por causa de um parametro que ele nem sabe que existe. Mesmo criterio da D-57.
+     */
+    private Map<AtributoProduto, List<String>> interpretarAtributos(List<String> parametros) {
+        if (parametros == null || parametros.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<AtributoProduto, List<String>> escolhas = new LinkedHashMap<>();
+
+        for (String parametro : parametros) {
+            int separador = parametro == null ? -1 : parametro.indexOf(':');
+            if (separador <= 0) {
+                continue;
+            }
+            try {
+                AtributoProduto chave = AtributoProduto.valueOf(
+                        parametro.substring(0, separador).trim().toUpperCase());
+
+                escolhas.computeIfAbsent(chave, k -> new ArrayList<>())
+                        .add(parametro.substring(separador + 1));
+            } catch (IllegalArgumentException chaveDesconhecida) {
+                log.debug("Filtro de atributo ignorado, chave desconhecida: {}", parametro);
+            }
+        }
+
+        return escolhas;
     }
 
     @GetMapping("/secoes")

@@ -118,11 +118,17 @@ O cliente digita o que procura, inclusive errado. "tnta" acha "Tinta"; "furadera
 
 ### 5. Filtros 🆕
 
-**Tela:** filtrar por **seção** — Tintas, Elétrica, Jardim — e alternar "mostrar só o que está disponível".
+**Tela:** filtrar por **seção** — Tintas, Elétrica, Jardim —, alternar "mostrar só o que está disponível" e escolher **características**: marca, bitola, amperagem, grão, potência.
 
-**Backend:** endpoint para listar as seções, e o filtro por seção e por disponibilidade na busca de produtos. Os dados já existem; falta a consulta.
+**Backend:** `GET /produtos` aceita `secao`, `apenasDisponiveis` e `atributo=CHAVE:valor` (repetível), tudo combinável com o termo de busca. `GET /produtos/secoes` alimenta o menu de corredores com a contagem de cada um.
 
-> **Sugestão:** faixa de preço é fácil de acrescentar depois, mas não é o que trava o cliente numa loja física. Seção e disponibilidade resolvem a maior parte.
+**Os filtros de característica são dinâmicos**, e essa é a parte que mais importa para a tela. A resposta traz as **facetas** do recorte atual: quem navega em Tintas recebe *Grão*, quem navega em Elétrica recebe *Amperagem*, e ninguém recebe os dois. Cada valor vem com a contagem, do mais comum para o menos comum.
+
+Cada faceta traz o próprio `rotulo`, então o frontend **não precisa manter tradução nenhuma** — característica nova aparece na tela sozinha.
+
+**Semântica:** valores da mesma chave são "ou", chaves diferentes são "e". Marcar duas marcas mostra as duas; acrescentar uma bitola restringe às que atendem as duas coisas.
+
+**Cuidado:** as facetas ignoram as características já escolhidas de propósito, para o cliente conseguir trocar de marca sem limpar o filtro antes. Se a tela esconder as opções não selecionadas, ela desfaz isso.
 
 ---
 
@@ -130,9 +136,11 @@ O cliente digita o que procura, inclusive errado. "tnta" acha "Tinta"; "furadera
 
 O cliente toca num produto e vê a página dele.
 
-**Tela:** imagem, nome, preço, descrição, disponibilidade e — o que diferencia de um e-commerce — **em que corredor ele está**, com um botão para ver no mapa.
+**Tela:** imagem, nome, preço, descrição, **tabela de especificações** — marca, material, medidas — , disponibilidade e, o que diferencia de um e-commerce, **em que corredor ele está**, com um botão para ver no mapa.
 
-**Backend:** o detalhe já existe com preço, estoque e corredor. **Faltam descrição e imagem.**
+**Backend:** `GET /produtos/{id}` traz tudo isso, incluindo `atributos` com o rótulo de cada característica pronto para exibir.
+
+> **Só o detalhe traz as especificações.** Carregá-las em cada item da listagem custaria uma consulta por produto, e a aplicação está a 5.000 km do banco.
 
 > **Decidido:** sem avaliações. Nota inventada numa demonstração é fácil de perceber e custa credibilidade.
 

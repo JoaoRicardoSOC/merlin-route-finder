@@ -1,5 +1,6 @@
 package br.com.jence.backend.infrastructure.database.schema;
 
+import br.com.jence.backend.domain.entity.AtributoProduto;
 import br.com.jence.backend.domain.entity.TipoPonto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +49,8 @@ public class RestricaoDeEnumNoBanco {
     }
 
     private static final List<ColunaDeEnum> COLUNAS = List.of(
-            new ColunaDeEnum("TB_PONTO_MAPA", "TIPO", TipoPonto.class));
+            new ColunaDeEnum("TB_PONTO_MAPA", "TIPO", TipoPonto.class),
+            new ColunaDeEnum("TB_PRODUTO_ATRIBUTO", "CHAVE", AtributoProduto.class));
 
     /** Captura cada literal entre aspas simples da condicao da restricao. */
     private static final Pattern LITERAL = Pattern.compile("'([^']*)'");

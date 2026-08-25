@@ -1,8 +1,10 @@
 package br.com.jence.backend.application.dto;
 
 import br.com.jence.backend.domain.entity.Produto;
+import br.com.jence.backend.domain.entity.ValorDeAtributo;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -21,9 +23,15 @@ public record ProdutoDetalhadoResponse(
         BigDecimal preco,
         int saldoEstoque,
         UUID pontoMapaId,
-        PontoMapaResponse pontoMapa
+        PontoMapaResponse pontoMapa,
+        List<AtributoResponse> atributos
 ) {
+    /** Detalhe sem especificacoes: usado onde o produto aparece embutido em outra resposta. */
     public static ProdutoDetalhadoResponse de(Produto produto) {
+        return de(produto, List.of());
+    }
+
+    public static ProdutoDetalhadoResponse de(Produto produto, List<ValorDeAtributo> atributos) {
         return new ProdutoDetalhadoResponse(
                 produto.getId(),
                 produto.getSku(),
@@ -33,7 +41,8 @@ public record ProdutoDetalhadoResponse(
                 produto.getPreco(),
                 produto.getSaldoEstoque(),
                 produto.getPontoMapa() != null ? produto.getPontoMapa().getId() : null,
-                PontoMapaResponse.de(produto.getPontoMapa())
+                PontoMapaResponse.de(produto.getPontoMapa()),
+                atributos.stream().map(AtributoResponse::de).toList()
         );
     }
 }

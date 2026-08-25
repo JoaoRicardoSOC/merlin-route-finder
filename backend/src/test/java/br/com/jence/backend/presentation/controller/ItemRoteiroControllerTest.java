@@ -20,6 +20,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -82,7 +83,8 @@ class ItemRoteiroControllerTest {
                 sugeridoId,
                 new ProdutoDetalhadoResponse(sugeridoId, "SKU-TIN-004", "Lixa d'Agua Grao 150", null, null,
                         new BigDecimal("4.20"), 40, UUID.randomUUID(),
-                        new PontoMapaResponse(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", null, 32, 10)),
+                        new PontoMapaResponse(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", null, 32, 10),
+                        List.of()),
                 "A lixa d'agua grao 150 da o mesmo acabamento e esta no mesmo corredor.",
                 OrigemSugestao.ASSISTENTE_IA);
     }
@@ -113,7 +115,8 @@ class ItemRoteiroControllerTest {
                 UUID.randomUUID(), sugeridoId,
                 new ProdutoDetalhadoResponse(sugeridoId, "SKU-TIN-002", "Rolo de La 23cm com Cabo", null, null,
                         new BigDecimal("34.90"), 25, UUID.randomUUID(),
-                        new PontoMapaResponse(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", null, 32, 10)),
+                        new PontoMapaResponse(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", null, 32, 10),
+                        List.of()),
                 "Este e o produto disponivel mais proximo de onde voce esta.",
                 OrigemSugestao.PROXIMIDADE));
 

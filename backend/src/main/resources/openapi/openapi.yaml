@@ -166,6 +166,21 @@ paths:
             type: string
           description: Corredor da loja, como devolvido por `/produtos/secoes`. Ausente significa todas.
           example: Tintas
+        - name: atributo
+          in: query
+          required: false
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          description: |
+            Caracteristica selecionada, no formato `CHAVE:valor` — repetível.
+
+            **Valores da mesma chave são "ou", chaves diferentes são "e".** `atributo=MARCA:Tigre&atributo=MARCA:Docol` traz as duas marcas; acrescentar `atributo=BITOLA:25 mm` restringe às que atendem as duas coisas.
+
+            Chave desconhecida é **ignorada**, não recusada: vem de um link antigo, e o cliente não tem o que fazer a respeito.
+          example: MARCA:Tigre
         - name: apenasDisponiveis
           in: query
           required: false
@@ -194,7 +209,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProdutoPage"
+                $ref: "#/components/schemas/Catalogo"
 
   /produtos/secoes:
     get:
@@ -469,6 +484,11 @@ components:
     StatusSessao:
       type: string
       enum: [ACTIVE, COMPLETED, EXPIRED, ABANDONED]
+    AtributoProduto:
+      type: string
+      description: As características pelas quais um produto pode ser filtrado.
+      enum: [MARCA, TIPO, MATERIAL, COR, TEMPERATURA_DE_COR, ACABAMENTO, FORMATO, POTENCIA, AMPERAGEM, POLOS, GRAO, BITOLA, VOLUME, PESO, COMPRIMENTO, LARGURA, DIMENSAO, QUANTIDADE]
+
     TipoPonto:
       type: string
       enum: [PRATELEIRA, BANHEIRO, CAIXA, QR_CODE]
@@ -519,6 +539,67 @@ components:
         coordenadaY:
           type: integer
 
+    Atributo:
+      type: object
+      description: Uma linha da tabela de especificações do produto.
+      properties:
+        atributo:
+          $ref: "#/components/schemas/AtributoProduto"
+        rotulo:
+          type: string
+          description: Como a característica aparece na tela, para o frontend não manter a tradução.
+          example: Bitola
+        valor:
+          type: string
+          example: 25 mm
+
+    Faceta:
+      type: object
+      description: |
+        Um filtro disponível, com os valores presentes **no resultado atual**.
+
+        As facetas são calculadas sobre o recorte de termo, seção e disponibilidade, **ignorando as características já escolhidas** — assim o cliente troca de marca sem precisar limpar o filtro primeiro.
+      properties:
+        atributo:
+          $ref: "#/components/schemas/AtributoProduto"
+        rotulo:
+          type: string
+          example: Marca
+        valores:
+          type: array
+          description: Do valor mais comum para o menos comum.
+          items:
+            type: object
+            properties:
+              valor:
+                type: string
+                example: Tigre
+              quantidade:
+                type: integer
+                example: 2
+
+    Catalogo:
+      type: object
+      description: Uma página de produtos e os filtros disponíveis para ela. Os dois vêm juntos porque a tela precisa dos dois ao mesmo tempo.
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/Produto"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        facetas:
+          type: array
+          description: Na ordem de exibição pretendida — marca primeiro, medidas depois.
+          items:
+            $ref: "#/components/schemas/Faceta"
+
     Secao:
       type: object
       properties:
@@ -563,22 +644,11 @@ components:
           properties:
             pontoMapa:
               $ref: "#/components/schemas/PontoMapa"
-
-    ProdutoPage:
-      type: object
-      properties:
-        content:
-          type: array
-          items:
-            $ref: "#/components/schemas/Produto"
-        page:
-          type: integer
-        size:
-          type: integer
-        totalElements:
-          type: integer
-        totalPages:
-          type: integer
+            atributos:
+              type: array
+              description: As especificações do produto. Só o detalhe as traz — na listagem, carregá-las custaria uma consulta por produto.
+              items:
+                $ref: "#/components/schemas/Atributo"
 
     ItemRoteiro:
       type: object

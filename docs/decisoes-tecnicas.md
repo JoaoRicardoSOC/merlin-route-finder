@@ -73,6 +73,8 @@
 - [D-59. A carga completa a apresentação de produtos que já estavam gravados](#d-59-a-carga-completa-a-apresentação-de-produtos-que-já-estavam-gravados)
 - [D-60. Uma consulta montada substitui as duas buscas de catálogo](#d-60-uma-consulta-montada-substitui-as-duas-buscas-de-catálogo)
 - [D-61. As seções do menu saem do catálogo, não da planta](#d-61-as-seções-do-menu-saem-do-catálogo-não-da-planta)
+- [D-62. As características dos produtos vivem numa tabela, não em colunas](#d-62-as-caracteristicas-dos-produtos-vivem-numa-tabela-nao-em-colunas)
+- [D-63. As facetas ignoram a escolha do cliente sobre elas mesmas](#d-63-as-facetas-ignoram-a-escolha-do-cliente-sobre-elas-mesmas)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -1483,6 +1485,54 @@ Não há risco de divergir da planta: o teste do mapa já garante que os dois co
 **A contagem não estava no card, e vale o custo.** É ela que faz um menu de navegação valer: *"Tintas (5)"* diz ao cliente se vale entrar antes de ele gastar um toque para descobrir. Sai de graça, na mesma consulta agrupada.
 
 **Onde no código.** `application/usecase/ListarSecoesUseCase.java`, `domain/repository/SecaoDoCatalogo.java`.
+
+---
+
+### D-62. As caracteristicas dos produtos vivem numa tabela, nao em colunas
+
+**Contexto.** O time decidiu levar os filtros ate onde um e-commerce de material de construcao chega: marca, medida, amperagem, grao. A alternativa barata — marca e faixa de preco como colunas — foi apresentada e recusada conscientemente, sabendo que esta e a maior peca isolada de backend do projeto.
+
+**O que impede colunas.** Os atributos **nao sao os mesmos para todo produto**: amperagem so existe em disjuntor, grao so em lixa, temperatura de cor so em lampada. Como colunas, `TB_PRODUTO` ficaria larga e quase toda nula — e cada caracteristica nova exigiria alterar a tabela.
+
+**Decisao.** `TB_PRODUTO_ATRIBUTO` com `(produto_id, chave, valor)`, chave unica por produto.
+
+**A chave e um enum, e nao texto livre.** Tres motivos: o rotulo de exibicao vive junto da chave, entao o frontend nao mantem traducao; a massa nao consegue gravar `Marca` e `marca` como coisas diferentes; e a lista fechada permite ordenar os filtros de forma previsivel. **A ordem de declaracao do enum e a ordem de exibicao** — marca primeiro, porque e o filtro mais usado numa loja de construcao, e medidas depois.
+
+O custo dessa escolha e a restricao de verificacao que o Hibernate cria para colunas de enum — e ela ja tem quem cuide, desde a [D-53](#d-53-a-aplicação-repara-a-restrição-de-enum-que-o-ddl-auto-update-deixa-envelhecer).
+
+**A semantica do filtro sai da forma da consulta.** Valores da mesma chave viram um `IN`, portanto "ou"; chaves diferentes viram `EXISTS` separados encadeados por `AND`, portanto "e". Um unico `JOIN` com todos os valores num `IN` daria so o "ou", e marcar *Tigre* mais *Bitola 25 mm* devolveria tudo que fosse Tigre **ou** 25 mm — que nao e o que ninguem espera de um filtro. Esta sob teste.
+
+**As caracteristicas so aparecem no detalhe.** Carrega-las junto de cada item de uma listagem custaria uma consulta por produto, e a aplicacao esta a 5.000 km do banco ([D-45](#d-45-o-deploy-mudou-quais-avisos-do-hibernate-importavam)). Na tela de um produto so, uma consulta a mais nao pesa.
+
+**A carga compara antes de gravar.** Reescrever os atributos de todo produto a cada inicializacao seriam dezenas de idas ao banco por boot. Uma leitura unica resolve, e a gravacao so acontece no que mudou — o log confirma "nada a carregar" a partir da segunda execucao.
+
+Diferente das descricoes ([D-59](#d-59-a-carga-completa-a-apresentação-de-produtos-que-já-estavam-gravados)), aqui a massa **sobrescreve** em vez de so completar: atributo e dado estruturado que alimenta filtro, e um valor divergente no banco quebraria a faceta em silencio.
+
+**As marcas sao reais**, e coerentes com o produto. A Leroy vende essas marcas, e um catalogo com marca inventada nao se parece com uma loja — pelo mesmo motivo de os precos serem plausiveis.
+
+**O que isso cobra.** Cada produto novo passa a exigir caracteristicas junto, o que agrava o esforco de massa que a [O-18](observacoes.md#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca) ja registrava como apertado.
+
+**Onde no codigo.** `domain/entity/AtributoProduto.java`, `infrastructure/database/seed/AtributosDaMassa.java`, `infrastructure/database/adapter/ProdutoRepositoryAdapter.java`.
+
+---
+
+### D-63. As facetas ignoram a escolha do cliente sobre elas mesmas
+
+**Contexto.** A tela de catalogo precisa saber **quais filtros oferecer**. A lista nao pode ser fixa: mostrar "Amperagem" para quem navega em Tintas e pior do que nao mostrar filtro nenhum — o cliente experimenta e nada acontece.
+
+**Decisao.** As facetas sao calculadas a cada busca, sobre o resultado. E o recorte usado tem uma sutileza que decide se o filtro e agradavel ou irritante:
+
+> As facetas saem do filtro **com** termo, secao e disponibilidade, mas **sem** as caracteristicas ja escolhidas.
+
+**Por que ignorar a propria escolha.** Calculando sobre o resultado final, escolher *Tigre* faria as outras marcas sumirem da lista — e para trocar para *Docol* o cliente teria que limpar o filtro primeiro. E o comportamento que mais incomoda num filtro de e-commerce, e o teste que o protege esta escrito exatamente nesses termos.
+
+**A contagem vai junto de cada valor**, e o valor mais comum vem primeiro: e o que o cliente provavelmente procura, e a contagem evita que ele escolha uma opcao que devolve um produto so.
+
+**Pagina e facetas vem na mesma resposta.** Um endpoint separado obrigaria o celular a repetir todos os filtros na URL e a fazer duas viagens a cada toque — dentro de uma loja, com sinal ruim. O `Catalogo` repete os campos da pagina em vez de aninha-los, para que o consumidor continue lendo `content` no mesmo lugar.
+
+**Chave desconhecida no filtro e ignorada, nao recusada.** Ela vem de um link antigo ou de uma caracteristica que saiu do sistema, e o cliente nao tem o que fazer a respeito: ignorar apenas alarga o resultado, enquanto um 400 deixaria a tela em branco por causa de um parametro que ele nem sabe que existe. Mesmo criterio da [D-57](#d-57-o-mesmo-código-inválido-é-aceito-na-entrada-e-recusado-no-recentrar).
+
+**Onde no codigo.** `domain/repository/FacetaDeProdutos.java`, `domain/repository/FiltroDeProdutos.java` — `semAtributos`.
 
 ---
 

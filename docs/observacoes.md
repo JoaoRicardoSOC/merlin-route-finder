@@ -213,6 +213,10 @@ Um catálogo maior também melhora o produto de graça:
 
 **A tensão que continua de pé é a imagem.** As URLs vêm do site público da Leroy, coletadas à mão — a lista está pronta para preencher em [`imagens-dos-produtos.md`](imagens-dos-produtos.md). Para 29 produtos é uma tarde; **para trezentos, não escala**.
 
+**E agora há um custo a mais por produto.** Desde 25/08 cada produto carrega também **características** — marca, medida, amperagem —, que são o que alimenta os filtros ([D-62](decisoes-tecnicas.md#d-62-as-caracteristicas-dos-produtos-vivem-numa-tabela-nao-em-colunas)). Um produto sem marca some do catálogo assim que o cliente filtra por qualquer marca, então não dá para deixar em branco como se faz com a imagem.
+
+Isso muda a conta de ampliar o catálogo: **cada produto novo custa descrição, imagem e características**, não só nome e preço. Vale considerar concentrar o volume nas seções que aparecem na demonstração, em vez de espalhar por todas.
+
 Três saídas, e vale escolher antes de começar:
 
 1. **Catálogo grande, imagens só nos produtos do roteiro da demonstração** — os outros usam uma imagem genérica por seção. Barato, e ninguém percebe numa vitrine.

@@ -2,6 +2,7 @@ package br.com.jence.backend.domain.repository;
 
 import br.com.jence.backend.domain.entity.PontoMapa;
 import br.com.jence.backend.domain.entity.Produto;
+import br.com.jence.backend.domain.entity.ValorDeAtributo;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +36,28 @@ public interface ProdutoRepository {
      * menu de navegacao, entao ela simplesmente nao aparece.
      */
     List<SecaoDoCatalogo> listarSecoes();
+
+    /**
+     * As caracteristicas de um produto, na ordem em que devem ser exibidas.
+     * <p>
+     * Consulta separada em vez de campo em {@link Produto} de proposito: numa listagem de
+     * vinte produtos, carregar os atributos de cada um custaria vinte idas ao banco - e a
+     * aplicacao esta a 5.000 km dele (D-45). A tela de detalhe pede um produto so, entao aqui
+     * uma consulta a mais nao pesa.
+     */
+    List<ValorDeAtributo> buscarAtributosDe(UUID produtoId);
+
+    /**
+     * Os filtros disponiveis para um resultado de busca, com a contagem de cada valor.
+     * <p>
+     * O filtro recebido aqui <b>nao deve conter atributos selecionados</b>: as facetas
+     * descrevem o que existe antes da escolha do cliente, para que ele possa trocar de opcao
+     * sem limpar o filtro. Ver {@link FiltroDeProdutos#semAtributos()}.
+     */
+    List<FacetaDeProdutos> calcularFacetas(FiltroDeProdutos filtro);
+
+    /** Grava as caracteristicas de um produto, substituindo as que ele tiver. */
+    void salvarAtributos(UUID produtoId, List<ValorDeAtributo> atributos);
 
     /**
      * Pre-filtragem espacial do tratamento de ruptura (UC-013): produtos com saldo em estoque

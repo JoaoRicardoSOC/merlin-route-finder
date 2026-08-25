@@ -41,7 +41,7 @@ class FalhaDeInfraestruturaTest {
     @MockitoBean ListarSecoesUseCase listarSecoesUseCase;
 
     private MvcResult quandoOBancoFalhaCom(RuntimeException falha) throws Exception {
-        when(buscarProdutosUseCase.executar(any(), any(), any(), any(), any())).thenThrow(falha);
+        when(buscarProdutosUseCase.executar(any(), any(), any(), any(), any(), any())).thenThrow(falha);
         return mockMvc.perform(get("/api/v1/produtos").param("query", "tinta")).andReturn();
     }
 

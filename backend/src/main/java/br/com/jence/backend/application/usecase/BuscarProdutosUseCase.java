@@ -1,8 +1,11 @@
 package br.com.jence.backend.application.usecase;
 
-import br.com.jence.backend.application.dto.PaginaResponse;
-import br.com.jence.backend.application.dto.ProdutoResponse;
+import br.com.jence.backend.application.dto.CatalogoResponse;
+import br.com.jence.backend.domain.entity.AtributoProduto;
 import br.com.jence.backend.domain.entity.Produto;
+
+import java.util.List;
+import java.util.Map;
 import br.com.jence.backend.domain.repository.FiltroDeProdutos;
 import br.com.jence.backend.domain.repository.Pagina;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
@@ -24,9 +27,9 @@ public class BuscarProdutosUseCase {
 
     private final ProdutoRepository produtoRepository;
 
-    public PaginaResponse<ProdutoResponse> executar(String termo, String secao,
-                                                    Boolean apenasDisponiveis,
-                                                    Integer pagina, Integer tamanho) {
+    public CatalogoResponse executar(String termo, String secao, Boolean apenasDisponiveis,
+                                     Map<AtributoProduto, List<String>> atributos,
+                                     Integer pagina, Integer tamanho) {
         int paginaSegura = Math.max(0, pagina == null ? 0 : pagina);
         int tamanhoSeguro = normalizarTamanho(tamanho);
 
@@ -35,7 +38,7 @@ public class BuscarProdutosUseCase {
          * O FiltroDeProdutos e quem normaliza, entao a regra vale para todo mundo que buscar.
          */
         FiltroDeProdutos filtro = new FiltroDeProdutos(
-                termo, secao, Boolean.TRUE.equals(apenasDisponiveis));
+                termo, secao, Boolean.TRUE.equals(apenasDisponiveis), atributos);
 
         /*
          * Combinacao sem resultado devolve pagina vazia, e nao 404: o cliente filtrou demais,
@@ -44,7 +47,13 @@ public class BuscarProdutosUseCase {
          */
         Pagina<Produto> resultado = produtoRepository.buscar(filtro, paginaSegura, tamanhoSeguro);
 
-        return PaginaResponse.de(resultado, ProdutoResponse::de);
+        /*
+         * As facetas saem do recorte SEM as caracteristicas escolhidas. Calcula-las sobre o
+         * resultado final faria as outras marcas sumirem assim que o cliente escolhesse uma -
+         * e para trocar de ideia ele teria que limpar o filtro antes. Ver D-63.
+         */
+        return CatalogoResponse.de(
+                resultado, produtoRepository.calcularFacetas(filtro.semAtributos()));
     }
 
     /* Limita o tamanho para que um size absurdo na URL nao carregue o catalogo inteiro em memoria. */

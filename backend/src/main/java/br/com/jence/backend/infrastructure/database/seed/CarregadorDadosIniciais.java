@@ -4,11 +4,13 @@ import br.com.jence.backend.domain.entity.BlocoMapa;
 import br.com.jence.backend.domain.entity.PlantaDaLoja;
 import br.com.jence.backend.domain.entity.PontoMapa;
 import br.com.jence.backend.domain.entity.Produto;
+import br.com.jence.backend.domain.entity.ValorDeAtributo;
 import br.com.jence.backend.domain.entity.TipoPonto;
 import br.com.jence.backend.domain.repository.Pagina;
 import br.com.jence.backend.domain.repository.PontoMapaRepository;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import br.com.jence.backend.infrastructure.database.repository.PontoMapaJpaRepository;
+import br.com.jence.backend.infrastructure.database.repository.ProdutoAtributoJpaRepository;
 import br.com.jence.backend.infrastructure.database.schema.RestricaoDeEnumNoBanco;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -76,6 +78,7 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
     private final ProdutoRepository produtoRepository;
     private final PontoMapaRepository pontoMapaRepository;
     private final PontoMapaJpaRepository pontoMapaJpaRepository;
+    private final ProdutoAtributoJpaRepository atributoJpaRepository;
     private final RestricaoDeEnumNoBanco restricaoDeEnum;
 
     /*
@@ -87,9 +90,10 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         private int pontos;
         private int produtos;
         private int apresentacoes;
+        private int atributos;
 
         private boolean nadaFeito() {
-            return pontos == 0 && produtos == 0 && apresentacoes == 0;
+            return pontos == 0 && produtos == 0 && apresentacoes == 0 && atributos == 0;
         }
     }
 
@@ -129,13 +133,15 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         apresentacoes.clear();
         criarCatalogo(secoes, skusExistentes, contagem);
         completarApresentacoes(contagem);
+        sincronizarAtributos(contagem);
 
         if (contagem.nadaFeito()) {
             log.info("Massa de demonstracao ja esta completa. Nada a carregar.");
         } else {
-            log.info("Carga incremental: {} ponto(s) do mapa, {} produto(s) criados e "
-                            + "{} apresentacao(oes) completada(s).",
-                    contagem.pontos, contagem.produtos, contagem.apresentacoes);
+            log.info("Carga incremental: {} ponto(s) do mapa, {} produto(s) criados, "
+                            + "{} apresentacao(oes) completada(s) e {} produto(s) com "
+                            + "caracteristicas atualizadas.",
+                    contagem.pontos, contagem.produtos, contagem.apresentacoes, contagem.atributos);
         }
     }
 
@@ -323,6 +329,41 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         produtoRepository.salvar(new Produto(UUID.randomUUID(), sku, nome, descricao,
                 IMAGENS.get(sku), new BigDecimal(preco), estoque, ponto));
         contagem.produtos++;
+    }
+
+    /**
+     * Deixa as caracteristicas de cada produto iguais as declaradas em {@link AtributosDaMassa}.
+     * <p>
+     * <b>Compara antes de gravar.</b> Reescrever os atributos de todo produto a cada
+     * inicializacao seriam dezenas de idas ao banco por boot, e a aplicacao esta a 5.000 km
+     * dele (D-45). Uma leitura unica resolve, e a gravacao so acontece no que mudou.
+     * <p>
+     * Diferente das descricoes, aqui a massa <b>sobrescreve</b>: atributo e dado estruturado
+     * que alimenta filtro, e um valor divergente no banco quebraria a faceta em silencio.
+     */
+    private void sincronizarAtributos(Contagem contagem) {
+        Map<String, List<ValorDeAtributo>> declarados = AtributosDaMassa.porSku();
+
+        Map<UUID, List<ValorDeAtributo>> gravados = atributoJpaRepository.findAll().stream()
+                .collect(Collectors.groupingBy(
+                        entity -> entity.getProduto().getId(),
+                        Collectors.mapping(
+                                entity -> new ValorDeAtributo(entity.getChave(), entity.getValor()),
+                                Collectors.toList())));
+
+        for (Produto produto : produtoRepository.buscarPaginado(0, LIMITE_DE_LEITURA).conteudo()) {
+            List<ValorDeAtributo> esperados = declarados.get(produto.getSku());
+            if (esperados == null) {
+                continue;
+            }
+
+            List<ValorDeAtributo> atuais = gravados.getOrDefault(produto.getId(), List.of());
+
+            if (!Set.copyOf(atuais).equals(Set.copyOf(esperados))) {
+                produtoRepository.salvarAtributos(produto.getId(), esperados);
+                contagem.atributos++;
+            }
+        }
     }
 
     /**
