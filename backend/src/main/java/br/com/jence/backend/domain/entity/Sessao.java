@@ -9,7 +9,15 @@ import java.util.UUID;
 @Getter
 public class Sessao {
 
-    public static final Duration TTL_PADRAO = Duration.ofMinutes(30);
+    /**
+     * Quanto tempo de inatividade a sessao suporta antes de vencer.
+     * <p>
+     * Eram 30 minutos, dimensionados para <b>liberar o totem</b> para o proximo cliente. Esse
+     * motivo desapareceu junto com o totem: o aparelho e do cliente, e agora e a sessao que
+     * guarda a lista inteira. Um cliente que atende uma ligacao de quarenta minutos perderia
+     * tudo, sem aviso. Ver D-24.
+     */
+    public static final Duration TTL_PADRAO = Duration.ofHours(4);
 
     private final UUID id;
     private StatusSessao status;

@@ -685,15 +685,24 @@ Efeito colateral positivo: por usar os ports de domínio, o seeder funciona como
 
 ### D-24. TTL da sessão é renovado a cada interação
 
-**Contexto.** A sessão nasce com TTL de 30 minutos (card 4). Adicionar e remover itens são as ações que o cliente executa enquanto monta o roteiro no Totem.
+> [!NOTE]
+> **Atualizada em 25/08/2026.** O TTL passou de 30 minutos para **4 horas**. O texto abaixo já reflete a mudança; o motivo dela está no primeiro parágrafo.
 
-**Decisão.** Adicionar ou remover item chama `Sessao.renovarSessao()`, empurrando o TTL para 30 minutos à frente da interação. Consultar a lista **não** renova.
+**Contexto.** A sessão nasce com um TTL de inatividade. Os 30 minutos originais foram dimensionados para **liberar o totem** para o próximo cliente — perder a sessão era um incômodo, mas a lista podia ser refeita ali mesmo, no equipamento.
 
-**Motivo — e por que isso é obrigatório, não um extra.** Sem renovação, teríamos uma contradição silenciosa com a [D-17](#d-17-carrinho-de-roteiro-sem-limite-de-itens): removemos o limite de itens do carrinho justamente para atender o empreiteiro que monta uma lista grande para uma obra inteira, mas um TTL fixo de 30 minutos expulsaria exatamente esse cliente no meio da montagem. As duas decisões só funcionam juntas.
+**Esse motivo desapareceu com o totem.** O aparelho é do cliente, ninguém está na fila esperando por ele, e agora **a sessão guarda a lista inteira**: perdê-la significa mandar quem está no meio de uma loja começar tudo de novo. Um cliente que atende uma ligação de quarenta minutos perdia tudo, sem aviso — e essa é uma quebra de fluxo comum, não um caso extremo.
+
+**Decisão.** TTL de **4 horas** de inatividade, e adicionar, remover, coletar ou recentrar chamam `Sessao.renovarSessao()`, empurrando o vencimento para 4 horas à frente da interação. Consultar a lista **não** renova.
+
+**Por que 4 horas, e não eterno.** Sem vencimento, o banco acumularia sessões `ACTIVE` para sempre e a varredura da [D-42](#d-42-a-varredura-de-ttl-distingue-carrinho-abandonado-de-quem-só-encostou-no-totem) não teria o que classificar — perderíamos a métrica de carrinho abandonado, que é informação de negócio. Quatro horas cobrem com folga qualquer compra real e ainda deixam o dado dizer algo.
+
+**Por que renovar continua sendo necessário, mesmo com folga.** Vale a mesma contradição de antes com a [D-17](#d-17-carrinho-de-roteiro-sem-limite-de-itens): o carrinho não tem limite justamente para atender o empreiteiro que monta uma lista para uma obra inteira, e um TTL fixo expulsaria exatamente esse cliente. As duas decisões só funcionam juntas.
 
 **Por que consultar não renova.** Consulta é leitura; renovar exigiria gravar a cada `GET`, e listar a lista não é sinal forte de atividade (uma tela aberta e esquecida continuaria consultando). As ações de escrita são evidência real de que há alguém interagindo.
 
-**Consequências.** Uma sessão só expira após 30 minutos de **inatividade** real, não 30 minutos de duração total. O job de expiração da Fase 3 continua funcionando normalmente: ele varre por `expiracaoTtl` vencido, que agora reflete a última interação.
+**A varredura acompanhou.** O intervalo passou de 5 para **30 minutos**: com um TTL de 4 horas, varrer a cada cinco seriam 48 consultas para cada uma que encontra algo — contra um banco a 5.000 km e num tier gratuito de 0,1 CPU ([D-45](#d-45-o-deploy-mudou-quais-avisos-do-hibernate-importavam)). A varredura não protege regra de negócio: `Sessao.isValida()` compara com o relógio a cada requisição.
+
+**Consequências.** Uma sessão só expira após 4 horas de **inatividade** real, não de duração total. O job de expiração continua funcionando normalmente: ele varre por `expiracaoTtl` vencido, que reflete a última interação.
 
 **Onde no código.** `application/usecase/AdicionarProdutoAoRoteiroUseCase.java`, `RemoverProdutoDoRoteiroUseCase.java`, `domain/entity/Sessao.java`.
 
@@ -711,7 +720,7 @@ O `ItemRoteiroRepository` continua no projeto: o fluxo de ruptura de estoque (Fa
 
 **Decisão 2: coletar renova o TTL da sessão.** Aplicação da [D-24](#d-24-ttl-da-sessão-é-renovado-a-cada-interação) ao trecho da caminhada, e aqui ela é ainda mais necessária.
 
-Sem isso havia um bug silencioso esperando: a sessão era renovada no handoff e **nada mais a renovava durante a caminhada**. Um cliente com lista grande numa loja de 10.000m² leva mais de 30 minutos com facilidade — a sessão morreria no meio da compra, quebrando a marcação dos itens seguintes e o tratamento de ruptura, sem nenhum erro aparente até o cliente tentar a próxima ação.
+Sem isso havia um bug silencioso esperando: a sessão era renovada no handoff e **nada mais a renovava durante a caminhada**. Um cliente com lista grande numa loja de 10.000m² leva mais de meia hora com facilidade — a sessão morreria no meio da compra, quebrando a marcação dos itens seguintes e o tratamento de ruptura, sem nenhum erro aparente até o cliente tentar a próxima ação.
 
 **Decisão 3: marcar item já coletado é no-op com 200.** O cliente pode tocar duas vezes, ou a rede pode reenviar. Recusar não protege nada e atrapalha.
 
@@ -883,7 +892,10 @@ Verificado sobre HTTP na jornada completa: depois de `POST /sessoes/{id}/conclui
 **Decisão.**
 
 - **Lista com itens → `ABANDONED`.** É o carrinho abandonado no sentido clássico do varejo: o cliente montou a lista e não concluiu. Uma venda que quase aconteceu.
-- **Lista vazia ou inexistente → `EXPIRED`.** Alguém encostou no totem e foi embora sem adicionar nada. Nada estava em jogo.
+- **Lista vazia ou inexistente → `EXPIRED`.** Alguém abriu a página — escaneou uma placa, olhou — e foi embora sem escolher nada. Nada estava em jogo.
+
+> [!NOTE]
+> **Ajustada em 25/08/2026.** O título e o exemplo falavam em totem, que não existe mais. A distinção continua valendo inteira: o que muda é o aparelho, não a diferença entre um carrinho abandonado e uma visita que não virou nada.
 
 **Motivo.** Mandar tudo para `EXPIRED` seria mais simples, mas jogaria fora justamente a métrica que o produto promete melhorar. "Quantos clientes montaram uma lista e desistiram no meio" é um número que a loja quer ver; "quantos encostaram no totem" é outro, e misturá-los não ajuda ninguém.
 
@@ -901,7 +913,7 @@ Verificado sobre HTTP na jornada completa: depois de `POST /sessoes/{id}/conclui
 
 **O job não roda com a aplicação dormindo.** Provedores gratuitos suspendem a instância por inatividade, então numa loja parada a varredura não acontece. É best-effort — e como o job não protege regra nenhuma, o custo é apenas o banco demorar mais para se acertar.
 
-**Há uma janela de corrida de milissegundos** entre a varredura ler as sessões vencidas e gravá-las: se o cliente renovar exatamente nesse intervalo, a renovação se perde e a próxima ação dele recebe 409. Para isso acontecer ele teria que estar inativo há 30 minutos e agir justo naquele milissegundo. Resolver exigiria bloqueio otimista — desproporcional ao risco.
+**Há uma janela de corrida de milissegundos** entre a varredura ler as sessões vencidas e gravá-las: se o cliente renovar exatamente nesse intervalo, a renovação se perde e a próxima ação dele recebe 409. Para isso acontecer ele teria que estar inativo há 4 horas e agir justo naquele milissegundo. Resolver exigiria bloqueio otimista — desproporcional ao risco.
 
 **A varredura é naturalmente idempotente**, porque a consulta filtra por `ACTIVE`: a segunda passagem não encontra o que a primeira já tratou. Verificado contra o Oracle real.
 

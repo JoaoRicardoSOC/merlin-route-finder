@@ -84,7 +84,7 @@ class ExpirarSessoesInativasUseCaseTest {
     }
 
     @Test
-    @DisplayName("lista vazia vira EXPIRED: encostou no totem e foi embora")
+    @DisplayName("lista vazia vira EXPIRED: abriu a pagina e foi embora sem escolher nada")
     void carrinhoVazioViraExpirada() {
         Sessao sessao = sessaoVencida();
         aVarreduraEncontra(sessao);

@@ -66,8 +66,11 @@ merlin:
   agendador:
     # Varredura de sessoes com TTL vencido. Nao protege regra de negocio - Sessao.isValida()
     # ja compara com o relogio - apenas mantem o banco condizente com a realidade.
-    # Ver D-42. Desligavel com merlin.agendador.enabled=false.
-    intervalo-ms: ${AGENDADOR_INTERVALO_MS:300000}
+    #
+    # Meia hora, e nao cinco minutos: com o TTL em 4 horas (D-24), varrer a cada cinco seriam
+    # 48 consultas para cada uma que encontra algo, contra um banco a 5.000 km e num tier
+    # gratuito de 0.1 CPU. Ver D-42. Desligavel com merlin.agendador.enabled=false.
+    intervalo-ms: ${AGENDADOR_INTERVALO_MS:1800000}
     atraso-inicial-ms: ${AGENDADOR_ATRASO_INICIAL_MS:60000}
   ia:
     base-url: https://generativelanguage.googleapis.com

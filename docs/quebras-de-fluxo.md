@@ -13,7 +13,7 @@
 
 Antes da lista, duas quebras que o novo escopo criou e que não existiam quando o totem existia.
 
-### ❓ A sessão morre em 30 minutos parada, e agora ela é a única coisa que o cliente tem
+### ✅ A sessão morre em 30 minutos parada, e agora ela é a única coisa que o cliente tem
 
 Antes, a sessão vivia no totem e o cliente levava a rota no celular. Se a sessão expirasse, ele ainda tinha a lista na tela.
 
@@ -23,7 +23,7 @@ Esse motivo desapareceu. Não há equipamento para liberar: o aparelho é do cli
 
 E o cenário é banal — o cliente monta quinze itens, recebe uma ligação, conversa quarenta minutos, volta e **perdeu tudo**. Nada no sistema avisa; ele simplesmente encontra uma sessão inválida.
 
-> **Recomendação: subir o TTL para algo entre 2 e 4 horas.** É mais tempo do que qualquer compra realista leva, e não custa nada — a varredura de sessões vencidas continua limpando o banco do mesmo jeito. Mexe numa constante e na [D-24](decisoes-tecnicas.md#d-24-ttl-da-sessão-é-renovado-a-cada-interação).
+> **Resolvido em 25/08/2026: o TTL passou para 4 horas.** É mais tempo do que qualquer compra realista leva, e a varredura de sessões vencidas continua limpando o banco — só que a cada 30 minutos em vez de 5, porque com o prazo novo varrer de cinco em cinco seriam 48 consultas para cada uma que encontra algo. Ver [D-24](decisoes-tecnicas.md#d-24-ttl-da-sessão-é-renovado-a-cada-interação).
 
 ### ❓ Loja de 10.000 m², paredes de concreto, e um produto que só funciona online
 
@@ -253,7 +253,7 @@ Já devolve erro limpo, sem vazar detalhe interno — está sob teste. Falta o f
 
 | # | Assunto |
 |---|---|
-| 1 | Subir o TTL da sessão de 30 minutos para 2–4 horas |
+| 1 | ~~Subir o TTL da sessão de 30 minutos para 2–4 horas~~ — resolvido: 4 horas |
 | 2 | Quanto de suporte a offline vale construir |
 | 3 | Código curto digitável ao lado de cada QR Code |
 | 4 | Limitar sugestões seguidas de substituto |
