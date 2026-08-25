@@ -350,6 +350,13 @@ Nenhum destes é trabalho grande. O que eles têm em comum é que **o backend j�
 
 **Uma ajuda que talvez passe despercebida.** Quando o filtro devolve lista vazia, a resposta traz junto as **facetas do recorte** — a tela consegue dizer quais filtros ainda têm resultado, em vez de só oferecer "limpar tudo".
 
+### Duas escolhas de tela que valem segundos
+
+Medido no ambiente publicado ([O-22](observacoes.md#o-22-a-tela-inicial-do-catálogo-leva-24-segundos-no-ambiente-publicado)):
+
+- **não abrir no catálogo sem filtro.** Ele é o endpoint mais lento de todos — **2,4 s**. Abrir pelo menu de seções (355 ms) e depois mostrar uma seção (814 ms) dá duas telas rápidas em vez de uma lenta;
+- **buscar `/mapa` uma vez e guardar.** Ele não depende de sessão justamente para isso, e economiza 669 ms a cada abertura da tela central do produto.
+
 ### Decisões do time, fora do código
 
 - **Arte da placa:** QR + URL curta + código de localização. Tem custo de impressão.
