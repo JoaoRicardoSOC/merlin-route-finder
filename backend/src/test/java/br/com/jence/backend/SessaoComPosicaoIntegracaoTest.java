@@ -4,8 +4,13 @@ import br.com.jence.backend.application.dto.SessaoResponse;
 import br.com.jence.backend.application.usecase.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.application.usecase.ConsultarSessaoUseCase;
 import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
+import br.com.jence.backend.application.usecase.ConcluirRotaUseCase;
 import br.com.jence.backend.application.usecase.MarcarItemColetadoUseCase;
+import br.com.jence.backend.application.usecase.RecentrarSessaoUseCase;
+import br.com.jence.backend.domain.entity.ItemRoteiro;
 import br.com.jence.backend.domain.entity.TipoPonto;
+import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
+import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import br.com.jence.backend.infrastructure.database.repository.ListaRoteiroJpaRepository;
@@ -22,6 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * A sessao sabendo onde o cliente esta, do codigo da placa ate a posicao devolvida.
@@ -36,6 +42,8 @@ class SessaoComPosicaoIntegracaoTest {
     @Autowired ConsultarSessaoUseCase consultar;
     @Autowired AdicionarProdutoAoRoteiroUseCase adicionar;
     @Autowired MarcarItemColetadoUseCase marcarColetado;
+    @Autowired RecentrarSessaoUseCase recentrar;
+    @Autowired ConcluirRotaUseCase concluir;
     @Autowired ProdutoRepository produtoRepository;
     @Autowired ListaRoteiroRepository listaRoteiroRepository;
 
@@ -135,6 +143,79 @@ class SessaoComPosicaoIntegracaoTest {
         System.out.println(">>> posicao apos duas coletas: " + corredor);
         assertThat(corredor).isEqualTo("Jardim");
     }
+
+    // ---------------------------------------------------------------- recentrar
+
+    @Test
+    @DisplayName("recentrar move a posicao e vence o ultimo item coletado")
+    void recentrarVenceAColeta() {
+        SessaoResponse sessao = iniciarEm("ENT-01");
+        coletar(sessao.id(), "SKU-TIN-001");
+
+        SessaoResponse depois = recentrar.executar(sessao.id(), "CEN-03");
+
+        assertThat(depois.posicaoAtual().codigoCurto())
+                .as("quem leu uma placa agora nao esta mais na prateleira de antes")
+                .isEqualTo("CEN03");
+        assertThat(consultar.executar(sessao.id()).posicaoAtual().codigoCurto()).isEqualTo("CEN03");
+    }
+
+    @Test
+    @DisplayName("recentrar nao mexe na lista nem no que ja foi coletado")
+    void recentrarPreservaALista() {
+        /*
+         * E a promessa central da operacao: o cliente se perdeu, nao recomecou. Perder a lista
+         * aqui seria pior do que nao ter o recurso.
+         */
+        SessaoResponse sessao = iniciarEm("ENT-01");
+        coletar(sessao.id(), "SKU-TIN-001");
+        UUID naoColetado = adicionar.executar(sessao.id(),
+                produtoRepository.buscarPorSku("SKU-JAR-001").orElseThrow().getId()).id();
+
+        recentrar.executar(sessao.id(), "CEN-03");
+
+        List<ItemRoteiro> itens = listaRoteiroRepository.buscarPorSessao(sessao.id())
+                .orElseThrow().getItens();
+
+        assertThat(itens).hasSize(2);
+        assertThat(itens).filteredOn(ItemRoteiro::isColetado).hasSize(1);
+        assertThat(itens).anyMatch(i -> i.getId().equals(naoColetado) && !i.isColetado());
+    }
+
+    @Test
+    @DisplayName("placa desconhecida devolve 404 e a posicao anterior continua valendo")
+    void placaDesconhecidaNaoZeraAPosicao() {
+        SessaoResponse sessao = iniciarEm("ENT-01");
+
+        assertThatThrownBy(() -> recentrar.executar(sessao.id(), "ZZZ-99"))
+                .isInstanceOf(RecursoNaoEncontradoException.class);
+
+        assertThat(consultar.executar(sessao.id()).posicaoAtual().codigoCurto())
+                .as("errar a digitacao nao pode apagar o que o sistema ja sabia")
+                .isEqualTo("ENT01");
+    }
+
+    @Test
+    @DisplayName("sessao encerrada recusa o recentrar")
+    void sessaoEncerradaRecusa() {
+        SessaoResponse sessao = iniciarEm("ENT-01");
+        concluir.executar(sessao.id());
+
+        assertThatThrownBy(() -> recentrar.executar(sessao.id(), "CEN-03"))
+                .isInstanceOf(OperacaoNaoPermitidaException.class);
+    }
+
+    @Test
+    @DisplayName("recentrar empurra o TTL: quem pede ajuda para se achar esta ativo")
+    void recentrarRenovaOTtl() {
+        SessaoResponse sessao = iniciarEm("ENT-01");
+
+        SessaoResponse depois = recentrar.executar(sessao.id(), "CEN-03");
+
+        assertThat(depois.expiracaoTtl()).isAfterOrEqualTo(sessao.expiracaoTtl());
+    }
+
+    // ---------------------------------------------------------------- persistencia
 
     @Test
     @DisplayName("a posicao sobrevive ao recarregar a pagina")

@@ -63,6 +63,44 @@ paths:
         "404":
           $ref: "#/components/responses/NaoEncontrado"
 
+  /sessoes/{sessaoId}/posicao:
+    put:
+      tags: [Sessao]
+      summary: Recentrar a posição do cliente
+      description: |
+        Acionado quando o cliente se perde e lê outra placa da loja.
+
+        Atualiza **apenas** onde ele está: a lista e o que já foi coletado permanecem intactos, e nenhuma sessão nova é criada. A placa informada passa a valer sobre o último item coletado, por ser a evidência mais recente.
+
+        **Código desconhecido devolve 404**, ao contrário de `POST /sessoes` — aqui o cliente já tem sessão funcionando, e avisar que a placa não foi encontrada é acionável. A posição anterior continua valendo.
+      parameters:
+        - $ref: "#/components/parameters/SessaoId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecentrarSessaoRequest"
+      responses:
+        "200":
+          description: Posição atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sessao"
+        "400":
+          description: Corpo sem o código da placa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardError"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+        "409":
+          $ref: "#/components/responses/SessaoInativa"
+        "500":
+          $ref: "#/components/responses/ErroInterno"
+
   /sessoes/{sessaoId}/concluir:
     post:
       tags: [Sessao]
@@ -510,6 +548,15 @@ components:
           nullable: true
           description: Código de localização impresso na placa, em qualquer grafia — `TIN-02`, `tin02` e `TIN 02` são equivalentes.
           example: TIN-02
+
+    RecentrarSessaoRequest:
+      type: object
+      required: [codigoPonto]
+      properties:
+        codigoPonto:
+          type: string
+          description: Código de localização impresso na placa onde o cliente está agora, em qualquer grafia.
+          example: CEN-03
 
     AdicionarItemRequest:
       type: object

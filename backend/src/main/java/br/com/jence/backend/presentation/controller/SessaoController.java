@@ -1,17 +1,21 @@
 package br.com.jence.backend.presentation.controller;
 
 import br.com.jence.backend.application.dto.IniciarSessaoRequest;
+import br.com.jence.backend.application.dto.RecentrarSessaoRequest;
 import br.com.jence.backend.application.dto.SessaoResponse;
 import br.com.jence.backend.application.usecase.ConcluirRotaUseCase;
 import br.com.jence.backend.application.usecase.ConsultarSessaoUseCase;
 import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
+import br.com.jence.backend.application.usecase.RecentrarSessaoUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,6 +39,7 @@ public class SessaoController {
     private final InicializarSessaoUseCase inicializarSessaoUseCase;
     private final ConsultarSessaoUseCase consultarSessaoUseCase;
     private final ConcluirRotaUseCase concluirRotaUseCase;
+    private final RecentrarSessaoUseCase recentrarSessaoUseCase;
 
     @PostMapping
     @Operation(summary = "Inicializar sessao (UC-001)",
@@ -57,6 +62,18 @@ public class SessaoController {
             description = "Devolve o status da sessao e onde o cliente esta.")
     public ResponseEntity<SessaoResponse> consultar(@PathVariable UUID sessaoId) {
         return ResponseEntity.ok(consultarSessaoUseCase.executar(sessaoId));
+    }
+
+    @PutMapping("/{sessaoId}/posicao")
+    @Operation(summary = "Recentrar a posicao do cliente",
+            description = "Acionado quando o cliente se perde e le outra placa da loja. "
+                    + "Atualiza apenas onde ele esta: a lista e o que ja foi coletado "
+                    + "permanecem intactos, e nenhuma sessao nova e criada.")
+    public ResponseEntity<SessaoResponse> recentrar(
+            @PathVariable UUID sessaoId,
+            @Valid @RequestBody RecentrarSessaoRequest requisicao) {
+        return ResponseEntity.ok(
+                recentrarSessaoUseCase.executar(sessaoId, requisicao.codigoPonto()));
     }
 
     @PostMapping("/{sessaoId}/concluir")

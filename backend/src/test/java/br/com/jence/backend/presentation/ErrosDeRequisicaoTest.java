@@ -5,6 +5,7 @@ import br.com.jence.backend.application.usecase.ConcluirRotaUseCase;
 import br.com.jence.backend.application.usecase.ConsultarListaRoteiroUseCase;
 import br.com.jence.backend.application.usecase.ConsultarSessaoUseCase;
 import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
+import br.com.jence.backend.application.usecase.RecentrarSessaoUseCase;
 import br.com.jence.backend.application.usecase.RemoverProdutoDoRoteiroUseCase;
 import br.com.jence.backend.presentation.controller.RoteiroController;
 import br.com.jence.backend.presentation.controller.SessaoController;
@@ -39,6 +40,7 @@ class ErrosDeRequisicaoTest {
     @MockitoBean InicializarSessaoUseCase inicializarSessaoUseCase;
     @MockitoBean ConsultarSessaoUseCase consultarSessaoUseCase;
     @MockitoBean ConcluirRotaUseCase concluirRotaUseCase;
+    @MockitoBean RecentrarSessaoUseCase recentrarSessaoUseCase;
     @MockitoBean ConsultarListaRoteiroUseCase consultarListaRoteiroUseCase;
     @MockitoBean AdicionarProdutoAoRoteiroUseCase adicionarProdutoAoRoteiroUseCase;
     @MockitoBean RemoverProdutoDoRoteiroUseCase removerProdutoDoRoteiroUseCase;

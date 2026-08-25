@@ -74,6 +74,20 @@ public class Sessao {
         finalizarCom(StatusSessao.ABANDONED);
     }
 
+    /**
+     * O cliente se perdeu e leu outra placa.
+     * <p>
+     * Nao mexe na lista nem no que ja foi coletado: recentrar diz onde ele esta agora, e nao
+     * desfaz nada do que ele fez. Como {@code escaneadoEm} passa a ser o instante mais
+     * recente, a nova placa vence o ultimo item coletado na estimativa de posicao.
+     *
+     * @see br.com.jence.backend.domain.service.PosicaoDoCliente
+     */
+    public void recentrarEm(PontoMapa ponto, LocalDateTime quando) {
+        this.pontoEscaneado = ponto;
+        this.escaneadoEm = quando;
+    }
+
     public void renovarSessao() {
         if (!isValida()) {
             return;

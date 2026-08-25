@@ -4,6 +4,7 @@ import br.com.jence.backend.application.dto.SessaoResponse;
 import br.com.jence.backend.application.usecase.ConcluirRotaUseCase;
 import br.com.jence.backend.application.usecase.ConsultarSessaoUseCase;
 import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
+import br.com.jence.backend.application.usecase.RecentrarSessaoUseCase;
 import br.com.jence.backend.domain.entity.StatusSessao;
 import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
@@ -12,15 +13,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -35,6 +39,7 @@ class SessaoControllerTest {
     @MockitoBean InicializarSessaoUseCase inicializarSessaoUseCase;
     @MockitoBean ConsultarSessaoUseCase consultarSessaoUseCase;
     @MockitoBean ConcluirRotaUseCase concluirRotaUseCase;
+    @MockitoBean RecentrarSessaoUseCase recentrarSessaoUseCase;
 
     private SessaoResponse sessaoAtiva(UUID id) {
         LocalDateTime agora = LocalDateTime.now();
@@ -109,6 +114,50 @@ class SessaoControllerTest {
         mockMvc.perform(post("/api/v1/sessoes/{id}/concluir", id))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value("Operacao Nao Permitida"));
+    }
+
+    // ---------------------------------------------------------------- recentrar
+
+    @Test
+    @DisplayName("PUT posicao devolve a sessao com a nova posicao")
+    void recentrar() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(recentrarSessaoUseCase.executar(id, "CEN-03")).thenReturn(sessaoAtiva(id));
+
+        mockMvc.perform(put("/api/v1/sessoes/{id}/posicao", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"codigoPonto\":\"CEN-03\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id.toString()));
+
+        verify(recentrarSessaoUseCase).executar(id, "CEN-03");
+    }
+
+    @Test
+    @DisplayName("PUT posicao sem codigo devolve 400 apontando o campo")
+    void recentrarSemCodigo() throws Exception {
+        /*
+         * Diferente de POST /sessoes, onde o codigo e opcional: aqui ele e o proprio objeto da
+         * operacao, e uma requisicao sem ele nao quer dizer nada.
+         */
+        mockMvc.perform(put("/api/v1/sessoes/{id}/posicao", UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.validationErrors[0].field").value("codigoPonto"));
+    }
+
+    @Test
+    @DisplayName("PUT posicao com placa desconhecida devolve 404")
+    void recentrarPlacaDesconhecida() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(recentrarSessaoUseCase.executar(any(), any()))
+                .thenThrow(new RecursoNaoEncontradoException("Placa de localizacao", "ZZZ-99"));
+
+        mockMvc.perform(put("/api/v1/sessoes/{id}/posicao", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"codigoPonto\":\"ZZZ-99\"}"))
+                .andExpect(status().isNotFound());
     }
 
     @Test

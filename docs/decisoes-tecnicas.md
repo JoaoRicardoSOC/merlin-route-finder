@@ -68,6 +68,7 @@
 - [D-54. A entrada aceita o código da placa num campo só, e código desconhecido não recusa a sessão](#d-54-a-entrada-aceita-o-código-da-placa-num-campo-só-e-código-desconhecido-não-recusa-a-sessão)
 - [D-55. A posição do cliente vem de duas pistas, e vale a mais recente](#d-55-a-posição-do-cliente-vem-de-duas-pistas-e-vale-a-mais-recente)
 - [D-56. A coluna `coletado` continua sendo gravada, mesmo redundante](#d-56-a-coluna-coletado-continua-sendo-gravada-mesmo-redundante)
+- [D-57. O mesmo código inválido é aceito na entrada e recusado no recentrar](#d-57-o-mesmo-código-inválido-é-aceito-na-entrada-e-recusado-no-recentrar)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -1369,6 +1370,31 @@ Fica um `INFO` no log com o código recusado, que é o que permite descobrir uma
 **É a terceira vez que o mesmo mecanismo cobra.** Linhas de tipo aposentado ([D-51](#d-51-um-valor-de-enum-removido-precisa-sumir-também-do-banco)), restrição de enum congelada ([D-53](#d-53-a-aplicação-repara-a-restrição-de-enum-que-o-ddl-auto-update-deixa-envelhecer)) e agora uma coluna que não dá para aposentar. O padrão vale registrar: **com `ddl-auto: update`, o esquema só cresce** — toda mudança precisa ser pensada como adição, ou vir com uma reparação explícita.
 
 **Onde no código.** `infrastructure/database/entity/ItemRoteiroEntity.java`.
+
+---
+
+### D-57. O mesmo código inválido é aceito na entrada e recusado no recentrar
+
+**Contexto.** Dois endpoints recebem o código da placa: `POST /sessoes`, quando o cliente entra, e `PUT /sessoes/{id}/posicao`, quando ele se perde e lê outra. Um código que não corresponde a placa alguma — adesivo velho, loja remanejada, erro de digitação — pode chegar nos dois.
+
+**Decisão.** Comportamentos opostos, de propósito:
+
+| | Código desconhecido |
+|---|---|
+| `POST /sessoes` | **aceita** — a sessão nasce sem posição e continua utilizável |
+| `PUT /sessoes/{id}/posicao` | **404** — a posição anterior continua valendo |
+
+**O que muda entre os dois é o custo de recusar.** Na entrada, o cliente ainda não tem nada: recusar o barraria do sistema inteiro por causa de um adesivo. Ele perderia catálogo, busca, lista e assistente — tudo que funciona perfeitamente sem saber onde ele está. O preço de aceitar é apenas um mapa sem "você está aqui".
+
+No recentrar, ele **já tem** uma sessão funcionando. Dizer "não encontramos essa localização" é acionável: ele confere a placa e tenta de novo. E aceitar em silêncio seria pior do que recusar — ele acharia que funcionou, e continuaria vendo o marcador no lugar errado sem entender por quê.
+
+**A regra por trás, que vale além destes dois endpoints:** *recusar só quando o cliente pode fazer algo a respeito, e o silêncio custaria mais que o erro.*
+
+**Consequência para o frontend.** As duas telas precisam tratar o mesmo dado de formas diferentes, e a da entrada é a que engana: como não há erro HTTP, ela precisa **perceber `posicaoAtual` nula e avisar**. Registrado em [O-19](observacoes.md#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe).
+
+**Por que `PUT` e não `POST`.** A operação define o valor de um recurso — onde o cliente está —, e reenviar "estou em CEN-03" duas vezes leva ao mesmo lugar. Cliente ou proxy podem repetir sem risco, que é o que se quer de alguém andando por uma loja com sinal ruim.
+
+**Onde no código.** `application/usecase/RecentrarSessaoUseCase.java`, `application/usecase/InicializarSessaoUseCase.java`.
 
 ---
 

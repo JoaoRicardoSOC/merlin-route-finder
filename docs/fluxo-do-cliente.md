@@ -214,11 +214,13 @@ O substituto entra **não coletado**, porque nem sempre está na mesma prateleir
 
 ### 13. Recentrar a posição
 
-Se o cliente se perder, ele escaneia qualquer QR Code da loja e o mapa se recentra.
+Se o cliente se perder, ele lê qualquer placa da loja — escaneando ou digitando o código, como na entrada — e o mapa se recentra.
 
-**Tela:** a mesma da entrada, mas sem criar sessão nova.
+**Tela:** a mesma da entrada, mas sem criar sessão nova. **A lista e o que já foi coletado permanecem intactos:** ele se perdeu, não recomeçou.
 
-**Backend:** 🆕 atualizar a posição da sessão a partir de um ponto escaneado.
+**Backend:** `PUT /sessoes/{sessaoId}/posicao` com o código da placa. A placa nova passa a valer sobre o último item coletado, por ser a evidência mais recente.
+
+**Aqui código desconhecido é erro**, ao contrário da entrada — o cliente já tem sessão funcionando, e avisar que a placa não foi encontrada é acionável. A posição anterior continua valendo.
 
 ---
 
