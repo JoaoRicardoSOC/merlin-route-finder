@@ -373,6 +373,52 @@ paths:
         "500":
           $ref: "#/components/responses/ErroInterno"
 
+  /roteiro/itens/{itemId}/substituir:
+    post:
+      tags: [Roteiro]
+      summary: Aceitar o substituto, trocando o item da lista
+      description: |
+        O produto que faltou **sai** da lista e o substituto **entra**, numa chamada só.
+
+        É o que fecha o ciclo da ruptura: sem isso, aceitar a sugestão exigiria do cliente duas ações — adicionar um produto e remover outro — em pé no corredor, com o celular na mão.
+
+        **O substituto entra NÃO coletado.** Ele nem sempre está na mesma prateleira, e pode estar alguns metros adiante — é o mapa que vai dizer onde. Marcá-lo como coletado faria o cliente sair sem o produto.
+
+        **O registro da ruptura permanece.** Ele é evidência do que aconteceu na gôndola e continua valendo tenha o cliente aceitado a troca ou não — comparar as duas coisas é o que diz à loja se as sugestões estão boas.
+
+        O produto vem no corpo, e não é deduzido da sugestão: o assistente pode responder diferente numa segunda chamada, e a troca precisa valer sobre o que o cliente **viu na tela**. Ele também não está preso à sugestão — se achou outra coisa que resolve, pode trocar por ela.
+      parameters:
+        - $ref: "#/components/parameters/ItemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubstituirItemRequest"
+      responses:
+        "200":
+          description: A lista já com a troca feita
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListaRoteiroResponse"
+        "400":
+          description: Corpo sem o produto substituto
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardError"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+        "409":
+          description: Sessão encerrada, ou tentativa de trocar o produto por ele mesmo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardError"
+        "500":
+          $ref: "#/components/responses/ErroInterno"
+
   /roteiro/itens/{itemId}/ruptura:
     post:
       tags: [RupturaEstoque]
@@ -765,6 +811,15 @@ components:
           type: string
           description: Código de localização impresso na placa onde o cliente está agora, em qualquer grafia.
           example: CEN-03
+
+    SubstituirItemRequest:
+      type: object
+      required: [produtoSubstitutoId]
+      properties:
+        produtoSubstitutoId:
+          type: string
+          format: uuid
+          description: Produto que entra no lugar do que faltou.
 
     AdicionarItemRequest:
       type: object

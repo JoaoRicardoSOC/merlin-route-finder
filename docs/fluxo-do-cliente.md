@@ -222,9 +222,13 @@ O cliente chega ao corredor e o produto não está lá.
 
 Se o assistente estiver fora do ar, cai para o disponível mais próximo — e a resposta traz um campo dizendo qual dos dois foi, para a tela não chamar de recomendação inteligente o que foi só proximidade.
 
-**Aceitar é uma ação só** 🆕. O cliente toca em "levar este" e, de uma vez: o substituto entra na lista e o produto que faltou sai. Fazer isso em duas ações — adicionar um, remover o outro — seria trabalho de sistema jogado no colo de quem está em pé no corredor.
+**Aceitar é uma ação só** 🆕 — `POST /roteiro/itens/{id}/substituir`. O cliente toca em "levar este" e, de uma vez: o substituto entra na lista e o produto que faltou sai. Fazer isso em duas ações — adicionar um, remover o outro — seria trabalho de sistema jogado no colo de quem está em pé no corredor.
 
 O substituto entra **não coletado**, porque nem sempre está na mesma prateleira: pode estar alguns metros adiante, e o mapa é que vai dizer onde.
+
+**O produto vai no corpo da requisição**, e não é deduzido da sugestão: o assistente pode responder diferente numa segunda chamada, e a troca precisa valer sobre o que o cliente **viu na tela**. De quebra, ele não fica preso à sugestão — se achou outra coisa na prateleira que resolve, pode trocar por ela.
+
+**O registro da ruptura permanece.** Ele é evidência do que aconteceu na gôndola, e vale tenha o cliente aceitado a troca ou não — comparar as duas coisas é o que diz à loja se as sugestões estão boas.
 
 > **Também é o que fecha o ciclo do produto.** A promessa é converter uma ruptura em venda; enquanto aceitar dá trabalho, a conversão não acontece.
 

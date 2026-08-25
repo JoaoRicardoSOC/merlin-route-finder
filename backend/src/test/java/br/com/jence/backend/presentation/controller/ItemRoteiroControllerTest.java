@@ -3,10 +3,12 @@ package br.com.jence.backend.presentation.controller;
 import br.com.jence.backend.application.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.application.dto.PontoMapaResponse;
 import br.com.jence.backend.application.dto.ProdutoDetalhadoResponse;
+import br.com.jence.backend.application.dto.ListaRoteiroResponse;
 import br.com.jence.backend.application.dto.ProdutoResponse;
 import br.com.jence.backend.application.dto.RupturaEstoqueResponse;
 import br.com.jence.backend.application.usecase.DesmarcarItemColetadoUseCase;
 import br.com.jence.backend.application.usecase.MarcarItemColetadoUseCase;
+import br.com.jence.backend.application.usecase.SubstituirItemDoRoteiroUseCase;
 import br.com.jence.backend.application.usecase.TratarRupturaEstoqueUseCase;
 import br.com.jence.backend.domain.entity.OrigemSugestao;
 import br.com.jence.backend.domain.entity.TipoPonto;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -38,6 +41,7 @@ class ItemRoteiroControllerTest {
     @MockitoBean MarcarItemColetadoUseCase marcarItemColetadoUseCase;
     @MockitoBean DesmarcarItemColetadoUseCase desmarcarItemColetadoUseCase;
     @MockitoBean TratarRupturaEstoqueUseCase tratarRupturaEstoqueUseCase;
+    @MockitoBean SubstituirItemDoRoteiroUseCase substituirItemDoRoteiroUseCase;
 
     // ---------------------------------------------------------------- coleta (UC-014)
 
@@ -85,6 +89,59 @@ class ItemRoteiroControllerTest {
 
         mockMvc.perform(patch("/api/v1/roteiro/itens/{i}/desmarcar", itemId))
                 .andExpect(status().isNotFound());
+    }
+
+    // ---------------------------------------------------------------- aceitar o substituto
+
+    @Test
+    @DisplayName("POST substituir devolve a lista ja com a troca feita")
+    void substituirItem() throws Exception {
+        UUID itemId = UUID.randomUUID();
+        UUID substitutoId = UUID.randomUUID();
+        UUID novoItemId = UUID.randomUUID();
+
+        when(substituirItemDoRoteiroUseCase.executar(itemId, substitutoId)).thenReturn(
+                new ListaRoteiroResponse(UUID.randomUUID(), UUID.randomUUID(), 1, List.of(
+                        new ItemRoteiroDetalhadoResponse(novoItemId, substitutoId, false,
+                                new ProdutoResponse(substitutoId, "SKU-TIN-004",
+                                        "Lixa d'Agua Grao 150", null, null,
+                                        new BigDecimal("4.20"), 40, UUID.randomUUID())))));
+
+        mockMvc.perform(post("/api/v1/roteiro/itens/{i}/substituir", itemId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"produtoSubstitutoId\":\"" + substitutoId + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.quantidadeItens").value(1))
+                .andExpect(jsonPath("$.itens[0].produto.sku").value("SKU-TIN-004"))
+                .andExpect(jsonPath("$.itens[0].coletado")
+                        .value(false));
+
+        verify(substituirItemDoRoteiroUseCase).executar(itemId, substitutoId);
+    }
+
+    @Test
+    @DisplayName("substituir sem o produto no corpo devolve 400 apontando o campo")
+    void substituirSemProduto() throws Exception {
+        mockMvc.perform(post("/api/v1/roteiro/itens/{i}/substituir", UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.validationErrors[0].field").value("produtoSubstitutoId"));
+    }
+
+    @Test
+    @DisplayName("trocar um produto por ele mesmo devolve 409")
+    void substituirPorSiMesmo() throws Exception {
+        UUID itemId = UUID.randomUUID();
+        UUID produtoId = UUID.randomUUID();
+        when(substituirItemDoRoteiroUseCase.executar(any(), any()))
+                .thenThrow(new OperacaoNaoPermitidaException(
+                        "Produto %s nao pode substituir a si mesmo".formatted(produtoId)));
+
+        mockMvc.perform(post("/api/v1/roteiro/itens/{i}/substituir", itemId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"produtoSubstitutoId\":\"" + produtoId + "\"}"))
+                .andExpect(status().isConflict());
     }
 
     @Test

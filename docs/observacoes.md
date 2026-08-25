@@ -33,6 +33,7 @@
 | [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final) | Limpar documentos de trabalho | Time | fim do ano |
 | [O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca) | Catálogo pequeno para a banca | Time | **Alta — 21/09** |
 | [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | Tela de código manual e arte da placa | Bielecky, Marcela e time | Alta |
+| [O-20](#o-20-a-limpeza-dos-testes-de-integração-falha-em-silêncio-quando-há-ruptura) | Limpeza de teste deixa sessão órfã | Backend | Baixa |
 
 ---
 
@@ -250,6 +251,22 @@ Qualquer um deles pode ser disparado pela ferramenta de simulação ([D-40](deci
 ## Limitações aceitas conscientemente
 
 > Estas não são pendências. São escolhas de escopo que valem ser lembradas — principalmente porque é melhor citá-las antes que alguém as descubra.
+
+### O-20. A limpeza dos testes de integração falha em silêncio quando há ruptura
+
+**O quê.** Vários testes de integração apagam a sessão que criaram no `@AfterEach`. Quando o teste dispara uma ruptura, essa limpeza **falha**: `TB_REGISTRO_RUPTURA` aponta para a sessão por chave estrangeira, e o Oracle recusa o delete com `ORA-02292`.
+
+**Por que passa despercebido.** O erro acontece *depois* das asserções, dentro do `@AfterEach`. Na maioria das execuções ele aparece apenas como exceção suprimida no relatório — o teste continua verde, e ninguém olha.
+
+**O efeito.** Sessões órfãs vão se acumulando nos schemas do time e no publicado, cada uma com sua lista e seus registros de ruptura. Não quebra nada hoje. Mas suja a massa, e uma varredura que conte sessões por status passa a mentir.
+
+**Onde já está resolvido.** O [`SubstituicaoDeItemIntegracaoTest`](../backend/src/test/java/br/com/jence/backend/SubstituicaoDeItemIntegracaoTest.java) apaga os registros de ruptura antes da sessão. O mesmo ajuste serve para os outros — é uma linha em cada `@AfterEach`.
+
+**Por que não foi feito junto.** Sairia do escopo do card e mexeria em testes que não têm nada a ver com a troca de item. Vale um card pequeno, ou o próximo que tocar em cada arquivo.
+
+**De quem.** Backend. **Urgência:** baixa — nada quebra, mas quanto mais tempo passa, mais lixo acumula.
+
+---
 
 ### O-09. A rota sempre parte do primeiro totem encontrado
 

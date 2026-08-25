@@ -76,6 +76,7 @@
 - [D-62. As características dos produtos vivem numa tabela, não em colunas](#d-62-as-caracteristicas-dos-produtos-vivem-numa-tabela-nao-em-colunas)
 - [D-63. As facetas ignoram a escolha do cliente sobre elas mesmas](#d-63-as-facetas-ignoram-a-escolha-do-cliente-sobre-elas-mesmas)
 - [D-64. Desmarcar um item não precisa mexer na posição do cliente](#d-64-desmarcar-um-item-não-precisa-mexer-na-posição-do-cliente)
+- [D-65. Aceitar o substituto é uma ação só, e o substituto entra não coletado](#d-65-aceitar-o-substituto-e-uma-acao-so-e-o-substituto-entra-nao-coletado)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -1568,6 +1569,26 @@ O card previa o cuidado: *"a posicao vem do ultimo item coletado; desmarcar prec
 **Espelha o marcar, inclusive na renovacao da sessao:** corrigir um engano e atividade do cliente como qualquer outra.
 
 **Onde no codigo.** `domain/entity/ItemRoteiro.java` — `desmarcarComoColetado`; `application/usecase/DesmarcarItemColetadoUseCase.java`.
+
+---
+
+### D-65. Aceitar o substituto e uma acao so, e o substituto entra nao coletado
+
+**Contexto.** O tratamento de ruptura sugeria um substituto e parava ali. Aceitar exigiria do cliente **duas acoes** — adicionar um produto e remover outro — em pe no corredor, com o celular na mao.
+
+**Isso nao e detalhe de conveniencia.** A promessa do recurso e converter prateleira vazia em venda ([D-23](#d-23-resolução-síncrona-de-inventário-não-é-integração-com-erp)). Enquanto aceitar da trabalho, a conversao nao acontece e o recurso vira decoracao — bonito na demonstracao, inutil na loja.
+
+**Decisao.** `POST /roteiro/itens/{itemId}/substituir` faz a troca inteira numa chamada: o substituto entra e o item que faltou sai.
+
+**O substituto entra NAO coletado, e nao herda o estado do item que saiu.** E o detalhe que decide se o cliente sai da loja com o produto: o substituto nem sempre esta na mesma prateleira, e pode estar alguns metros adiante. Marca-lo como coletado faria o cliente ir embora sem ele — e mentiria sobre onde ele esta ([D-55](#d-55-a-posição-do-cliente-vem-de-duas-pistas-e-vale-a-mais-recente)).
+
+**O produto vem no corpo, e nao e deduzido da sugestao.** Dois motivos: o assistente pode responder diferente numa segunda chamada, e a troca precisa valer sobre o que o cliente **viu na tela**; e ele nao fica preso a sugestao — se encontrou outra coisa na prateleira que resolve, pode trocar por ela.
+
+**O registro da ruptura nao e tocado.** Ele e evidencia do que aconteceu na gondola, e continua valendo tenha o cliente aceitado a troca ou nao. Mais que isso: **comparar quantas rupturas viraram troca e o que diz a loja se as sugestoes estao boas** — apagar o registro destruiria exatamente o dado que o recurso existe para produzir. O registro passa a apontar para um item que ja nao existe, e tudo bem: ele descreve o que aconteceu, nao o estado de agora.
+
+**Uma guarda que evita apagar um item em silencio.** Trocar um produto por ele mesmo devolve 409. Sem ela, o `adicionarProduto` devolveria o item existente ([D-18](#d-18-produto-duplicado-é-ignorado-no-carrinho)) e o `removerProduto` o apagaria em seguida — o cliente ficaria sem o produto sem ter pedido isso.
+
+**Onde no codigo.** `application/usecase/SubstituirItemDoRoteiroUseCase.java`.
 
 ---
 

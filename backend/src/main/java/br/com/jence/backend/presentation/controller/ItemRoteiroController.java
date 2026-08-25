@@ -1,19 +1,24 @@
 package br.com.jence.backend.presentation.controller;
 
 import br.com.jence.backend.application.dto.ItemRoteiroDetalhadoResponse;
+import br.com.jence.backend.application.dto.ListaRoteiroResponse;
+import br.com.jence.backend.application.dto.SubstituirItemRequest;
 import br.com.jence.backend.application.dto.RupturaEstoqueResponse;
 import br.com.jence.backend.application.usecase.DesmarcarItemColetadoUseCase;
 import br.com.jence.backend.application.usecase.MarcarItemColetadoUseCase;
+import br.com.jence.backend.application.usecase.SubstituirItemDoRoteiroUseCase;
 import br.com.jence.backend.application.usecase.TratarRupturaEstoqueUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,6 +39,7 @@ public class ItemRoteiroController {
     private final MarcarItemColetadoUseCase marcarItemColetadoUseCase;
     private final DesmarcarItemColetadoUseCase desmarcarItemColetadoUseCase;
     private final TratarRupturaEstoqueUseCase tratarRupturaEstoqueUseCase;
+    private final SubstituirItemDoRoteiroUseCase substituirItemDoRoteiroUseCase;
 
     @PatchMapping("/{itemId}/coletar")
     @Operation(summary = "Marcar item como coletado (UC-014)",
@@ -51,6 +57,28 @@ public class ItemRoteiroController {
                     + "deste - ou para a placa lida, se nao houver nenhum. Idempotente.")
     public ResponseEntity<ItemRoteiroDetalhadoResponse> desmarcar(@PathVariable UUID itemId) {
         return ResponseEntity.ok(desmarcarItemColetadoUseCase.executar(itemId));
+    }
+
+    @PostMapping("/{itemId}/substituir")
+    @Operation(summary = "Aceitar o substituto, trocando o item da lista",
+            description = "O produto que faltou sai da lista e o substituto entra, numa "
+                    + "chamada so - sem isso, aceitar a sugestao exigiria do cliente duas "
+                    + "acoes em pe no corredor. O substituto entra NAO coletado: ele pode "
+                    + "estar alguns metros adiante, e e o mapa que vai dizer onde. O registro "
+                    + "da ruptura permanece: ele e evidencia do que aconteceu na gondola.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Lista ja com a troca feita"),
+            @ApiResponse(responseCode = "400", description = "Corpo sem o produto substituto"),
+            @ApiResponse(responseCode = "404", description = "Item ou produto inexistente"),
+            @ApiResponse(responseCode = "409",
+                    description = "Sessao encerrada, ou tentativa de trocar o produto por ele mesmo")
+    })
+    public ResponseEntity<ListaRoteiroResponse> substituir(
+            @PathVariable UUID itemId,
+            @Valid @RequestBody SubstituirItemRequest requisicao) {
+
+        return ResponseEntity.ok(substituirItemDoRoteiroUseCase.executar(
+                itemId, requisicao.produtoSubstitutoId()));
     }
 
     /*
