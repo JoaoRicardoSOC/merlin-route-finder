@@ -12,6 +12,7 @@ import br.com.jence.backend.domain.exception.AssistenteIAIndisponivelException;
 import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.exception.SubstitutoIndisponivelException;
+import br.com.jence.backend.domain.repository.AfinidadeDeProduto;
 import br.com.jence.backend.domain.repository.ItemRoteiroRepository;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
@@ -148,8 +149,17 @@ public class TratarRupturaEstoqueUseCase {
                 .map(i -> i.getProduto().getId())
                 .collect(Collectors.toSet());
 
+        /*
+         * A afinidade entra na consulta, e nao numa reordenacao depois: o teto de candidatos e
+         * aplicado pelo banco, entao ordenar em memoria chegaria tarde - os semelhantes ja
+         * teriam sido cortados. Ver D-68.
+         */
+        AfinidadeDeProduto afinidade = AfinidadeDeProduto.de(
+                produtoRepository.buscarAtributosDe(emFalta.getId()));
+
         return produtoRepository
-                .buscarDisponiveisProximosDe(origem, emFalta.getId(), RAIO_DE_BUSCA, LIMITE_DE_CANDIDATOS)
+                .buscarDisponiveisProximosDe(origem, emFalta.getId(), afinidade,
+                        RAIO_DE_BUSCA, LIMITE_DE_CANDIDATOS)
                 .stream()
                 // Sugerir o que o cliente ja vai levar nao ajuda ninguem.
                 .filter(p -> !jaNoRoteiro.contains(p.getId()))
@@ -176,6 +186,13 @@ public class TratarRupturaEstoqueUseCase {
              * disponivel mais proximo entrega algo util sem fingir que houve analise.
              */
             log.warn("Assistente indisponivel na ruptura de '{}': {}", emFalta.getSku(), e.getMessage());
+
+            /*
+             * O primeiro candidato ja e o mais semelhante disponivel, e nao apenas o mais
+             * proximo: a consulta ordena por tipo, depois marca, depois distancia (D-68). Isso
+             * importa justamente aqui, no caminho que roda quando a cota do Gemini estoura -
+             * que e o cenario mais provavel de acontecer durante a banca.
+             */
             return Sugestao.porProximidade(candidatos.getFirst());
         }
     }

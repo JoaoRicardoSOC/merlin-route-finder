@@ -101,7 +101,8 @@ class TratarRupturaEstoqueUseCaseTest {
 
     /** A consulta espacial devolve, em ordem de distancia, os candidatos informados. */
     private void comCandidatosProximos(Produto... candidatos) {
-        when(produtoRepository.buscarDisponiveisProximosDe(any(), eq(lixaEmFalta.getId()), anyDouble(), anyInt()))
+        when(produtoRepository.buscarDisponiveisProximosDe(
+                any(), eq(lixaEmFalta.getId()), any(), anyDouble(), anyInt()))
                 .thenReturn(List.of(candidatos));
     }
 

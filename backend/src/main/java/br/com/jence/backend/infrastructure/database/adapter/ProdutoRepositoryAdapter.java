@@ -4,6 +4,7 @@ import br.com.jence.backend.domain.entity.AtributoProduto;
 import br.com.jence.backend.domain.entity.PontoMapa;
 import br.com.jence.backend.domain.entity.Produto;
 import br.com.jence.backend.domain.entity.ValorDeAtributo;
+import br.com.jence.backend.domain.repository.AfinidadeDeProduto;
 import br.com.jence.backend.domain.repository.FacetaDeProdutos;
 import br.com.jence.backend.domain.repository.FiltroDeProdutos;
 import br.com.jence.backend.domain.repository.Pagina;
@@ -263,6 +264,7 @@ public class ProdutoRepositoryAdapter implements ProdutoRepository {
     @Override
     @Transactional(readOnly = true)
     public List<Produto> buscarDisponiveisProximosDe(PontoMapa referencia, UUID excluido,
+                                                     AfinidadeDeProduto afinidade,
                                                      double raio, int limite) {
         return jpaRepository.buscarDisponiveisProximosDe(
                         referencia.getCoordenadaX(),
@@ -271,6 +273,8 @@ public class ProdutoRepositoryAdapter implements ProdutoRepository {
                         // O id e gravado como varchar (ver ProdutoEntity); na query nativa a
                         // comparacao precisa ser feita no mesmo tipo.
                         excluido.toString(),
+                        afinidade.tipo(),
+                        afinidade.marca(),
                         PageRequest.of(0, limite))
                 .getContent().stream()
                 .map(produtoFactory::paraDominio)

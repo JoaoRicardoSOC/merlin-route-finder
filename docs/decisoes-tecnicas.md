@@ -79,6 +79,7 @@
 - [D-65. Aceitar o substituto é uma ação só, e o substituto entra não coletado](#d-65-aceitar-o-substituto-e-uma-acao-so-e-o-substituto-entra-nao-coletado)
 - [D-66. Cada produto da massa é declarado uma vez, inteiro](#d-66-cada-produto-da-massa-e-declarado-uma-vez-inteiro)
 - [D-67. O teto de candidatos da ruptura envelheceu com o catálogo](#d-67-o-teto-de-candidatos-da-ruptura-envelheceu-com-o-catalogo)
+- [D-68. O substituto é escolhido por semelhança antes de proximidade](#d-68-o-substituto-é-escolhido-por-semelhança-antes-de-proximidade)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -1631,6 +1632,44 @@ O motivo e sutil e vale entender. Todos os produtos de uma secao compartilham a 
 **O que isso ensina sobre constantes dimensionadas.** O 10 nao estava errado quando foi escolhido; ele envelheceu com o dado. Uma constante que depende do tamanho da massa merece um teste que verifique a **propriedade** que ela deveria garantir, e nao o valor dela.
 
 **Onde no codigo.** `application/usecase/TratarRupturaEstoqueUseCase.java` — `LIMITE_DE_CANDIDATOS`.
+
+---
+
+### D-68. O substituto é escolhido por semelhança antes de proximidade
+
+**Contexto.** A pré-filtragem espacial ordenava os candidatos por distância. Isso funcionava com 29 produtos — mas **todos os produtos de uma seção compartilham a coordenada do bloco** ([D-58](#d-58-a-planta-da-loja-não-vive-no-banco-e-é-dela-que-saem-as-coordenadas-das-seções)), então empatam em distância e o desempate acabava sendo o nome.
+
+Com onze produtos por corredor, *"o mais próximo"* virou na prática **"o primeiro do corredor em ordem alfabética"**.
+
+**Como isso apareceu.** A jornada completa reescrita imprimiu a sugestão, e ela era absurda: **bandeja de pintura para uma lixa**. Medido nos cinco pares plantados na massa, o resultado foi **errado em cinco de cinco**:
+
+| Em falta | Esperado | O que saía |
+|---|---|---|
+| Lixa grão 120 | Lixa d'água 150 | Bandeja para Pintura |
+| Lâmpada LED 9W | Lâmpada LED 12W | Arandela Externa |
+| Sifão sanfonado | Sifão copo | Caixa Sifonada |
+| Trena 5m | Trena 7,5m | Alicate Universal |
+| Argamassa AC-II | Argamassa AC-III | Areia Ensacada |
+
+**Por que isso é grave, e não cosmético.** O primeiro candidato é exatamente o que o cliente recebe **quando o assistente está fora do ar ou a cota estourou** ([D-35](#d-35-o-cliente-de-ia-falha-explicitamente-o-fallback-é-de-quem-chama)) — e o tier gratuito permite cinco chamadas por minuto ([O-01](observacoes.md#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada)). É o caminho **mais provável de rodar durante a banca**.
+
+**Decisão.** A consulta passa a ordenar por **mesmo tipo, depois mesma marca, depois distância, depois nome**. A afinidade vem de `AtributoProduto.TIPO` e `MARCA`, que existem desde os filtros por característica ([D-62](#d-62-as-caracteristicas-dos-produtos-vivem-numa-tabela-nao-em-colunas)) — o dado já estava lá, faltava usá-lo.
+
+**Tipo pesa mais que marca** porque duas lixas continuam sendo lixas mesmo de fabricantes diferentes, enquanto duas Norton podem ser uma lixa e uma serra.
+
+**Por que na consulta, e não reordenando depois.** O teto de candidatos é aplicado pelo banco. Reordenar em memória chegaria tarde: os semelhantes já teriam sido cortados — que é precisamente o defeito.
+
+**Degrada sem quebrar.** Produto sem tipo nem marca faz os dois `CASE` devolverem 1 para todos, e a ordem cai de volta para distância e nome. Massa incompleta não vira erro em produção, e está sob teste.
+
+**Uma nuance que a medição revelou, e vale registrar.** Dos cinco pares, **três foram resolvidos pela marca, não pelo tipo**: `Lixa para parede` e `Lixa d'água` são tipos diferentes, assim como `Sifão sanfonado`/`Sifão copo` e `Argamassa AC-II`/`AC-III`.
+
+Isso expõe uma tensão real: `TIPO` serve a **dois propósitos**. Como faceta de filtro, o cliente quer que seja específico — distinguir AC-II de AC-III é útil na hora de escolher. Como sinal de afinidade, quereríamos algo mais geral.
+
+Não foi resolvido porque não há defeito a corrigir: o resultado está certo nos cinco casos. Se um dia aparecer um par de marcas diferentes com tipos específicos distintos, a saída é uma categoria acima do tipo — e aí sim com um caso concreto para justificá-la.
+
+**O assistente também ganha com isso.** A lista que chega ao modelo passa a vir ordenada por semelhança, então os candidatos mais plausíveis sobrevivem ao teto de 20 ([D-67](#d-67-o-teto-de-candidatos-da-ruptura-envelheceu-com-o-catalogo)).
+
+**Onde no código.** `domain/repository/AfinidadeDeProduto.java`, `infrastructure/database/repository/ProdutoJpaRepository.java`.
 
 ---
 

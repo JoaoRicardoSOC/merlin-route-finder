@@ -67,10 +67,16 @@ public interface ProdutoRepository {
      * real trazer tudo para a aplicacao so para descartar a maior parte seria inviavel. E e
      * esta lista - e somente ela - que o assistente pode considerar ao eleger um substituto.
      *
+     * <b>A ordenacao considera afinidade antes de distancia.</b> Nao por capricho: produtos da
+     * mesma secao compartilham a coordenada do bloco e empatam em distancia, entao ordenar so
+     * por proximidade faz o desempate cair no nome. Ver {@link AfinidadeDeProduto} e a D-68.
+     *
      * @param referencia ponto do produto em falta
      * @param excluido   id do proprio produto em falta, que nao pode substituir a si mesmo
+     * @param afinidade  o que o produto em falta e, para preferir semelhantes
      */
-    List<Produto> buscarDisponiveisProximosDe(PontoMapa referencia, UUID excluido, double raio, int limite);
+    List<Produto> buscarDisponiveisProximosDe(PontoMapa referencia, UUID excluido,
+                                              AfinidadeDeProduto afinidade, double raio, int limite);
 
     Produto salvar(Produto produto);
 }

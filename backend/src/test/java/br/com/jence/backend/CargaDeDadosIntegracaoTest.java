@@ -4,6 +4,7 @@ import br.com.jence.backend.application.usecase.TratarRupturaEstoqueUseCase;
 import br.com.jence.backend.domain.entity.PontoMapa;
 import br.com.jence.backend.domain.entity.Produto;
 import br.com.jence.backend.domain.entity.TipoPonto;
+import br.com.jence.backend.domain.repository.AfinidadeDeProduto;
 import br.com.jence.backend.domain.repository.PontoMapaRepository;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import br.com.jence.backend.infrastructure.database.seed.CarregadorDadosIniciais;
@@ -53,6 +54,7 @@ class CargaDeDadosIntegracaoTest {
 
             List<String> candidatos = produtoRepository.buscarDisponiveisProximosDe(
                             emFalta.getPontoMapa(), emFalta.getId(),
+                            AfinidadeDeProduto.de(produtoRepository.buscarAtributosDe(emFalta.getId())),
                             TratarRupturaEstoqueUseCase.RAIO_DE_BUSCA,
                             TratarRupturaEstoqueUseCase.LIMITE_DE_CANDIDATOS)
                     .stream().map(Produto::getSku).toList();

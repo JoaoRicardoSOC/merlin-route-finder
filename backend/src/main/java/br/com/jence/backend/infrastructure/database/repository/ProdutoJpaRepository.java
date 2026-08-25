@@ -54,6 +54,14 @@ public interface ProdutoJpaRepository extends JpaRepository<ProdutoEntity, UUID>
      * O produto em falta e excluido explicitamente. Ele esta a distancia zero de si mesmo e,
      * como o saldo do sistema pode nao refletir a prateleira vazia, apareceria como o
      * "melhor" candidato a substituir a si proprio.
+     *
+     * A ordenacao poe AFINIDADE antes de distancia: mesmo tipo primeiro, depois mesma marca, e
+     * so entao proximidade. Sem isso, produtos da mesma secao empatam em distancia e o
+     * desempate vira o nome - o que fez o fallback sugerir bandeja de pintura para uma lixa
+     * assim que o catalogo cresceu. Ver D-68.
+     *
+     * Tipo e marca nulos nao quebram nada: a comparacao com nulo nunca e verdadeira, os dois
+     * CASE devolvem 1 para todos, e a ordem cai de volta para distancia e nome.
      */
     @Query(
             value = """
@@ -62,7 +70,15 @@ public interface ProdutoJpaRepository extends JpaRepository<ProdutoEntity, UUID>
                     where p.saldo_estoque > 0
                       and p.id <> :excluido
                       and sqrt(power(m.coordenada_x - :x, 2) + power(m.coordenada_y - :y, 2)) <= :raio
-                    order by sqrt(power(m.coordenada_x - :x, 2) + power(m.coordenada_y - :y, 2)), p.nome
+                    order by
+                      case when exists (select 1 from tb_produto_atributo a
+                                         where a.produto_id = p.id
+                                           and a.chave = 'TIPO' and a.valor = :tipo) then 0 else 1 end,
+                      case when exists (select 1 from tb_produto_atributo a
+                                         where a.produto_id = p.id
+                                           and a.chave = 'MARCA' and a.valor = :marca) then 0 else 1 end,
+                      sqrt(power(m.coordenada_x - :x, 2) + power(m.coordenada_y - :y, 2)),
+                      p.nome
                     """,
             countQuery = """
                     select count(*) from tb_produto p
@@ -77,5 +93,7 @@ public interface ProdutoJpaRepository extends JpaRepository<ProdutoEntity, UUID>
                                                     @Param("y") int y,
                                                     @Param("raio") double raio,
                                                     @Param("excluido") String excluido,
+                                                    @Param("tipo") String tipo,
+                                                    @Param("marca") String marca,
                                                     Pageable pageable);
 }
