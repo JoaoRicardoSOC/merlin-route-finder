@@ -16,9 +16,19 @@
 
 ## Bloco 1 — Remover o que o novo escopo dispensou
 
-Três cards, **nesta ordem**: cada um remove um consumidor do seguinte, então inverter a ordem deixa código órfão no meio do caminho.
+Três cards, **nesta ordem**, que não é arbitrária: o ponto de interesse depende da ordem de caminho que o handoff calcula, e o handoff é o único consumidor do algoritmo de rota. Removendo nessa sequência, nenhum estado intermediário fica quebrado — a ordem inversa deixaria o endpoint de ponto de interesse respondendo com ordem nula entre um card e outro.
 
-### Card 1. Remover o handoff entre dispositivos
+### Card 1. Remover o ponto de interesse no meio da rota
+
+Sem rota, não existe posição em que inserir um desvio. O banheiro vira mais um ponto desenhado no mapa.
+
+**Sai:** `IncluirPontoDeInteresseUseCase`, o endpoint de pontos de interesse, o DTO de requisição, a rota do contrato e os testes.
+
+**Preservar:** a lógica que infere a posição do cliente a partir do último item coletado vive dentro deste caso de uso e **não pode ser perdida** — ela migra para a sessão no card 5. Ficou registrada na [D-49](decisoes-tecnicas.md#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada) antes da remoção.
+
+**Verificar:** suíte verde; contrato sem a rota; a inferência de posição está copiada em local seguro antes da remoção.
+
+### Card 2. Remover o handoff entre dispositivos
 
 Não há mais transição entre aparelhos: a jornada inteira acontece no celular do cliente.
 
@@ -26,21 +36,11 @@ Não há mais transição entre aparelhos: a jornada inteira acontece no celular
 
 **Some junto:** o único uso de JWT no projeto.
 
-**Cuidado:** `GerarHandoffUseCase` é hoje quem chama o cálculo de rota. Removê-lo primeiro deixa o card 3 mais simples.
+**Cuidado:** `GerarHandoffUseCase` é quem chama o cálculo de rota. Depois deste card, o algoritmo fica sem nenhum consumidor — o que torna o card 3 uma remoção limpa.
 
 **Verificar:** suíte verde; o contrato não descreve mais `/handoff`; `grep -ri jwt` no código de produção não devolve nada.
 
 **Documentar:** D-49 registrando o que saiu e por quê — D-08, D-27, D-29 e D-44 passam a descrever um mecanismo que não existe mais e precisam ser marcadas como superadas.
-
-### Card 2. Remover o ponto de interesse no meio da rota
-
-Sem rota, não existe posição em que inserir um desvio. O banheiro vira mais um ponto desenhado no mapa.
-
-**Sai:** `IncluirPontoDeInteresseUseCase`, o endpoint de pontos de interesse, o DTO de requisição, a rota do contrato e os testes.
-
-**Preservar:** a lógica que infere a posição do cliente a partir do último item coletado vive dentro deste caso de uso. **Ela não pode ser apagada** — vai migrar no card 5. Anotar isso antes de remover.
-
-**Verificar:** suíte verde; contrato sem a rota; a inferência de posição está copiada em local seguro antes da remoção.
 
 ### Card 3. Remover o cálculo de rota
 
@@ -72,7 +72,7 @@ O cliente entra na loja escaneando um QR afixado num corredor de passagem ou num
 
 **Entra:** `POST /sessoes` passa a aceitar o ponto escaneado; `Sessao` guarda a posição inicial; e a **posição atual** passa a ser exposta — vinda do último item coletado quando houver, e do ponto escaneado caso contrário.
 
-**É aqui que a inferência de posição preservada no card 2 volta a viver**, agora como conceito próprio da sessão em vez de detalhe de um desvio de rota.
+**É aqui que a inferência de posição preservada no card 1 volta a viver**, agora como conceito próprio da sessão em vez de detalhe de um desvio de rota.
 
 **Cuidado:** o ponto pode não existir mais — adesivo velho, loja remanejada. A sessão deve nascer **assim mesmo, sem posição**, e não recusar. Melhor um mapa sem "você está aqui" do que nenhum sistema.
 
@@ -181,7 +181,7 @@ Vinte e nove produtos deixam a busca sem sentido, a navegação por seção vazi
 ```
      commit do teste de jornada  (retrato do "antes")
                  |
-     1  handoff  ->  2  ponto de interesse  ->  3  rota
+     1  ponto de interesse  ->  2  handoff  ->  3  rota
                  |
      4  pontos de QR  ->  5  sessao com posicao  ->  6  recentrar
                  |

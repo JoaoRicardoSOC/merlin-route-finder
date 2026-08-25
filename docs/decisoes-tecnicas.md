@@ -60,6 +60,7 @@
 - [D-20. Google Gemini como provedor de LLM](#d-20-google-gemini-como-provedor-de-llm)
 - [D-21. Demo da banca por simulação animada, não posicionamento real](#d-21-demo-da-banca-por-simulação-animada-não-posicionamento-real)
 - [D-23. "Resolução síncrona de inventário" não é integração com ERP](#d-23-resolução-síncrona-de-inventário-não-é-integração-com-erp)
+- [D-49. O escopo revisado retirou o totem e a rota calculada](#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -622,6 +623,11 @@ Efeito colateral positivo: por usar os ports de domínio, o seeder funciona como
 
 ### D-31. Ponto de interesse não é persistido
 
+> [!NOTE]
+> **Superada em 25/08/2026.** O recurso foi removido junto com a rota calculada — sem rota, não existe posição em que inserir um desvio, e o banheiro virou apenas mais um ponto desenhado no mapa. Ver [D-49](#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada).
+>
+> O registro abaixo fica porque a **lógica de inferir a posição do cliente** nasceu aqui e sobreviveu à remoção, agora como conceito da sessão.
+
 **Contexto.** O UC-012 permite ao cliente pedir um banheiro ou caixa durante a caminhada. Mas um ponto de apoio **não é um produto**: não cabe como `ItemRoteiro`, que exige um `Produto`, e o DER entregue à banca não tem tabela para esse conceito.
 
 **Decisão.** O ponto de apoio é inserido apenas na rota **devolvida** pelo endpoint. Nada é gravado no banco.
@@ -1147,6 +1153,42 @@ A correção proposta — estreitar as escritas para item a item, em vez de grav
 **A lição.** Ler o código e concluir que há um defeito não é o mesmo que demonstrar o defeito. Aqui a inferência era plausível, o mecanismo perigoso existe de verdade — e mesmo assim o sistema estava correto, por uma razão que só apareceu ao medir. **Sem a exigência de prova, teríamos commitado uma correção elegante para um problema inexistente, com uma justificativa bem escrita para acompanhá-la.**
 
 **Onde no código.** `infrastructure/database/adapter/ListaRoteiroRepositoryAdapter.java`, `infrastructure/database/factory/ListaRoteiroFactory.java`, e os cinco testes acima.
+
+---
+
+### D-49. O escopo revisado retirou o totem e a rota calculada
+
+**Contexto.** Na mentoria de 24/08/2026, os representantes técnicos da Leroy Merlin deram duas orientações que mudaram a raiz do produto. As duas vieram de perguntas que o time levou preparadas.
+
+**1. Sem totem.** A jornada inteira passa a acontecer no celular do cliente, numa página web. Ele entra escaneando um **QR Code afixado na loja**, e cada QR carrega a posição onde está colado — é assim que o sistema sabe de onde ele partiu.
+
+**2. Sem rota calculada.** Perguntamos se otimizar o percurso não trabalharia contra a venda por impulso, já que a loja é organizada para o cliente passar por coisas que não veio buscar. A resposta foi que a Leroy já tem um circuito próprio, e a orientação foi **mostrar apenas a posição do cliente e a de cada produto da lista**, deixando o caminho por conta dele.
+
+**Isso aproxima o projeto do desafio.** O enunciado da FIAP nomeia o "problema do último metro" — achar o produto exato num layout complexo. Mostrar onde tudo está **é** a resposta a isso; a rota otimizada era acréscimo nosso. E some o totem, que era a parte menos realista da proposta.
+
+---
+
+**O que sai, e o que isso custa.** Três remoções, feitas em cards separados:
+
+| O que sai | Decisões que passam a descrever algo inexistente |
+|---|---|
+| Ponto de interesse no meio da rota | [D-31](#d-31-ponto-de-interesse-não-é-persistido) |
+| Handoff entre dispositivos, com JWT de uso único | [D-08](#d-08-o-domínio-registra-o-token-de-handoff-nunca-o-assina), [D-27](#d-27-segredo-do-jwt-por-ambiente-com-chave-aleatória-em-desenvolvimento), [D-29](#d-29-uso-único-do-token-pela-ausência-no-banco), [D-44](#d-44-o-token-de-handoff-sai-da-url-e-o-qr-code-passa-a-ser-regenerável) |
+| Nearest Neighbor e refinamento 2-opt | [D-26](#d-26-nearest-neighbor-como-heurística-de-roteamento), [D-28](#d-28-a-rota-parte-do-primeiro-ponto-do-tipo-totem), [D-43](#d-43-2-opt-sobre-o-nearest-neighbor-na-variante-de-caminho-aberto) |
+
+Junto vai o número de vitrine de **41% de redução de percurso**, que era um dos dois argumentos técnicos mais fortes para a banca. Não é desperdício: é o preço de ouvir quem conhece a operação da loja. **As decisões antigas ficam no documento**, marcadas como superadas — apagá-las esconderia o raciocínio que levou até aqui, e a banca pode perguntar exatamente isso.
+
+**A ordem das remoções não é arbitrária.** O ponto de interesse depende da ordem de caminho que o handoff calcula, e o handoff é o único consumidor do algoritmo de rota. Removendo nessa sequência — ponto de interesse, handoff, rota — nenhum estado intermediário fica quebrado. A ordem inversa deixaria o endpoint de ponto de interesse respondendo com ordem nula entre um card e outro.
+
+---
+
+**O que precisa sobreviver às remoções.** Uma lógica não óbvia mora dentro do caso de uso do ponto de interesse e **não pode ser perdida**: a posição atual do cliente é inferida do **último item marcado como coletado**; se nada foi coletado, ele ainda está a caminho da primeira parada.
+
+No escopo novo essa regra vale igual, com uma origem a mais: **a posição atual é a do último item coletado; na ausência dele, a do QR Code escaneado.** Ela renasce como conceito da própria `Sessao` — que é onde deveria ter estado desde o começo, em vez de detalhe interno de um desvio de rota.
+
+**O que sobrevive inteiro.** Busca tolerante a erro de digitação, detalhe de produto, lista de compras sem limite, assistente de IA, tratamento de ruptura com substituto, marcação de coletado, ciclo de vida da sessão e toda a infraestrutura publicada.
+
+**Onde no código.** As remoções acontecem nos três primeiros cards de [`backlog-escopo-revisado.md`](backlog-escopo-revisado.md). O escopo novo está descrito em [`fluxo-do-cliente.md`](fluxo-do-cliente.md).
 
 ---
 

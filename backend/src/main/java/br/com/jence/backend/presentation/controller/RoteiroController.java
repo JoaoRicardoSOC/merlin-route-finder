@@ -1,13 +1,10 @@
 package br.com.jence.backend.presentation.controller;
 
 import br.com.jence.backend.application.dto.AdicionarItemRequest;
-import br.com.jence.backend.application.dto.IncluirPontoInteresseRequest;
 import br.com.jence.backend.application.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.application.dto.ListaRoteiroResponse;
-import br.com.jence.backend.application.dto.RotaCalculadaResponse;
 import br.com.jence.backend.application.usecase.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.application.usecase.ConsultarListaRoteiroUseCase;
-import br.com.jence.backend.application.usecase.IncluirPontoDeInteresseUseCase;
 import br.com.jence.backend.application.usecase.RemoverProdutoDoRoteiroUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,7 +37,6 @@ public class RoteiroController {
     private final ConsultarListaRoteiroUseCase consultarListaRoteiroUseCase;
     private final AdicionarProdutoAoRoteiroUseCase adicionarProdutoAoRoteiroUseCase;
     private final RemoverProdutoDoRoteiroUseCase removerProdutoDoRoteiroUseCase;
-    private final IncluirPontoDeInteresseUseCase incluirPontoDeInteresseUseCase;
 
     @GetMapping
     @Operation(summary = "Consultar a lista de compras da sessao (UC-005)")
@@ -65,18 +61,6 @@ public class RoteiroController {
                 adicionarProdutoAoRoteiroUseCase.executar(sessaoId, request.produtoId());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(item);
-    }
-
-    @PostMapping("/pontos-interesse")
-    @Operation(summary = "Incluir ponto de apoio no trajeto (UC-012)",
-            description = "Acionado pelo celular durante a caminhada. Insere o banheiro ou caixa "
-                    + "mais proximo logo apos a posicao atual do cliente, sem alterar a ordem "
-                    + "das compras. O desvio nao e persistido (ver D-31).")
-    public ResponseEntity<RotaCalculadaResponse> incluirPontoDeInteresse(
-            @PathVariable UUID sessaoId,
-            @Valid @RequestBody IncluirPontoInteresseRequest request) {
-
-        return ResponseEntity.ok(incluirPontoDeInteresseUseCase.executar(sessaoId, request.tipo()));
     }
 
     @DeleteMapping("/itens/{itemId}")

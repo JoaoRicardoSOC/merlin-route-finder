@@ -214,24 +214,6 @@ class JornadaCompletaIntegracaoTest {
                 .as("toque duplo ou reenvio da rede nao e erro")
                 .isEqualTo(200);
 
-        // --- desvio ao banheiro entra no meio da rota (UC-012)
-        ResponseEntity<String> desvio = chamar(HttpMethod.POST,
-                "/sessoes/" + sessao + "/roteiro/pontos-interesse", "{\"tipo\":\"BANHEIRO\"}");
-        assertThat(desvio.getStatusCode().value()).isEqualTo(200);
-        JsonNode comDesvio = corpoDe(desvio);
-        assertThat(comDesvio.get("pontos")).hasSize(5);
-
-        boolean temParadaSemItem = false;
-        for (JsonNode ponto : comDesvio.get("pontos")) {
-            if (ponto.get("item").isNull()) {
-                temParadaSemItem = true;
-            }
-        }
-        assertThat(temParadaSemItem)
-                .as("o desvio e a unica parada sem item: e assim que o celular o distingue (D-31)")
-                .isTrue();
-        passo("desvio ao banheiro inserido: 5 paradas");
-
         // --- conclusao da jornada (UC-014)
         ResponseEntity<String> conclusao = chamar(HttpMethod.POST, "/sessoes/" + sessao + "/concluir", null);
         assertThat(conclusao.getStatusCode().value()).isEqualTo(200);

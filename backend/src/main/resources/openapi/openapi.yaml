@@ -210,33 +210,6 @@ paths:
         "409":
           $ref: "#/components/responses/SessaoInativa"
 
-  /sessoes/{sessaoId}/roteiro/pontos-interesse:
-    post:
-      tags: [Roteiro]
-      summary: Incluir ponto de interesse na rota em andamento (UC-012)
-      description: >
-        Acionado pelo Mobile para incluir um ponto de apoio (banheiro ou caixa) no trajeto,
-        sem que isso seja um produto do roteiro de compras. Localiza o PontoMapa do tipo
-        solicitado mais próximo e insere na sequência de navegação sem alterar a ordem dos
-        itens de compra já calculada.
-      parameters:
-        - $ref: "#/components/parameters/SessaoId"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/IncluirPontoInteresseRequest"
-      responses:
-        "200":
-          description: Rota atualizada com o ponto de interesse incluído
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/RotaCalculada"
-        "404":
-          $ref: "#/components/responses/NaoEncontrado"
-
   /roteiro/itens/{itemId}/coletar:
     patch:
       tags: [Roteiro]
@@ -602,15 +575,6 @@ components:
         produtoId:
           type: string
           format: uuid
-
-    IncluirPontoInteresseRequest:
-      type: object
-      required: [tipo]
-      properties:
-        tipo:
-          type: string
-          enum: [BANHEIRO, CAIXA]
-          description: Tipo de ponto de apoio a incluir na rota (não é um item de compra)
 
     EstoqueUpdateRequest:
       type: object
