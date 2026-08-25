@@ -25,17 +25,17 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * A jornada do cliente percorrida por HTTP, da entrada na loja ao encerramento.
+ * A jornada do cliente percorrida por HTTP, da placa na parede ao encerramento.
  * <p>
- * Ate ser escrito, esse percurso so tinha sido verificado a mao, com {@code curl} digitado
- * durante o desenvolvimento - o que provava que funcionava naquele momento, na maquina de uma
- * pessoa, e nao deixava nada para tras. Aqui ele vira ativo: roda em qualquer maquina com
- * banco, e quebra se alguem desalinhar dois passos que os testes de unidade veem separados.
+ * <b>E o nivel que importa para a integracao com o frontend.</b> Os testes de
+ * {@code @WebMvcTest} exercitam um controller com casos de uso simulados; aqui sobe a
+ * aplicacao inteira e cada chamada passa por serializacao, status HTTP, tratamento de erro e
+ * banco real - exatamente o que o celular do cliente vai encontrar.
  * <p>
- * <b>E o nivel que importa para a integracao com o frontend.</b> Os testes de {@code @WebMvcTest}
- * exercitam um controller com casos de uso simulados; aqui sobe a aplicacao inteira e as
- * chamadas passam por serializacao, status HTTP, tratamento de erro e banco real - exatamente
- * o que o celular do cliente vai encontrar.
+ * <b>Reescrito em 25/08/2026 para o escopo revisado.</b> A versao anterior descrevia a jornada
+ * antiga e nao tocava em metade do produto: entrada por placa, mapa, filtros, facetas,
+ * recentrar, desmarcar e aceitar substituto ficavam de fora. Um teste de vitrine que descreve
+ * um produto que nao existe mais e pior que nenhum, porque passa e da confianca.
  * <p>
  * Nao exige {@code GEMINI_API_KEY}: o passo da ruptura aceita tanto a escolha do assistente
  * quanto o substituto por proximidade, que e o fallback da D-38. Assim o teste roda para
@@ -59,6 +59,9 @@ class JornadaCompletaIntegracaoTest {
     @Autowired RegistroRupturaJpaRepository rupturaJpa;
 
     private final List<UUID> sessoesCriadas = new ArrayList<>();
+
+    /** A lixa grao 120 e o unico produto que nasce zerado: e o gatilho da ruptura. */
+    private static final String EM_FALTA = "SKU-TIN-003";
 
     @AfterEach
     void limpar() {
@@ -102,14 +105,19 @@ class JornadaCompletaIntegracaoTest {
         return corpoDe(r);
     }
 
+    private int status(HttpMethod metodo, String caminho, String corpo) {
+        return chamar(metodo, caminho, corpo).getStatusCode().value();
+    }
+
     private void passo(String descricao) {
         System.out.println(">>> " + descricao);
     }
 
     // ---------------------------------------------------------------- montagem
 
-    private UUID novaSessao() {
-        ResponseEntity<String> r = chamar(HttpMethod.POST, "/sessoes", null);
+    private UUID entrarPelaPlaca(String codigo) {
+        String corpo = codigo == null ? null : "{\"codigoPonto\":\"" + codigo + "\"}";
+        ResponseEntity<String> r = chamar(HttpMethod.POST, "/sessoes", corpo);
         assertThat(r.getStatusCode().value()).isEqualTo(201);
 
         UUID id = UUID.fromString(corpoDe(r).get("id").asText());
@@ -117,10 +125,19 @@ class JornadaCompletaIntegracaoTest {
         return id;
     }
 
-    private String idDoProduto(String sku, String termoDeBusca) {
-        for (JsonNode produto : get("/produtos?query=" + termoDeBusca).get("content")) {
+    private String idDoProduto(String sku) {
+        for (JsonNode produto : get("/produtos?size=100&query=" + sku.substring(8)).get("content")) {
             if (sku.equals(produto.get("sku").asText())) {
                 return produto.get("id").asText();
+            }
+        }
+        // O SKU nao serve de termo de busca para todo produto; cai para a varredura por secao.
+        for (JsonNode secao : get("/produtos/secoes")) {
+            for (JsonNode produto : get("/produtos?size=100&secao="
+                    + secao.get("nome").asText().replace(" ", "%20")).get("content")) {
+                if (sku.equals(produto.get("sku").asText())) {
+                    return produto.get("id").asText();
+                }
             }
         }
         throw new AssertionError("produto ausente na massa: " + sku);
@@ -133,146 +150,262 @@ class JornadaCompletaIntegracaoTest {
         return corpoDe(r);
     }
 
-    // ---------------------------------------------------------------- a jornada
+    private String corredorAtual(UUID sessaoId) {
+        JsonNode posicao = get("/sessoes/" + sessaoId).get("posicaoAtual");
+        return posicao.isNull() ? null : posicao.get("corredor").asText();
+    }
+
+    // ---------------------------------------------------------------- a jornada inteira
 
     @Test
-    @DisplayName("da entrada ao encerramento: montar a lista, caminhar, coletar e concluir")
+    @DisplayName("da placa na parede ao encerramento, passando por tudo que o cliente faz")
     void jornadaDoClienteNaLoja() {
-        UUID sessao = novaSessao();
-        passo("sessao aberta: " + sessao);
 
-        // --- busca tolerante a erro de digitacao (UC-002)
-        JsonNode busca = get("/produtos?query=tnta");
-        assertThat(busca.get("totalElements").asInt())
-                .as("'tnta' precisa achar 'Tinta': e a busca fuzzy do UC-002")
-                .isPositive();
+        // ---- 1. entra escaneando a placa da entrada
+        UUID sessao = entrarPelaPlaca("ENT-01");
+        JsonNode aberta = get("/sessoes/" + sessao);
+
+        assertThat(aberta.get("status").asText()).isEqualTo("ACTIVE");
+        assertThat(aberta.get("posicaoAtual").get("codigoCurto").asText()).isEqualTo("ENT01");
+        passo("entrou pela placa " + aberta.get("posicaoAtual").get("corredor").asText());
+
+        // ---- 2. abre o mapa, que nao depende da sessao
+        JsonNode mapa = get("/mapa");
+
+        assertThat(mapa.get("largura").asInt()).isEqualTo(100);
+        assertThat(mapa.get("blocos")).isNotEmpty();
+        assertThat(mapa.get("pontos")).isNotEmpty();
+        passo("mapa com " + mapa.get("blocos").size() + " corredores e "
+                + mapa.get("pontos").size() + " pontos de servico");
+
+        // ---- 3. navega pelo menu de secoes
+        JsonNode secoes = get("/produtos/secoes");
+        assertThat(secoes).isNotEmpty();
+        assertThat(secoes.get(0).get("quantidadeProdutos").asInt()).isPositive();
+
+        JsonNode emTintas = get("/produtos?secao=Tintas&size=50");
+        assertThat(emTintas.get("content")).isNotEmpty();
+        passo("Tintas tem " + emTintas.get("totalElements").asInt() + " produtos");
+
+        // ---- 4. usa uma faceta que a propria resposta ofereceu
+        JsonNode facetaMarca = null;
+        for (JsonNode faceta : emTintas.get("facetas")) {
+            if ("MARCA".equals(faceta.get("atributo").asText())) {
+                facetaMarca = faceta;
+            }
+        }
+        assertThat(facetaMarca)
+                .as("a tela de catalogo precisa de filtros para oferecer")
+                .isNotNull();
+
+        String marca = facetaMarca.get("valores").get(0).get("valor").asText();
+        long esperados = facetaMarca.get("valores").get(0).get("quantidade").asLong();
+
+        JsonNode filtrado = get("/produtos?secao=Tintas&size=50&atributo=MARCA:" + marca);
+
+        assertThat(filtrado.get("totalElements").asLong())
+                .as("a contagem da faceta precisa bater com o filtro que ela oferece")
+                .isEqualTo(esperados);
+        passo("filtrou Tintas por marca " + marca + " -> " + esperados + " produto(s)");
+
+        // ---- 5. busca errando a digitacao
+        JsonNode busca = get("/produtos?query=tnta&size=20");
+        assertThat(busca.get("content")).isNotEmpty();
         passo("busca por 'tnta' -> " + busca.get("content").get(0).get("nome").asText());
 
-        // --- monta o carrinho de roteiro (UC-004), de proposito fora de ordem geografica
-        adicionar(sessao, idDoProduto("SKU-DEC-001", "Espelho"));
-        adicionar(sessao, idDoProduto("SKU-MAT-002", "Cimento"));
-        adicionar(sessao, idDoProduto("SKU-JAR-001", "Vaso"));
-        String lixaEmFalta = idDoProduto("SKU-TIN-003", "Lixa");
-        adicionar(sessao, lixaEmFalta);
+        // ---- 6. abre o detalhe e ve as especificacoes
+        String tinta = busca.get("content").get(0).get("id").asText();
+        JsonNode detalhe = get("/produtos/" + tinta);
 
-        JsonNode roteiro = get("/sessoes/" + sessao + "/roteiro");
-        assertThat(roteiro.get("itens")).hasSize(4);
-        passo("roteiro montado com 4 itens");
+        assertThat(detalhe.get("descricao").asText()).isNotBlank();
+        assertThat(detalhe.get("pontoMapa").get("corredor").asText()).isNotBlank();
+        assertThat(detalhe.get("atributos"))
+                .as("a tela de detalhe mostra a tabela de especificacoes")
+                .isNotEmpty();
+        passo("detalhe de " + detalhe.get("nome").asText() + " com "
+                + detalhe.get("atributos").size() + " caracteristicas");
 
-        // --- produto repetido nao vira parada nova (D-18)
-        adicionar(sessao, idDoProduto("SKU-JAR-001", "Vaso"));
-        assertThat(get("/sessoes/" + sessao + "/roteiro").get("itens"))
-                .as("adicionar o mesmo produto duas vezes nao pode criar duas paradas")
-                .hasSize(4);
+        // ---- 7. monta a lista
+        String cano = idDoProduto("SKU-ENC-001");
+        String lixaZerada = idDoProduto(EM_FALTA);
 
-        // --- caminhada: o cliente escolhe por onde ir e marca o que pegou (UC-014)
-        passo("itens a coletar:");
-        for (JsonNode item : get("/sessoes/" + sessao + "/roteiro").get("itens")) {
-            System.out.printf("    %-32s %s%n",
-                    item.get("produto").get("nome").asText(),
-                    item.get("produto").get("pontoMapaId").asText().substring(0, 8));
-        }
+        adicionar(sessao, tinta);
+        String itemCano = adicionar(sessao, cano).get("id").asText();
+        String itemLixa = adicionar(sessao, lixaZerada).get("id").asText();
 
-        String primeiroItem = get("/sessoes/" + sessao + "/roteiro")
-                .get("itens").get(0).get("id").asText();
-        ResponseEntity<String> coleta = chamar(HttpMethod.PATCH,
-                "/roteiro/itens/" + primeiroItem + "/coletar", null);
-        assertThat(coleta.getStatusCode().value()).isEqualTo(200);
-        assertThat(corpoDe(coleta).get("coletado").asBoolean()).isTrue();
-        passo("primeiro item coletado");
+        JsonNode lista = get("/sessoes/" + sessao + "/roteiro");
+        assertThat(lista.get("quantidadeItens").asInt()).isEqualTo(3);
+        passo("lista montada com 3 itens");
 
-        // --- marcar de novo e idempotente (D-32)
-        assertThat(chamar(HttpMethod.PATCH, "/roteiro/itens/" + primeiroItem + "/coletar", null)
-                .getStatusCode().value())
-                .as("toque duplo ou reenvio da rede nao e erro")
+        // ---- 8. caminha e coleta: a posicao acompanha
+        assertThat(status(HttpMethod.PATCH, "/roteiro/itens/" + itemCano + "/coletar", null))
                 .isEqualTo(200);
 
-        // --- conclusao da jornada (UC-014)
-        ResponseEntity<String> conclusao = chamar(HttpMethod.POST, "/sessoes/" + sessao + "/concluir", null);
-        assertThat(conclusao.getStatusCode().value()).isEqualTo(200);
-        assertThat(corpoDe(conclusao).get("status").asText()).isEqualTo("COMPLETED");
-        passo("jornada concluida");
+        assertThat(corredorAtual(sessao))
+                .as("depois de pegar o cano, o cliente esta em Encanamento")
+                .isEqualTo("Encanamento");
+        passo("coletou o cano -> posicao em Encanamento");
 
-        // --- sessao encerrada: leitura sim, escrita nao (D-41)
-        assertThat(chamar(HttpMethod.GET, "/sessoes/" + sessao + "/chat/mensagens", null)
-                .getStatusCode().value())
-                .as("historico e registro do que aconteceu; continua legivel")
+        // ---- 9. tocou por engano: desmarca e a posicao volta
+        assertThat(status(HttpMethod.PATCH, "/roteiro/itens/" + itemCano + "/desmarcar", null))
                 .isEqualTo(200);
 
-        assertThat(chamar(HttpMethod.POST, "/sessoes/" + sessao + "/chat/mensagens",
-                "{\"conteudo\":\"ainda posso perguntar?\"}").getStatusCode().value())
-                .as("escrever numa jornada encerrada e incoerente")
-                .isEqualTo(409);
-    }
+        assertThat(corredorAtual(sessao))
+                .as("desfeita a coleta, ele volta a estar na placa de entrada")
+                .isEqualTo("Entrada da loja");
+        passo("desmarcou -> posicao de volta na entrada");
 
-    // ---------------------------------------------------------------- ruptura
+        // recoloca, porque ele de fato pegou o cano
+        chamar(HttpMethod.PATCH, "/roteiro/itens/" + itemCano + "/coletar", null);
 
-    @Test
-    @DisplayName("prateleira vazia devolve um substituto de verdade, com estoque e corredor")
-    void rupturaDevolveSubstitutoUtil() {
-        UUID sessao = novaSessao();
-        String item = adicionar(sessao, idDoProduto("SKU-TIN-003", "Lixa")).get("id").asText();
+        // ---- 10. chega na prateleira da lixa e ela esta vazia
+        ResponseEntity<String> respostaRuptura =
+                chamar(HttpMethod.POST, "/roteiro/itens/" + itemLixa + "/ruptura", null);
 
-        ResponseEntity<String> resposta = chamar(HttpMethod.POST,
-                "/roteiro/itens/" + item + "/ruptura", null);
-        assertThat(resposta.getStatusCode().value()).isEqualTo(200);
+        assertThat(respostaRuptura.getStatusCode().value())
+                .as("a massa garante um substituto plausivel para a lixa")
+                .isEqualTo(200);
 
-        JsonNode ruptura = corpoDe(resposta);
+        JsonNode ruptura = corpoDe(respostaRuptura);
         JsonNode sugerido = ruptura.get("produtoSugerido");
 
-        passo("sugerido: " + sugerido.get("nome").asText()
-                + " | " + sugerido.get("pontoMapa").get("corredor").asText()
-                + " | origem " + ruptura.get("origemSugestao").asText());
-        passo("justificativa: " + ruptura.get("justificativa").asText());
-
         assertThat(sugerido.get("saldoEstoque").asInt())
-                .as("sugerir produto sem estoque manda o cliente a outra prateleira vazia")
+                .as("nao adianta sugerir algo que tambem acabou")
                 .isPositive();
-        assertThat(sugerido.get("pontoMapa").get("corredor").asText())
-                .as("sem o corredor o cliente nao sabe para onde ir")
-                .isNotBlank();
-        assertThat(ruptura.get("justificativa").asText()).isNotBlank();
-
-        /*
-         * Aceita as duas origens de proposito: sem GEMINI_API_KEY o fluxo cai no substituto
-         * por proximidade (D-38), e o teste precisa continuar valendo para quem so tem banco.
-         */
         assertThat(ruptura.get("origemSugestao").asText())
                 .isIn("ASSISTENTE_IA", "PROXIMIDADE");
+        passo("prateleira vazia -> " + sugerido.get("nome").asText()
+                + " (" + ruptura.get("origemSugestao").asText() + ")");
+
+        // ---- 11. aceita o substituto: uma acao so
+        ResponseEntity<String> troca = chamar(HttpMethod.POST,
+                "/roteiro/itens/" + itemLixa + "/substituir",
+                "{\"produtoSubstitutoId\":\"" + sugerido.get("id").asText() + "\"}");
+
+        assertThat(troca.getStatusCode().value()).isEqualTo(200);
+        JsonNode depoisDaTroca = corpoDe(troca);
+
+        assertThat(depoisDaTroca.get("quantidadeItens").asInt())
+                .as("trocar nao muda o tamanho da lista")
+                .isEqualTo(3);
+
+        List<String> skus = new ArrayList<>();
+        depoisDaTroca.get("itens").forEach(item -> skus.add(item.get("produto").get("sku").asText()));
+
+        assertThat(skus).doesNotContain(EM_FALTA);
+        assertThat(skus).contains(sugerido.get("sku").asText());
+        passo("substituto aceito numa chamada; a lixa em falta saiu da lista");
+
+        // ---- 12. se perde e le outra placa
+        assertThat(status(HttpMethod.PUT, "/sessoes/" + sessao + "/posicao",
+                "{\"codigoPonto\":\"CEN-03\"}")).isEqualTo(200);
+
+        assertThat(corredorAtual(sessao)).isEqualTo("Cruzamento central");
+        assertThat(get("/sessoes/" + sessao + "/roteiro").get("quantidadeItens").asInt())
+                .as("recentrar nao pode mexer na lista")
+                .isEqualTo(3);
+        passo("recentrou no cruzamento central, com a lista intacta");
+
+        // ---- 13. encerra
+        JsonNode encerrada = corpoDe(chamar(HttpMethod.POST, "/sessoes/" + sessao + "/concluir", null));
+        assertThat(encerrada.get("status").asText()).isEqualTo("COMPLETED");
+        passo("jornada concluida");
+
+        // ---- 14. depois de encerrar: le, mas nao escreve
+        assertThat(status(HttpMethod.GET, "/sessoes/" + sessao + "/roteiro", null))
+                .as("a lista continua legivel depois de encerrada (D-41)")
+                .isEqualTo(200);
+
+        assertThat(status(HttpMethod.POST, "/sessoes/" + sessao + "/roteiro/itens",
+                "{\"produtoId\":\"" + tinta + "\"}"))
+                .as("escrever numa sessao encerrada e 409, e o frontend traduz isso")
+                .isEqualTo(409);
+        passo("sessao encerrada: leitura sim, escrita 409");
     }
 
-    // ---------------------------------------------------------------- recuperacao
+    // ---------------------------------------------------------------- entradas que dao errado
 
     @Test
-    @DisplayName("celular que perdeu a aba recupera a lista so com o id da sessao")
-    void celularSeRecuperaComOIdDaSessao() {
-        UUID sessao = novaSessao();
-        adicionar(sessao, idDoProduto("SKU-MAT-002", "Cimento"));
-        String lampada = adicionar(sessao, idDoProduto("SKU-ILU-001", "Lampada")).get("id").asText();
-
-        chamar(HttpMethod.PATCH, "/roteiro/itens/" + lampada + "/coletar", null);
-
+    @DisplayName("placa desconhecida nao barra a entrada: a sessao nasce sem posicao e funciona")
+    void placaDesconhecidaNaoBarraAEntrada() {
         /*
-         * O identificador da sessao vive no localStorage do navegador e sobrevive a fechar a
-         * aba. Ao voltar, o celular so precisa dele para reencontrar tudo - inclusive o que
-         * ja tinha sido coletado.
+         * A assimetria da D-57 vista de fora: aqui nao ha erro HTTP nenhum, e a unica pista de
+         * que algo deu errado e posicaoAtual vir nula. E por isso que a tela precisa olhar
+         * esse campo - se ignorar, o cliente digita errado e nao entende por que o mapa nao o
+         * localiza.
          */
-        JsonNode roteiro = get("/sessoes/" + sessao + "/roteiro");
+        UUID sessao = entrarPelaPlaca("ZZZ-99");
 
-        passo("recuperacao pelo id da sessao: " + roteiro.get("itens").size() + " itens");
+        assertThat(get("/sessoes/" + sessao).get("posicaoAtual").isNull()).isTrue();
 
-        assertThat(roteiro.get("itens")).hasSize(2);
-        assertThat(roteiro.get("itens").findValuesAsText("coletado"))
-                .as("o progresso do cliente precisa sobreviver a fechar a aba")
-                .contains("true");
+        String produto = idDoProduto("SKU-ENC-001");
+        assertThat(status(HttpMethod.POST, "/sessoes/" + sessao + "/roteiro/itens",
+                "{\"produtoId\":\"" + produto + "\"}"))
+                .as("sem posicao, mas com o sistema inteiro disponivel")
+                .isEqualTo(201);
+
+        passo("placa desconhecida: sessao viva, posicao nula");
     }
 
-    // ---------------------------------------------------------------- ferramenta de demo
+    @Test
+    @DisplayName("recentrar com placa desconhecida e recusado, e a posicao anterior fica de pe")
+    void recentrarComPlacaDesconhecida() {
+        // O outro lado da mesma assimetria: aqui o cliente ja tem sessao, e avisar e acionavel.
+        UUID sessao = entrarPelaPlaca("ENT-01");
+
+        assertThat(status(HttpMethod.PUT, "/sessoes/" + sessao + "/posicao",
+                "{\"codigoPonto\":\"ZZZ-99\"}")).isEqualTo(404);
+
+        assertThat(corredorAtual(sessao))
+                .as("errar a digitacao nao pode apagar o que o sistema ja sabia")
+                .isEqualTo("Entrada da loja");
+    }
+
+    @Test
+    @DisplayName("o codigo da placa e aceito em qualquer grafia")
+    void codigoEmQualquerGrafia() {
+        // O plano B: quem nao consegue escanear digita o que le na placa, do jeito que le.
+        // O codigo vai no CORPO da requisicao, entao nao ha nada a escapar - foi o erro da
+        // primeira versao deste teste, que codificava o espaco como se fosse URL.
+        for (String grafia : List.of("TIN-02", "tin-02", "TIN02", "tin 02")) {
+            UUID sessao = entrarPelaPlaca(grafia);
+            assertThat(get("/sessoes/" + sessao).get("posicaoAtual").get("codigoCurto").asText())
+                    .as("grafia %s", grafia)
+                    .isEqualTo("TIN02");
+        }
+    }
+
+    // ---------------------------------------------------------------- retomada e demonstracao
+
+    @Test
+    @DisplayName("celular que perdeu a aba recupera tudo so com o id da sessao")
+    void celularSeRecuperaComOIdDaSessao() {
+        /*
+         * O unico estado que o aparelho guarda e o sessaoId, no localStorage. Tudo o mais -
+         * lista, itens coletados, posicao - volta do banco. E o que impede uma aba fechada sem
+         * querer de virar "comece tudo de novo" no meio da loja.
+         */
+        UUID sessao = entrarPelaPlaca("ENT-01");
+        String cano = idDoProduto("SKU-ENC-001");
+        String item = adicionar(sessao, cano).get("id").asText();
+        chamar(HttpMethod.PATCH, "/roteiro/itens/" + item + "/coletar", null);
+
+        // ---- daqui para baixo, o app so tem o id da sessao
+        JsonNode estado = get("/sessoes/" + sessao);
+        JsonNode lista = get("/sessoes/" + sessao + "/roteiro");
+
+        assertThat(estado.get("status").asText()).isEqualTo("ACTIVE");
+        assertThat(estado.get("posicaoAtual").get("corredor").asText()).isEqualTo("Encanamento");
+        assertThat(lista.get("quantidadeItens").asInt()).isEqualTo(1);
+        assertThat(lista.get("itens").get(0).get("coletado").asBoolean()).isTrue();
+
+        passo("recuperacao pelo id da sessao: posicao e coleta preservadas");
+    }
 
     @Test
     @DisplayName("a simulacao de estoque cria e desfaz o cenario de ruptura sob demanda")
     void simulacaoDeEstoqueCriaEDesfazOCenario() {
-        String trena = idDoProduto("SKU-FER-002", "Trena");
+        String trena = idDoProduto("SKU-FER-002");
         int saldoOriginal = get("/produtos/" + trena).get("saldoEstoque").asInt();
 
         try {
@@ -281,7 +414,7 @@ class JornadaCompletaIntegracaoTest {
             assertThat(zerado.getStatusCode().value()).isEqualTo(200);
             assertThat(corpoDe(zerado).get("saldoEstoque").asInt()).isZero();
 
-            UUID sessao = novaSessao();
+            UUID sessao = entrarPelaPlaca("ENT-01");
             String item = adicionar(sessao, trena).get("id").asText();
 
             JsonNode ruptura = corpoDe(chamar(HttpMethod.POST,
