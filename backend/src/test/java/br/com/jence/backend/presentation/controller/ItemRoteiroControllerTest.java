@@ -44,7 +44,7 @@ class ItemRoteiroControllerTest {
         UUID produtoId = UUID.randomUUID();
         when(marcarItemColetadoUseCase.executar(itemId)).thenReturn(
                 new ItemRoteiroDetalhadoResponse(itemId, produtoId, true,
-                        new ProdutoResponse(produtoId, "SKU-ENC-001", "Cano PVC Soldavel 25mm 6m",
+                        new ProdutoResponse(produtoId, "SKU-ENC-001", "Cano PVC Soldavel 25mm 6m", null, null,
                                 new BigDecimal("28.90"), 35, UUID.randomUUID())));
 
         mockMvc.perform(patch("/api/v1/roteiro/itens/{i}/coletar", itemId))
@@ -80,7 +80,7 @@ class ItemRoteiroControllerTest {
         return new RupturaEstoqueResponse(
                 produtoOriginalId,
                 sugeridoId,
-                new ProdutoDetalhadoResponse(sugeridoId, "SKU-TIN-004", "Lixa d'Agua Grao 150",
+                new ProdutoDetalhadoResponse(sugeridoId, "SKU-TIN-004", "Lixa d'Agua Grao 150", null, null,
                         new BigDecimal("4.20"), 40, UUID.randomUUID(),
                         new PontoMapaResponse(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", null, 32, 10)),
                 "A lixa d'agua grao 150 da o mesmo acabamento e esta no mesmo corredor.",
@@ -111,7 +111,7 @@ class ItemRoteiroControllerTest {
         UUID sugeridoId = UUID.randomUUID();
         when(tratarRupturaEstoqueUseCase.executar(itemId)).thenReturn(new RupturaEstoqueResponse(
                 UUID.randomUUID(), sugeridoId,
-                new ProdutoDetalhadoResponse(sugeridoId, "SKU-TIN-002", "Rolo de La 23cm com Cabo",
+                new ProdutoDetalhadoResponse(sugeridoId, "SKU-TIN-002", "Rolo de La 23cm com Cabo", null, null,
                         new BigDecimal("34.90"), 25, UUID.randomUUID(),
                         new PontoMapaResponse(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", null, 32, 10)),
                 "Este e o produto disponivel mais proximo de onde voce esta.",

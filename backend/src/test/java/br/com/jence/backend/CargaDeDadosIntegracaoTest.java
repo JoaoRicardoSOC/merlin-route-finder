@@ -108,6 +108,55 @@ class CargaDeDadosIntegracaoTest {
         }
     }
 
+    // ---------------------------------------------------------------- apresentacao
+
+    @Test
+    void todoProdutoDaMassaTemDescricao() {
+        /*
+         * A carga e incremental e nunca reescreve um SKU que ja existe, entao os 29 produtos
+         * criados antes destes campos ficariam sem descricao para sempre se o passo de
+         * completar apresentacoes nao existisse. Este teste roda contra um banco que ja tinha
+         * a massa antiga - e por isso ele prova exatamente esse passo.
+         */
+        List<Produto> semDescricao = todosOsProdutos().stream()
+                .filter(produto -> produto.getDescricao() == null || produto.getDescricao().isBlank())
+                .toList();
+
+        assertThat(semDescricao)
+                .as("produtos sem descricao: %s",
+                        semDescricao.stream().map(Produto::getSku).toList())
+                .isEmpty();
+    }
+
+    @Test
+    void aDescricaoCabeNaColuna() {
+        // A coluna aceita 1000 caracteres; um texto maior nao falha em teste, falha na carga.
+        assertThat(todosOsProdutos()).allSatisfy(produto ->
+                assertThat(produto.getDescricao().length())
+                        .as("descricao de %s", produto.getSku())
+                        .isLessThanOrEqualTo(1000));
+    }
+
+    @Test
+    void produtoSemImagemContinuaUtilizavel() {
+        /*
+         * A coleta de URLs e incremental e feita pelo time (O-18): imagem nula e estado normal,
+         * nao defeito. O que nao pode e o produto deixar de responder por causa disso.
+         */
+        List<Produto> semImagem = todosOsProdutos().stream()
+                .filter(produto -> produto.getImagemUrl() == null)
+                .toList();
+
+        System.out.printf(">>> produtos sem imagem: %d de %d%n",
+                semImagem.size(), todosOsProdutos().size());
+
+        assertThat(semImagem).allSatisfy(produto -> {
+            assertThat(produto.getNome()).isNotBlank();
+            assertThat(produto.getDescricao()).isNotBlank();
+            assertThat(produto.getPontoMapa()).isNotNull();
+        });
+    }
+
     @Test
     void oCenarioPlantadoContinuaComEstoqueZerado() {
         // A lixa grao 120 e o unico produto que nasce zerado: e o gatilho da demonstracao.
@@ -119,6 +168,10 @@ class CargaDeDadosIntegracaoTest {
                 assertThat(porSku(sku).temDisponibilidade())
                         .as("o substituto %s precisa ter estoque", sku)
                         .isTrue());
+    }
+
+    private List<Produto> todosOsProdutos() {
+        return produtoRepository.buscarPaginado(0, 1000).conteudo();
     }
 
     private List<PontoMapa> todosOsPontos() {

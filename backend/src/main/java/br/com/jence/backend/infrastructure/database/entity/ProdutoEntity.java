@@ -36,6 +36,12 @@ public class ProdutoEntity {
     @Column(name = "nome", nullable = false, length = 200)
     private String nome;
 
+    @Column(name = "descricao", length = 1000)
+    private String descricao;
+
+    @Column(name = "imagem_url", length = 500)
+    private String imagemUrl;
+
     @Column(name = "preco", nullable = false, precision = 10, scale = 2)
     private BigDecimal preco;
 

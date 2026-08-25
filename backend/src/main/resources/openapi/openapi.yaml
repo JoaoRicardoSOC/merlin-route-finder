@@ -490,6 +490,14 @@ components:
           type: string
         nome:
           type: string
+        descricao:
+          type: string
+          nullable: true
+          description: O que o produto é e para que serve. Nulo enquanto ninguém escreveu.
+        imagemUrl:
+          type: string
+          nullable: true
+          description: URL pública da foto. **Nula é um estado normal** — a coleta das imagens é incremental, e a tela precisa tratar a ausência.
         preco:
           type: number
           format: double

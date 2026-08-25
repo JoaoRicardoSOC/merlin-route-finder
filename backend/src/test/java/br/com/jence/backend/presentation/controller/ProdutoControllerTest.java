@@ -41,7 +41,7 @@ class ProdutoControllerTest {
     @MockitoBean SimularEstoqueUseCase simularEstoqueUseCase;
 
     private ProdutoResponse produto(UUID id) {
-        return new ProdutoResponse(id, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L",
+        return new ProdutoResponse(id, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L", null, null,
                 new BigDecimal("289.90"), 12, UUID.randomUUID());
     }
 
@@ -101,7 +101,7 @@ class ProdutoControllerTest {
         UUID id = UUID.randomUUID();
         UUID pontoId = UUID.randomUUID();
         when(consultarProdutoUseCase.executar(id)).thenReturn(new ProdutoDetalhadoResponse(
-                id, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L", new BigDecimal("289.90"), 12,
+                id, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L", null, null, new BigDecimal("289.90"), 12,
                 pontoId, new PontoMapaResponse(pontoId, TipoPonto.PRATELEIRA, "Tintas", null, 32, 10)));
 
         mockMvc.perform(get("/api/v1/produtos/{id}", id))
@@ -150,7 +150,7 @@ class ProdutoControllerTest {
     void zerarEstoque() throws Exception {
         UUID produtoId = UUID.randomUUID();
         when(simularEstoqueUseCase.executar(eq(produtoId), eq(0))).thenReturn(
-                new ProdutoResponse(produtoId, "SKU-TIN-003", "Lixa para Parede Grao 120",
+                new ProdutoResponse(produtoId, "SKU-TIN-003", "Lixa para Parede Grao 120", null, null,
                         new BigDecimal("3.50"), 0, UUID.randomUUID()));
 
         mockMvc.perform(ajustarEstoque(produtoId, """
@@ -165,7 +165,7 @@ class ProdutoControllerTest {
     void restaurarEstoque() throws Exception {
         UUID produtoId = UUID.randomUUID();
         when(simularEstoqueUseCase.executar(eq(produtoId), eq(25))).thenReturn(
-                new ProdutoResponse(produtoId, "SKU-TIN-003", "Lixa para Parede Grao 120",
+                new ProdutoResponse(produtoId, "SKU-TIN-003", "Lixa para Parede Grao 120", null, null,
                         new BigDecimal("3.50"), 25, UUID.randomUUID()));
 
         mockMvc.perform(ajustarEstoque(produtoId, """

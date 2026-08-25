@@ -61,6 +61,18 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
      */
     private static final List<String> TIPOS_APOSENTADOS = List.of("TOTEM");
 
+    /*
+     * URLs publicas das fotos, coletadas do site da Leroy pelo time (O-18). Enquanto um SKU
+     * nao estiver aqui, o produto responde com imagem nula - o que a tela precisa tratar, e
+     * nao um estado invalido. Acrescentar uma URL aqui chega aos bancos que ja existem pelo
+     * passo de completarApresentacoes.
+     */
+    private static final Map<String, String> IMAGENS = Map.of();
+
+    /** Descricao e imagem de um produto, para completar o que ja esta gravado. */
+    private record Apresentacao(String descricao, String imagemUrl) {
+    }
+
     private final ProdutoRepository produtoRepository;
     private final PontoMapaRepository pontoMapaRepository;
     private final PontoMapaJpaRepository pontoMapaJpaRepository;
@@ -74,11 +86,19 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
     private static final class Contagem {
         private int pontos;
         private int produtos;
+        private int apresentacoes;
 
         private boolean nadaFeito() {
-            return pontos == 0 && produtos == 0;
+            return pontos == 0 && produtos == 0 && apresentacoes == 0;
         }
     }
+
+    /*
+     * Montado enquanto o catalogo e declarado, e consumido logo depois para completar o que ja
+     * estava gravado. Vive numa instancia por execucao pelo mesmo motivo da Contagem: o
+     * componente e um singleton do Spring.
+     */
+    private final Map<String, Apresentacao> apresentacoes = new LinkedHashMap<>();
 
     @Override
     public void run(ApplicationArguments args) {
@@ -106,13 +126,16 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         Map<String, PontoMapa> secoes = carregarOuCriarSecoes(contagem);
         criarPontosDeServicoQueFaltam(contagem);
         criarPontosDeQrCodeQueFaltam(contagem);
+        apresentacoes.clear();
         criarCatalogo(secoes, skusExistentes, contagem);
+        completarApresentacoes(contagem);
 
         if (contagem.nadaFeito()) {
             log.info("Massa de demonstracao ja esta completa. Nada a carregar.");
         } else {
-            log.info("Carga incremental: {} ponto(s) do mapa e {} produto(s) criados.",
-                    contagem.pontos, contagem.produtos);
+            log.info("Carga incremental: {} ponto(s) do mapa, {} produto(s) criados e "
+                            + "{} apresentacao(oes) completada(s).",
+                    contagem.pontos, contagem.produtos, contagem.apresentacoes);
         }
     }
 
@@ -208,40 +231,65 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
          * zerada e a lixa d'agua grao 150, na mesma secao, e o substituto plausivel que a IA
          * deve encontrar na pre-filtragem espacial.
          */
-        produto(jaExistentes, contagem, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L", "289.90", 12, secoes.get("Tintas"));
-        produto(jaExistentes, contagem, "SKU-TIN-002", "Rolo de La 23cm com Cabo", "34.90", 25, secoes.get("Tintas"));
-        produto(jaExistentes, contagem, "SKU-TIN-003", "Lixa para Parede Grao 120", "3.50", 0, secoes.get("Tintas"));
-        produto(jaExistentes, contagem, "SKU-TIN-004", "Lixa d'Agua Grao 150", "4.20", 40, secoes.get("Tintas"));
-        produto(jaExistentes, contagem, "SKU-TIN-005", "Fita Crepe 48mm x 50m", "12.90", 30, secoes.get("Tintas"));
+        produto(jaExistentes, contagem, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L", "289.90", 12, secoes.get("Tintas"),
+                "Tinta acrilica de acabamento fosco para paredes internas e externas. O balde de 18 litros rende cerca de 350 m2 por demao e disfarca imperfeicoes da superficie melhor que os acabamentos brilhantes.");
+        produto(jaExistentes, contagem, "SKU-TIN-002", "Rolo de La 23cm com Cabo", "34.90", 25, secoes.get("Tintas"),
+                "Rolo de la de carneiro 23 cm com cabo, para aplicar tinta acrilica ou latex em grandes areas. A la solta pouco pelo e nao deixa marca de emenda em parede lisa.");
+        produto(jaExistentes, contagem, "SKU-TIN-003", "Lixa para Parede Grao 120", "3.50", 0, secoes.get("Tintas"),
+                "Lixa de papel grao 120 para preparar parede antes da pintura. Grao medio: remove respingos e nivela massa corrida sem abrir sulcos no reboco.");
+        produto(jaExistentes, contagem, "SKU-TIN-004", "Lixa d'Agua Grao 150", "4.20", 40, secoes.get("Tintas"),
+                "Lixa d'agua grao 150 para acabamento fino em parede, madeira e metal. Usada umida, produz menos po e entope menos que a lixa comum.");
+        produto(jaExistentes, contagem, "SKU-TIN-005", "Fita Crepe 48mm x 50m", "12.90", 30, secoes.get("Tintas"),
+                "Fita crepe 48 mm x 50 m para proteger rodape, batente e tomada durante a pintura. Sai sem deixar residuo se removida em ate 24 horas.");
 
-        produto(jaExistentes, contagem, "SKU-FRG-001", "Parafuso Chipboard 4x40mm - 100un", "19.90", 80, secoes.get("Ferragens"));
-        produto(jaExistentes, contagem, "SKU-FRG-002", "Bucha de Nylon 8mm - 50un", "15.90", 65, secoes.get("Ferragens"));
+        produto(jaExistentes, contagem, "SKU-FRG-001", "Parafuso Chipboard 4x40mm - 100un", "19.90", 80, secoes.get("Ferragens"),
+                "Caixa com 100 parafusos chipboard 4x40 mm, cabeca chata e rosca soberba. Indicados para MDF, aglomerado e madeira macica sem necessidade de pre-furo em muitos casos.");
+        produto(jaExistentes, contagem, "SKU-FRG-002", "Bucha de Nylon 8mm - 50un", "15.90", 65, secoes.get("Ferragens"),
+                "Pacote com 50 buchas de nylon 8 mm para fixacao em alvenaria, concreto e bloco. Acompanham o furo de broca 8 mm e suportam prateleiras e suportes de TV leves.");
 
-        produto(jaExistentes, contagem, "SKU-ELE-001", "Cabo Flexivel 2,5mm 100m", "189.90", 8, secoes.get("Eletrica"));
-        produto(jaExistentes, contagem, "SKU-ELE-002", "Interruptor Simples Branco", "14.90", 50, secoes.get("Eletrica"));
-        produto(jaExistentes, contagem, "SKU-ELE-003", "Disjuntor Bipolar 25A", "42.90", 15, secoes.get("Eletrica"));
+        produto(jaExistentes, contagem, "SKU-ELE-001", "Cabo Flexivel 2,5mm 100m", "189.90", 8, secoes.get("Eletrica"),
+                "Rolo de 100 m de cabo flexivel 2,5 mm2, isolacao 750 V. Bitola usada em circuitos de tomadas de uso geral em residencias.");
+        produto(jaExistentes, contagem, "SKU-ELE-002", "Interruptor Simples Branco", "14.90", 50, secoes.get("Eletrica"),
+                "Interruptor simples de embutir, uma tecla, acabamento branco. Liga e desliga um ponto de luz a partir de um unico local.");
+        produto(jaExistentes, contagem, "SKU-ELE-003", "Disjuntor Bipolar 25A", "42.90", 15, secoes.get("Eletrica"),
+                "Disjuntor termomagnetico bipolar 25 A, padrao DIN. Protege circuitos de chuveiro e ar-condicionado contra sobrecarga e curto-circuito.");
 
-        produto(jaExistentes, contagem, "SKU-ENC-001", "Cano PVC Soldavel 25mm 6m", "28.90", 35, secoes.get("Encanamento"));
-        produto(jaExistentes, contagem, "SKU-ENC-002", "Cola para PVC 175g", "18.90", 22, secoes.get("Encanamento"));
-        produto(jaExistentes, contagem, "SKU-ENC-003", "Torneira Cromada para Banheiro", "129.90", 10, secoes.get("Encanamento"));
-        produto(jaExistentes, contagem, "SKU-ENC-004", "Sifao Sanfonado Universal", "22.50", 18, secoes.get("Encanamento"));
+        produto(jaExistentes, contagem, "SKU-ENC-001", "Cano PVC Soldavel 25mm 6m", "28.90", 35, secoes.get("Encanamento"),
+                "Barra de 6 m de cano PVC soldavel 25 mm para agua fria. Bitola mais comum em ramais de banheiro e cozinha em residencias.");
+        produto(jaExistentes, contagem, "SKU-ENC-002", "Cola para PVC 175g", "18.90", 22, secoes.get("Encanamento"),
+                "Adesivo plastico 175 g para soldar conexoes de PVC rigido. A junta pode receber agua depois de 12 horas de cura.");
+        produto(jaExistentes, contagem, "SKU-ENC-003", "Torneira Cromada para Banheiro", "129.90", 10, secoes.get("Encanamento"),
+                "Torneira de mesa para lavatorio de banheiro, acabamento cromado, bica baixa. Rosca padrao de 1/2 polegada.");
+        produto(jaExistentes, contagem, "SKU-ENC-004", "Sifao Sanfonado Universal", "22.50", 18, secoes.get("Encanamento"),
+                "Sifao sanfonado universal para pia e lavatorio. O corpo flexivel se ajusta a distancias diferentes entre o ralo e a parede, o que resolve instalacoes fora do esquadro.");
 
-        produto(jaExistentes, contagem, "SKU-COZ-001", "Cuba Inox 56x33cm", "249.90", 6, secoes.get("Cozinhas"));
-        produto(jaExistentes, contagem, "SKU-COZ-002", "Torneira Gourmet Cromada", "389.90", 4, secoes.get("Cozinhas"));
+        produto(jaExistentes, contagem, "SKU-COZ-001", "Cuba Inox 56x33cm", "249.90", 6, secoes.get("Cozinhas"),
+                "Cuba de aco inox 56x33 cm para bancada de cozinha, com valvula. Profundidade que acomoda panela grande sem respingar.");
+        produto(jaExistentes, contagem, "SKU-COZ-002", "Torneira Gourmet Cromada", "389.90", 4, secoes.get("Cozinhas"),
+                "Torneira gourmet de mesa com bica alta movel e acabamento cromado. A altura livre facilita encher panelas e jarras.");
 
-        produto(jaExistentes, contagem, "SKU-ILU-001", "Lampada LED 9W Branca - kit 3", "39.90", 60, secoes.get("Iluminacao"));
-        produto(jaExistentes, contagem, "SKU-ILU-002", "Luminaria de Embutir Quadrada", "69.90", 14, secoes.get("Iluminacao"));
+        produto(jaExistentes, contagem, "SKU-ILU-001", "Lampada LED 9W Branca - kit 3", "39.90", 60, secoes.get("Iluminacao"),
+                "Kit com 3 lampadas LED 9 W, luz branca, soquete E27. Cerca de 900 lumens cada, equivalentes a lampadas incandescentes de 60 W.");
+        produto(jaExistentes, contagem, "SKU-ILU-002", "Luminaria de Embutir Quadrada", "69.90", 14, secoes.get("Iluminacao"),
+                "Luminaria quadrada de embutir para forro de gesso, com recorte de 17 cm. Acompanha soquete e mola de fixacao.");
 
-        produto(jaExistentes, contagem, "SKU-JAR-001", "Vaso de Ceramica 30cm", "79.90", 12, secoes.get("Jardim"));
-        produto(jaExistentes, contagem, "SKU-JAR-002", "Terra Vegetal 20kg", "24.90", 30, secoes.get("Jardim"));
+        produto(jaExistentes, contagem, "SKU-JAR-001", "Vaso de Ceramica 30cm", "79.90", 12, secoes.get("Jardim"),
+                "Vaso de ceramica esmaltada 30 cm de diametro, com furo de drenagem. Indicado para plantas de porte medio em area interna ou varanda.");
+        produto(jaExistentes, contagem, "SKU-JAR-002", "Terra Vegetal 20kg", "24.90", 30, secoes.get("Jardim"),
+                "Saco de 20 kg de terra vegetal adubada, pronta para uso em vasos, canteiros e replantio. Nao precisa de correcao antes do plantio.");
 
-        produto(jaExistentes, contagem, "SKU-FER-001", "Furadeira de Impacto 650W", "299.90", 7, secoes.get("Ferramentas"));
-        produto(jaExistentes, contagem, "SKU-FER-002", "Trena 5m", "24.90", 45, secoes.get("Ferramentas"));
+        produto(jaExistentes, contagem, "SKU-FER-001", "Furadeira de Impacto 650W", "299.90", 7, secoes.get("Ferramentas"),
+                "Furadeira de impacto 650 W com mandril de 1/2 polegada e reversao. O modo impacto perfura concreto e alvenaria; sem impacto, madeira e metal.");
+        produto(jaExistentes, contagem, "SKU-FER-002", "Trena 5m", "24.90", 45, secoes.get("Ferramentas"),
+                "Trena de 5 m com fita de aco, trava e clipe de cinto. Fita de 19 mm, que mantem a rigidez em medidas longas sem apoio.");
 
-        produto(jaExistentes, contagem, "SKU-DEC-001", "Espelho Redondo 60cm", "159.90", 9, secoes.get("Decoracao"));
+        produto(jaExistentes, contagem, "SKU-DEC-001", "Espelho Redondo 60cm", "159.90", 9, secoes.get("Decoracao"),
+                "Espelho redondo de 60 cm com moldura fina e sistema de fixacao incluso. Amplia visualmente ambientes pequenos como lavabo e corredor.");
 
-        produto(jaExistentes, contagem, "SKU-MAT-001", "Argamassa AC-II 20kg", "28.90", 50, secoes.get("Materiais de construcao"));
-        produto(jaExistentes, contagem, "SKU-MAT-002", "Cimento CP-II 50kg", "42.90", 40, secoes.get("Materiais de construcao"));
+        produto(jaExistentes, contagem, "SKU-MAT-001", "Argamassa AC-II 20kg", "28.90", 50, secoes.get("Materiais de construcao"),
+                "Argamassa colante AC-II, saco de 20 kg, para assentamento de ceramica em area interna e externa. Suporta variacao de temperatura e umidade.");
+        produto(jaExistentes, contagem, "SKU-MAT-002", "Cimento CP-II 50kg", "42.90", 40, secoes.get("Materiais de construcao"),
+                "Saco de 50 kg de cimento Portland CP-II, de uso geral em concreto, argamassa e assentamento de blocos.");
 
         /*
          * Pares de substituicao acrescentados para a demonstracao (ver D-47 e O-14).
@@ -255,19 +303,55 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
          * verdade. Ficam em quatro secoes espalhadas pela loja, para a demonstracao poder
          * partir de qualquer canto do mapa.
          */
-        produto(jaExistentes, contagem, "SKU-ILU-003", "Lampada LED 12W Branca - kit 3", "49.90", 35, secoes.get("Iluminacao"));
-        produto(jaExistentes, contagem, "SKU-ENC-005", "Sifao Copo Cromado Universal", "39.90", 12, secoes.get("Encanamento"));
-        produto(jaExistentes, contagem, "SKU-FER-003", "Trena 7,5m", "34.90", 20, secoes.get("Ferramentas"));
-        produto(jaExistentes, contagem, "SKU-MAT-003", "Argamassa AC-III 20kg", "36.90", 28, secoes.get("Materiais de construcao"));
+        produto(jaExistentes, contagem, "SKU-ILU-003", "Lampada LED 12W Branca - kit 3", "49.90", 35, secoes.get("Iluminacao"),
+                "Kit com 3 lampadas LED 12 W, luz branca, soquete E27. Cerca de 1.250 lumens cada, indicadas para sala e cozinha.");
+        produto(jaExistentes, contagem, "SKU-ENC-005", "Sifao Copo Cromado Universal", "39.90", 12, secoes.get("Encanamento"),
+                "Sifao copo cromado universal para pia e lavatorio. O copo retem residuos e pode ser aberto para limpeza sem desmontar a instalacao.");
+        produto(jaExistentes, contagem, "SKU-FER-003", "Trena 7,5m", "34.90", 20, secoes.get("Ferramentas"),
+                "Trena de 7,5 m com fita de aco, trava e clipe de cinto. O alcance extra cobre comodos inteiros e vaos de parede numa medida so.");
+        produto(jaExistentes, contagem, "SKU-MAT-003", "Argamassa AC-III 20kg", "36.90", 28, secoes.get("Materiais de construcao"),
+                "Argamassa colante AC-III, saco de 20 kg, de aderencia reforcada. Indicada para porcelanato, pecas grandes e assentamento sobre piso antigo.");
     }
 
     private void produto(Set<String> jaExistentes, Contagem contagem, String sku, String nome,
-                         String preco, int estoque, PontoMapa ponto) {
+                         String preco, int estoque, PontoMapa ponto, String descricao) {
+        apresentacoes.put(sku, new Apresentacao(descricao, IMAGENS.get(sku)));
+
         if (jaExistentes.contains(sku)) {
             return;
         }
-        produtoRepository.salvar(
-                new Produto(UUID.randomUUID(), sku, nome, new BigDecimal(preco), estoque, ponto));
+        produtoRepository.salvar(new Produto(UUID.randomUUID(), sku, nome, descricao,
+                IMAGENS.get(sku), new BigDecimal(preco), estoque, ponto));
         contagem.produtos++;
+    }
+
+    /**
+     * Completa descricao e imagem de produtos que ja estavam gravados.
+     * <p>
+     * A carga e incremental e nunca reescreve um SKU existente (D-47), entao sem este passo os
+     * produtos criados antes destes campos existirem ficariam sem apresentacao para sempre -
+     * em todos os bancos do time e no publicado.
+     * <p>
+     * <b>So preenche o que esta vazio.</b> Nunca sobrescreve um texto ja gravado: se alguem
+     * ajustar uma descricao direto no banco, a proxima inicializacao nao desfaz.
+     */
+    private void completarApresentacoes(Contagem contagem) {
+        for (Produto produto : produtoRepository.buscarPaginado(0, LIMITE_DE_LEITURA).conteudo()) {
+            Apresentacao nova = apresentacoes.get(produto.getSku());
+            if (nova == null) {
+                continue;
+            }
+
+            String descricao = produto.getDescricao() == null ? nova.descricao() : produto.getDescricao();
+            String imagem = produto.getImagemUrl() == null ? nova.imagemUrl() : produto.getImagemUrl();
+
+            boolean mudou = !java.util.Objects.equals(descricao, produto.getDescricao())
+                    || !java.util.Objects.equals(imagem, produto.getImagemUrl());
+
+            if (mudou) {
+                produtoRepository.salvar(produto.comApresentacao(descricao, imagem));
+                contagem.apresentacoes++;
+            }
+        }
     }
 }

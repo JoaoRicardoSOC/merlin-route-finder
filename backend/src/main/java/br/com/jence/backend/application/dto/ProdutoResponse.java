@@ -15,6 +15,8 @@ public record ProdutoResponse(
         UUID id,
         String sku,
         String nome,
+        String descricao,
+        String imagemUrl,
         BigDecimal preco,
         int saldoEstoque,
         UUID pontoMapaId
@@ -24,6 +26,8 @@ public record ProdutoResponse(
                 produto.getId(),
                 produto.getSku(),
                 produto.getNome(),
+                produto.getDescricao(),
+                produto.getImagemUrl(),
                 produto.getPreco(),
                 produto.getSaldoEstoque(),
                 produto.getPontoMapa() != null ? produto.getPontoMapa().getId() : null

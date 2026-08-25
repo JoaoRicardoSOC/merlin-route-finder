@@ -70,6 +70,7 @@
 - [D-56. A coluna `coletado` continua sendo gravada, mesmo redundante](#d-56-a-coluna-coletado-continua-sendo-gravada-mesmo-redundante)
 - [D-57. O mesmo código inválido é aceito na entrada e recusado no recentrar](#d-57-o-mesmo-código-inválido-é-aceito-na-entrada-e-recusado-no-recentrar)
 - [D-58. A planta da loja não vive no banco, e é dela que saem as coordenadas das seções](#d-58-a-planta-da-loja-não-vive-no-banco-e-é-dela-que-saem-as-coordenadas-das-seções)
+- [D-59. A carga completa a apresentação de produtos que já estavam gravados](#d-59-a-carga-completa-a-apresentação-de-produtos-que-já-estavam-gravados)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -1422,6 +1423,24 @@ Isso não é purismo: é o que permite ao frontend buscar o mapa uma vez e guard
 **Consequência assumida.** Blocos são retângulos alinhados aos eixos. Uma loja real tem recortes, corredores diagonais e ilhas — nada disso é representável. É deliberado: retângulos com rótulo bastam para o cliente reconhecer onde está, e polígonos arbitrários custariam trabalho de frontend que o time não tem para dar.
 
 **Onde no código.** `domain/entity/PlantaDaLoja.java`, `domain/entity/BlocoMapa.java`, `application/usecase/ConsultarMapaUseCase.java`.
+
+---
+
+### D-59. A carga completa a apresentação de produtos que já estavam gravados
+
+**Contexto.** `Produto` ganhou descrição e URL de imagem. A carga inicial é **incremental** e nunca reescreve um SKU que já existe ([D-47](#d-47-a-massa-ganhou-pares-de-substituição-e-a-carga-passou-a-ser-incremental)) — foi assim que produtos novos passaram a chegar aos bancos com a massa antiga.
+
+Aqui a mesma regra vira armadilha: os 29 produtos criados antes destes campos **nunca receberiam descrição**. Em todos os schemas do time e no publicado, o catálogo ficaria com a tela de detalhe vazia — sem erro nenhum, sem nada no log.
+
+**Decisão.** Depois de criar o que falta, a carga faz um segundo passo: para cada produto do catálogo declarado, **preenche descrição e imagem que estiverem nulas** no banco.
+
+**Só preenche o que está vazio, nunca sobrescreve.** Se alguém ajustar um texto direto no banco, a próxima inicialização não desfaz. O custo é que corrigir um typo na descrição do código não se propaga sozinho para bancos que já a receberam — aceitável, e a alternativa (sobrescrever sempre) apagaria trabalho manual sem avisar.
+
+**A quarta vez que o mesmo padrão aparece.** [D-51](#d-51-um-valor-de-enum-removido-precisa-sumir-também-do-banco), [D-53](#d-53-a-aplicação-repara-a-restrição-de-enum-que-o-ddl-auto-update-deixa-envelhecer), [D-56](#d-56-a-coluna-coletado-continua-sendo-gravada-mesmo-redundante) e agora esta. Sem Flyway e com `ddl-auto: update`, **a carga inicial é o único lugar do sistema que pode reconciliar banco e código** — e toda mudança em dado existente precisa passar por ela explicitamente.
+
+**Imagem nula é estado normal, não defeito.** As URLs vêm do site público da Leroy e são coletadas à mão pelo time ([O-18](observacoes.md#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca)), de forma incremental. O contrato marca o campo como anulável e o teste verifica que um produto sem foto continua respondendo nome, descrição e localização. A coleta está organizada em [`imagens-dos-produtos.md`](imagens-dos-produtos.md).
+
+**Onde no código.** `infrastructure/database/seed/CarregadorDadosIniciais.java` — `completarApresentacoes`; `domain/entity/Produto.java` — `comApresentacao`.
 
 ---
 

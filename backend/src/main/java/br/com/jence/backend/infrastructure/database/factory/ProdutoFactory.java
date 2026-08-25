@@ -19,6 +19,8 @@ public class ProdutoFactory {
                 entity.getId(),
                 entity.getSku(),
                 entity.getNome(),
+                entity.getDescricao(),
+                entity.getImagemUrl(),
                 entity.getPreco(),
                 entity.getSaldoEstoque(),
                 pontoMapaFactory.paraDominio(entity.getPontoMapa())
@@ -33,6 +35,8 @@ public class ProdutoFactory {
                 produto.getId(),
                 produto.getSku(),
                 produto.getNome(),
+                produto.getDescricao(),
+                produto.getImagemUrl(),
                 produto.getPreco(),
                 produto.getSaldoEstoque(),
                 pontoMapaFactory.paraPersistencia(produto.getPontoMapa())

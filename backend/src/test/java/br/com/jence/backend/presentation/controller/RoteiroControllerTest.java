@@ -40,7 +40,7 @@ class RoteiroControllerTest {
 
     private ItemRoteiroDetalhadoResponse item(UUID itemId, UUID produtoId) {
         return new ItemRoteiroDetalhadoResponse(itemId, produtoId, false,
-                new ProdutoResponse(produtoId, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L",
+                new ProdutoResponse(produtoId, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L", null, null,
                         new BigDecimal("289.90"), 12, UUID.randomUUID()));
     }
 

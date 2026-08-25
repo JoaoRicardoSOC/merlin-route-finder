@@ -181,7 +181,7 @@ Eliminar de vez exigiria um código curto opaco com consulta separada, o que é 
 
 ### O-17. Documentos de trabalho precisam sair antes da entrega final
 
-**O quê.** Apagar [`perguntas-mentoria.md`](perguntas-mentoria.md) — e qualquer arquivo da mesma natureza que venha a existir — antes de enviar o repositório ao portal da faculdade.
+**O quê.** Apagar [`perguntas-mentoria.md`](perguntas-mentoria.md) e [`imagens-dos-produtos.md`](imagens-dos-produtos.md) — e qualquer arquivo da mesma natureza que venha a existir — antes de enviar o repositório ao portal da faculdade.
 
 **Por que importa.** Nem tudo que ajuda o time a trabalhar pertence à documentação do produto. O arquivo de perguntas foi escrito para preparar **uma reunião específica**, em uma data específica; passada ela, só acrescenta ruído a quem for avaliar o projeto.
 
@@ -209,7 +209,9 @@ Um catálogo maior também melhora o produto de graça:
 - **os pares de substituição aparecem sozinhos** — hoje há cinco, plantados à mão ([O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida)); com trezentos produtos, quase todo item passa a ter vizinho plausível;
 - **o mapa fica com densidade de loja de verdade.**
 
-**A tensão que precisa ser resolvida junto.** O escopo revisado ([`fluxo-do-cliente.md`](fluxo-do-cliente.md)) decidiu que cada produto ganha **descrição e imagem**, e que as URLs de imagem seriam coletadas manualmente do site da Leroy. **Isso não escala para trezentos produtos** — são trezentas buscas manuais.
+**A descrição já está resolvida.** Os 29 produtos atuais têm descrição escrita, e a carga completa quem já estava gravado ([D-59](decisoes-tecnicas.md#d-59-a-carga-completa-a-apresentação-de-produtos-que-já-estavam-gravados)). Produtos novos entram com a sua junto.
+
+**A tensão que continua de pé é a imagem.** As URLs vêm do site público da Leroy, coletadas à mão — a lista está pronta para preencher em [`imagens-dos-produtos.md`](imagens-dos-produtos.md). Para 29 produtos é uma tarde; **para trezentos, não escala**.
 
 Três saídas, e vale escolher antes de começar:
 
