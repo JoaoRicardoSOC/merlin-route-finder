@@ -5,6 +5,7 @@ import br.com.jence.backend.application.dto.PontoMapaResponse;
 import br.com.jence.backend.application.dto.ProdutoDetalhadoResponse;
 import br.com.jence.backend.application.dto.ProdutoResponse;
 import br.com.jence.backend.application.dto.RupturaEstoqueResponse;
+import br.com.jence.backend.application.usecase.DesmarcarItemColetadoUseCase;
 import br.com.jence.backend.application.usecase.MarcarItemColetadoUseCase;
 import br.com.jence.backend.application.usecase.TratarRupturaEstoqueUseCase;
 import br.com.jence.backend.domain.entity.OrigemSugestao;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -34,6 +36,7 @@ class ItemRoteiroControllerTest {
 
     @Autowired MockMvc mockMvc;
     @MockitoBean MarcarItemColetadoUseCase marcarItemColetadoUseCase;
+    @MockitoBean DesmarcarItemColetadoUseCase desmarcarItemColetadoUseCase;
     @MockitoBean TratarRupturaEstoqueUseCase tratarRupturaEstoqueUseCase;
 
     // ---------------------------------------------------------------- coleta (UC-014)
@@ -53,6 +56,35 @@ class ItemRoteiroControllerTest {
                 .andExpect(jsonPath("$.id").value(itemId.toString()))
                 .andExpect(jsonPath("$.coletado").value(true))
                 .andExpect(jsonPath("$.produto.nome").value("Cano PVC Soldavel 25mm 6m"));
+    }
+
+    @Test
+    @DisplayName("PATCH desmarcar devolve o item sem coleta")
+    void desmarcarItem() throws Exception {
+        UUID itemId = UUID.randomUUID();
+        UUID produtoId = UUID.randomUUID();
+        when(desmarcarItemColetadoUseCase.executar(itemId)).thenReturn(
+                new ItemRoteiroDetalhadoResponse(itemId, produtoId, false,
+                        new ProdutoResponse(produtoId, "SKU-ENC-001", "Cano PVC Soldavel 25mm 6m",
+                                null, null, new BigDecimal("28.90"), 35, UUID.randomUUID())));
+
+        mockMvc.perform(patch("/api/v1/roteiro/itens/{i}/desmarcar", itemId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(itemId.toString()))
+                .andExpect(jsonPath("$.coletado").value(false));
+
+        verify(desmarcarItemColetadoUseCase).executar(itemId);
+    }
+
+    @Test
+    @DisplayName("desmarcar item inexistente devolve 404")
+    void desmarcarItemInexistente() throws Exception {
+        UUID itemId = UUID.randomUUID();
+        when(desmarcarItemColetadoUseCase.executar(itemId))
+                .thenThrow(new RecursoNaoEncontradoException("Item do roteiro", itemId));
+
+        mockMvc.perform(patch("/api/v1/roteiro/itens/{i}/desmarcar", itemId))
+                .andExpect(status().isNotFound());
     }
 
     @Test

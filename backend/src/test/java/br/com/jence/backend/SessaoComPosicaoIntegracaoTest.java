@@ -5,6 +5,7 @@ import br.com.jence.backend.application.usecase.AdicionarProdutoAoRoteiroUseCase
 import br.com.jence.backend.application.usecase.ConsultarSessaoUseCase;
 import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
 import br.com.jence.backend.application.usecase.ConcluirRotaUseCase;
+import br.com.jence.backend.application.usecase.DesmarcarItemColetadoUseCase;
 import br.com.jence.backend.application.usecase.MarcarItemColetadoUseCase;
 import br.com.jence.backend.application.usecase.RecentrarSessaoUseCase;
 import br.com.jence.backend.domain.entity.ItemRoteiro;
@@ -43,6 +44,7 @@ class SessaoComPosicaoIntegracaoTest {
     @Autowired AdicionarProdutoAoRoteiroUseCase adicionar;
     @Autowired MarcarItemColetadoUseCase marcarColetado;
     @Autowired RecentrarSessaoUseCase recentrar;
+    @Autowired DesmarcarItemColetadoUseCase desmarcar;
     @Autowired ConcluirRotaUseCase concluir;
     @Autowired ProdutoRepository produtoRepository;
     @Autowired ListaRoteiroRepository listaRoteiroRepository;
@@ -213,6 +215,79 @@ class SessaoComPosicaoIntegracaoTest {
         SessaoResponse depois = recentrar.executar(sessao.id(), "CEN-03");
 
         assertThat(depois.expiracaoTtl()).isAfterOrEqualTo(sessao.expiracaoTtl());
+    }
+
+    // ---------------------------------------------------------------- desfazer uma coleta
+
+    @Test
+    @DisplayName("desmarcar devolve a posicao ao item coletado antes dele")
+    void desmarcarVoltaAoAnterior() {
+        SessaoResponse sessao = iniciarEm("ENT-01");
+        coletar(sessao.id(), "SKU-TIN-001");
+        UUID jardim = coletar(sessao.id(), "SKU-JAR-001");
+
+        assertThat(consultar.executar(sessao.id()).posicaoAtual().corredor()).isEqualTo("Jardim");
+
+        desmarcar.executar(jardim);
+
+        assertThat(consultar.executar(sessao.id()).posicaoAtual().corredor())
+                .as("desfazer a coleta em Jardim devolve o cliente a Tintas")
+                .isEqualTo("Tintas");
+    }
+
+    @Test
+    @DisplayName("desmarcar o unico coletado devolve a posicao a placa de entrada")
+    void desmarcarOUnico() {
+        SessaoResponse sessao = iniciarEm("ENT-01");
+        UUID tinta = coletar(sessao.id(), "SKU-TIN-001");
+
+        desmarcar.executar(tinta);
+
+        assertThat(consultar.executar(sessao.id()).posicaoAtual().codigoCurto())
+                .isEqualTo("ENT01");
+    }
+
+    @Test
+    @DisplayName("desmarcar tambem desfaz o estado do item, e nao so a posicao")
+    void desmarcarDesfazOItem() {
+        SessaoResponse sessao = iniciarEm("ENT-01");
+        UUID tinta = coletar(sessao.id(), "SKU-TIN-001");
+
+        assertThat(desmarcar.executar(tinta).coletado()).isFalse();
+
+        assertThat(listaRoteiroRepository.buscarPorSessao(sessao.id()).orElseThrow().getItens())
+                .as("o item continua na lista, apenas nao coletado")
+                .hasSize(1)
+                .noneMatch(ItemRoteiro::isColetado);
+    }
+
+    @Test
+    @DisplayName("desmarcar o que ja esta desmarcado nao e erro")
+    void desmarcarEIdempotente() {
+        // Rede reenviando, ou o cliente tocando duas vezes: nada disso pode virar erro.
+        SessaoResponse sessao = iniciarEm("ENT-01");
+        UUID tinta = coletar(sessao.id(), "SKU-TIN-001");
+
+        desmarcar.executar(tinta);
+
+        assertThat(desmarcar.executar(tinta).coletado()).isFalse();
+        assertThat(consultar.executar(sessao.id()).posicaoAtual().codigoCurto()).isEqualTo("ENT01");
+    }
+
+    @Test
+    @DisplayName("coletar de novo depois de desmarcar volta a mover a posicao")
+    void podeColetarDeNovo() {
+        /*
+         * O ciclo completo: o cliente desfaz por engano e refaz. Se marcarComoColetado
+         * continuasse guardando a hora da primeira vez, a posicao nao acompanharia.
+         */
+        SessaoResponse sessao = iniciarEm("ENT-01");
+        UUID tinta = coletar(sessao.id(), "SKU-TIN-001");
+
+        desmarcar.executar(tinta);
+        marcarColetado.executar(tinta);
+
+        assertThat(consultar.executar(sessao.id()).posicaoAtual().corredor()).isEqualTo("Tintas");
     }
 
     // ---------------------------------------------------------------- persistencia

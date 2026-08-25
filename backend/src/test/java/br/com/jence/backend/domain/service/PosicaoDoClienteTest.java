@@ -148,6 +148,58 @@ class PosicaoDoClienteTest {
         assertThat(PosicaoDoCliente.estimar(sessao, lista)).contains(PRATELEIRA_TINTAS);
     }
 
+    // ---------------------------------------------------------------- desfazer uma coleta
+
+    @Test
+    @DisplayName("desmarcar o ultimo coletado devolve a posicao ao anterior")
+    void desmarcarVoltaAoAnterior() {
+        /*
+         * Nada aqui mexe em posicao: so o instante da coleta e apagado. Ela volta sozinha
+         * porque nunca foi um campo gravado - e sempre deduzida do que aconteceu.
+         */
+        ItemRoteiro tinta = item(PRATELEIRA_TINTAS, AGORA.minusMinutes(20));
+        ItemRoteiro jardim = item(PRATELEIRA_JARDIM, AGORA.minusMinutes(2));
+        Sessao sessao = sessaoQueLeu(PLACA_ENTRADA, AGORA.minusHours(1));
+        ListaRoteiro lista = listaCom(tinta, jardim);
+
+        assertThat(PosicaoDoCliente.estimar(sessao, lista)).contains(PRATELEIRA_JARDIM);
+
+        jardim.desmarcarComoColetado();
+
+        assertThat(PosicaoDoCliente.estimar(sessao, lista)).contains(PRATELEIRA_TINTAS);
+    }
+
+    @Test
+    @DisplayName("desmarcar o unico coletado devolve a posicao a placa lida")
+    void desmarcarOUnicoVoltaAPlaca() {
+        ItemRoteiro tinta = item(PRATELEIRA_TINTAS, AGORA.minusMinutes(2));
+        Sessao sessao = sessaoQueLeu(PLACA_ENTRADA, AGORA.minusHours(1));
+        ListaRoteiro lista = listaCom(tinta);
+
+        tinta.desmarcarComoColetado();
+
+        assertThat(PosicaoDoCliente.estimar(sessao, lista)).contains(PLACA_ENTRADA);
+    }
+
+    @Test
+    @DisplayName("desmarcar com uma placa lida no meio devolve a posicao a ela, e nao ao item antigo")
+    void desmarcarComRecentragemNoMeio() {
+        /*
+         * O caso que uma reversao "manual" erraria. O cliente pegou a tinta, se perdeu e leu a
+         * placa central, depois pegou algo em Jardim. Desfazer a coleta de Jardim tem que
+         * deixa-lo no cruzamento - onde ele comprovadamente esteve depois de Tintas -, e nao
+         * de volta em Tintas.
+         */
+        ItemRoteiro tinta = item(PRATELEIRA_TINTAS, AGORA.minusMinutes(30));
+        ItemRoteiro jardim = item(PRATELEIRA_JARDIM, AGORA.minusMinutes(2));
+        Sessao sessao = sessaoQueLeu(PLACA_CENTRAL, AGORA.minusMinutes(15));
+        ListaRoteiro lista = listaCom(tinta, jardim);
+
+        jardim.desmarcarComoColetado();
+
+        assertThat(PosicaoDoCliente.estimar(sessao, lista)).contains(PLACA_CENTRAL);
+    }
+
     // ---------------------------------------------------------------- bordas
 
     @Test

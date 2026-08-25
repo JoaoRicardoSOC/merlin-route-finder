@@ -204,9 +204,11 @@ O cliente pega o produto da prateleira e marca.
 
 E pode **desmarcar** 🆕, se tiver tocado por engano — algo comum num celular, andando.
 
-**Backend:** marcar já existe e é idempotente. Falta **desmarcar**.
+**Backend:** `PATCH /roteiro/itens/{id}/coletar` e `PATCH /roteiro/itens/{id}/desmarcar`, os dois idempotentes.
 
-> A posição do cliente é inferida do último item coletado, então desmarcar também precisa reverter isso de forma coerente: a posição volta a ser a do item marcado anterior, ou a do último QR escaneado se não houver nenhum.
+> **A posição volta sozinha.** Ela não é gravada em lugar nenhum — é deduzida do item coletado mais recente comparado com a placa lida. Desmarcar só apaga o instante da coleta, e a dedução encontra o item anterior, ou a placa, sem nenhuma lógica de reversão.
+>
+> Inclusive no caso torto: se o cliente pegou a tinta, se perdeu, leu a placa do cruzamento e depois pegou algo em Jardim, desfazer a coleta de Jardim o deixa **no cruzamento** — e não de volta em Tintas.
 
 ---
 

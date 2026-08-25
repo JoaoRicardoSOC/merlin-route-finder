@@ -48,4 +48,17 @@ public class ItemRoteiro {
             this.coletadoEm = quando;
         }
     }
+
+    /**
+     * Desfaz a coleta: o cliente tocou por engano, ou devolveu o produto a prateleira.
+     * <p>
+     * Apagar o instante e tudo o que precisa acontecer. A posicao do cliente nao e um campo
+     * gravado em lugar nenhum - ela e deduzida do item coletado mais recente -, entao ela
+     * volta sozinha para onde estava. Ver D-64.
+     * <p>
+     * Idempotente: desmarcar o que ja esta desmarcado nao e erro.
+     */
+    public void desmarcarComoColetado() {
+        this.coletadoEm = null;
+    }
 }

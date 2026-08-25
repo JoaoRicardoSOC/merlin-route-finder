@@ -2,6 +2,7 @@ package br.com.jence.backend.presentation.controller;
 
 import br.com.jence.backend.application.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.application.dto.RupturaEstoqueResponse;
+import br.com.jence.backend.application.usecase.DesmarcarItemColetadoUseCase;
 import br.com.jence.backend.application.usecase.MarcarItemColetadoUseCase;
 import br.com.jence.backend.application.usecase.TratarRupturaEstoqueUseCase;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,6 +32,7 @@ import java.util.UUID;
 public class ItemRoteiroController {
 
     private final MarcarItemColetadoUseCase marcarItemColetadoUseCase;
+    private final DesmarcarItemColetadoUseCase desmarcarItemColetadoUseCase;
     private final TratarRupturaEstoqueUseCase tratarRupturaEstoqueUseCase;
 
     @PatchMapping("/{itemId}/coletar")
@@ -40,6 +42,15 @@ public class ItemRoteiroController {
                     + "onde o cliente esta. Idempotente.")
     public ResponseEntity<ItemRoteiroDetalhadoResponse> coletar(@PathVariable UUID itemId) {
         return ResponseEntity.ok(marcarItemColetadoUseCase.executar(itemId));
+    }
+
+    @PatchMapping("/{itemId}/desmarcar")
+    @Operation(summary = "Desfazer a coleta de um item",
+            description = "Acionado quando o cliente tocou por engano ou devolveu o produto a "
+                    + "prateleira. A posicao dele volta sozinha para o item marcado antes "
+                    + "deste - ou para a placa lida, se nao houver nenhum. Idempotente.")
+    public ResponseEntity<ItemRoteiroDetalhadoResponse> desmarcar(@PathVariable UUID itemId) {
+        return ResponseEntity.ok(desmarcarItemColetadoUseCase.executar(itemId));
     }
 
     /*

@@ -75,6 +75,7 @@
 - [D-61. As seções do menu saem do catálogo, não da planta](#d-61-as-seções-do-menu-saem-do-catálogo-não-da-planta)
 - [D-62. As características dos produtos vivem numa tabela, não em colunas](#d-62-as-caracteristicas-dos-produtos-vivem-numa-tabela-nao-em-colunas)
 - [D-63. As facetas ignoram a escolha do cliente sobre elas mesmas](#d-63-as-facetas-ignoram-a-escolha-do-cliente-sobre-elas-mesmas)
+- [D-64. Desmarcar um item não precisa mexer na posição do cliente](#d-64-desmarcar-um-item-não-precisa-mexer-na-posição-do-cliente)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -1545,6 +1546,28 @@ Diferente das descricoes ([D-59](#d-59-a-carga-completa-a-apresentação-de-prod
 **Chave desconhecida no filtro e ignorada, nao recusada.** Ela vem de um link antigo ou de uma caracteristica que saiu do sistema, e o cliente nao tem o que fazer a respeito: ignorar apenas alarga o resultado, enquanto um 400 deixaria a tela em branco por causa de um parametro que ele nem sabe que existe. Mesmo criterio da [D-57](#d-57-o-mesmo-código-inválido-é-aceito-na-entrada-e-recusado-no-recentrar).
 
 **Onde no codigo.** `domain/repository/FacetaDeProdutos.java`, `domain/repository/FiltroDeProdutos.java` — `semAtributos`.
+
+---
+
+### D-64. Desmarcar um item não precisa mexer na posição do cliente
+
+**Contexto.** Tocar por engano num celular, andando por uma loja, e comum — e ate agora nao havia volta: o item ficava marcado, e ainda **arrastava a posicao do cliente para uma prateleira onde ele nunca esteve**.
+
+O card previa o cuidado: *"a posicao vem do ultimo item coletado; desmarcar precisa reverte-la de forma coerente — para o item marcado anterior, ou para o ultimo QR escaneado se nao houver nenhum"*.
+
+**Decisao.** `desmarcarComoColetado()` apaga o instante da coleta. **E so.**
+
+**Por que nao ha nada a reverter.** A posicao nunca foi gravada em lugar nenhum: ela e deduzida, a cada consulta, do item coletado mais recente comparado com a placa lida ([D-55](#d-55-a-posição-do-cliente-vem-de-duas-pistas-e-vale-a-mais-recente)). Apagando o instante, o item simplesmente deixa de ser candidato, e a deducao encontra sozinha o anterior — ou a placa, se nao houver nenhum.
+
+**E o caso que uma reversao manual erraria.** Um codigo que guardasse "a posicao anterior" para restaurar acertaria o caso simples e erraria este: o cliente pega a tinta, se perde, le a placa do cruzamento, depois pega algo em Jardim. Desfazer a coleta de Jardim deve deixa-lo **no cruzamento** — onde ele comprovadamente esteve depois de Tintas —, e nao de volta em Tintas. A comparacao por data acerta isso sem saber que o caso existe. Esta sob teste.
+
+**A licao, que vale alem deste card.** Modelar o **fato** — *quando* o item foi coletado — em vez da **conclusao** — *onde* o cliente esta — foi o que fez a reversao sair de graca. Se `Sessao` guardasse `posicaoAtual` como campo, este card seria uma maquina de estados com casos de borda.
+
+**Idempotente por natureza.** Apagar um campo ja nulo nao faz nada, entao rede reenviando ou toque duplo nao viram erro — sem precisar de guarda.
+
+**Espelha o marcar, inclusive na renovacao da sessao:** corrigir um engano e atividade do cliente como qualquer outra.
+
+**Onde no codigo.** `domain/entity/ItemRoteiro.java` — `desmarcarComoColetado`; `application/usecase/DesmarcarItemColetadoUseCase.java`.
 
 ---
 

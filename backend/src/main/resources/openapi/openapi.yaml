@@ -349,6 +349,30 @@ paths:
         "404":
           $ref: "#/components/responses/NaoEncontrado"
 
+  /roteiro/itens/{itemId}/desmarcar:
+    patch:
+      tags: [Roteiro]
+      summary: Desfazer a coleta de um item
+      description: |
+        Acionado quando o cliente tocou por engano — comum num celular, andando — ou devolveu o produto à prateleira.
+
+        **A posição dele volta sozinha** para o item marcado antes deste, ou para a placa lida se não houver nenhum. Não é preciso informar nada: a posição é deduzida do que aconteceu, não gravada.
+
+        Idempotente: desmarcar o que já está desmarcado devolve 200 sem mudar nada.
+      parameters:
+        - $ref: "#/components/parameters/ItemId"
+      responses:
+        "200":
+          description: Item desmarcado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemRoteiroDetalhado"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+        "500":
+          $ref: "#/components/responses/ErroInterno"
+
   /roteiro/itens/{itemId}/ruptura:
     post:
       tags: [RupturaEstoque]
