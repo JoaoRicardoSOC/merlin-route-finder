@@ -80,6 +80,7 @@
 - [D-66. Cada produto da massa é declarado uma vez, inteiro](#d-66-cada-produto-da-massa-e-declarado-uma-vez-inteiro)
 - [D-67. O teto de candidatos da ruptura envelheceu com o catálogo](#d-67-o-teto-de-candidatos-da-ruptura-envelheceu-com-o-catalogo)
 - [D-68. O substituto é escolhido por semelhança antes de proximidade](#d-68-o-substituto-é-escolhido-por-semelhança-antes-de-proximidade)
+- [D-69. A massa passou a ser a fonte do nome e da descrição, e sobrescreve o banco](#d-69-a-massa-passou-a-ser-a-fonte-do-nome-e-da-descrição-e-sobrescreve-o-banco)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -1457,6 +1458,9 @@ Aqui a mesma regra vira armadilha: os 29 produtos criados antes destes campos **
 
 **Só preenche o que está vazio, nunca sobrescreve.** Se alguém ajustar um texto direto no banco, a próxima inicialização não desfaz. O custo é que corrigir um typo na descrição do código não se propaga sozinho para bancos que já a receberam — aceitável, e a alternativa (sobrescrever sempre) apagaria trabalho manual sem avisar.
 
+> [!NOTE]
+> **Esta regra foi revista em 25/08/2026.** O custo que aqui era aceitável deixou de ser quando os nomes reais dos produtos entraram na massa: a carga passou a **sobrescrever** nome, descrição e imagem. Ver [D-69](#d-69-a-massa-passou-a-ser-a-fonte-do-nome-e-da-descrição-e-sobrescreve-o-banco).
+
 **A quarta vez que o mesmo padrão aparece.** [D-51](#d-51-um-valor-de-enum-removido-precisa-sumir-também-do-banco), [D-53](#d-53-a-aplicação-repara-a-restrição-de-enum-que-o-ddl-auto-update-deixa-envelhecer), [D-56](#d-56-a-coluna-coletado-continua-sendo-gravada-mesmo-redundante) e agora esta. Sem Flyway e com `ddl-auto: update`, **a carga inicial é o único lugar do sistema que pode reconciliar banco e código** — e toda mudança em dado existente precisa passar por ela explicitamente.
 
 **Imagem nula é estado normal, não defeito.** As URLs vêm do site público da Leroy e são coletadas à mão pelo time ([O-18](observacoes.md#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens)), de forma incremental. O contrato marca o campo como anulável e o teste verifica que um produto sem foto continua respondendo nome, descrição e localização. A coleta está organizada em [`imagens-dos-produtos.md`](imagens-dos-produtos.md).
@@ -1670,6 +1674,38 @@ Não foi resolvido porque não há defeito a corrigir: o resultado está certo n
 **O assistente também ganha com isso.** A lista que chega ao modelo passa a vir ordenada por semelhança, então os candidatos mais plausíveis sobrevivem ao teto de 20 ([D-67](#d-67-o-teto-de-candidatos-da-ruptura-envelheceu-com-o-catalogo)).
 
 **Onde no código.** `domain/repository/AfinidadeDeProduto.java`, `infrastructure/database/repository/ProdutoJpaRepository.java`.
+
+### D-69. A massa passou a ser a fonte do nome e da descrição, e sobrescreve o banco
+
+**Contexto.** O time coletou as fotos dos produtos no site da Leroy e, no caminho, trocou os nomes inventados da massa pelos **nomes reais** dos produtos que fotografou. Isso obrigou a corrigir junto o atributo `MARCA` de 13 produtos — um espelho batizado *Gavix* não pode ter *Evolux* na ficha técnica — e quatro medidas que descreviam outro item.
+
+Aí a armadilha apareceu. Os dois caminhos de reconciliação da carga tinham regras opostas:
+
+| O que | Como chegava a um banco que já tinha o produto |
+|---|---|
+| Atributos (`MARCA`, medidas) | **Sobrescreve sempre** ([D-62](#d-62-as-caracteristicas-dos-produtos-vivem-numa-tabela-nao-em-colunas)) |
+| Nome | **Nunca** — a carga não reescreve SKU existente ([D-47](#d-47-a-massa-ganhou-pares-de-substituição-e-a-carga-passou-a-ser-incremental)) |
+| Descrição e imagem | Só se estivessem nulas ([D-59](#d-59-a-carga-completa-a-apresentação-de-produtos-que-já-estavam-gravados)) |
+
+O resultado seria um banco meio corrigido: **marca nova embaixo de nome velho**, em todos os schemas do time e no publicado, que é o que a banca vê. Sem erro, sem log, visível só olhando a tela.
+
+**Decisão.** A massa é a fonte de nome, descrição e imagem, e a carga **sobrescreve** os três quando divergem. `completarApresentacoes` virou `sincronizarApresentacoes`, e ficou com a mesma forma que os atributos já tinham: comparar o declarado com o gravado, e gravar quando diferente.
+
+**O que se perde.** A proteção que a [D-59](#d-59-a-carga-completa-a-apresentação-de-produtos-que-já-estavam-gravados) dava a um texto ajustado à mão direto no banco. Deixou de valer a pena: ninguém edita descrição por SQL, e o preço de manter a proteção era não conseguir corrigir nada depois de gravado. **Editar a massa no código passou a ser o único caminho** — e é o certo, porque é o que está versionado.
+
+**O que continua igual.** A carga não recria produto que existe, não mexe em preço nem em estoque, e imagem nula segue sendo estado normal ([O-18](observacoes.md#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens)).
+
+**A quinta vez que o mesmo padrão aparece.** [D-51](#d-51-um-valor-de-enum-removido-precisa-sumir-também-do-banco), [D-53](#d-53-a-aplicação-repara-a-restrição-de-enum-que-o-ddl-auto-update-deixa-envelhecer), [D-56](#d-56-a-coluna-coletado-continua-sendo-gravada-mesmo-redundante), [D-59](#d-59-a-carga-completa-a-apresentação-de-produtos-que-já-estavam-gravados) e agora esta. Sem Flyway e com `ddl-auto: update`, **a carga é o único lugar que reconcilia banco e código** — e a lição que se repete é que *qualquer* campo deixado de fora dela envelhece em silêncio.
+
+**Medido.** Rodando contra o Oracle da FIAP, a carga relatou 22 apresentações e 19 conjuntos de atributos atualizados num banco que já tinha os 111 produtos. Dois testes seguram a regra: um compara nome e descrição de todos os produtos com o que a massa declara, outro altera um produto à mão, recarrega e verifica que voltou.
+
+**Uma tentativa que a suíte recusou, e fez bem.** Cinco dos nomes reais não declaram marca nenhuma, e a primeira versão tirou o atributo `MARCA` deles por coerência. O teste que exige marca em todo produto falhou — e a razão dele está escrita na própria justificativa: **produto sem marca desaparece assim que o cliente escolhe qualquer marca no filtro**. Os cinco voltaram a ter a marca inventada, que não contradiz nada porque o nome real não menciona marca alguma. Está anotado em [`imagens-dos-produtos.md`](imagens-dos-produtos.md#o-que-entrou-junto-com-os-nomes-reais--aplicado-em-25082026) que a marca verdadeira desses cinco está no campo *Marca* da página do site.
+
+**Sobre os acentos, que entraram junto.** Os nomes reais têm acento e a massa não tinha nenhum. Medido no Oracle: o banco é `AL32UTF8`, o texto volta idêntico e o Maven já compila em UTF-8. O `LIKE` deixa de achar quem digita sem acento — `flexivel` não encontra *Flexível* —, mas o `JARO_WINKLER` entre as duas formas ficou entre **85 e 94**, bem acima do corte de 70 da busca ([D-15](#d-15-query-nativa-com-utl_match-para-busca-tolerante-a-erro-de-digitação)). A busca continua achando, por semelhança em vez de correspondência exata. Existe saída se um dia incomodar — `convert(nome, 'US7ASCII')` dos dois lados do `LIKE` —, e não foi aplicada porque não há caso falhando.
+
+**Onde no código.** `infrastructure/database/seed/CarregadorDadosIniciais.java` — `sincronizarApresentacoes` e o mapa `IMAGENS`; `domain/entity/Produto.java` — `comApresentacao`.
+
+---
 
 ---
 

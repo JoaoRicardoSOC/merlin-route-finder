@@ -60,13 +60,16 @@ public class Produto {
     }
 
     /**
-     * Devolve uma copia com descricao e imagem preenchidas.
+     * Devolve uma copia com outro nome, outra descricao e outra imagem.
      * <p>
-     * Existe para a carga inicial completar produtos que ja estavam no banco antes de estes
-     * campos existirem: a carga e incremental e nunca reescreve um SKU que ja esta la, entao
-     * sem isto os 29 produtos originais ficariam sem apresentacao para sempre. Ver D-59.
+     * Existe para a carga inicial fazer o que esta gravado voltar a bater com o que a massa
+     * declara: a carga e incremental e nunca reescreve um SKU que ja esta la, entao sem isto
+     * qualquer correcao ficaria so no codigo, inclusive no banco publicado. Ver D-59 e D-69.
+     * <p>
+     * O nome entra aqui, e nao num metodo proprio, porque os tres campos mudam pelo mesmo
+     * motivo e na mesma passagem - separar daria dois caminhos para a mesma correcao.
      */
-    public Produto comApresentacao(String novaDescricao, String novaImagemUrl) {
-        return new Produto(id, sku, nome, novaDescricao, novaImagemUrl, preco, saldoEstoque, pontoMapa);
+    public Produto comApresentacao(String novoNome, String novaDescricao, String novaImagemUrl) {
+        return new Produto(id, sku, novoNome, novaDescricao, novaImagemUrl, preco, saldoEstoque, pontoMapa);
     }
 }

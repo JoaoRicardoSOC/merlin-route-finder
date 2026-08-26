@@ -163,11 +163,11 @@ final class CatalogoDaMassa {
                         de(BITOLA, "8 mm"),de(QUANTIDADE, "100 un")));
 
         // ---------------------------------------------------------------- Eletrica
-        produto("SKU-ELE-001", "Cabo Flexivel 2,5mm 100m", "Eletrica", "189.90", 8,
+        produto("SKU-ELE-001", "Cabo Flexível 2,5mm 100m Azul 750V Megatron", "Eletrica", "189.90", 8,
                 "Rolo de 100 m de cabo flexivel 2,5 mm2, isolacao 750 V. Bitola usada em circuitos de tomadas de uso geral em residencias.",
-                List.of(de(MARCA, "Sil"),de(TIPO, "Cabo flexivel"),de(BITOLA, "2,5 mm2"),
+                List.of(de(MARCA, "Megatron"),de(TIPO, "Cabo flexivel"),de(BITOLA, "2,5 mm2"),
                         de(COMPRIMENTO, "100 m")));
-        produto("SKU-ELE-002", "Interruptor Simples Branco", "Eletrica", "14.90", 50,
+        produto("SKU-ELE-002", "Interruptor Simples 4x2 C/ 1 Tecla 10a 250v Branco Tramontina", "Eletrica", "14.90", 50,
                 "Interruptor simples de embutir, uma tecla, acabamento branco. Liga e desliga um ponto de luz a partir de um unico local.",
                 List.of(de(MARCA, "Tramontina"),de(TIPO, "Interruptor simples"),de(COR, "Branco")));
         produto("SKU-ELE-003", "Disjuntor Bipolar 25A", "Eletrica", "42.90", 15,
@@ -255,40 +255,40 @@ final class CatalogoDaMassa {
                         de(DIMENSAO, "100x100x50 mm")));
 
         // ---------------------------------------------------------------- Cozinhas
-        produto("SKU-COZ-001", "Cuba Inox 56x33cm", "Cozinhas", "249.90", 6,
-                "Cuba de aco inox 56x33 cm para bancada de cozinha, com valvula. Profundidade que acomoda panela grande sem respingar.",
+        produto("SKU-COZ-001", "Cuba Retangular Tramontina Em Aco Inox Acetinado 56x34cm 56 Bl Com Valvula", "Cozinhas", "249.90", 6,
+                "Cuba de aco inox 56x34 cm para bancada de cozinha, com valvula. Profundidade que acomoda panela grande sem respingar.",
                 List.of(de(MARCA, "Tramontina"),de(TIPO, "Cuba de bancada"),de(MATERIAL, "Inox"),
-                        de(DIMENSAO, "56x33 cm")));
-        produto("SKU-COZ-002", "Torneira Gourmet Cromada", "Cozinhas", "389.90", 4,
+                        de(DIMENSAO, "56x34 cm")));
+        produto("SKU-COZ-002", "Torneira Monocomando Gourmet de Pia para Cozinha com Bica Alta Flexível Cromada Tomas Delinia", "Cozinhas", "389.90", 4,
                 "Torneira gourmet de mesa com bica alta movel e acabamento cromado. A altura livre facilita encher panelas e jarras.",
-                List.of(de(MARCA, "Docol"),de(TIPO, "Torneira gourmet"),de(ACABAMENTO, "Cromado")));
-        produto("SKU-COZ-003", "Cuba Inox 40x34cm", "Cozinhas", "179.90", 10,
+                List.of(de(MARCA, "Delinia"),de(TIPO, "Torneira gourmet"),de(ACABAMENTO, "Cromado")));
+        produto("SKU-COZ-003", "Cuba De Embutir Retangular 40 Bl Standard 40x34 Cm Sem Válvula Tramontina Inox", "Cozinhas", "179.90", 10,
                 "Cuba de aco inox 40x34 cm, dimensao que cabe em bancadas mais estreitas sem abrir mao da profundidade.",
                 List.of(de(MARCA, "Tramontina"),de(TIPO, "Cuba de bancada"),de(MATERIAL, "Inox"),
                         de(DIMENSAO, "40x34 cm")));
-        produto("SKU-COZ-004", "Cuba Dupla Inox 84x40cm", "Cozinhas", "429.90", 5,
+        produto("SKU-COZ-004", "Cuba para Cozinha Dupla de Embutir ou Sobrepor em Aço Inox 304 Fosco Retangular 70x40x17cm 0,6mm 3.1/2\" Mekal", "Cozinhas", "429.90", 5,
                 "Cuba dupla em inox, que permite lavar de um lado e escorrer do outro sem trocar a agua.",
-                List.of(de(MARCA, "Tramontina"),de(TIPO, "Cuba de bancada"),de(MATERIAL, "Inox"),
-                        de(DIMENSAO, "84x40 cm")));
-        produto("SKU-COZ-005", "Torneira de Parede para Cozinha Cromada", "Cozinhas", "189.90", 14,
+                List.of(de(MARCA, "Mekal"),de(TIPO, "Cuba de bancada"),de(MATERIAL, "Inox"),
+                        de(DIMENSAO, "70x40x17 cm")));
+        produto("SKU-COZ-005", "Torneira Misturador de Parede para Cozinha com Bica Alta Cromada Sao Delinia", "Cozinhas", "189.90", 14,
                 "Torneira de parede com bica movel, indicada quando a instalacao de agua sai acima da bancada.",
-                List.of(de(MARCA, "Docol"),de(TIPO, "Torneira de parede"),de(ACABAMENTO, "Cromado")));
-        produto("SKU-COZ-006", "Torneira Gourmet Preta Fosca", "Cozinhas", "449.90", 6,
+                List.of(de(MARCA, "Delinia"),de(TIPO, "Torneira de parede"),de(ACABAMENTO, "Cromado")));
+        produto("SKU-COZ-006", "Torneira Monocomando de Pia para Cozinha com Bica Alta Extensível Preta Fosca Econocozi Jiwi", "Cozinhas", "449.90", 6,
                 "Mesma bica alta movel da versao cromada, com acabamento preto fosco.",
-                List.of(de(MARCA, "Docol"),de(TIPO, "Torneira gourmet"),
+                List.of(de(MARCA, "Jiwi"),de(TIPO, "Torneira gourmet"),
                         de(ACABAMENTO, "Preto fosco"),de(COR, "Preto")));
-        produto("SKU-COZ-007", "Lixeira de Embutir para Bancada 5L", "Cozinhas", "129.90", 12,
+        produto("SKU-COZ-007", "Lixeira Inox Escovado 5 Litros Embutir Pia Cozinha Cesto Lixo Bancada Granito Marmore Tampa Oculta", "Cozinhas", "129.90", 12,
                 "Lixeira embutida no tampo, com tampa que fecha rente a bancada.",
                 List.of(de(MARCA, "Tramontina"),de(TIPO, "Lixeira"),de(MATERIAL, "Inox"),
                         de(VOLUME, "5 L")));
-        produto("SKU-COZ-008", "Escorredor de Loucas de Embutir Inox", "Cozinhas", "159.90", 9,
-                "Escorredor que encaixa sobre a cuba, liberando a bancada enquanto a louca seca.",
-                List.of(de(MARCA, "Tramontina"),de(TIPO, "Escorredor"),de(MATERIAL, "Inox")));
-        produto("SKU-COZ-009", "Puxador de Aluminio 128mm - par", "Cozinhas", "24.90", 40,
-                "Par de puxadores com furacao padrao de 128 mm, compativel com a maioria das portas de armario.",
-                List.of(de(MARCA, "Ciser"),de(TIPO, "Puxador"),de(MATERIAL, "Aluminio"),
-                        de(DIMENSAO, "128 mm"),de(QUANTIDADE, "2 un")));
-        produto("SKU-COZ-010", "Rejunte Epoxi Branco 1kg", "Cozinhas", "79.90", 18,
+        produto("SKU-COZ-008", "Escorredor De Louças De Embutir Bandeja Inox 77x26cm Schmitt", "Cozinhas", "159.90", 9,
+                "Escorredor de embutir na bancada, com bandeja de 77x26 cm que recolhe a agua da louca.",
+                List.of(de(MARCA, "Schmitt"),de(TIPO, "Escorredor"),de(MATERIAL, "Inox")));
+        produto("SKU-COZ-009", "Puxador para Móveis Alumínio Preto Alça 128mm 4 Peças Java Inspire", "Cozinhas", "24.90", 40,
+                "Jogo de 4 puxadores com furacao padrao de 128 mm, compativel com a maioria das portas de armario.",
+                List.of(de(MARCA, "Inspire"),de(TIPO, "Puxador"),de(MATERIAL, "Aluminio"),
+                        de(DIMENSAO, "128 mm"),de(QUANTIDADE, "4 un")));
+        produto("SKU-COZ-010", "Rejunte Epoxi Quartzolit Cores 1kg Cerâmica Porcelanato Branco", "Cozinhas", "79.90", 18,
                 "Rejunte epoxi para area molhada de cozinha: nao absorve gordura e resiste a limpeza pesada.",
                 List.of(de(MARCA, "Quartzolit"),de(TIPO, "Rejunte epoxi"),de(COR, "Branco"),
                         de(PESO, "1 kg")));
@@ -426,41 +426,41 @@ final class CatalogoDaMassa {
                         de(QUANTIDADE, "5 un")));
 
         // ---------------------------------------------------------------- Decoracao
-        produto("SKU-DEC-001", "Espelho Redondo 60cm", "Decoracao", "159.90", 9,
-                "Espelho redondo de 60 cm com moldura fina e sistema de fixacao incluso. Amplia visualmente ambientes pequenos como lavabo e corredor.",
-                List.of(de(MARCA, "Evolux"),de(TIPO, "Espelho"),de(FORMATO, "Redondo"),
+        produto("SKU-DEC-001", "Espelho para Banheiro Redondo com LED Bivolt 60cm Gavix", "Decoracao", "159.90", 9,
+                "Espelho redondo de 60 cm com iluminacao LED embutida, bivolt. Amplia visualmente ambientes pequenos como lavabo e corredor.",
+                List.of(de(MARCA, "Gavix"),de(TIPO, "Espelho"),de(FORMATO, "Redondo"),
                         de(DIMENSAO, "60 cm")));
-        produto("SKU-DEC-002", "Espelho Redondo 40cm", "Decoracao", "99.90", 15,
-                "Versao menor do espelho redondo, com moldura fina. Cabe em lavabo estreito.",
-                List.of(de(MARCA, "Evolux"),de(TIPO, "Espelho"),de(FORMATO, "Redondo"),
+        produto("SKU-DEC-002", "Espelho Decorativo Redondo 40cm Preto sem Moldura Adnet Arte Própria", "Decoracao", "99.90", 15,
+                "Versao menor do espelho redondo, sem moldura, no formato Adnet. Cabe em lavabo estreito.",
+                List.of(de(MARCA, "Arte Própria"),de(TIPO, "Espelho"),de(FORMATO, "Redondo"),
                         de(DIMENSAO, "40 cm")));
-        produto("SKU-DEC-003", "Espelho Retangular 80x60cm", "Decoracao", "229.90", 8,
+        produto("SKU-DEC-003", "Espelho Retangular Decorativo Lumina 80x60cm Corino Preto", "Decoracao", "229.90", 8,
                 "Espelho retangular com moldura preta, indicado para acima de bancada de banheiro.",
-                List.of(de(MARCA, "Evolux"),de(TIPO, "Espelho"),de(FORMATO, "Retangular"),
+                List.of(de(MARCA, "Lumina"),de(TIPO, "Espelho"),de(FORMATO, "Retangular"),
                         de(DIMENSAO, "80x60 cm"),de(COR, "Preto")));
-        produto("SKU-DEC-004", "Quadro Decorativo com Moldura 40x60cm", "Decoracao", "119.90", 12,
-                "Quadro com vidro e moldura em madeira, pronto para pendurar.",
-                List.of(de(MARCA, "Evolux"),de(TIPO, "Quadro"),de(MATERIAL, "Madeira"),
+        produto("SKU-DEC-004", "Quadro Decorativo Arte Manual com Moldura Dourado Retangular com Vidro 40x60cm", "Decoracao", "119.90", 12,
+                "Quadro com vidro e moldura dourada, pronto para pendurar.",
+                List.of(de(MARCA, "Arte Própria"),de(TIPO, "Quadro"),de(MATERIAL, "Madeira"),
                         de(DIMENSAO, "40x60 cm")));
-        produto("SKU-DEC-005", "Prateleira de Madeira 60cm", "Decoracao", "69.90", 22,
-                "Prateleira de 60 cm com suportes invisiveis - a fixacao fica escondida atras da peca.",
+        produto("SKU-DEC-005", "Prateleira Suspensa 60cm Parede Nicho De Madeira + Suporte", "Decoracao", "69.90", 22,
+                "Prateleira de 60 cm em madeira, no formato nicho, com suporte de fixacao incluso.",
                 List.of(de(MARCA, "Evolux"),de(TIPO, "Prateleira"),de(MATERIAL, "Madeira"),
                         de(COMPRIMENTO, "60 cm")));
-        produto("SKU-DEC-006", "Cortina Blackout 2,00x1,80m Cinza", "Decoracao", "189.90", 10,
+        produto("SKU-DEC-006", "Cortina Blackout Alycia Cinza 2,60x1,80m 2 Folhas Inspire", "Decoracao", "189.90", 10,
                 "Cortina com tecido blackout, que bloqueia a maior parte da luz externa. Ideal para quarto.",
-                List.of(de(MARCA, "Evolux"),de(TIPO, "Cortina"),de(COR, "Cinza"),
-                        de(DIMENSAO, "2,00x1,80 m")));
-        produto("SKU-DEC-007", "Tapete Antiderrapante 1,20x0,60m", "Decoracao", "89.90", 16,
+                List.of(de(MARCA, "Inspire"),de(TIPO, "Cortina"),de(COR, "Cinza"),
+                        de(DIMENSAO, "2,60x1,80 m")));
+        produto("SKU-DEC-007", "Tapete de Banheiro em Microfibra Retangular Bege 1 Peça Oikos", "Decoracao", "89.90", 16,
                 "Tapete com base emborrachada que nao desliza no piso frio.",
-                List.of(de(MARCA, "Evolux"),de(TIPO, "Tapete"),de(DIMENSAO, "1,20x0,60 m")));
-        produto("SKU-DEC-008", "Papel de Parede Adesivo Marmore 3m", "Decoracao", "79.90", 20,
+                List.of(de(MARCA, "Oikos"),de(TIPO, "Tapete"),de(DIMENSAO, "1,20x0,60 m")));
+        produto("SKU-DEC-008", "Papel De Parede Autocolante Azulejo Ladrilho Mármore Calacatta 3m", "Decoracao", "79.90", 20,
                 "Rolo adesivo de 3 m com padrao marmore, aplicavel sobre parede lisa sem cola.",
                 List.of(de(MARCA, "Evolux"),de(TIPO, "Papel de parede"),de(COMPRIMENTO, "3 m")));
-        produto("SKU-DEC-009", "Cabideiro de Parede 5 Ganchos", "Decoracao", "49.90", 25,
-                "Cabideiro de parede com 5 ganchos metalicos e base de madeira.",
-                List.of(de(MARCA, "Evolux"),de(TIPO, "Cabideiro"),de(MATERIAL, "Madeira"),
+        produto("SKU-DEC-009", "Cabideiro De Parede Com 5 Ganchos Para Pendurar Roupas E Bolsas Industrial Em Aço Preto", "Decoracao", "49.90", 25,
+                "Cabideiro de parede em aco preto, com 5 ganchos, no estilo industrial.",
+                List.of(de(MARCA, "Evolux"),de(TIPO, "Cabideiro"),de(MATERIAL, "Aco"),
                         de(QUANTIDADE, "5 un")));
-        produto("SKU-DEC-010", "Vaso Decorativo de Vidro 25cm", "Decoracao", "59.90", 18,
+        produto("SKU-DEC-010", "Vaso Decorativo Vidro Tubo Transparente 25cm Único", "Decoracao", "59.90", 18,
                 "Vaso de vidro transparente 25 cm, para flores ou como peca isolada em aparador.",
                 List.of(de(MARCA, "Evolux"),de(TIPO, "Vaso decorativo"),de(MATERIAL, "Vidro"),
                         de(DIMENSAO, "25 cm")));

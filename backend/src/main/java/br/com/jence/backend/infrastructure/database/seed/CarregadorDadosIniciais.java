@@ -22,10 +22,13 @@ import org.springframework.stereotype.Component;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static java.util.Map.entry;
 
 /**
  * Popula o banco com uma loja Leroy Merlin em miniatura para desenvolvimento e demonstracao.
@@ -66,12 +69,59 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
      * URLs publicas das fotos, coletadas do site da Leroy pelo time (O-18). Enquanto um SKU
      * nao estiver aqui, o produto responde com imagem nula - o que a tela precisa tratar, e
      * nao um estado invalido. Acrescentar uma URL aqui chega aos bancos que ja existem pelo
-     * passo de completarApresentacoes.
+     * passo de sincronizarApresentacoes.
+     *
+     * O site publica varias fotos por produto; aqui fica a primeira, porque o produto guarda
+     * uma imagem so. A lista completa do que foi visitado esta em docs/imagens-dos-produtos.md.
      */
-    private static final Map<String, String> IMAGENS = Map.of();
+    private static final Map<String, String> IMAGENS = Map.ofEntries(
+            entry("SKU-COZ-001",
+                    "https://cdn.leroymerlin.com.br/products/cuba_retangular_tramontina_em_aco_inox_acetinado_56x34cm_56_b_1566754993_5d96_600x600.jpg"),
+            entry("SKU-COZ-002",
+                    "https://cdn.leroymerlin.com.br/products/torneira_monocomando_de_pia_bica_alta_cromado_tomas_delinia_92308153_057c_600x600.png"),
+            entry("SKU-COZ-003",
+                    "https://cdn.leroymerlin.com.br/products/cuba_de_embutir_retangular_40_bl_standard_40x34_cm_sem_valvul_1571090792_985a_600x600.jpg"),
+            entry("SKU-COZ-004",
+                    "https://cdn.leroymerlin.com.br/products/cuba_para_cozinha_dupla_de_embutir_40x17x70cm_escovado_90834422_b6be_600x600.jpg"),
+            entry("SKU-COZ-005",
+                    "https://cdn.leroymerlin.com.br/products/torneira_misturador_de_parede_bica_alta_cromada_sao_delinia_92420762_4610_600x600.jpg"),
+            entry("SKU-COZ-006",
+                    "https://cdn.leroymerlin.com.br/products/torneira_monocomando_de_pia_bica_alta_preto_econocozi_jiwi_92323371_e005_600x600.JPG"),
+            entry("SKU-COZ-007",
+                    "https://cdn.leroymerlin.com.br/products/lixeira_inox_escovado_5_litros_embutir_pia_cozinha_cesto_lixo_1572480011_ea6a_600x600.png"),
+            entry("SKU-COZ-008",
+                    "https://cdn.leroymerlin.com.br/products/escorredor_de_loucas_de_embutir_bandeja_inox_77x26cm_schmitt_1571389776_e170_600x600.png"),
+            entry("SKU-COZ-009",
+                    "https://cdn.leroymerlin.com.br/products/puxador_de_movel_aluminio_preto_128mm_java_92315902_56bf_600x600.jpg"),
+            entry("SKU-COZ-010",
+                    "https://cdn.leroymerlin.com.br/products/rejunte_epoxi_quartzolit_cores_1kg_ceramica_porcelanato_branco_1567293979_78db_600x600.png"),
+            entry("SKU-DEC-001",
+                    "https://cdn.leroymerlin.com.br/products/espelho_redondo_led_bivolt_60cm_com_led_gavix_92462440_dcc4_600x600.jpg"),
+            entry("SKU-DEC-002",
+                    "https://cdn.leroymerlin.com.br/products/_92358392_fa7a_600x600.jpg"),
+            entry("SKU-DEC-003",
+                    "https://cdn.leroymerlin.com.br/products/espelho_decorativo_retangular_80x60cm_corino_lumina_92527960_0cb1_600x600.jpg"),
+            entry("SKU-DEC-004",
+                    "https://cdn.leroymerlin.com.br/products/quadro_arte_manual_dourado_40x60cm_arte_propria_92052016_a21b_600x600.jpg"),
+            entry("SKU-DEC-005",
+                    "https://cdn.leroymerlin.com.br/products/prateleira_suspensa_60cm_parede_nicho_de_madeira___suporte_1572341279_3c70_600x600.jpg"),
+            entry("SKU-DEC-006",
+                    "https://cdn.leroymerlin.com.br/products/cortina_alycia_2,60x1,80m_moon_inspire_91903350_0001_600x600.jpg"),
+            entry("SKU-DEC-007",
+                    "https://cdn.leroymerlin.com.br/products/tapete_de_banheiro_em_microfibra_retangular_bege_1_peca_oikos_92425396_7e77_600x600.jpg"),
+            entry("SKU-DEC-008",
+                    "https://cdn.leroymerlin.com.br/products/papel_de_parede_autocolante_azulejo_ladrilho_marmore_calacatt_1570857265_fbf5_600x600.jpg"),
+            entry("SKU-DEC-009",
+                    "https://cdn.leroymerlin.com.br/products/cabideiro_de_parede_com_5_ganchos_para_pendurar_roupas_e_bols_1570051837_06ed_600x600.jpg"),
+            entry("SKU-DEC-010",
+                    "https://cdn.leroymerlin.com.br/products/vaso_decorativo_vidro_tubo_transparente_25cm_unico_1571745978_e474_600x600.jpg"),
+            entry("SKU-ELE-001",
+                    "https://cdn.leroymerlin.com.br/products/cabo_flexivel_azul_2_50_rolo_100m_87807090_0002_600x600.jpg"),
+            entry("SKU-ELE-002",
+                    "https://cdn.leroymerlin.com.br/products/interruptor_simples_4x2_c__1_tecla_10a_250v_branco_tramontina_1568977079_2a81_600x600.jpg"));
 
-    /** Descricao e imagem de um produto, para completar o que ja esta gravado. */
-    private record Apresentacao(String descricao, String imagemUrl) {
+    /** Nome, descricao e imagem de um produto, como a massa os declara hoje. */
+    private record Apresentacao(String nome, String descricao, String imagemUrl) {
     }
 
     private final ProdutoRepository produtoRepository;
@@ -131,14 +181,14 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         criarPontosDeQrCodeQueFaltam(contagem);
         apresentacoes.clear();
         criarCatalogo(secoes, skusExistentes, contagem);
-        completarApresentacoes(contagem);
+        sincronizarApresentacoes(contagem);
         sincronizarAtributos(contagem);
 
         if (contagem.nadaFeito()) {
             log.info("Massa de demonstracao ja esta completa. Nada a carregar.");
         } else {
             log.info("Carga incremental: {} ponto(s) do mapa, {} produto(s) criados, "
-                            + "{} apresentacao(oes) completada(s) e {} produto(s) com "
+                            + "{} apresentacao(oes) sincronizada(s) e {} produto(s) com "
                             + "caracteristicas atualizadas.",
                     contagem.pontos, contagem.produtos, contagem.apresentacoes, contagem.atributos);
         }
@@ -246,8 +296,8 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
                 continue;
             }
 
-            apresentacoes.put(declarado.sku(),
-                    new Apresentacao(declarado.descricao(), IMAGENS.get(declarado.sku())));
+            apresentacoes.put(declarado.sku(), new Apresentacao(
+                    declarado.nome(), declarado.descricao(), IMAGENS.get(declarado.sku())));
 
             if (jaExistentes.contains(declarado.sku())) {
                 continue;
@@ -287,30 +337,32 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
     }
 
     /**
-     * Completa descricao e imagem de produtos que ja estavam gravados.
+     * Faz o que esta gravado voltar a bater com o que a massa declara: nome, descricao e imagem.
      * <p>
-     * A carga e incremental e nunca reescreve um SKU existente (D-47), entao sem este passo os
-     * produtos criados antes destes campos existirem ficariam sem apresentacao para sempre -
-     * em todos os bancos do time e no publicado.
+     * A carga e incremental e nunca reescreve o SKU de um produto que ja existe (D-47), entao
+     * sem este passo qualquer correcao na massa ficaria so no codigo - inclusive no banco
+     * publicado, que e o que a banca ve.
      * <p>
-     * <b>So preenche o que esta vazio.</b> Nunca sobrescreve um texto ja gravado: se alguem
-     * ajustar uma descricao direto no banco, a proxima inicializacao nao desfaz.
+     * <b>A massa e a fonte, e este passo sobrescreve.</b> Antes ele so preenchia campo vazio,
+     * regra que servia enquanto o unico caso era completar produtos criados antes de descricao
+     * e imagem existirem. Quando os nomes reais entraram junto com as fotos, ela passou a ser
+     * um problema: o atributo MARCA sincroniza sempre e o nome nao sincronizava nunca, e o
+     * banco publicado ficaria com marca nova e nome velho. Ver D-69.
      */
-    private void completarApresentacoes(Contagem contagem) {
+    private void sincronizarApresentacoes(Contagem contagem) {
         for (Produto produto : produtoRepository.buscarPaginado(0, LIMITE_DE_LEITURA).conteudo()) {
-            Apresentacao nova = apresentacoes.get(produto.getSku());
-            if (nova == null) {
+            Apresentacao declarada = apresentacoes.get(produto.getSku());
+            if (declarada == null) {
                 continue;
             }
 
-            String descricao = produto.getDescricao() == null ? nova.descricao() : produto.getDescricao();
-            String imagem = produto.getImagemUrl() == null ? nova.imagemUrl() : produto.getImagemUrl();
-
-            boolean mudou = !java.util.Objects.equals(descricao, produto.getDescricao())
-                    || !java.util.Objects.equals(imagem, produto.getImagemUrl());
+            boolean mudou = !Objects.equals(declarada.nome(), produto.getNome())
+                    || !Objects.equals(declarada.descricao(), produto.getDescricao())
+                    || !Objects.equals(declarada.imagemUrl(), produto.getImagemUrl());
 
             if (mudou) {
-                produtoRepository.salvar(produto.comApresentacao(descricao, imagem));
+                produtoRepository.salvar(produto.comApresentacao(
+                        declarada.nome(), declarada.descricao(), declarada.imagemUrl()));
                 contagem.apresentacoes++;
             }
         }

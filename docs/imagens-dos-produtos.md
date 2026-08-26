@@ -8,7 +8,7 @@ Para cada produto abaixo, achar o item equivalente no site da Leroy Merlin e col
 
 **Como pegar a URL da imagem:** abrir a página do produto, clicar com o botão direito na foto e escolher *Copiar endereço da imagem*. O que serve é o endereço que termina em `.jpg`, `.png` ou `.webp` — **não** o endereço da página do produto.
 
-**Não precisa ser o produto exato.** Marca e modelo não importam: a massa é de demonstração. Um rolo de lã 23 cm qualquer serve para `SKU-TIN-002`.
+**Não precisa ser o produto exato.** Um rolo de lã 23 cm qualquer serve para `SKU-TIN-002`. Se o produto escolhido tiver **outra marca ou outra medida** que a massa, basta colar o nome real do site junto da foto: marca e medidas do catálogo são reconciliadas depois, do lado do código. O que não pode é a foto entrar sozinha e a ficha técnica continuar descrevendo outro produto.
 
 **Não precisa completar tudo de uma vez.** Imagem nula é um estado normal — o produto continua funcionando sem foto, e as URLs entram de forma incremental. Pode devolver a tabela com dez preenchidas e completar o resto depois.
 
@@ -26,7 +26,7 @@ O resto pode ficar sem foto indefinidamente — imagem nula é estado normal e t
 
 **As duas lixas continuam vazias.** `SKU-TIN-003` e `SKU-TIN-004` são as que aparecem no cenário de ruptura, o momento mais visto da apresentação — se der para pegar só mais duas, são essas.
 
-> **Os nomes mudaram junto.** Nas 22 linhas preenchidas, a coluna *Produto* deixou de ser o nome inventado da massa e passou a ser **o nome real do produto no site**. O SKU continua o mesmo, e é ele que amarra tudo: nenhum teste e nenhuma rota dependem do nome. Aplicar esses nomes à massa é uma decisão à parte — ver *O que muda se os nomes reais entrarem*, abaixo.
+> **Os nomes mudaram junto, e já estão na massa.** Nas 22 linhas preenchidas, a coluna *Produto* deixou de ser o nome inventado e passou a ser **o nome real do produto no site**. O SKU continua o mesmo, e é ele que amarra tudo: nenhum teste e nenhuma rota dependem do nome. As marcas e as medidas foram reconciliadas junto — ver *O que entrou junto com os nomes reais*, abaixo.
 
 ## CÓD e EAN, os dois números da página do produto
 
@@ -42,72 +42,63 @@ A página de cada produto mostra um `CÓD.` de 8 dígitos e um `EAN:` de 13. **N
 
 ## Onde isso entra
 
-As URLs vão para o mapa `IMAGENS` em `CarregadorDadosIniciais`. Acrescentar uma URL ali chega sozinha aos bancos que já existem, inclusive o publicado: a carga completa a apresentação de quem já está gravado sem recriar nada.
+As URLs vão para o mapa `IMAGENS` em `CarregadorDadosIniciais`. Acrescentar uma URL ali chega sozinha aos bancos que já existem, inclusive o publicado: a carga sincroniza nome, descrição e imagem de quem já está gravado, sem recriar nada ([D-69](decisoes-tecnicas.md#d-69-a-massa-passou-a-ser-a-fonte-do-nome-e-da-descrição-e-sobrescreve-o-banco)).
 
-## O que muda se os nomes reais entrarem
+## O que entrou junto com os nomes reais — aplicado em 25/08/2026
 
-Nada quebra — **o SKU é o contrato**, e nenhum teste nem nenhuma rota depende do nome do produto. Mas duas coisas precisam entrar junto, senão a tela passa a se contradizer.
+Os 22 nomes, as 22 fotos e as correções abaixo estão na massa. **Nada quebrou por causa do nome** — o SKU é o contrato, e nenhum teste nem nenhuma rota depende dele. Mas três coisas precisaram entrar junto.
 
-### 1. A marca do nome briga com a marca do filtro
+### 1. Treze marcas passaram a ser as reais
 
-Em **18 das 22 linhas**, o produto real é de uma marca diferente da que está gravada no atributo `MARCA`. Se só o nome mudar, o cliente filtra por *Evolux* e recebe um espelho chamado *Gavix* — e a tabela de especificações, logo abaixo da foto, diz *Evolux*.
+O atributo `MARCA` é o primeiro filtro das facetas e uma das chaves que ordenam o substituto na ruptura ([D-68](decisoes-tecnicas.md#d-68-o-substituto-é-escolhido-por-semelhança-antes-de-proximidade)). Deixá-lo divergir do nome faria o cliente filtrar por *Evolux* e receber um espelho chamado *Gavix*, com a ficha técnica logo abaixo da foto insistindo em *Evolux*.
 
-| SKU | `MARCA` na massa | Marca no nome real |
-|---|---|---|
-| `SKU-COZ-002` | Docol | Delinia |
-| `SKU-COZ-004` | Tramontina | Mekal |
-| `SKU-COZ-005` | Docol | Delinia |
-| `SKU-COZ-006` | Docol | Jiwi |
-| `SKU-COZ-007` | Tramontina | (nenhuma no nome) |
-| `SKU-COZ-008` | Tramontina | Schmitt |
-| `SKU-COZ-009` | Ciser | Inspire |
-| `SKU-DEC-001` | Evolux | Gavix |
-| `SKU-DEC-002` | Evolux | Arte Própria |
-| `SKU-DEC-003` | Evolux | Lumina |
-| `SKU-DEC-004` | Evolux | Arte Manual |
-| `SKU-DEC-005` | Evolux | (nenhuma no nome) |
-| `SKU-DEC-006` | Evolux | Inspire |
-| `SKU-DEC-007` | Evolux | Oikos |
-| `SKU-DEC-008` | Evolux | (nenhuma no nome) |
-| `SKU-DEC-009` | Evolux | (nenhuma no nome) |
-| `SKU-DEC-010` | Evolux | (nenhuma no nome) |
-| `SKU-ELE-001` | Sil | Megatron |
+| SKU | Antes | Agora | De onde saiu |
+|---|---|---|---|
+| `SKU-COZ-002` | Docol | Delinia | nome |
+| `SKU-COZ-004` | Tramontina | Mekal | nome |
+| `SKU-COZ-005` | Docol | Delinia | nome |
+| `SKU-COZ-006` | Docol | Jiwi | nome |
+| `SKU-COZ-008` | Tramontina | Schmitt | nome |
+| `SKU-COZ-009` | Ciser | Inspire | nome |
+| `SKU-DEC-001` | Evolux | Gavix | nome |
+| `SKU-DEC-002` | Evolux | Arte Própria | nome |
+| `SKU-DEC-003` | Evolux | Lumina | nome |
+| `SKU-DEC-004` | Evolux | Arte Própria | **endereço da foto** — o nome diz *Arte Manual*, que é a linha; o endereço termina em `arte_propria` |
+| `SKU-DEC-006` | Evolux | Inspire | nome (*Alycia* é o modelo) |
+| `SKU-DEC-007` | Evolux | Oikos | nome |
+| `SKU-ELE-001` | Sil | Megatron | nome |
 
-Isso não é só cosmético: `MARCA` é uma das duas chaves que ordenam o substituto quando falta produto ([D-68](decisoes-tecnicas.md#d-68-o-substituto-é-escolhido-por-semelhança-antes-de-proximidade)), e é o primeiro filtro da lista de facetas.
+**Cinco ficaram como estavam**, e de propósito: `SKU-COZ-007`, `SKU-DEC-005`, `SKU-DEC-008`, `SKU-DEC-009` e `SKU-DEC-010` têm nomes reais que **não declaram marca nenhuma**, então não há contradição a corrigir. Tirar a marca deles foi tentado e a suíte recusou: existe um teste que exige marca em todo produto, porque **produto sem marca some da tela quando o cliente escolhe qualquer marca no filtro**. A marca real desses cinco está no campo *Marca* da página do site — se alguém passar por lá, vale anotar.
 
-**A correção é acompanhar a realidade:** trocar `MARCA` pela marca do produto de verdade. O que isso custa:
+**Decoração perdeu a marca única**, e isso não custa nada: uma faceta com um valor que cobre tudo nunca filtrou nada. As facetas que a demonstração usa são grão em Tintas, amperagem na Elétrica e potência na Iluminação.
 
-- **Decoração perde a marca única.** As 10 viram 8 marcas diferentes, várias com um produto só, e cinco produtos ficam sem marca nenhuma. Parece perda, mas não é: uma faceta com **um valor que cobre tudo** nunca filtrou nada — clicar em *Evolux (10)* devolvia os mesmos 10. As facetas que a demonstração usa são grão em Tintas, amperagem na Elétrica e potência na Iluminação, e nenhuma delas encosta em Decoração.
-- **Docol cai de 5 para 2**, restando em Encanamento. O teste que usa Docol só exige que a marca exista e tenha menos produtos que Tigre — continua passando.
+### 2. Quatro medidas descreviam outro produto
 
-### 2. Quatro medidas descrevem outro produto
-
-O item escolhido no site nem sempre tem a medida que a massa inventou:
-
-| SKU | Medida na massa | Medida do produto real |
+| SKU | Antes | Agora |
 |---|---|---|
 | `SKU-COZ-001` | 56x33 cm | 56x34 cm |
 | `SKU-COZ-004` | 84x40 cm | 70x40x17 cm |
-| `SKU-COZ-009` | 2 un | 4 peças |
+| `SKU-COZ-009` | 2 un | 4 un |
 | `SKU-DEC-006` | 2,00x1,80 m | 2,60x1,80 m |
 
+Aqui a foto entrega: uma cuba anunciada como 84x40 ilustrada por uma 70x40 é visível na tela. Oito descrições foram ajustadas pelo mesmo motivo — o espelho de `SKU-DEC-001` dizia *moldura fina* e o produto real é iluminado por LED e não tem moldura; o cabideiro de `SKU-DEC-009` era de madeira e o real é de aço, então o `MATERIAL` mudou junto.
 
-Aqui a foto entrega: uma cuba anunciada como 84x40 com a imagem de uma 70x40 é visível na tela. Os atributos precisam seguir o produto escolhido.
+### 3. A carga precisou passar a sobrescrever
 
-### 3. Os acentos funcionam, mas a busca exata deixa de achar
+O detalhe que quase passou: o atributo `MARCA` sincroniza sempre, mas o **nome nunca sincronizava** — a carga é incremental e não reescreve SKU que já existe. Corrigir só o código deixaria todo banco que já tem os produtos, **inclusive o publicado**, com marca nova embaixo de nome velho. A massa passou a ser a fonte de nome, descrição e imagem, e a carga sobrescreve os três. Ver [D-69](decisoes-tecnicas.md#d-69-a-massa-passou-a-ser-a-fonte-do-nome-e-da-descrição-e-sobrescreve-o-banco).
 
-Os nomes reais têm acento e a massa inteira, hoje, não tem nenhum. Medido contra o Oracle da FIAP:
+### Sobre os acentos, medidos no Oracle
 
-- **Guardar é seguro.** O banco é `AL32UTF8` e o texto acentuado volta idêntico ao que foi enviado; o Maven já compila em UTF-8.
-- **Cabe.** O maior nome novo tem 109 caracteres e a coluna aceita 200; a maior URL tem 130 e a coluna aceita 500.
-- **O `LIKE` para de achar.** Quem digita `flexivel` não encontra *Flexível* — para o Oracle são letras diferentes.
-- **A busca tolerante segura.** O `JARO_WINKLER` entre a forma acentuada e a sem acento ficou entre **85 e 94**, e o nosso corte é 70. Ou seja: a busca continua achando, só deixa de ser por correspondência exata e passa a ser por semelhança.
+- **Guardar é seguro.** O banco é `AL32UTF8`, o texto acentuado volta idêntico, e o Maven já compila em UTF-8.
+- **Cabe.** O maior nome tem 109 caracteres e a coluna aceita 200; a maior URL tem 130 e a coluna aceita 500. Há teste segurando os dois.
+- **O `LIKE` para de achar.** Quem digita `flexivel` não encontra *Flexível*: para o Oracle são letras diferentes.
+- **A busca tolerante segura.** O `JARO_WINKLER` entre a forma acentuada e a sem acento ficou entre **85 e 94**, e o corte da busca é 70. Continua achando, por semelhança em vez de correspondência exata.
 
-Se um dia isso incomodar, existe saída medida: `convert(nome, 'US7ASCII')` dos dois lados do `LIKE` faz `flexivel` achar *Flexível*. Não vale mexer agora — não há caso falhando.
+Se um dia incomodar, existe saída medida — `convert(nome, 'US7ASCII')` dos dois lados do `LIKE`. Não foi aplicada porque não há caso falhando.
 
-### 4. Vinte e duas de 111 é um catálogo desparelho
+### O catálogo ficou desparelho, e é esperado
 
-Aplicando só o que está coletado, a grade mistura 22 nomes longos e reais com 89 curtos e inventados — *Cuba para Cozinha Dupla de Embutir ou Sobrepor em Aço Inox 304 Fosco Retangular 70x40x17cm 0,6mm 3.1/2" Mekal* ao lado de *Trena 5m*. Vale decidir se entram agora ou quando a cobertura estiver maior.
+22 nomes longos e reais convivem com 89 curtos e inventados: *Cuba para Cozinha Dupla de Embutir ou Sobrepor em Aço Inox 304 Fosco Retangular 70x40x17cm 0,6mm 3.1/2" Mekal* ao lado de *Trena 5m*. Some conforme a coleta avança.
 
 ## A lista
 

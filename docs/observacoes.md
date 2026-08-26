@@ -196,7 +196,7 @@ A distinção vale a pena manter em mente conforme o repositório cresce:
 > [!NOTE]
 > **Volume resolvido em 25/08/2026: o catálogo passou de 29 para 111 produtos**, cerca de onze por seção. O que continua aberto é a **coleta das imagens**, e ela ficou maior junto.
 >
-> **Coleta em andamento: 22 de 111 em 25/08/2026** — Cozinhas, Decoração e o início da Elétrica. Junto delas vieram os **nomes reais** dos produtos do site, e aplicá-los à massa é uma decisão à parte, com as consequências medidas em [`imagens-dos-produtos.md`](imagens-dos-produtos.md#o-que-muda-se-os-nomes-reais-entrarem). **As duas lixas da ruptura continuam sem foto.**
+> **Coleta em andamento: 22 de 111 em 25/08/2026** — Cozinhas, Decoração e o início da Elétrica. Junto das fotos vieram os **nomes reais** dos produtos do site, e os dois já estão na massa, com as marcas e medidas reconciliadas ([registro](imagens-dos-produtos.md#o-que-entrou-junto-com-os-nomes-reais--aplicado-em-25082026)). **As duas lixas da ruptura continuam sem foto** — são as que encenam a ruptura, e as mais importantes de todas.
 
 **O quê.** Ampliar a massa de demonstração, e coletar as URLs das imagens.
 
