@@ -26,6 +26,7 @@
 | [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final) | Limpar documentos de trabalho | Time | fim do ano |
 | [O-20](#o-20-rodar-a-suíte-deixa-um-resto-de-sessões-no-banco-de-demonstração) | Limpar sessões de teste antes da banca | Backend | Baixa |
 | [O-21](#o-21-desenvolvimento-testes-e-demonstração-usam-o-mesmo-schema) | Um schema só para tudo | Time | Média |
+| [O-22](#o-22-a-tela-inicial-do-catálogo-leva-24-segundos-no-ambiente-publicado) | Catálogo sem filtro leva 2,4 s | Frontend e time | Média |
 | [O-11](#o-11-o-swagger-fica-exposto-no-ambiente-publicado) | Swagger em produção | — | aceita |
 | [O-12](#o-12-o-raio-de-busca-da-ruptura-é-um-palpite-informado--agora-medido) | Raio de 25 unidades — medido | — | aceita |
 | [O-15](#o-15-o-endpoint-de-simulação-de-estoque-não-tem-proteção-nenhuma) | Simulação de estoque sem proteção | — | aceita |
@@ -194,6 +195,8 @@ A distinção vale a pena manter em mente conforme o repositório cresce:
 
 > [!NOTE]
 > **Volume resolvido em 25/08/2026: o catálogo passou de 29 para 111 produtos**, cerca de onze por seção. O que continua aberto é a **coleta das imagens**, e ela ficou maior junto.
+>
+> **Coleta em andamento: 22 de 111 em 25/08/2026** — Cozinhas, Decoração e o início da Elétrica. Junto das fotos vieram os **nomes reais** dos produtos do site, e os dois já estão na massa, com as marcas e medidas reconciliadas ([registro](imagens-dos-produtos.md#o-que-entrou-junto-com-os-nomes-reais--aplicado-em-25082026)). **As duas lixas da ruptura continuam sem foto** — são as que encenam a ruptura, e as mais importantes de todas.
 
 **O quê.** Ampliar a massa de demonstração, e coletar as URLs das imagens.
 
@@ -311,6 +314,43 @@ O que existe no lugar de proteção: marcação explícita como `[Demonstracao]`
 ---
 
 ## Riscos de ambiente
+
+### O-22. A tela inicial do catálogo leva 2,4 segundos no ambiente publicado
+
+**Medido em 25/08/2026** contra a instância no Render, já quente, sete amostras por endpoint:
+
+| Endpoint | Mediana | Resposta |
+|---|---|---|
+| `GET /produtos` (catálogo sem filtro) | **2.421 ms** | 15,3 KB |
+| `GET /produtos?size=100` | 2.946 ms | 40,0 KB |
+| `GET /produtos?atributo=MARCA:Tigre` | 1.099 ms | 11,3 KB |
+| `GET /produtos?query=tinta` | 931 ms | 1,7 KB |
+| `GET /produtos?secao=Tintas` | **814 ms** | 5,6 KB |
+| `GET /mapa` | 669 ms | 1,9 KB |
+| `GET /produtos/{id}` | 509 ms | 0,6 KB |
+| `GET /produtos/secoes` | **355 ms** | 0,5 KB |
+
+**As consultas não são o problema.** Medidas direto no Oracle, as três que compõem `GET /produtos` somam **240 ms**: conteúdo 90 ms, contagem 30 ms, facetas 120 ms. A busca com `UTL_MATCH` custa 31 ms.
+
+Ou seja: **240 ms de banco viram 2.421 ms de resposta.** Cerca de 90% da latência é o ambiente — 0,1 CPU serializando JSON e mapeando entidades, mais o trânsito entre o Render (Estados Unidos) e o Oracle (Brasil) a cada consulta.
+
+**Otimizar SQL aqui não renderia nada.** É importante dizer isso porque é o instinto errado óbvio: mexer no índice ou reescrever a consulta atacaria os 10%.
+
+### O que dá para fazer, em ordem de retorno
+
+**1. Não abrir na tela do catálogo sem filtro — é frontend, custa zero e vale 3×.**
+
+A tela de entrada é a mais lenta de todas, e é a única de 2,4 segundos. Abrir pelo **menu de seções** (355 ms) e só então mostrar produtos de uma seção (814 ms) dá ao cliente duas telas rápidas em vez de uma lenta. É como um e-commerce de material de construção funciona de qualquer forma: ninguém navega 111 produtos sem categoria.
+
+**2. Guardar o mapa no aparelho.** `GET /mapa` não depende de sessão justamente para isso ([D-58](decisoes-tecnicas.md#d-58-a-planta-da-loja-não-vive-no-banco-e-é-dela-que-saem-as-coordenadas-das-seções)). Buscar uma vez e reusar economiza 669 ms a cada abertura do mapa, que é a tela central do produto.
+
+**3. Cache do mapa no backend** — não feito, e vale discutir antes. Os pontos só mudam quando a carga roda, no startup, então guardar a resposta em memória seria seguro. Economiza os 669 ms para quem não guardou no aparelho. É código novo com uma premissa declarada, e por isso não entrou sem conversa.
+
+**O que não vale.** Aumentar o plano do Render resolveria de vez, e o time já decidiu ficar no gratuito. Vale lembrar que **a partida a frio (163–176 s) continua sendo o número dominante** para qualquer demonstração: 2,4 segundos incomoda, três minutos inviabiliza.
+
+**De quem.** Frontend (itens 1 e 2), time (item 3). **Urgência:** média — a tela lenta é a primeira que a banca vê.
+
+---
 
 ### O-21. Desenvolvimento, testes e demonstração usam o mesmo schema
 

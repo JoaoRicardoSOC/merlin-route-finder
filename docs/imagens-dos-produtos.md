@@ -8,7 +8,7 @@ Para cada produto abaixo, achar o item equivalente no site da Leroy Merlin e col
 
 **Como pegar a URL da imagem:** abrir a página do produto, clicar com o botão direito na foto e escolher *Copiar endereço da imagem*. O que serve é o endereço que termina em `.jpg`, `.png` ou `.webp` — **não** o endereço da página do produto.
 
-**Não precisa ser o produto exato.** Marca e modelo não importam: a massa é de demonstração. Um rolo de lã 23 cm qualquer serve para `SKU-TIN-002`.
+**Não precisa ser o produto exato.** Um rolo de lã 23 cm qualquer serve para `SKU-TIN-002`. Se o produto escolhido tiver **outra marca ou outra medida** que a massa, basta colar o nome real do site junto da foto: marca e medidas do catálogo são reconciliadas depois, do lado do código. O que não pode é a foto entrar sozinha e a ficha técnica continuar descrevendo outro produto.
 
 **Não precisa completar tudo de uma vez.** Imagem nula é um estado normal — o produto continua funcionando sem foto, e as URLs entram de forma incremental. Pode devolver a tabela com dez preenchidas e completar o resto depois.
 
@@ -20,36 +20,112 @@ Para cada produto abaixo, achar o item equivalente no site da Leroy Merlin e col
 
 O resto pode ficar sem foto indefinidamente — imagem nula é estado normal e testado.
 
+## Como está — 25/08/2026
+
+**22 de 111 preenchidos**, todos de Cozinhas, Decoração e as duas primeiras da Elétrica. Para chegar nelas foram visitadas cerca de 115 fotos: o site tem várias por produto, e aqui **fica só a primeira**, porque o produto guarda uma imagem só.
+
+**As duas lixas continuam vazias.** `SKU-TIN-003` e `SKU-TIN-004` são as que aparecem no cenário de ruptura, o momento mais visto da apresentação — se der para pegar só mais duas, são essas.
+
+> **Os nomes mudaram junto, e já estão na massa.** Nas 22 linhas preenchidas, a coluna *Produto* deixou de ser o nome inventado e passou a ser **o nome real do produto no site**. O SKU continua o mesmo, e é ele que amarra tudo: nenhum teste e nenhuma rota dependem do nome. As marcas e as medidas foram reconciliadas junto — ver *O que entrou junto com os nomes reais*, abaixo.
+
+## CÓD e EAN, os dois números da página do produto
+
+A página de cada produto mostra um `CÓD.` de 8 dígitos e um `EAN:` de 13. **Nenhum dos dois muda nada no que já está construído**, mas vale saber o que são, porque um deles responde uma pergunta que a banca costuma fazer.
+
+**O `CÓD.` é o SKU da Leroy** — o identificador interno deles, equivalente ao nosso `SKU-TIN-003`. E ele aparece dentro do endereço da própria foto: em `..._tomas_delinia_92308153_057c_600x600.png`, o `92308153` tem exatamente a forma de um CÓD. Nas 22 linhas coletadas o padrão se divide em dois: 12 endereços trazem um número de 8 dígitos como esse, e 10 trazem um de 10 dígitos que é um *timestamp* de 2019 — produtos mais antigos, cadastrados antes de a convenção mudar. **Isso não foi confirmado na página**, porque o site recusa acesso automatizado (403); é o padrão que os dados mostram, e uma olhada na página do Tomas Delinia confirma ou derruba em dois segundos.
+
+**O `EAN` é o código de barras**, o mesmo GTIN-13 impresso na embalagem e lido no caixa. É global: o mesmo produto tem o mesmo EAN em qualquer loja de qualquer rede.
+
+**Por que isso importa para a defesa.** Se perguntarem *"como isso conversaria com o sistema real da Leroy?"*, a resposta fica concreta: o nosso `SKU-XXX-000` é um substituto do `CÓD.` deles, e a chave de integração com fornecedor e com o caixa seria o **EAN**. Também é o que tornaria possível, num passo seguinte, apontar a câmera para o código de barras do produto na prateleira em vez de digitar o nome — o aparelho já lê QR para se localizar, e ler um EAN é o mesmo gesto.
+
+**O que não fazemos.** Não entram campos de CÓD nem de EAN na massa. Seriam 111 números a coletar à mão para nenhuma tela mostrar, e o SKU já cumpre o papel de identificador.
+
 ## Onde isso entra
 
-As URLs vão para o mapa `IMAGENS` em `CarregadorDadosIniciais`. Acrescentar uma URL ali chega sozinha aos bancos que já existem, inclusive o publicado: a carga completa a apresentação de quem já está gravado sem recriar nada.
+As URLs vão para o mapa `IMAGENS` em `CarregadorDadosIniciais`. Acrescentar uma URL ali chega sozinha aos bancos que já existem, inclusive o publicado: a carga sincroniza nome, descrição e imagem de quem já está gravado, sem recriar nada ([D-69](decisoes-tecnicas.md#d-69-a-massa-passou-a-ser-a-fonte-do-nome-e-da-descrição-e-sobrescreve-o-banco)).
+
+## O que entrou junto com os nomes reais — aplicado em 25/08/2026
+
+Os 22 nomes, as 22 fotos e as correções abaixo estão na massa. **Nada quebrou por causa do nome** — o SKU é o contrato, e nenhum teste nem nenhuma rota depende dele. Mas três coisas precisaram entrar junto.
+
+### 1. Treze marcas passaram a ser as reais
+
+O atributo `MARCA` é o primeiro filtro das facetas e uma das chaves que ordenam o substituto na ruptura ([D-68](decisoes-tecnicas.md#d-68-o-substituto-é-escolhido-por-semelhança-antes-de-proximidade)). Deixá-lo divergir do nome faria o cliente filtrar por *Evolux* e receber um espelho chamado *Gavix*, com a ficha técnica logo abaixo da foto insistindo em *Evolux*.
+
+| SKU | Antes | Agora | De onde saiu |
+|---|---|---|---|
+| `SKU-COZ-002` | Docol | Delinia | nome |
+| `SKU-COZ-004` | Tramontina | Mekal | nome |
+| `SKU-COZ-005` | Docol | Delinia | nome |
+| `SKU-COZ-006` | Docol | Jiwi | nome |
+| `SKU-COZ-008` | Tramontina | Schmitt | nome |
+| `SKU-COZ-009` | Ciser | Inspire | nome |
+| `SKU-DEC-001` | Evolux | Gavix | nome |
+| `SKU-DEC-002` | Evolux | Arte Própria | nome |
+| `SKU-DEC-003` | Evolux | Lumina | nome |
+| `SKU-DEC-004` | Evolux | Arte Própria | **endereço da foto** — o nome diz *Arte Manual*, que é a linha; o endereço termina em `arte_propria` |
+| `SKU-DEC-006` | Evolux | Inspire | nome (*Alycia* é o modelo) |
+| `SKU-DEC-007` | Evolux | Oikos | nome |
+| `SKU-ELE-001` | Sil | Megatron | nome |
+
+**Cinco ficaram como estavam**, e de propósito: `SKU-COZ-007`, `SKU-DEC-005`, `SKU-DEC-008`, `SKU-DEC-009` e `SKU-DEC-010` têm nomes reais que **não declaram marca nenhuma**, então não há contradição a corrigir. Tirar a marca deles foi tentado e a suíte recusou: existe um teste que exige marca em todo produto, porque **produto sem marca some da tela quando o cliente escolhe qualquer marca no filtro**. A marca real desses cinco está no campo *Marca* da página do site — se alguém passar por lá, vale anotar.
+
+**Decoração perdeu a marca única**, e isso não custa nada: uma faceta com um valor que cobre tudo nunca filtrou nada. As facetas que a demonstração usa são grão em Tintas, amperagem na Elétrica e potência na Iluminação.
+
+### 2. Quatro medidas descreviam outro produto
+
+| SKU | Antes | Agora |
+|---|---|---|
+| `SKU-COZ-001` | 56x33 cm | 56x34 cm |
+| `SKU-COZ-004` | 84x40 cm | 70x40x17 cm |
+| `SKU-COZ-009` | 2 un | 4 un |
+| `SKU-DEC-006` | 2,00x1,80 m | 2,60x1,80 m |
+
+Aqui a foto entrega: uma cuba anunciada como 84x40 ilustrada por uma 70x40 é visível na tela. Oito descrições foram ajustadas pelo mesmo motivo — o espelho de `SKU-DEC-001` dizia *moldura fina* e o produto real é iluminado por LED e não tem moldura; o cabideiro de `SKU-DEC-009` era de madeira e o real é de aço, então o `MATERIAL` mudou junto.
+
+### 3. A carga precisou passar a sobrescrever
+
+O detalhe que quase passou: o atributo `MARCA` sincroniza sempre, mas o **nome nunca sincronizava** — a carga é incremental e não reescreve SKU que já existe. Corrigir só o código deixaria todo banco que já tem os produtos, **inclusive o publicado**, com marca nova embaixo de nome velho. A massa passou a ser a fonte de nome, descrição e imagem, e a carga sobrescreve os três. Ver [D-69](decisoes-tecnicas.md#d-69-a-massa-passou-a-ser-a-fonte-do-nome-e-da-descrição-e-sobrescreve-o-banco).
+
+### Sobre os acentos, medidos no Oracle
+
+- **Guardar é seguro.** O banco é `AL32UTF8`, o texto acentuado volta idêntico, e o Maven já compila em UTF-8.
+- **Cabe.** O maior nome tem 109 caracteres e a coluna aceita 200; a maior URL tem 130 e a coluna aceita 500. Há teste segurando os dois.
+- **O `LIKE` para de achar.** Quem digita `flexivel` não encontra *Flexível*: para o Oracle são letras diferentes.
+- **A busca tolerante segura.** O `JARO_WINKLER` entre a forma acentuada e a sem acento ficou entre **85 e 94**, e o corte da busca é 70. Continua achando, por semelhança em vez de correspondência exata.
+
+Se um dia incomodar, existe saída medida — `convert(nome, 'US7ASCII')` dos dois lados do `LIKE`. Não foi aplicada porque não há caso falhando.
+
+### O catálogo ficou desparelho, e é esperado
+
+22 nomes longos e reais convivem com 89 curtos e inventados: *Cuba para Cozinha Dupla de Embutir ou Sobrepor em Aço Inox 304 Fosco Retangular 70x40x17cm 0,6mm 3.1/2" Mekal* ao lado de *Trena 5m*. Some conforme a coleta avança.
 
 ## A lista
 
 | SKU | Produto | Seção | URL da imagem |
 |---|---|---|---|
-| `SKU-COZ-001` | Cuba Inox 56x33cm | Cozinhas |  |
-| `SKU-COZ-002` | Torneira Gourmet Cromada | Cozinhas |  |
-| `SKU-COZ-003` | Cuba Inox 40x34cm | Cozinhas |  |
-| `SKU-COZ-004` | Cuba Dupla Inox 84x40cm | Cozinhas |  |
-| `SKU-COZ-005` | Torneira de Parede para Cozinha Cromada | Cozinhas |  |
-| `SKU-COZ-006` | Torneira Gourmet Preta Fosca | Cozinhas |  |
-| `SKU-COZ-007` | Lixeira de Embutir para Bancada 5L | Cozinhas |  |
-| `SKU-COZ-008` | Escorredor de Loucas de Embutir Inox | Cozinhas |  |
-| `SKU-COZ-009` | Puxador de Aluminio 128mm - par | Cozinhas |  |
-| `SKU-COZ-010` | Rejunte Epoxi Branco 1kg | Cozinhas |  |
-| `SKU-DEC-001` | Espelho Redondo 60cm | Decoracao |  |
-| `SKU-DEC-002` | Espelho Redondo 40cm | Decoracao |  |
-| `SKU-DEC-003` | Espelho Retangular 80x60cm | Decoracao |  |
-| `SKU-DEC-004` | Quadro Decorativo com Moldura 40x60cm | Decoracao |  |
-| `SKU-DEC-005` | Prateleira de Madeira 60cm | Decoracao |  |
-| `SKU-DEC-006` | Cortina Blackout 2,00x1,80m Cinza | Decoracao |  |
-| `SKU-DEC-007` | Tapete Antiderrapante 1,20x0,60m | Decoracao |  |
-| `SKU-DEC-008` | Papel de Parede Adesivo Marmore 3m | Decoracao |  |
-| `SKU-DEC-009` | Cabideiro de Parede 5 Ganchos | Decoracao |  |
-| `SKU-DEC-010` | Vaso Decorativo de Vidro 25cm | Decoracao |  |
-| `SKU-ELE-001` | Cabo Flexivel 2,5mm 100m | Eletrica |  |
-| `SKU-ELE-002` | Interruptor Simples Branco | Eletrica |  |
+| `SKU-COZ-001` | Cuba Retangular Tramontina Em Aco Inox Acetinado 56x34cm 56 Bl Com Valvula | Cozinhas | https://cdn.leroymerlin.com.br/products/cuba_retangular_tramontina_em_aco_inox_acetinado_56x34cm_56_b_1566754993_5d96_600x600.jpg |
+| `SKU-COZ-002` | Torneira Monocomando Gourmet de Pia para Cozinha com Bica Alta Flexível Cromada Tomas Delinia | Cozinhas | https://cdn.leroymerlin.com.br/products/torneira_monocomando_de_pia_bica_alta_cromado_tomas_delinia_92308153_057c_600x600.png |
+| `SKU-COZ-003` | Cuba De Embutir Retangular 40 Bl Standard 40x34 Cm Sem Válvula Tramontina Inox | Cozinhas | https://cdn.leroymerlin.com.br/products/cuba_de_embutir_retangular_40_bl_standard_40x34_cm_sem_valvul_1571090792_985a_600x600.jpg |
+| `SKU-COZ-004` | Cuba para Cozinha Dupla de Embutir ou Sobrepor em Aço Inox 304 Fosco Retangular 70x40x17cm 0,6mm 3.1/2" Mekal | Cozinhas | https://cdn.leroymerlin.com.br/products/cuba_para_cozinha_dupla_de_embutir_40x17x70cm_escovado_90834422_b6be_600x600.jpg |
+| `SKU-COZ-005` | Torneira Misturador de Parede para Cozinha com Bica Alta Cromada Sao Delinia | Cozinhas | https://cdn.leroymerlin.com.br/products/torneira_misturador_de_parede_bica_alta_cromada_sao_delinia_92420762_4610_600x600.jpg |
+| `SKU-COZ-006` | Torneira Monocomando de Pia para Cozinha com Bica Alta Extensível Preta Fosca Econocozi Jiwi | Cozinhas | https://cdn.leroymerlin.com.br/products/torneira_monocomando_de_pia_bica_alta_preto_econocozi_jiwi_92323371_e005_600x600.JPG |
+| `SKU-COZ-007` | Lixeira Inox Escovado 5 Litros Embutir Pia Cozinha Cesto Lixo Bancada Granito Marmore Tampa Oculta | Cozinhas | https://cdn.leroymerlin.com.br/products/lixeira_inox_escovado_5_litros_embutir_pia_cozinha_cesto_lixo_1572480011_ea6a_600x600.png |
+| `SKU-COZ-008` | Escorredor De Louças De Embutir Bandeja Inox 77x26cm Schmitt | Cozinhas | https://cdn.leroymerlin.com.br/products/escorredor_de_loucas_de_embutir_bandeja_inox_77x26cm_schmitt_1571389776_e170_600x600.png |
+| `SKU-COZ-009` | Puxador para Móveis Alumínio Preto Alça 128mm 4 Peças Java Inspire | Cozinhas | https://cdn.leroymerlin.com.br/products/puxador_de_movel_aluminio_preto_128mm_java_92315902_56bf_600x600.jpg |
+| `SKU-COZ-010` | Rejunte Epoxi Quartzolit Cores 1kg Cerâmica Porcelanato Branco | Cozinhas | https://cdn.leroymerlin.com.br/products/rejunte_epoxi_quartzolit_cores_1kg_ceramica_porcelanato_branco_1567293979_78db_600x600.png |
+| `SKU-DEC-001` | Espelho para Banheiro Redondo com LED Bivolt 60cm Gavix | Decoracao | https://cdn.leroymerlin.com.br/products/espelho_redondo_led_bivolt_60cm_com_led_gavix_92462440_dcc4_600x600.jpg |
+| `SKU-DEC-002` | Espelho Decorativo Redondo 40cm Preto sem Moldura Adnet Arte Própria | Decoracao | https://cdn.leroymerlin.com.br/products/_92358392_fa7a_600x600.jpg |
+| `SKU-DEC-003` | Espelho Retangular Decorativo Lumina 80x60cm Corino Preto | Decoracao | https://cdn.leroymerlin.com.br/products/espelho_decorativo_retangular_80x60cm_corino_lumina_92527960_0cb1_600x600.jpg |
+| `SKU-DEC-004` | Quadro Decorativo Arte Manual com Moldura Dourado Retangular com Vidro 40x60cm | Decoracao | https://cdn.leroymerlin.com.br/products/quadro_arte_manual_dourado_40x60cm_arte_propria_92052016_a21b_600x600.jpg |
+| `SKU-DEC-005` | Prateleira Suspensa 60cm Parede Nicho De Madeira + Suporte | Decoracao | https://cdn.leroymerlin.com.br/products/prateleira_suspensa_60cm_parede_nicho_de_madeira___suporte_1572341279_3c70_600x600.jpg |
+| `SKU-DEC-006` | Cortina Blackout Alycia Cinza 2,60x1,80m 2 Folhas Inspire | Decoracao | https://cdn.leroymerlin.com.br/products/cortina_alycia_2,60x1,80m_moon_inspire_91903350_0001_600x600.jpg |
+| `SKU-DEC-007` | Tapete de Banheiro em Microfibra Retangular Bege 1 Peça Oikos | Decoracao | https://cdn.leroymerlin.com.br/products/tapete_de_banheiro_em_microfibra_retangular_bege_1_peca_oikos_92425396_7e77_600x600.jpg |
+| `SKU-DEC-008` | Papel De Parede Autocolante Azulejo Ladrilho Mármore Calacatta 3m | Decoracao | https://cdn.leroymerlin.com.br/products/papel_de_parede_autocolante_azulejo_ladrilho_marmore_calacatt_1570857265_fbf5_600x600.jpg |
+| `SKU-DEC-009` | Cabideiro De Parede Com 5 Ganchos Para Pendurar Roupas E Bolsas Industrial Em Aço Preto | Decoracao | https://cdn.leroymerlin.com.br/products/cabideiro_de_parede_com_5_ganchos_para_pendurar_roupas_e_bols_1570051837_06ed_600x600.jpg |
+| `SKU-DEC-010` | Vaso Decorativo Vidro Tubo Transparente 25cm Único | Decoracao | https://cdn.leroymerlin.com.br/products/vaso_decorativo_vidro_tubo_transparente_25cm_unico_1571745978_e474_600x600.jpg |
+| `SKU-ELE-001` | Cabo Flexível 2,5mm 100m Azul 750V Megatron | Eletrica | https://cdn.leroymerlin.com.br/products/cabo_flexivel_azul_2_50_rolo_100m_87807090_0002_600x600.jpg |
+| `SKU-ELE-002` | Interruptor Simples 4x2 C/ 1 Tecla 10a 250v Branco Tramontina | Eletrica | https://cdn.leroymerlin.com.br/products/interruptor_simples_4x2_c__1_tecla_10a_250v_branco_tramontina_1568977079_2a81_600x600.jpg |
 | `SKU-ELE-003` | Disjuntor Bipolar 25A | Eletrica |  |
 | `SKU-ELE-004` | Cabo Flexivel 1,5mm 100m | Eletrica |  |
 | `SKU-ELE-005` | Cabo Flexivel 4mm 50m | Eletrica |  |
