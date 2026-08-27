@@ -5,8 +5,8 @@ import SearchBar from './components/SearchBar'
 import BentoActions from './components/BentoActions'
 import ProductCard from './components/ProductCard'
 import PromoBanner from './components/PromoBanner'
-import BottomNav from './components/BottomNav'
 import RouteModal from './components/RouteModal'
+import SplashScreen from './components/SplashScreen'
 import './App.css'
 
 const INITIAL_PRODUCTS = [
@@ -169,6 +169,9 @@ function App() {
 
   return (
     <div className="app-root">
+      {/* Intro Split Splash Screen */}
+      <SplashScreen />
+
       {/* Header / TopAppBar */}
       <Header
         activeTab={activeTab}
@@ -255,12 +258,6 @@ function App() {
           }}
         />
       </main>
-
-      {/* Mobile Bottom Navigation */}
-      <BottomNav
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
 
       {/* Interactive Modal (Map, Specialist, Route) */}
       <RouteModal

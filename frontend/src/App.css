@@ -19,7 +19,7 @@
   width: 100%;
   max-width: var(--container-mobile-max);
   margin: 0 auto;
-  padding: 20px 16px calc(80px + var(--safe-bottom)) 16px;
+  padding: 20px 16px calc(32px + var(--safe-bottom)) 16px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -1375,3 +1375,184 @@
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* --------------------------------------------------------------------------
+   App Launch Splash Screen (Split Curtain Opening)
+   -------------------------------------------------------------------------- */
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: all;
+  user-select: none;
+}
+
+.splash-screen.is-opening {
+  pointer-events: none;
+}
+
+/* Left & Right Split Doors */
+.splash-door {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50.5vw;
+  height: 100vh;
+  height: 100dvh;
+  background: linear-gradient(145deg, #004d1c 0%, #006b27 60%, #008733 100%);
+  transition: transform 0.65s cubic-bezier(0.76, 0, 0.24, 1);
+  will-change: transform;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.splash-door-left {
+  left: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.splash-door-right {
+  right: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.splash-door-pattern {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(136, 251, 149, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Doors Split Apart Animation */
+.splash-screen.is-opening .splash-door-left {
+  transform: translateX(-100%);
+}
+
+.splash-screen.is-opening .splash-door-right {
+  transform: translateX(100%);
+}
+
+/* Center Seam Light Line */
+.splash-seam-glow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(136, 251, 149, 0.6) 20%,
+    #ffffff 50%,
+    rgba(136, 251, 149, 0.6) 80%,
+    transparent 100%
+  );
+  z-index: 2;
+  opacity: 0.8;
+  transition: opacity 0.25s ease;
+  box-shadow: 0 0 12px rgba(136, 251, 149, 0.8);
+}
+
+.splash-screen.is-opening .splash-seam-glow {
+  opacity: 0;
+}
+
+/* Center Brand Content */
+.splash-center-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  text-align: center;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  will-change: transform, opacity;
+}
+
+.splash-screen.is-opening .splash-center-content {
+  transform: scale(1.15);
+  opacity: 0;
+}
+
+.splash-logo-card {
+  background-color: #ffffff;
+  padding: 16px 28px;
+  border-radius: 20px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: splashLogoPop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.splash-logo-img {
+  height: 48px;
+  width: auto;
+  max-width: 190px;
+  object-fit: contain;
+  display: block;
+}
+
+.splash-brand-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.splash-tagline {
+  font-family: var(--font-label);
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  animation: fadeIn 0.4s ease-out 0.15s both;
+}
+
+.splash-loader-bar {
+  width: 140px;
+  height: 3px;
+  background-color: rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.splash-loader-fill {
+  width: 100%;
+  height: 100%;
+  background-color: #88fb95;
+  border-radius: var(--radius-full);
+  transform-origin: left;
+  animation: splashLoadProgress 0.55s ease-out forwards;
+}
+
+@keyframes splashLogoPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes splashLoadProgress {
+  0% {
+    transform: scaleX(0);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
