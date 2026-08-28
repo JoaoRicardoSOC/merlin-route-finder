@@ -1,3 +1,5 @@
+import { formatPrice } from '../utils/format'
+
 /**
  * Prateleira vazia: o cliente relata que não achou o produto e recebe um substituto.
  *
@@ -22,11 +24,6 @@ export default function RupturaModal({
   const sugestao = resultado?.estado === 'sugerido' ? resultado.sugestao : null
   const produto = sugestao?.produtoSugerido
   const veioDaIA = sugestao?.origemSugestao === 'ASSISTENTE_IA'
-
-  const formatarPreco = (valor) => {
-    const n = typeof valor === 'number' ? valor : parseFloat(valor) || 0
-    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-  }
 
   // O corredor vem plano na resposta desde que a listagem passou a levá-lo; o ponto do mapa
   // fica como recuo para respostas antigas em cache.
@@ -94,7 +91,7 @@ export default function RupturaModal({
                       <span>{corredorDe(produto)}</span>
                     </div>
                   )}
-                  <span className="ruptura-produto-preco">{formatarPreco(produto?.preco)}</span>
+                  <span className="ruptura-produto-preco">{formatPrice(produto?.preco)}</span>
                 </div>
               </div>
 

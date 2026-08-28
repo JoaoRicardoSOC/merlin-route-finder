@@ -1,4 +1,5 @@
 import React from 'react'
+import { formatPrice } from '../utils/format'
 
 export default function RoteiroDrawer({
   isOpen,
@@ -13,11 +14,6 @@ export default function RoteiroDrawer({
 }) {
 
   if (!isOpen) return null
-
-  const formatPrice = (price) => {
-    const val = typeof price === 'number' ? price : parseFloat(price) || 0
-    return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-  }
 
   const totalPrice = items.reduce((acc, item) => {
     const p = typeof item.preco === 'number' ? item.preco : parseFloat(item.preco) || 0

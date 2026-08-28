@@ -1,5 +1,6 @@
 import React from 'react'
 import { SECTOR_METADATA, DEFAULT_SECTOR_META } from '../services/catalogService'
+import { formatPrice } from '../utils/format'
 
 export default function ProductCard({
   product,
@@ -7,16 +8,6 @@ export default function ProductCard({
   onNavigateToProduct,
   onViewDetails
 }) {
-  const formatPrice = (price) => {
-    if (typeof price !== 'number') {
-      price = parseFloat(price) || 0
-    }
-    return price.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    })
-  }
-
   const name = product.nome || product.name || 'Produto sem nome'
   const specs = product.descricao || product.specs || ''
   const price = product.preco ?? product.price ?? 0

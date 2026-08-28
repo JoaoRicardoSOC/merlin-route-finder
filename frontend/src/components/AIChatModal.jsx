@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { consultarHistoricoChat, enviarMensagemChat } from '../services/chatService'
+import { formatPrice } from '../utils/format'
 
 export default function AIChatModal({
   isOpen,
@@ -157,11 +158,6 @@ export default function AIChatModal({
       e.preventDefault()
       handleSendMessage()
     }
-  }
-
-  const formatPrice = (price) => {
-    const val = typeof price === 'number' ? price : parseFloat(price) || 0
-    return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   }
 
   return (

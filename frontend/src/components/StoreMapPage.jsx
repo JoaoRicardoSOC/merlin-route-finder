@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react'
+import { formatPrice } from '../utils/format'
 import {
   STORE_SECTORS,
   STORE_AMENITIES,
@@ -639,7 +640,7 @@ export default function StoreMapPage({
               </div>
               <h4 className="product-name">{selectedPinItem.nome}</h4>
               <span className="product-price">
-                {(selectedPinItem.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                {formatPrice(selectedPinItem.preco)}
               </span>
             </div>
 

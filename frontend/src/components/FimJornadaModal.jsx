@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { formatPrice } from '../utils/format'
 
 export default function FimJornadaModal({
   isOpen,
@@ -16,10 +17,6 @@ export default function FimJornadaModal({
     const p = typeof item.preco === 'number' ? item.preco : parseFloat(item.preco) || 0
     return acc + p
   }, 0)
-
-  const formatPrice = (val) => {
-    return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-  }
 
   return (
     <div className="modal-backdrop fim-jornada-backdrop" onClick={onClose}>

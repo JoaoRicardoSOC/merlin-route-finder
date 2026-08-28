@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { fetchProdutoDetalhe, SECTOR_METADATA, DEFAULT_SECTOR_META } from '../services/catalogService'
+import { formatPrice } from '../utils/format'
 
 export default function ProductDetailPage({
   product,
@@ -26,11 +27,6 @@ export default function ProductDetailPage({
   }, [product])
 
   if (!product) return null
-
-  const formatPrice = (price) => {
-    const val = typeof price === 'number' ? price : parseFloat(price) || 0
-    return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-  }
 
   const name = detailedProduct.nome || detailedProduct.name || 'Produto'
   const specs = detailedProduct.descricao || detailedProduct.specs || ''
