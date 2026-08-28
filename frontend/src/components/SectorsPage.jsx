@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { SECTOR_METADATA, DEFAULT_SECTOR_META } from '../services/catalogService'
+import { SECTOR_METADATA, DEFAULT_SECTOR_META } from '../constants/setores'
 
 export default function SectorsPage({
   secoes = [],

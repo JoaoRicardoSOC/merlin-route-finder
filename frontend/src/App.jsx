@@ -21,10 +21,9 @@ import FloatingAIChatButton from './components/FloatingAIChatButton'
 import AIChatModal from './components/AIChatModal'
 import {
   fetchSecoes,
-  fetchProdutos,
-  SECTOR_METADATA,
-  DEFAULT_SECTOR_META
+  fetchProdutos
 } from './services/catalogService'
+import { SECTOR_METADATA, DEFAULT_SECTOR_META } from './constants/setores'
 import {
   obterOuCriarSessao,
   recentrarPosicao,

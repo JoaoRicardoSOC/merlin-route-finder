@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { fetchProdutoDetalhe, SECTOR_METADATA, DEFAULT_SECTOR_META } from '../services/catalogService'
+import { fetchProdutoDetalhe } from '../services/catalogService'
+import { SECTOR_METADATA, DEFAULT_SECTOR_META } from '../constants/setores'
 import { formatPrice } from '../utils/format'
 
 export default function ProductDetailModal({
