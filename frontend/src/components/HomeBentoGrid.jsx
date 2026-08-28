@@ -2,8 +2,7 @@ import React from 'react'
 
 export default function HomeBentoGrid({
   onOpenMap,
-  onOpenSectors,
-  onCallSpecialist
+  onOpenSectors
 }) {
   return (
     <section className="home-bento-section" aria-label="Ações Rápidas">
@@ -48,25 +47,6 @@ export default function HomeBentoGrid({
           </div>
         </button>
 
-        {/* Card 3: Chamar Especialista */}
-        <button
-          type="button"
-          className="bento-card bento-card-green"
-          onClick={onCallSpecialist}
-        >
-          <div className="bento-card-header">
-            <div className="bento-icon-box">
-              <span className="material-symbols-outlined filled">support_agent</span>
-            </div>
-            <span className="bento-arrow">
-              <span className="material-symbols-outlined">arrow_forward</span>
-            </span>
-          </div>
-          <div className="bento-card-body">
-            <h3 className="bento-card-title">Chamar Especialista</h3>
-            <p className="bento-card-desc">Solicite ajuda presencial no corredor</p>
-          </div>
-        </button>
       </div>
     </section>
   )

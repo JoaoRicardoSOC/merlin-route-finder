@@ -14,7 +14,6 @@ import LocationCodeModal from './components/LocationCodeModal'
 import RoteiroDrawer from './components/RoteiroDrawer'
 import FacetFiltersModal from './components/FacetFiltersModal'
 import PromoBanner from './components/PromoBanner'
-import RouteModal from './components/RouteModal'
 import SplashScreen from './components/SplashScreen'
 import BottomNav from './components/BottomNav'
 import FloatingAIChatButton from './components/FloatingAIChatButton'
@@ -100,12 +99,6 @@ function App() {
   const [isTrocandoItem, setIsTrocandoItem] = useState(false)
   const [selectedProductForDetail, setSelectedProductForDetail] = useState(null)
   const [focusedProductForMap, setFocusedProductForMap] = useState(null)
-  const [modalConfig, setModalConfig] = useState({
-    isOpen: false,
-    title: '',
-    type: '',
-    data: null
-  })
 
 
   const showToast = (msg) => {
@@ -494,16 +487,13 @@ function App() {
 
   const handleStartFullRoute = (items) => {
     handleOpenMap()
-    showToast(`Traçando rota otimizada com ${items.length} paradas!`)
-  }
-
-  const handleCallSpecialist = () => {
-    setModalConfig({
-      isOpen: true,
-      title: 'Solicitação de Especialista Presencial',
-      type: 'specialist',
-      data: null
-    })
+    // Sem promessa de otimizacao: o sistema mostra ONDE cada item esta. O calculo de rota
+    // saiu do escopo na virada de 24/08, e prometer o que nao existe e o defeito que este
+    // card veio corrigir.
+    const onde = items.length === 1
+      ? 'está seu item'
+      : `estão seus ${items.length} itens`
+    showToast(`Mostrando no mapa onde ${onde}`)
   }
 
   // Handle bottom navigation tab clicks
@@ -575,11 +565,10 @@ function App() {
               isGliding={isGlidingSearch}
             />
 
-            {/* Minimalist Green Bento Action Grid (Mapa, Setores, Chamar Especialista) */}
+            {/* Bento de acoes rapidas: mapa e setores */}
             <HomeBentoGrid
               onOpenMap={handleOpenMap}
               onOpenSectors={handleOpenSectorsPage}
-              onCallSpecialist={handleCallSpecialist}
             />
 
             {/* Featured Promotional Banner */}
@@ -753,15 +742,6 @@ function App() {
         selectedSecao={selectedSecao}
         onSelectSecao={handleSelectSecao}
         onOpenMap={handleOpenMap}
-      />
-
-      {/* Interactive Modal (Map, Specialist, Route) */}
-      <RouteModal
-        isOpen={modalConfig.isOpen}
-        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
-        title={modalConfig.title}
-        type={modalConfig.type}
-        data={modalConfig.data}
       />
 
       {/* Toast Notification */}

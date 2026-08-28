@@ -179,7 +179,7 @@ export default function AIChatModal({
             <div className="chat-title-wrap">
               <h3 className="chat-title">Assistente IA da Loja</h3>
               <span className="chat-status-text">
-                {isProductContext ? 'Contexto de Produto Ativo' : 'Grounded no Catálogo • Online'}
+                {isProductContext ? 'Contexto de Produto Ativo' : 'Grounded no Catálogo'}
               </span>
             </div>
           </div>

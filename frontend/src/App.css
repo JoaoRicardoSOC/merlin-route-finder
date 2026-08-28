@@ -475,9 +475,6 @@
   font-size: 26px;
 }
 
-.specialist-icon {
-  background-color: var(--primary-light);
-}
 
 .bento-text-wrapper {
   display: flex;
@@ -1029,48 +1026,11 @@
   font-weight: 700;
 }
 
-.map-tip {
-  font-size: 13px;
-  color: var(--on-surface-variant);
-  text-align: center;
-}
 
-.specialist-status {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 10px;
-  margin-bottom: 14px;
-}
 
-.specialist-avatar {
-  font-size: 44px;
-  color: var(--primary);
-  background-color: var(--primary-light);
-  padding: 12px;
-  border-radius: var(--radius-full);
-}
 
-.specialist-status h4 {
-  font-size: 16px;
-  font-weight: 700;
-}
 
-.specialist-status p {
-  font-size: 13px;
-  color: var(--text-muted);
-}
 
-.specialist-msg {
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--on-surface);
-  background-color: var(--surface-container-low);
-  padding: 12px;
-  border-radius: var(--radius-md);
-  text-align: center;
-}
 
 .route-target-info {
   margin-bottom: 14px;
@@ -4342,7 +4302,8 @@
 
 @media (min-width: 768px) {
   .home-bento-grid {
-    grid-template-columns: repeat(3, 1fr);
+    /* Dois cartoes: tres colunas deixariam um buraco a direita. */
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 

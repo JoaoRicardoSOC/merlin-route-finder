@@ -11,7 +11,7 @@ export default function PromoBanner({ onExplore }) {
         </div>
         <h3 className="promo-title">Iluminação Inteligente & Sustentável</h3>
         <p className="promo-subtitle">
-          Descubra painéis solares, fitas inteligentes e lâmpadas dimerizáveis no corredor A12.
+          Fitas LED, lâmpadas de filamento e painéis de sobrepor, no corredor de Iluminação.
         </p>
         <button className="promo-cta-btn" onClick={onExplore}>
           <span>Explorar Novidades</span>

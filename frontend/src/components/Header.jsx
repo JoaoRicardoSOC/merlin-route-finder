@@ -49,12 +49,6 @@ export default function Header({
             Scan & Rota
           </button>
           <button 
-            className={`nav-link ${activeTab === 'projects' ? 'active' : ''}`}
-            onClick={() => setActiveTab('projects')}
-          >
-            Projetos
-          </button>
-          <button 
             className={`nav-link ${activeTab === 'support' ? 'active' : ''}`}
             onClick={() => setActiveTab('support')}
           >
@@ -66,7 +60,7 @@ export default function Header({
         <div className="header-actions">
           <button 
             className="icon-button cart-header-btn" 
-            aria-label={`Meu roteiro com ${cartCount} itens`}
+            aria-label={`Meu roteiro com ${cartCount} ${cartCount === 1 ? 'item' : 'itens'}`}
             title="Abrir meu roteiro de compras"
             onClick={onOpenRoteiro}
             type="button"
