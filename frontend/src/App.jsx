@@ -3,12 +3,12 @@ import Header from './components/Header'
 import LocationStatus from './components/LocationStatus'
 import SearchBar from './components/SearchBar'
 import BentoActions from './components/BentoActions'
-import SectorExplorer from './components/SectorExplorer'
-import SectorBanner from './components/SectorBanner'
 import SectorsDrawer from './components/SectorsDrawer'
 import LocationCodeModal from './components/LocationCodeModal'
 import ProductDetailModal from './components/ProductDetailModal'
 import RoteiroDrawer from './components/RoteiroDrawer'
+import FacetFiltersModal from './components/FacetFiltersModal'
+import ActiveFilterChips from './components/ActiveFilterChips'
 import ProductCard from './components/ProductCard'
 import PromoBanner from './components/PromoBanner'
 import RouteModal from './components/RouteModal'
@@ -47,11 +47,13 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSecao, setSelectedSecao] = useState('todos')
   const [apenasDisponiveis, setApenasDisponiveis] = useState(false)
+  const [selectedAtributos, setSelectedAtributos] = useState({})
   const [toastMessage, setToastMessage] = useState(null)
 
   // Data states
   const [secoes, setSecoes] = useState([])
   const [produtos, setProdutos] = useState([])
+  const [facetas, setFacetas] = useState([])
   const [totalProductsCount, setTotalProductsCount] = useState(0)
   const [isLoadingSecoes, setIsLoadingSecoes] = useState(true)
   const [isLoadingProdutos, setIsLoadingProdutos] = useState(true)
@@ -72,6 +74,7 @@ function App() {
   // Drawer & Modals state
   const [isSectorsDrawerOpen, setIsSectorsDrawerOpen] = useState(false)
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false)
+  const [isFacetModalOpen, setIsFacetModalOpen] = useState(false)
   const [selectedProductForDetail, setSelectedProductForDetail] = useState(null)
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
@@ -164,7 +167,7 @@ function App() {
     return () => { isMounted = false }
   }, [])
 
-  // 3. Load products based on selected sector, search query and availability
+  // 3. Load products based on sector, query, availability and dynamic attribute facets (UC-002 / Passo 5)
   const loadProdutos = useCallback(async () => {
     setIsLoadingProdutos(true)
     try {
@@ -172,16 +175,18 @@ function App() {
         query: searchQuery,
         secao: selectedSecao === 'todos' ? '' : selectedSecao,
         apenasDisponiveis: apenasDisponiveis,
+        atributos: selectedAtributos,
         page: 0,
         size: 50
       })
       setProdutos(response.content || [])
+      setFacetas(response.facetas || [])
     } catch (err) {
       console.error('Erro ao buscar produtos:', err)
     } finally {
       setIsLoadingProdutos(false)
     }
-  }, [searchQuery, selectedSecao, apenasDisponiveis])
+  }, [searchQuery, selectedSecao, apenasDisponiveis, selectedAtributos])
 
   // Debounced search & filtering
   useEffect(() => {
@@ -230,19 +235,41 @@ function App() {
 
   const handleSelectSecao = (secaoNome) => {
     setSelectedSecao(secaoNome)
+    // Clear attribute filters on section change so new dynamic facets apply
+    setSelectedAtributos({})
     if (secaoNome !== 'todos') {
       const meta = SECTOR_METADATA[secaoNome] || DEFAULT_SECTOR_META
       showToast(`Filtrando pelo setor: ${secaoNome} (${meta.corredor})`)
     } else {
       showToast('Exibindo catálogo completo de todas as seções')
     }
+  }
 
-    if (productsSectionRef.current) {
-      const yOffset = -80
-      const element = productsSectionRef.current
-      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset
-      window.scrollTo({ top: y, behavior: 'smooth' })
-    }
+  // Attribute facet toggle handler (Semântica: valores da mesma chave são "ou", chaves diferentes são "e")
+  const handleToggleAtributo = (chave, valor) => {
+    setSelectedAtributos(prev => {
+      const currentList = prev[chave] || []
+      const updatedList = currentList.includes(valor)
+        ? currentList.filter(v => v !== valor)
+        : [...currentList, valor]
+
+      if (updatedList.length === 0) {
+        const next = { ...prev }
+        delete next[chave]
+        return next
+      }
+      return { ...prev, [chave]: updatedList }
+    })
+  }
+
+  const handleRemoveAtributo = (chave, valor) => {
+    handleToggleAtributo(chave, valor)
+  }
+
+  const handleClearAllFilters = () => {
+    setSelectedAtributos({})
+    setApenasDisponiveis(false)
+    showToast('Filtros de características limpos')
   }
 
   // Roteiro Actions
@@ -314,6 +341,12 @@ function App() {
       setIsRoteiroDrawerOpen(true)
     }
   }
+
+  // Count active facet filters
+  const activeFiltersCount = Object.values(selectedAtributos).reduce(
+    (acc, vals) => acc + (Array.isArray(vals) ? vals.length : vals ? 1 : 0),
+    0
+  ) + (apenasDisponiveis ? 1 : 0)
 
   return (
     <div className="app-root">
@@ -395,18 +428,35 @@ function App() {
               </div>
             </div>
 
-            {/* Quick Filter Bar: Availability switch & Drawer button */}
+            {/* Quick Filter Bar: Availability, Facet Characteristics Modal Button & Sectors */}
             <div className="catalog-filters-bar">
-              <label className="toggle-availability-label">
-                <input
-                  type="checkbox"
-                  checked={apenasDisponiveis}
-                  onChange={(e) => setApenasDisponiveis(e.target.checked)}
-                  className="toggle-checkbox"
-                />
-                <span className="toggle-custom-slider"></span>
-                <span className="toggle-text">Apenas disponíveis hoje</span>
-              </label>
+              <div className="filters-left-group">
+                {/* Dynamic Characteristics Filter Button */}
+                <button
+                  type="button"
+                  className={`characteristics-filter-btn ${activeFiltersCount > 0 ? 'has-active' : ''}`}
+                  onClick={() => setIsFacetModalOpen(true)}
+                  title="Filtrar por marca, grão, bitola, amperagem, etc."
+                >
+                  <span className="material-symbols-outlined">tune</span>
+                  <span>Filtros</span>
+                  {activeFiltersCount > 0 && (
+                    <span className="filter-count-badge">{activeFiltersCount}</span>
+                  )}
+                </button>
+
+                {/* Quick Availability Switch */}
+                <label className="toggle-availability-label">
+                  <input
+                    type="checkbox"
+                    checked={apenasDisponiveis}
+                    onChange={(e) => setApenasDisponiveis(e.target.checked)}
+                    className="toggle-checkbox"
+                  />
+                  <span className="toggle-custom-slider"></span>
+                  <span className="toggle-text">Apenas disponíveis hoje</span>
+                </label>
+              </div>
 
               <button
                 type="button"
@@ -417,6 +467,16 @@ function App() {
                 <span>Todos os Setores</span>
               </button>
             </div>
+
+            {/* Active Filter Chips Row */}
+            <ActiveFilterChips
+              selectedAtributos={selectedAtributos}
+              facetas={facetas}
+              apenasDisponiveis={apenasDisponiveis}
+              onToggleDisponiveis={setApenasDisponiveis}
+              onRemoveAtributo={handleRemoveAtributo}
+              onClearAll={handleClearAllFilters}
+            />
           </div>
 
           {isLoadingProdutos ? (
@@ -437,15 +497,24 @@ function App() {
               <span className="material-symbols-outlined empty-icon">search_off</span>
               <h3 className="empty-title">Nenhum produto encontrado</h3>
               <p className="empty-desc">
-                Não encontramos itens para o filtro selecionado{' '}
+                Não encontramos itens para a combinação de filtros selecionada{' '}
                 {selectedSecao !== 'todos' && <strong>em {selectedSecao}</strong>}
                 {searchQuery && <span> com o termo "<em>{searchQuery}</em>"</span>}.
               </p>
               <div className="empty-actions">
-                {selectedSecao !== 'todos' && (
+                {activeFiltersCount > 0 && (
                   <button
                     type="button"
                     className="empty-action-btn primary"
+                    onClick={handleClearAllFilters}
+                  >
+                    Limpar características e filtros
+                  </button>
+                )}
+                {selectedSecao !== 'todos' && (
+                  <button
+                    type="button"
+                    className="empty-action-btn"
                     onClick={() => handleSelectSecao('todos')}
                   >
                     Ver todas as seções
@@ -504,6 +573,19 @@ function App() {
       <BottomNav
         activeTab={activeTab}
         setActiveTab={handleTabChange}
+      />
+
+      {/* Dynamic Facet Filters Modal (Passo 5 do Fluxo / UC-002) */}
+      <FacetFiltersModal
+        isOpen={isFacetModalOpen}
+        onClose={() => setIsFacetModalOpen(false)}
+        facetas={facetas}
+        selectedAtributos={selectedAtributos}
+        onToggleAtributo={handleToggleAtributo}
+        onClearAtributos={handleClearAllFilters}
+        apenasDisponiveis={apenasDisponiveis}
+        onToggleDisponiveis={setApenasDisponiveis}
+        totalResultsCount={produtos.length}
       />
 
       {/* Roteiro / Shopping List Drawer */}

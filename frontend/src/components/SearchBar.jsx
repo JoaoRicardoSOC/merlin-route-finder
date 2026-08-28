@@ -23,10 +23,9 @@ export default function SearchBar({
     <div className="search-section" id="store-search-section">
       <div className="search-header">
         <label className="search-label" htmlFor="store-search">
-          <span className="material-symbols-outlined search-ai-sparkle filled">auto_awesome</span>
-          Busca Inteligente no Catálogo
+          <span className="material-symbols-outlined search-ai-sparkle filled">search</span>
+          Buscar no Catálogo
         </label>
-        <span className="search-badge">Tolerante a erros de digitação</span>
       </div>
 
       <form onSubmit={handleSubmit} className={`search-bar-form ${isFocused ? 'focused' : ''}`}>
@@ -39,7 +38,7 @@ export default function SearchBar({
           onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholder="Digite o produto (ex: tnta, furadera, disjuntor, silicone...)"
+          placeholder="Pesquisar produtos, materiais ou ferramentas..."
           className="search-input"
           autoComplete="off"
         />

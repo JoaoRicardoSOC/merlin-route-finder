@@ -318,12 +318,37 @@ export async function fetchSecoes() {
  * Searches and filters catalog products (GET /api/v1/produtos)
  * Supports secao, query, apenasDisponiveis, page, size
  */
-export async function fetchProdutos({ query = '', secao = '', apenasDisponiveis = false, page = 0, size = 50 } = {}) {
+export async function fetchProdutos({
+  query = '',
+  secao = '',
+  apenasDisponiveis = false,
+  atributos = {},
+  page = 0,
+  size = 50
+} = {}) {
   try {
     const params = new URLSearchParams()
     if (query && query.trim() !== '') params.append('query', query.trim())
     if (secao && secao.trim() !== '' && secao !== 'todos') params.append('secao', secao.trim())
     if (apenasDisponiveis) params.append('apenasDisponiveis', 'true')
+
+    // Append repeated 'atributo' query params: atributo=CHAVE:valor
+    if (Array.isArray(atributos)) {
+      atributos.forEach(item => {
+        if (item && item.includes(':')) params.append('atributo', item)
+      })
+    } else if (atributos && typeof atributos === 'object') {
+      Object.entries(atributos).forEach(([chave, valores]) => {
+        if (Array.isArray(valores)) {
+          valores.forEach(v => {
+            if (v) params.append('atributo', `${chave}:${v}`)
+          })
+        } else if (valores) {
+          params.append('atributo', `${chave}:${valores}`)
+        }
+      })
+    }
+
     params.append('page', page.toString())
     params.append('size', size.toString())
 
