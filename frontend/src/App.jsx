@@ -3,10 +3,11 @@ import Header from './components/Header'
 import LocationStatus from './components/LocationStatus'
 import SearchBar from './components/SearchBar'
 import HomeBentoGrid from './components/HomeBentoGrid'
+import SectorsPage from './components/SectorsPage'
 import CatalogSearchPage from './components/CatalogSearchPage'
+import ProductDetailPage from './components/ProductDetailPage'
 import SectorsDrawer from './components/SectorsDrawer'
 import LocationCodeModal from './components/LocationCodeModal'
-import ProductDetailModal from './components/ProductDetailModal'
 import RoteiroDrawer from './components/RoteiroDrawer'
 import FacetFiltersModal from './components/FacetFiltersModal'
 import PromoBanner from './components/PromoBanner'
@@ -42,7 +43,8 @@ const SEARCH_SUGGESTIONS = [
 ]
 
 function App() {
-  const [currentView, setCurrentView] = useState('home') // 'home' | 'search'
+  const [currentView, setCurrentView] = useState('home') // 'home' | 'search' | 'sectors' | 'product-detail'
+  const [previousView, setPreviousView] = useState('home')
   const [activeTab, setActiveTab] = useState('home')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSecao, setSelectedSecao] = useState('todos')
@@ -189,6 +191,7 @@ function App() {
   // Navigation to search view with smooth glide transition
   const handleOpenSearchPage = (shouldFocus = true, initialQuery = '') => {
     if (initialQuery) setSearchQuery(initialQuery)
+    setPreviousView(currentView)
     setIsGlidingSearch(true)
     setTimeout(() => {
       setAutoFocusSearch(shouldFocus ? Date.now() : false)
@@ -198,8 +201,43 @@ function App() {
     }, 180)
   }
 
+  // Navigation to Sectors Page
+  const handleOpenSectorsPage = () => {
+    setPreviousView(currentView)
+    setCurrentView('sectors')
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }
+
+  // Navigation to Dedicated Product Detail Page
+  const handleOpenProductDetailPage = (product) => {
+    setSelectedProductForDetail(product)
+    setPreviousView(currentView)
+    setCurrentView('product-detail')
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }
+
   const handleBackToHome = () => {
     setCurrentView('home')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleBackFromSearch = () => {
+    if (previousView === 'sectors') {
+      setCurrentView('sectors')
+    } else {
+      setCurrentView('home')
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleBackFromProductDetail = () => {
+    if (previousView === 'sectors') {
+      setCurrentView('sectors')
+    } else if (previousView === 'search') {
+      setCurrentView('search')
+    } else {
+      setCurrentView('home')
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -243,15 +281,15 @@ function App() {
   const handleSelectSecao = (secaoNome) => {
     setSelectedSecao(secaoNome)
     setSelectedAtributos({})
-    if (currentView !== 'search') {
-      setCurrentView('search')
-    }
+    setPreviousView(currentView)
+    setCurrentView('search')
     if (secaoNome !== 'todos') {
       const meta = SECTOR_METADATA[secaoNome] || DEFAULT_SECTOR_META
       showToast(`Filtrando pelo setor: ${secaoNome} (${meta.corredor})`)
     } else {
       showToast('Exibindo catálogo completo de todas as seções')
     }
+    window.scrollTo({ top: 0, behavior: 'instant' })
   }
 
   // Attribute facet toggle handler (Semântica: valores da mesma chave são "ou", chaves diferentes são "e")
@@ -368,7 +406,7 @@ function App() {
       <Header
         activeTab={activeTab}
         setActiveTab={handleTabChange}
-        onOpenSectors={() => setIsSectorsDrawerOpen(true)}
+        onOpenSectors={handleOpenSectorsPage}
         onOpenRoteiro={() => setIsRoteiroDrawerOpen(true)}
         onSearchClick={() => handleOpenSearchPage(true)}
         cartCount={roteiroItems.length}
@@ -407,7 +445,7 @@ function App() {
             {/* Minimalist Green Bento Action Grid (Mapa, Setores, Chamar Especialista) */}
             <HomeBentoGrid
               onOpenMap={handleOpenMap}
-              onOpenSectors={() => setIsSectorsDrawerOpen(true)}
+              onOpenSectors={handleOpenSectorsPage}
               onCallSpecialist={handleCallSpecialist}
             />
 
@@ -419,14 +457,41 @@ function App() {
               }}
             />
           </div>
+        ) : currentView === 'sectors' ? (
+          /* ========================================================
+             2. SECTORS PAGE VIEW (Dedicated list of departments)
+             ======================================================== */
+          <SectorsPage
+            secoes={secoes}
+            totalProductsCount={totalProductsCount}
+            onSelectSector={handleSelectSecao}
+            onBackToHome={handleBackToHome}
+            isLoading={isLoadingSecoes}
+          />
+        ) : currentView === 'product-detail' ? (
+          /* ========================================================
+             3. DEDICATED PRODUCT DETAIL PAGE (Full page with specs & map)
+             ======================================================== */
+          <ProductDetailPage
+            product={selectedProductForDetail}
+            onBack={handleBackFromProductDetail}
+            onAddToCart={handleAddToCart}
+            onNavigateToProduct={handleNavigateToProduct}
+            onViewOnMap={(product) => setModalConfig({
+              isOpen: true,
+              title: `Planta da Loja • ${product.corredor || 'Corredor do Produto'}`,
+              type: 'map',
+              data: product
+            })}
+          />
         ) : (
           /* ========================================================
-             2. SEARCH & CATALOG RESULTS VIEW (Dedicated results page)
+             4. SEARCH & CATALOG RESULTS VIEW (Dedicated results page)
              ======================================================== */
           <CatalogSearchPage
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
-            onBackToHome={handleBackToHome}
+            onBackToHome={handleBackFromSearch}
             secoes={secoes}
             selectedSecao={selectedSecao}
             onSelectSecao={handleSelectSecao}
@@ -444,17 +509,19 @@ function App() {
             onOpenSectorsDrawer={() => setIsSectorsDrawerOpen(true)}
             onAddToCart={handleAddToCart}
             onNavigateToProduct={handleNavigateToProduct}
-            onViewProductDetails={(product) => setSelectedProductForDetail(product)}
+            onViewProductDetails={handleOpenProductDetailPage}
             autoFocusSearch={autoFocusSearch}
           />
         )}
       </main>
 
-      {/* Bottom Navigation for Mobile */}
-      <BottomNav
-        activeTab={activeTab}
-        setActiveTab={handleTabChange}
-      />
+      {/* Bottom Navigation for Mobile (hidden on dedicated product detail page) */}
+      {currentView !== 'product-detail' && (
+        <BottomNav
+          activeTab={activeTab}
+          setActiveTab={handleTabChange}
+        />
+      )}
 
       {/* Dynamic Facet Filters Modal (Passo 5 do Fluxo / UC-002) */}
       <FacetFiltersModal
@@ -477,15 +544,6 @@ function App() {
         onRemoveItem={handleRemoveFromRoteiro}
         onClearAll={handleClearRoteiro}
         onStartRoute={handleStartFullRoute}
-      />
-
-      {/* Product Detail Modal (UC-003) */}
-      <ProductDetailModal
-        isOpen={!!selectedProductForDetail}
-        onClose={() => setSelectedProductForDetail(null)}
-        product={selectedProductForDetail}
-        onAddToCart={handleAddToCart}
-        onNavigateToProduct={handleNavigateToProduct}
       />
 
       {/* Location Code & QR Scanner Modal (Plan A & Plan B) */}

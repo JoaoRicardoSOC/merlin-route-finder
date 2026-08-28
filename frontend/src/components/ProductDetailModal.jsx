@@ -6,7 +6,8 @@ export default function ProductDetailModal({
   onClose,
   product,
   onAddToCart,
-  onNavigateToProduct
+  onNavigateToProduct,
+  onViewOnMap
 }) {
   const [detailedProduct, setDetailedProduct] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -51,12 +52,13 @@ export default function ProductDetailModal({
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="product-detail-modal-container"
+        className="product-detail-modal-container animate-fade-in"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label={`Detalhes de ${name}`}
       >
+        {/* Header */}
         <div className="product-detail-header">
           <div className="detail-sku-badge">SKU: {sku}</div>
           <button
@@ -69,8 +71,9 @@ export default function ProductDetailModal({
           </button>
         </div>
 
+        {/* Body */}
         <div className="product-detail-body">
-          {/* Product Hero Image */}
+          {/* Product Hero Visual */}
           <div className="product-detail-visual">
             {image ? (
               <img src={image} alt={name} className="product-detail-img" />
@@ -82,16 +85,16 @@ export default function ProductDetailModal({
             {secao && <span className="product-detail-sector-pill">{secao}</span>}
           </div>
 
-          {/* Title and Specs */}
+          {/* Title and Description */}
           <div className="product-detail-main-info">
             <h2 className="product-detail-title">{name}</h2>
             {specs && <p className="product-detail-description">{specs}</p>}
           </div>
 
-          {/* Physical Location in Store */}
+          {/* Physical Location in Store & Map Button */}
           <div className="product-detail-location-card">
             <div className="detail-loc-icon">
-              <span className="material-symbols-outlined filled">near_me</span>
+              <span className="material-symbols-outlined filled">location_on</span>
             </div>
             <div className="detail-loc-text">
               <span className="detail-loc-label">Localização Física na Loja</span>
@@ -102,11 +105,16 @@ export default function ProductDetailModal({
               className="detail-map-btn"
               onClick={() => {
                 onClose()
-                onNavigateToProduct(detailedProduct)
+                if (onViewOnMap) {
+                  onViewOnMap(detailedProduct)
+                } else if (onNavigateToProduct) {
+                  onNavigateToProduct(detailedProduct)
+                }
               }}
+              title="Ver no mapa inteligente da loja"
             >
-              <span className="material-symbols-outlined">directions_walk</span>
-              <span>Rota</span>
+              <span className="material-symbols-outlined">map</span>
+              <span>Ver no Mapa</span>
             </button>
           </div>
 
@@ -122,10 +130,16 @@ export default function ProductDetailModal({
             </span>
           </div>
 
-          {/* Specifications Table (Atributos do Backend) */}
-          {atributos && atributos.length > 0 && (
-            <div className="product-detail-attributes-section">
-              <h4 className="detail-attributes-heading">Especificações Técnicas</h4>
+          {/* Specifications Table (Atributos do Backend - GET /produtos/{id}) */}
+          <div className="product-detail-attributes-section">
+            <h4 className="detail-attributes-heading">Especificações Técnicas</h4>
+            {isLoading ? (
+              <div className="attributes-loading-skeleton">
+                <div className="skeleton-line"></div>
+                <div className="skeleton-line"></div>
+                <div className="skeleton-line short"></div>
+              </div>
+            ) : atributos && atributos.length > 0 ? (
               <div className="attributes-grid">
                 {atributos.map((attr, index) => (
                   <div key={index} className="attribute-row">
@@ -134,14 +148,25 @@ export default function ProductDetailModal({
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="attributes-grid">
+                <div className="attribute-row">
+                  <span className="attribute-key">Departamento:</span>
+                  <span className="attribute-val">{secao || 'Geral'}</span>
+                </div>
+                <div className="attribute-row">
+                  <span className="attribute-key">Corredor:</span>
+                  <span className="attribute-val">{corredor}</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Footer with Price & Actions */}
         <div className="product-detail-footer">
           <div className="detail-price-box">
-            <span className="detail-price-label">Preço exclusivo loja física</span>
+            <span className="detail-price-label">Preço na loja física</span>
             <span className="detail-price-value">{formatPrice(price)}</span>
           </div>
 
