@@ -1,65 +1,100 @@
 import React from 'react'
+import { SECTOR_METADATA, DEFAULT_SECTOR_META } from '../services/catalogService'
 
 export default function ProductCard({ product, onAddToCart, onNavigateToProduct }) {
   const formatPrice = (price) => {
+    if (typeof price !== 'number') {
+      price = parseFloat(price) || 0
+    }
     return price.toLocaleString('pt-BR', {
       style: 'currency',
       currency: 'BRL',
     })
   }
 
+  // Normalize fields between backend ProdutoResponse and local format
+  const name = product.nome || product.name || 'Produto sem nome'
+  const specs = product.descricao || product.specs || ''
+  const price = product.preco ?? product.price ?? 0
+  const stock = product.saldoEstoque ?? product.stock ?? 0
+  const secao = product.secao || ''
+  const corredor = product.corredor || (secao && SECTOR_METADATA[secao]?.corredor) || 'Corredor da Loja'
+  const image = product.imagemUrl || product.image || null
+  const tag = product.tag || (stock === 0 ? 'Sem Estoque (Ruptura)' : stock <= 5 ? 'Últimas Unidades' : null)
+
+  const meta = SECTOR_METADATA[secao] || DEFAULT_SECTOR_META
+  const icon = product.icon || meta.icon || 'inventory_2'
+
+  const isOutOfStock = stock <= 0
+
   return (
-    <div className="product-card">
+    <div className={`product-card ${isOutOfStock ? 'out-of-stock' : ''}`}>
       <div className="product-visual">
-        {product.image ? (
-          <img src={product.image} alt={product.name} className="product-img" />
+        {image ? (
+          <img src={image} alt={name} className="product-img" loading="lazy" />
         ) : (
-          <div className="product-icon-fallback">
-            <span className="material-symbols-outlined">{product.icon || 'lightbulb'}</span>
+          <div className="product-icon-fallback" style={{ color: meta.color }}>
+            <span className="material-symbols-outlined">{icon}</span>
           </div>
         )}
-        {product.tag && (
-          <span className="product-badge">{product.tag}</span>
+        {tag && (
+          <span className={`product-badge ${isOutOfStock ? 'badge-out-of-stock' : ''}`}>
+            {tag}
+          </span>
+        )}
+        {secao && (
+          <span className="product-sector-pill">
+            {secao}
+          </span>
         )}
       </div>
 
       <div className="product-content">
         <div className="product-header">
-          <h3 className="product-name">{product.name}</h3>
-          <p className="product-specs">{product.specs}</p>
+          <h3 className="product-name">{name}</h3>
+          {specs && <p className="product-specs">{specs}</p>}
         </div>
 
         <div className="product-stock-location">
-          <div className="stock-info">
-            <span className="material-symbols-outlined stock-icon">inventory_2</span>
-            <span className="stock-text">{product.stock} un. disponíveis</span>
+          <div className={`stock-info ${isOutOfStock ? 'stock-zero' : ''}`}>
+            <span className="material-symbols-outlined stock-icon">
+              {isOutOfStock ? 'warning' : 'inventory_2'}
+            </span>
+            <span className="stock-text">
+              {isOutOfStock ? 'Estoque Esgotado' : `${stock} un. disponíveis`}
+            </span>
           </div>
           <div className="location-info-tag">
             <span className="material-symbols-outlined loc-pin-icon filled">location_on</span>
-            <span className="aisle-name">{product.corredor}</span>
+            <span className="aisle-name">{corredor}</span>
           </div>
         </div>
 
         <div className="product-footer">
           <div className="price-block">
             <span className="price-label">À vista</span>
-            <span className="price-value">{formatPrice(product.price)}</span>
+            <span className="price-value">{formatPrice(price)}</span>
           </div>
 
           <div className="product-actions">
-            <button 
-              className="action-btn route-btn" 
-              onClick={() => onNavigateToProduct(product)}
-              title="Traçar rota até este produto"
+            <button
+              className="action-btn route-btn"
+              onClick={() => onNavigateToProduct({ ...product, name, corredor, price, stock })}
+              title="Traçar rota até este produto na loja"
+              aria-label={`Traçar rota até ${name}`}
             >
               <span className="material-symbols-outlined">near_me</span>
             </button>
-            <button 
-              className="action-btn cart-btn" 
-              onClick={() => onAddToCart(product)}
-              title="Adicionar à lista de compras"
+            <button
+              className={`action-btn cart-btn ${isOutOfStock ? 'btn-disabled' : ''}`}
+              onClick={() => !isOutOfStock && onAddToCart({ ...product, name, corredor, price, stock })}
+              title={isOutOfStock ? 'Produto indisponível' : 'Adicionar à lista de compras'}
+              disabled={isOutOfStock}
+              aria-label={`Adicionar ${name} à lista`}
             >
-              <span className="material-symbols-outlined">add_shopping_cart</span>
+              <span className="material-symbols-outlined">
+                {isOutOfStock ? 'block' : 'add_shopping_cart'}
+              </span>
             </button>
           </div>
         </div>

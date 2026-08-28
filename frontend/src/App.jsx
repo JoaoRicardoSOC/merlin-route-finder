@@ -1,107 +1,66 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import Header from './components/Header'
 import LocationStatus from './components/LocationStatus'
 import SearchBar from './components/SearchBar'
 import BentoActions from './components/BentoActions'
+import SectorExplorer from './components/SectorExplorer'
+import SectorBanner from './components/SectorBanner'
+import SectorsDrawer from './components/SectorsDrawer'
+import LocationCodeModal from './components/LocationCodeModal'
 import ProductCard from './components/ProductCard'
 import PromoBanner from './components/PromoBanner'
 import RouteModal from './components/RouteModal'
 import SplashScreen from './components/SplashScreen'
+import BottomNav from './components/BottomNav'
+import {
+  fetchSecoes,
+  fetchProdutos,
+  SECTOR_METADATA,
+  DEFAULT_SECTOR_META
+} from './services/catalogService'
+import {
+  obterOuCriarSessao,
+  recentrarPosicao,
+  normalizarCodigo
+} from './services/sessionService'
 import './App.css'
-
-const INITIAL_PRODUCTS = [
-  {
-    id: 1,
-    name: 'Lâmpada LED Bulbo 9W',
-    specs: 'LED, 9W, 6500K (Luz Branca Fria), Bivolt',
-    category: 'iluminacao',
-    corredor: 'Corredor A12',
-    stock: 12,
-    price: 14.90,
-    icon: 'lightbulb',
-    tag: 'Mais Vendido'
-  },
-  {
-    id: 2,
-    name: 'Selante de Silicone Acético',
-    specs: 'Incolor, 280g, Anti-mofo e Fungicida',
-    category: 'construcao',
-    corredor: 'Corredor B04',
-    stock: 8,
-    price: 29.90,
-    icon: 'hardware',
-    tag: 'Destaque'
-  },
-  {
-    id: 3,
-    name: 'Rolo de Pintura Antigota 23cm',
-    specs: 'Lã Sintética Microfibra, 23cm com cabo',
-    category: 'pintura',
-    corredor: 'Corredor C02',
-    stock: 15,
-    price: 22.50,
-    icon: 'imagesearch_roller',
-    tag: 'Oferta'
-  },
-  {
-    id: 4,
-    name: 'Fita LED Smart RGB 5 Metros',
-    specs: 'Wi-Fi, Compatível com Alexa/Google, 16M cores',
-    category: 'iluminacao',
-    corredor: 'Corredor A12',
-    stock: 6,
-    price: 89.90,
-    icon: 'flare',
-    tag: 'Smart Home'
-  },
-  {
-    id: 5,
-    name: 'Disjuntor Bipolar Din 32A',
-    specs: 'Curva C, 3kA 230/400V, Proteção Elétrica',
-    category: 'eletrica',
-    corredor: 'Corredor A14',
-    stock: 20,
-    price: 34.90,
-    icon: 'electrical_services',
-    tag: 'Segurança'
-  },
-  {
-    id: 6,
-    name: 'Plafon LED Sobrepor Quadrado 24W',
-    specs: 'Luz Neutra 4000K, Alumínio Branco, 30x30cm',
-    category: 'iluminacao',
-    corredor: 'Corredor A13',
-    stock: 9,
-    price: 49.90,
-    icon: 'highlight',
-    tag: 'Recomendado'
-  }
-]
 
 const SEARCH_SUGGESTIONS = [
   'Lâmpada LED',
+  'Tinta Acrílica',
+  'Parafusadeira',
   'Fita LED Smart',
-  'Plafon sobrepor',
-  'Silicone anti-mofo',
-  'Disjuntor 32A'
-]
-
-const CATEGORIES = [
-  { id: 'todos', label: 'Todos os Produtos' },
-  { id: 'iluminacao', label: 'Iluminação (A12/A13)' },
-  { id: 'eletrica', label: 'Elétrica (A14)' },
-  { id: 'pintura', label: 'Pintura (C02)' },
-  { id: 'construcao', label: 'Construção (B04)' }
+  'Disjuntor 32A',
+  'Cimento 50kg'
 ]
 
 function App() {
   const [activeTab, setActiveTab] = useState('home')
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('todos')
+  const [selectedSecao, setSelectedSecao] = useState('todos')
+  const [apenasDisponiveis, setApenasDisponiveis] = useState(false)
   const [cartCount, setCartCount] = useState(0)
   const [toastMessage, setToastMessage] = useState(null)
 
-  // Modals state
+  // Data states
+  const [secoes, setSecoes] = useState([])
+  const [produtos, setProdutos] = useState([])
+  const [totalProductsCount, setTotalProductsCount] = useState(0)
+  const [isLoadingSecoes, setIsLoadingSecoes] = useState(true)
+  const [isLoadingProdutos, setIsLoadingProdutos] = useState(true)
+
+  // Session & Location state (UC-001)
+  const [session, setSession] = useState(null)
+  const [currentLocation, setCurrentLocation] = useState({
+    sector: 'Entrada Principal da Loja',
+    aisle: 'Entrada da Loja',
+    code: 'ENT-01',
+    coords: '50, 92'
+  })
+
+  // Drawer & Modals state
+  const [isSectorsDrawerOpen, setIsSectorsDrawerOpen] = useState(false)
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false)
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
     title: '',
@@ -109,28 +68,168 @@ function App() {
     data: null
   })
 
-  // Location state
-  const [currentLocation] = useState({
-    sector: 'Setor de Iluminação',
-    aisle: 'Corredor A12'
-  })
+  const productsSectionRef = useRef(null)
 
   const showToast = (msg) => {
     setToastMessage(msg)
     setTimeout(() => {
       setToastMessage(null)
-    }, 3000)
+    }, 3200)
+  }
+
+  // Parse location code from URL (?ponto=TIN-02 or ?codigo=TIN-02)
+  const getUrlPlateCode = () => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      return params.get('ponto') || params.get('codigo') || params.get('plate') || null
+    } catch (e) {
+      return null
+    }
+  }
+
+  // 1. Initialize or Resume Session (UC-001)
+  useEffect(() => {
+    let isMounted = true
+    async function initSession() {
+      const urlCode = getUrlPlateCode()
+      try {
+        const sess = await obterOuCriarSessao(urlCode)
+        if (isMounted && sess) {
+          setSession(sess)
+          if (sess.posicaoAtual) {
+            setCurrentLocation({
+              sector: sess.posicaoAtual.corredor || 'Loja Leroy Merlin',
+              aisle: sess.posicaoAtual.corredor || 'Corredor',
+              code: sess.posicaoAtual.codigoCurto || urlCode,
+              coords: sess.posicaoAtual.coordenadaX != null ? `${sess.posicaoAtual.coordenadaX}, ${sess.posicaoAtual.coordenadaY}` : null
+            })
+            if (urlCode) {
+              showToast(`Sessão iniciada na placa: ${urlCode} (${sess.posicaoAtual.corredor})`)
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao inicializar sessão:', err)
+      }
+    }
+    initSession()
+    return () => { isMounted = false }
+  }, [])
+
+  // 2. Load sections from backend (ListarSecoesUseCase / SecaoResponse)
+  useEffect(() => {
+    let isMounted = true
+    async function loadSecoes() {
+      setIsLoadingSecoes(true)
+      try {
+        const data = await fetchSecoes()
+        if (isMounted) {
+          setSecoes(data)
+          const sum = data.reduce((acc, curr) => acc + (curr.quantidadeProdutos || 0), 0)
+          setTotalProductsCount(sum)
+        }
+      } catch (err) {
+        console.error('Erro ao carregar seções:', err)
+      } finally {
+        if (isMounted) setIsLoadingSecoes(false)
+      }
+    }
+    loadSecoes()
+    return () => { isMounted = false }
+  }, [])
+
+  // 3. Load products based on selected sector, search query and availability
+  const loadProdutos = useCallback(async () => {
+    setIsLoadingProdutos(true)
+    try {
+      const response = await fetchProdutos({
+        query: searchQuery,
+        secao: selectedSecao === 'todos' ? '' : selectedSecao,
+        apenasDisponiveis: apenasDisponiveis,
+        page: 0,
+        size: 50
+      })
+      setProdutos(response.content || [])
+    } catch (err) {
+      console.error('Erro ao buscar produtos:', err)
+    } finally {
+      setIsLoadingProdutos(false)
+    }
+  }, [searchQuery, selectedSecao, apenasDisponiveis])
+
+  // Debounced search & filtering
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadProdutos()
+    }, 200)
+    return () => clearTimeout(timer)
+  }, [loadProdutos])
+
+  // Handle manual or scanned location update (PUT /api/v1/sessoes/{id}/posicao)
+  const handleUpdateLocation = async (codigoPonto) => {
+    if (!codigoPonto) return
+    try {
+      if (session && session.id) {
+        const updated = await recentrarPosicao(session.id, codigoPonto)
+        setSession(updated)
+        if (updated.posicaoAtual) {
+          setCurrentLocation({
+            sector: updated.posicaoAtual.corredor,
+            aisle: updated.posicaoAtual.corredor,
+            code: updated.posicaoAtual.codigoCurto || codigoPonto,
+            coords: updated.posicaoAtual.coordenadaX != null ? `${updated.posicaoAtual.coordenadaX}, ${updated.posicaoAtual.coordenadaY}` : null
+          })
+          showToast(`Posição atualizada para: ${updated.posicaoAtual.corredor} (Placa ${codigoPonto})`)
+        } else {
+          showToast(`Placa ${codigoPonto} registrada.`)
+        }
+      } else {
+        const sess = await obterOuCriarSessao(codigoPonto)
+        setSession(sess)
+        if (sess.posicaoAtual) {
+          setCurrentLocation({
+            sector: sess.posicaoAtual.corredor,
+            aisle: sess.posicaoAtual.corredor,
+            code: sess.posicaoAtual.codigoCurto || codigoPonto,
+            coords: `${sess.posicaoAtual.coordenadaX}, ${sess.posicaoAtual.coordenadaY}`
+          })
+          showToast(`Sessão iniciada na placa: ${codigoPonto}`)
+        }
+      }
+    } catch (e) {
+      console.error('Erro ao atualizar posição:', e)
+      showToast(`Placa ${codigoPonto} configurada localmente.`)
+    }
+  }
+
+  const handleSelectSecao = (secaoNome) => {
+    setSelectedSecao(secaoNome)
+    if (secaoNome !== 'todos') {
+      const meta = SECTOR_METADATA[secaoNome] || DEFAULT_SECTOR_META
+      showToast(`Filtrando pelo setor: ${secaoNome} (${meta.corredor})`)
+    } else {
+      showToast('Exibindo catálogo completo de todas as seções')
+    }
+
+    if (productsSectionRef.current) {
+      const yOffset = -80
+      const element = productsSectionRef.current
+      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset
+      window.scrollTo({ top: y, behavior: 'smooth' })
+    }
   }
 
   const handleAddToCart = (product) => {
     setCartCount(prev => prev + 1)
-    showToast(`"${product.name}" adicionado à lista! (${product.corredor})`)
+    const prodName = product.nome || product.name
+    const corredor = product.corredor || 'Corredor da Loja'
+    showToast(`"${prodName}" adicionado à lista! (${corredor})`)
   }
 
   const handleNavigateToProduct = (product) => {
     setModalConfig({
       isOpen: true,
-      title: `Rota até: ${product.name}`,
+      title: `Rota até: ${product.nome || product.name}`,
       type: 'route',
       data: product
     })
@@ -139,7 +238,7 @@ function App() {
   const handleOpenMap = () => {
     setModalConfig({
       isOpen: true,
-      title: 'Mapa da Loja & Corredores',
+      title: 'Planta Inteligente & Corredores da Loja',
       type: 'map',
       data: null
     })
@@ -148,24 +247,19 @@ function App() {
   const handleCallSpecialist = () => {
     setModalConfig({
       isOpen: true,
-      title: 'Solicitação de Atendimento',
+      title: 'Solicitação de Especialista Presencial',
       type: 'specialist',
       data: null
     })
   }
 
-  const filteredProducts = useMemo(() => {
-    return INITIAL_PRODUCTS.filter(item => {
-      const matchesSearch = searchQuery.trim() === '' || 
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.specs.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.corredor.toLowerCase().includes(searchQuery.toLowerCase())
-
-      const matchesCategory = selectedCategory === 'todos' || item.category === selectedCategory
-
-      return matchesSearch && matchesCategory
-    })
-  }, [searchQuery, selectedCategory])
+  // Handle bottom navigation tab clicks
+  const handleTabChange = (tabKey) => {
+    setActiveTab(tabKey)
+    if (tabKey === 'scan') {
+      setIsLocationModalOpen(true)
+    }
+  }
 
   return (
     <div className="app-root">
@@ -175,8 +269,9 @@ function App() {
       {/* Header / TopAppBar */}
       <Header
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onMenuClick={() => showToast('Menu de categorias aberto.')}
+        setActiveTab={handleTabChange}
+        onMenuClick={() => setIsSectorsDrawerOpen(true)}
+        onOpenSectors={() => setIsSectorsDrawerOpen(true)}
         onProfileClick={() => showToast('Perfil do cliente Leroy Merlin')}
       />
 
@@ -184,15 +279,16 @@ function App() {
       <main className="main-content">
         {/* Welcome Section */}
         <section className="welcome-section">
-          <h1 className="welcome-title">Bem-vindo à loja!</h1>
+          <h1 className="welcome-title">Bem-vindo à Leroy Merlin!</h1>
           <p className="welcome-subtitle">
-            Como podemos ajudar no seu projeto hoje? Encontre produtos, navegue pelo mapa inteligente ou fale com um de nossos especialistas no corredor.
+            Encontre produtos com facilidade, explore os corredores temáticos pelo mapa inteligente e trace a rota ideal para sua compra na loja.
           </p>
         </section>
 
-        {/* Location Status Chip */}
+        {/* Location Status Chip (QR Code & Placa Indicator) */}
         <LocationStatus
           location={currentLocation}
+          onChangeLocation={() => setIsLocationModalOpen(true)}
           onViewMap={handleOpenMap}
         />
 
@@ -202,45 +298,125 @@ function App() {
           setSearchQuery={setSearchQuery}
           suggestions={SEARCH_SUGGESTIONS}
           onSearch={(query) => {
-            if (query) showToast(`Buscando com IA por: "${query}"`)
+            if (query) showToast(`Buscando no catálogo: "${query}"`)
           }}
         />
 
         {/* Bento Grid Actions */}
         <BentoActions
-          currentSectorName="Iluminação"
-          onViewProducts={() => setSelectedCategory('iluminacao')}
+          currentSectorName={selectedSecao !== 'todos' ? selectedSecao : 'Iluminação'}
+          onViewProducts={() => {
+            if (selectedSecao === 'todos') {
+              handleSelectSecao('Iluminação')
+            } else {
+              handleSelectSecao(selectedSecao)
+            }
+          }}
           onCallSpecialist={handleCallSpecialist}
           onViewMap={handleOpenMap}
         />
 
-        {/* Sector Recommended Products */}
-        <section className="products-section">
+        {/* Physical Store Sector Explorer (ListarSecoesUseCase) */}
+        <SectorExplorer
+          secoes={secoes}
+          selectedSecao={selectedSecao}
+          onSelectSecao={handleSelectSecao}
+          totalProductsCount={totalProductsCount}
+          isLoading={isLoadingSecoes}
+        />
+
+        {/* Active Sector Contextual Banner */}
+        <SectorBanner
+          selectedSecao={selectedSecao}
+          productCount={produtos.length}
+          onClearFilter={() => handleSelectSecao('todos')}
+          onOpenMap={handleOpenMap}
+        />
+
+        {/* Products Grid Section */}
+        <section className="products-section" ref={productsSectionRef}>
           <div className="section-header-wrap">
-            <h2 className="section-heading">Produtos Recomendados</h2>
-            <div className="filter-category-tabs">
-              {CATEGORIES.map(cat => (
-                <button
-                  key={cat.id}
-                  className={`filter-tab ${selectedCategory === cat.id ? 'active' : ''}`}
-                  onClick={() => setSelectedCategory(cat.id)}
-                >
-                  {cat.label}
-                </button>
-              ))}
+            <div className="products-header-title-bar">
+              <h2 className="section-heading">
+                {selectedSecao === 'todos' ? 'Vitrine de Produtos' : `Produtos de ${selectedSecao}`}
+              </h2>
+              <span className="products-count-badge">
+                {produtos.length} {produtos.length === 1 ? 'item' : 'itens'}
+              </span>
+            </div>
+
+            {/* Quick Filter Bar: Availability switch */}
+            <div className="catalog-filters-bar">
+              <label className="toggle-availability-label">
+                <input
+                  type="checkbox"
+                  checked={apenasDisponiveis}
+                  onChange={(e) => setApenasDisponiveis(e.target.checked)}
+                  className="toggle-checkbox"
+                />
+                <span className="toggle-custom-slider"></span>
+                <span className="toggle-text">Apenas disponíveis hoje</span>
+              </label>
+
+              <button
+                type="button"
+                className="view-all-sectors-btn"
+                onClick={() => setIsSectorsDrawerOpen(true)}
+              >
+                <span className="material-symbols-outlined">menu_open</span>
+                <span>Todos os Setores</span>
+              </button>
             </div>
           </div>
 
-          {filteredProducts.length === 0 ? (
-            <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '48px', marginBottom: '10px' }}>search_off</span>
-              <p>Nenhum produto encontrado para o termo ou filtro selecionado.</p>
+          {isLoadingProdutos ? (
+            <div className="products-grid">
+              {[1, 2, 3, 4, 5, 6].map((idx) => (
+                <div key={idx} className="product-card-skeleton">
+                  <div className="skeleton-visual"></div>
+                  <div className="skeleton-body">
+                    <div className="skeleton-line title"></div>
+                    <div className="skeleton-line text"></div>
+                    <div className="skeleton-line short"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : produtos.length === 0 ? (
+            <div className="empty-catalog-state">
+              <span className="material-symbols-outlined empty-icon">search_off</span>
+              <h3 className="empty-title">Nenhum produto encontrado</h3>
+              <p className="empty-desc">
+                Não encontramos itens para o filtro selecionado{' '}
+                {selectedSecao !== 'todos' && <strong>em {selectedSecao}</strong>}
+                {searchQuery && <span> com o termo "<em>{searchQuery}</em>"</span>}.
+              </p>
+              <div className="empty-actions">
+                {selectedSecao !== 'todos' && (
+                  <button
+                    type="button"
+                    className="empty-action-btn primary"
+                    onClick={() => handleSelectSecao('todos')}
+                  >
+                    Ver todas as seções
+                  </button>
+                )}
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="empty-action-btn"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    Limpar pesquisa
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <div className="products-grid">
-              {filteredProducts.map(prod => (
+              {produtos.map((prod) => (
                 <ProductCard
-                  key={prod.id}
+                  key={prod.id || prod.sku}
                   product={prod}
                   onAddToCart={handleAddToCart}
                   onNavigateToProduct={handleNavigateToProduct}
@@ -253,11 +429,35 @@ function App() {
         {/* Featured Promotional Banner */}
         <PromoBanner
           onExplore={() => {
-            setSelectedCategory('iluminacao')
+            handleSelectSecao('Iluminação')
             showToast('Exibindo novidades do setor de Iluminação inteligente!')
           }}
         />
       </main>
+
+      {/* Bottom Navigation for Mobile */}
+      <BottomNav
+        activeTab={activeTab}
+        setActiveTab={handleTabChange}
+      />
+
+      {/* Location Code & QR Scanner Modal (Plan A & Plan B) */}
+      <LocationCodeModal
+        isOpen={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
+        currentLocation={currentLocation}
+        onUpdateLocation={handleUpdateLocation}
+      />
+
+      {/* Sectors Full Drawer / Modal */}
+      <SectorsDrawer
+        isOpen={isSectorsDrawerOpen}
+        onClose={() => setIsSectorsDrawerOpen(false)}
+        secoes={secoes}
+        selectedSecao={selectedSecao}
+        onSelectSecao={handleSelectSecao}
+        onOpenMap={handleOpenMap}
+      />
 
       {/* Interactive Modal (Map, Specialist, Route) */}
       <RouteModal

@@ -1,14 +1,20 @@
 import React from 'react'
 import leroyLogo from '../assets/leroy_logo.png'
 
-export default function Header({ activeTab, setActiveTab, onMenuClick, onProfileClick }) {
+export default function Header({
+  activeTab,
+  setActiveTab,
+  onMenuClick,
+  onOpenSectors,
+  onProfileClick
+}) {
   return (
     <header className="app-header">
       <div className="header-inner">
         <button 
           className="icon-button mobile-menu-btn" 
-          aria-label="Abrir menu" 
-          onClick={onMenuClick}
+          aria-label="Abrir menu de setores" 
+          onClick={onMenuClick || onOpenSectors}
         >
           <span className="material-symbols-outlined">menu</span>
         </button>
@@ -23,6 +29,14 @@ export default function Header({ activeTab, setActiveTab, onMenuClick, onProfile
             onClick={() => setActiveTab('home')}
           >
             Home
+          </button>
+          <button 
+            className="nav-link"
+            onClick={onOpenSectors}
+            title="Ver catálogo físico e todos os setores da loja"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '18px', marginRight: '4px' }}>storefront</span>
+            Setores da Loja
           </button>
           <button 
             className={`nav-link ${activeTab === 'scan' ? 'active' : ''}`}
