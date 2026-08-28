@@ -31,9 +31,21 @@ export default function StoreMapPage({
   const svgRef = useRef(null)
 
   // Map roteiro items to store sectors with coordinates
+  //
+  // Item cuja secao nao casa com bloco nenhum NAO ganha alfinete. Antes caia em
+  // STORE_SECTORS[0] - Pintura -, e o mapa afirmava um corredor que nao era: quem pedia rota
+  // para um sifao era mandado ao corredor de tintas. Nao desenhar e pior que desenhar certo, e
+  // muito melhor que desenhar errado com confianca.
   const mappedRoteiroPins = useMemo(() => {
     return roteiroItems.map((item, idx) => {
-      const sector = findSectorForProduct(item) || STORE_SECTORS[0]
+      const sector = findSectorForProduct(item)
+
+      if (!sector) {
+        console.warn('Sem bloco no mapa para "%s" (secao %s): o item fica sem alfinete.',
+          item.nome, item.corredor || item.secao || '?')
+        return null
+      }
+
       // Add slight random offset within sector if multiple items share the same sector
       const offsetX = (idx % 3 - 1) * 16
       const offsetY = (Math.floor(idx / 3) % 3 - 1) * 14
@@ -44,7 +56,7 @@ export default function StoreMapPage({
         pinY: sector.y + sector.h / 2 + offsetY,
         orderIndex: idx + 1
       }
-    })
+    }).filter(Boolean)
   }, [roteiroItems])
 
   // Determine customer coordinates on the map

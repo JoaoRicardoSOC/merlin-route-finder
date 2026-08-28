@@ -66,7 +66,7 @@ export const STORE_SECTORS = [
     y: 525,
     w: 105,
     h: 70,
-    secaoRef: 'Eletrica',
+    secaoRef: 'Elétrica',
     descricao: 'Fios, cabos, disjuntores, conduítes e interruptores'
   },
   {
@@ -92,7 +92,7 @@ export const STORE_SECTORS = [
     y: 605,
     w: 100,
     h: 75,
-    secaoRef: 'Sanitarios',
+    secaoRef: 'Encanamento',
     descricao: 'Vasos sanitários, cubas, assentos, gabinetes e chuveiros'
   },
   {
@@ -144,7 +144,7 @@ export const STORE_SECTORS = [
     y: 740,
     w: 95,
     h: 65,
-    secaoRef: 'Iluminacao',
+    secaoRef: 'Iluminação',
     descricao: 'Lustres, pendentes, painéis LED, spots e fitas de LED'
   },
   {
@@ -157,7 +157,7 @@ export const STORE_SECTORS = [
     y: 805,
     w: 65,
     h: 55,
-    secaoRef: 'Decoracao',
+    secaoRef: 'Enquadramento',
     descricao: 'Molduras prontas, confecção sob medida e quadros'
   },
   {
@@ -170,7 +170,7 @@ export const STORE_SECTORS = [
     y: 835,
     w: 70,
     h: 55,
-    secaoRef: 'Decoracao',
+    secaoRef: 'Decoração',
     descricao: 'Almofadas, cortinas, papéis de parede e espelhos'
   },
   {
@@ -183,7 +183,7 @@ export const STORE_SECTORS = [
     y: 775,
     w: 60,
     h: 50,
-    secaoRef: 'Decoracao',
+    secaoRef: 'Tapetes',
     descricao: 'Tapetes decorativos, passadeiras e capachos'
   },
   {
@@ -222,7 +222,7 @@ export const STORE_SECTORS = [
     y: 215,
     w: 100,
     h: 80,
-    secaoRef: 'Materiais de construcao',
+    secaoRef: 'Materiais de construção',
     descricao: 'Cimento, cal, blocos, areia, telhas e impermeabilizantes'
   },
   {
@@ -235,7 +235,7 @@ export const STORE_SECTORS = [
     y: 125,
     w: 130,
     h: 65,
-    secaoRef: 'Materiais de construcao',
+    secaoRef: 'Drive Thru',
     descricao: 'Retirada rápida de materiais pesados no pátio'
   }
 ]
@@ -315,36 +315,56 @@ export const STORE_QR_POINTS = [
 /**
  * Searches the closest sector for a given product or section name
  */
+/**
+ * Reduz um texto à forma usada na comparação: sem acento e em minúsculas.
+ *
+ * A comparação era por igualdade crua, e foi ela que quebrou "Materiais de construção" no dia
+ * em que o catálogo ganhou acento — o secaoRef daqui continuou sem. Consertar a string resolve
+ * o caso; normalizar resolve a classe, que já mordeu duas vezes.
+ */
+function comparavel(texto) {
+  return (texto || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+}
+
+/**
+ * Encontra o bloco do mapa onde o produto está, ou null quando não sabe.
+ *
+ * <b>Devolver null é a parte que importa.</b> Antes esta função devolvia STORE_SECTORS[0] —
+ * Pintura — com a mesma confiança com que devolveria o certo, e quem pedia rota para um sifão
+ * era mandado ao corredor de tintas. Não saber precisa parecer não saber.
+ */
 export function findSectorForProduct(product) {
   if (!product) return null
-  const targetSecao = (product.secao || '').toLowerCase()
-  const targetCorredor = (product.corredor || '').toLowerCase()
-  const targetNome = (product.nome || product.name || '').toLowerCase()
 
-  // Match by secaoRef
-  const bySecao = STORE_SECTORS.find(s => 
-    s.secaoRef.toLowerCase() === targetSecao ||
-    s.nome.toLowerCase() === targetSecao ||
-    targetSecao.includes(s.nome.toLowerCase()) ||
-    s.nome.toLowerCase().includes(targetSecao)
+  // O corredor gravado no item E o nome da secao: e assim que o backend o devolve
+  // ("Encanamento", "Tintas"). Olhar so para `secao` fazia a busca falhar com o produto
+  // que vem da API, que nao tem esse campo - e foi o que a verificacao pela tela pegou,
+  // depois de a medicao direta passar porque eu mesmo alimentava `secao`.
+  const alvoSecao = comparavel(product.secao || product.corredor)
+  const alvoCorredor = comparavel(product.corredor)
+  const alvoNome = comparavel(product.nome || product.name)
+
+  // Pela seção, que é o caminho que resolve as dez seções do catálogo.
+  const porSecao = alvoSecao && STORE_SECTORS.find(s =>
+    comparavel(s.secaoRef) === alvoSecao ||
+    comparavel(s.nome) === alvoSecao ||
+    alvoSecao.includes(comparavel(s.nome)) ||
+    comparavel(s.nome).includes(alvoSecao)
   )
-  if (bySecao) return bySecao
+  if (porSecao) return porSecao
 
-  // Match by corredor name
-  const byCorredor = STORE_SECTORS.find(s =>
-    targetCorredor.includes(s.nome.toLowerCase()) ||
-    s.corredor.toLowerCase().includes(targetCorredor)
+  // Pelo corredor gravado no item.
+  const porCorredor = alvoCorredor && STORE_SECTORS.find(s =>
+    alvoCorredor.includes(comparavel(s.nome)) ||
+    comparavel(s.corredor).includes(alvoCorredor)
   )
-  if (byCorredor) return byCorredor
+  if (porCorredor) return porCorredor
 
-  // Match keywords in product name
-  for (const sector of STORE_SECTORS) {
-    if (targetNome.includes(sector.nome.toLowerCase())) {
-      return sector
-    }
-  }
+  // Último recurso: o nome do produto citar o bloco.
+  const porNome = alvoNome && STORE_SECTORS.find(s => alvoNome.includes(comparavel(s.nome)))
+  if (porNome) return porNome
 
-  return STORE_SECTORS[0] // fallback to Pintura
+  return null
 }
 
 /**
