@@ -193,9 +193,41 @@ export async function obterOuCriarSessao(codigoUrl = null) {
 }
 
 /**
+ * Concludes the active shopping session (POST /api/v1/sessoes/{sessaoId}/concluir)
+ */
+export async function concluirSessao(sessaoId) {
+  if (!sessaoId) {
+    limparSessao()
+    return { status: 'CONCLUIDA' }
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/sessoes/${sessaoId}/concluir`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} ao concluir sessão`)
+    }
+
+    const data = await response.json()
+    limparSessao()
+    return data
+  } catch (e) {
+    console.warn('Erro ao concluir sessão no backend, finalizando localmente:', e.message)
+    limparSessao()
+    return { id: sessaoId, status: 'CONCLUIDA' }
+  }
+}
+
+/**
  * Clears stored session
  */
 export function limparSessao() {
   localStorage.removeItem(SESSION_STORAGE_KEY)
   localStorage.removeItem(SESSION_DATA_KEY)
 }
+

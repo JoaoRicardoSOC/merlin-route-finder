@@ -14,8 +14,10 @@ export default function StoreMapPage({
   onViewProductDetails,
   onOpenRoteiro,
   onOpenLocationModal,
+  onEncerrarJornada,
   focusedProduct = null
 }) {
+
   const [zoomLevel, setZoomLevel] = useState(1)
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
@@ -698,17 +700,35 @@ export default function StoreMapPage({
               )}
             </div>
 
-            <button
-              type="button"
-              className="open-roteiro-action-btn"
-              onClick={onOpenRoteiro}
-            >
-              <span className="material-symbols-outlined">format_list_bulleted</span>
-              <span>Ver Roteiro</span>
-            </button>
+            <div className="map-summary-actions-group">
+              <button
+                type="button"
+                className="open-roteiro-action-btn secondary"
+                onClick={onOpenRoteiro}
+              >
+                <span className="material-symbols-outlined">format_list_bulleted</span>
+                <span>Roteiro</span>
+              </button>
+
+              {totalItems > 0 && (
+                <button
+                  type="button"
+                  className={`open-roteiro-action-btn ${collectedCount === totalItems ? 'success' : 'primary'}`}
+                  onClick={() => {
+                    if (onEncerrarJornada) onEncerrarJornada()
+                  }}
+                >
+                  <span className="material-symbols-outlined">
+                    {collectedCount === totalItems ? 'task_alt' : 'point_of_sale'}
+                  </span>
+                  <span>{collectedCount === totalItems ? 'Ir para o Caixa' : 'Encerrar'}</span>
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
     </div>
+
   )
 }

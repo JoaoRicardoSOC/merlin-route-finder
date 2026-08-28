@@ -7,8 +7,10 @@ export default function RoteiroDrawer({
   onRemoveItem,
   onToggleCollectItem,
   onClearAll,
-  onStartRoute
+  onStartRoute,
+  onEncerrarJornada
 }) {
+
   if (!isOpen) return null
 
   const formatPrice = (price) => {
@@ -143,20 +145,35 @@ export default function RoteiroDrawer({
               </div>
             </div>
 
-            <button
-              type="button"
-              className="roteiro-start-route-btn"
-              onClick={() => {
-                onClose()
-                if (onStartRoute) onStartRoute(items)
-              }}
-            >
-              <span className="material-symbols-outlined">directions_walk</span>
-              <span>Traçar Rota Otimizada da Compra</span>
-            </button>
+            <div className="roteiro-actions-stack">
+              <button
+                type="button"
+                className="roteiro-start-route-btn"
+                onClick={() => {
+                  onClose()
+                  if (onStartRoute) onStartRoute(items)
+                }}
+              >
+                <span className="material-symbols-outlined">directions_walk</span>
+                <span>Traçar Rota no Mapa</span>
+              </button>
+
+              <button
+                type="button"
+                className="roteiro-finish-btn"
+                onClick={() => {
+                  onClose()
+                  if (onEncerrarJornada) onEncerrarJornada()
+                }}
+              >
+                <span className="material-symbols-outlined">point_of_sale</span>
+                <span>Encerrar Compra & Ir ao Caixa</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
     </div>
+
   )
 }

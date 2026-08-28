@@ -7,6 +7,7 @@ import SectorsPage from './components/SectorsPage'
 import CatalogSearchPage from './components/CatalogSearchPage'
 import ProductDetailPage from './components/ProductDetailPage'
 import StoreMapPage from './components/StoreMapPage'
+import FimJornadaModal from './components/FimJornadaModal'
 import SectorsDrawer from './components/SectorsDrawer'
 import LocationCodeModal from './components/LocationCodeModal'
 import RoteiroDrawer from './components/RoteiroDrawer'
@@ -26,8 +27,10 @@ import {
 import {
   obterOuCriarSessao,
   recentrarPosicao,
+  concluirSessao,
   normalizarCodigo
 } from './services/sessionService'
+
 import {
   consultarRoteiro,
   adicionarAoRoteiro,
@@ -85,6 +88,7 @@ function App() {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false)
   const [isFacetModalOpen, setIsFacetModalOpen] = useState(false)
   const [isAIChatOpen, setIsAIChatOpen] = useState(false)
+  const [isFimJornadaModalOpen, setIsFimJornadaModalOpen] = useState(false)
   const [selectedProductForDetail, setSelectedProductForDetail] = useState(null)
   const [focusedProductForMap, setFocusedProductForMap] = useState(null)
   const [modalConfig, setModalConfig] = useState({
@@ -93,6 +97,7 @@ function App() {
     type: '',
     data: null
   })
+
 
   const showToast = (msg) => {
     setToastMessage(msg)
@@ -362,6 +367,13 @@ function App() {
         })
       }
       showToast(`Item "${item.nome}" marcado como coletado! Posição atualizada para ${item.corredor}.`)
+
+      // Check if all items are now collected (Passo 14 do fluxo)
+      if (updated.length > 0 && updated.every(i => i.coletado)) {
+        setTimeout(() => {
+          setIsFimJornadaModalOpen(true)
+        }, 700)
+      }
     } else {
       // Revert to most recent collected item or fallback to scanned QR code
       const lastCollected = [...updated].reverse().find(i => i.coletado)
@@ -383,6 +395,38 @@ function App() {
       showToast('Item desmarcado da coleta.')
     }
   }
+
+  // Fim da Jornada Handlers (UC-014 / Passo 14)
+  const handleConfirmAjudaCaixa = async () => {
+    try {
+      if (session?.id) {
+        await concluirSessao(session.id)
+      }
+    } catch (e) {
+      console.warn('Erro ao concluir sessão:', e)
+    }
+    // Navigate to Map focused on Checkouts
+    setCurrentView('map')
+    setActiveTab('map')
+    setFocusedProductForMap(null)
+    showToast('🎉 Rota traçada até a Frente de Caixas! Obrigado por comprar na Leroy Merlin.')
+  }
+
+  const handleConcluirSemCaixa = async () => {
+    try {
+      if (session?.id) {
+        await concluirSessao(session.id)
+      }
+    } catch (e) {
+      console.warn('Erro ao concluir sessão:', e)
+    }
+    limparRoteiroLocal()
+    setRoteiroItems([])
+    setCurrentView('home')
+    setActiveTab('home')
+    showToast('🎉 Compra concluída com sucesso! Obrigado por comprar na Leroy Merlin.')
+  }
+
 
 
   const handleOpenMap = (product = null) => {
@@ -509,6 +553,7 @@ function App() {
             onViewProductDetails={handleOpenProductDetailPage}
             onOpenRoteiro={() => setIsRoteiroDrawerOpen(true)}
             onOpenLocationModal={() => setIsLocationModalOpen(true)}
+            onEncerrarJornada={() => setIsFimJornadaModalOpen(true)}
             focusedProduct={focusedProductForMap}
           />
         ) : currentView === 'sectors' ? (
@@ -617,7 +662,18 @@ function App() {
         onToggleCollectItem={handleToggleCollectItem}
         onClearAll={handleClearRoteiro}
         onStartRoute={handleStartFullRoute}
+        onEncerrarJornada={() => setIsFimJornadaModalOpen(true)}
       />
+
+      {/* Fim da Jornada Modal (Passo 14 / UC-014) */}
+      <FimJornadaModal
+        isOpen={isFimJornadaModalOpen}
+        onClose={() => setIsFimJornadaModalOpen(false)}
+        items={roteiroItems}
+        onConfirmAjudaCaixa={handleConfirmAjudaCaixa}
+        onConcluirSemCaixa={handleConcluirSemCaixa}
+      />
+
 
 
       {/* Location Code & QR Scanner Modal (Plan A & Plan B) */}
