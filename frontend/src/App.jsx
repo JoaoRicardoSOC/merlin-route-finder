@@ -8,6 +8,7 @@ import CatalogSearchPage from './components/CatalogSearchPage'
 import ProductDetailPage from './components/ProductDetailPage'
 import StoreMapPage from './components/StoreMapPage'
 import FimJornadaModal from './components/FimJornadaModal'
+import RupturaModal from './components/RupturaModal'
 import SectorsDrawer from './components/SectorsDrawer'
 import LocationCodeModal from './components/LocationCodeModal'
 import RoteiroDrawer from './components/RoteiroDrawer'
@@ -36,6 +37,8 @@ import {
   adicionarAoRoteiro,
   removerDoRoteiro,
   alternarColetaItem,
+  relatarRuptura,
+  aceitarSubstituto,
   limparRoteiroLocal
 } from './services/roteiroService'
 import './App.css'
@@ -89,6 +92,13 @@ function App() {
   const [isFacetModalOpen, setIsFacetModalOpen] = useState(false)
   const [isAIChatOpen, setIsAIChatOpen] = useState(false)
   const [isFimJornadaModalOpen, setIsFimJornadaModalOpen] = useState(false)
+
+  // Ruptura: o item relatado, o desfecho da consulta, e os dois momentos de espera - buscar
+  // o substituto e efetivar a troca. Sao esperas diferentes e travam botoes diferentes.
+  const [rupturaItem, setRupturaItem] = useState(null)
+  const [rupturaResultado, setRupturaResultado] = useState(null)
+  const [isBuscandoSubstituto, setIsBuscandoSubstituto] = useState(false)
+  const [isTrocandoItem, setIsTrocandoItem] = useState(false)
   const [selectedProductForDetail, setSelectedProductForDetail] = useState(null)
   const [focusedProductForMap, setFocusedProductForMap] = useState(null)
   const [modalConfig, setModalConfig] = useState({
@@ -350,6 +360,46 @@ function App() {
     limparRoteiroLocal()
     setRoteiroItems([])
     showToast('Roteiro esvaziado')
+  }
+
+  const fecharRuptura = () => {
+    setRupturaItem(null)
+    setRupturaResultado(null)
+  }
+
+  const handleRelatarRuptura = async (itemId) => {
+    if (isBuscandoSubstituto) return
+
+    const item = roteiroItems.find(i => i.id === itemId || i.produtoId === itemId)
+    setRupturaItem(item)
+    setRupturaResultado(null)
+    setIsBuscandoSubstituto(true)
+
+    try {
+      setRupturaResultado(await relatarRuptura(itemId))
+    } finally {
+      // Em qualquer caminho: sem isto, um erro deixaria o modal girando para sempre.
+      setIsBuscandoSubstituto(false)
+    }
+  }
+
+  const handleAceitarSubstituto = async (produtoSubstitutoId) => {
+    if (!rupturaItem || isTrocandoItem) return
+    setIsTrocandoItem(true)
+
+    try {
+      const { ok, itens } = await aceitarSubstituto(rupturaItem.id, produtoSubstitutoId)
+      setRoteiroItems(itens)
+
+      if (ok) {
+        fecharRuptura()
+        showToast('Trocado! O substituto entrou no seu roteiro.')
+      } else {
+        showToast('Não foi possível trocar agora. Tente novamente.')
+      }
+    } finally {
+      setIsTrocandoItem(false)
+    }
   }
 
   const handleToggleCollectItem = async (itemId) => {
@@ -663,6 +713,18 @@ function App() {
         onClearAll={handleClearRoteiro}
         onStartRoute={handleStartFullRoute}
         onEncerrarJornada={() => setIsFimJornadaModalOpen(true)}
+        onRelatarRuptura={handleRelatarRuptura}
+      />
+
+      {/* Prateleira vazia e substituto (Passo 12 / UC-013) */}
+      <RupturaModal
+        isOpen={Boolean(rupturaItem)}
+        onClose={fecharRuptura}
+        itemEmFalta={rupturaItem}
+        resultado={rupturaResultado}
+        isCarregando={isBuscandoSubstituto}
+        isTrocando={isTrocandoItem}
+        onAceitar={handleAceitarSubstituto}
       />
 
       {/* Fim da Jornada Modal (Passo 14 / UC-014) */}

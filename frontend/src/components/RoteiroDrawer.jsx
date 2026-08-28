@@ -6,6 +6,7 @@ export default function RoteiroDrawer({
   items = [],
   onRemoveItem,
   onToggleCollectItem,
+  onRelatarRuptura,
   onClearAll,
   onStartRoute,
   onEncerrarJornada
@@ -109,15 +110,35 @@ export default function RoteiroDrawer({
                     <span className="roteiro-item-price">{formatPrice(item.preco)}</span>
                   </div>
 
-                  <button
-                    type="button"
-                    className="roteiro-remove-btn"
-                    onClick={() => onRemoveItem(item.id)}
-                    title="Remover do roteiro"
-                    aria-label={`Remover ${item.nome} do roteiro`}
-                  >
-                    <span className="material-symbols-outlined">delete_outline</span>
-                  </button>
+                  <div className="roteiro-item-acoes">
+                    {/* Só faz sentido para item que o cliente ainda está procurando: quem
+                        coletou, achou. E a rota exige o id do servidor, então item que ainda
+                        não sincronizou avisa em vez de falhar depois do toque. */}
+                    {!item.coletado && (
+                      <button
+                        type="button"
+                        className="roteiro-ruptura-btn"
+                        onClick={() => onRelatarRuptura && onRelatarRuptura(item.id)}
+                        disabled={!item.idBackend}
+                        title={item.idBackend
+                          ? 'Não encontrei este produto na prateleira'
+                          : 'Item ainda não sincronizado com a loja'}
+                        aria-label={`Não encontrei ${item.nome} na prateleira`}
+                      >
+                        <span className="material-symbols-outlined">production_quantity_limits</span>
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      className="roteiro-remove-btn"
+                      onClick={() => onRemoveItem(item.id)}
+                      title="Remover do roteiro"
+                      aria-label={`Remover ${item.nome} do roteiro`}
+                    >
+                      <span className="material-symbols-outlined">delete_outline</span>
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

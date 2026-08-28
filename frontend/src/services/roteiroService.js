@@ -229,6 +229,112 @@ export async function alternarColetaItem(itemId) {
   return itens
 }
 
+/**
+ * Tempo maximo de espera pela sugestao de substituto.
+ *
+ * A chamada passa pelo assistente, que o backend tenta ate tres vezes antes de cair no
+ * calculo de proximidade - o pior caso medido passou de trinta segundos. Sem um teto, um
+ * socket pendurado deixaria o modal girando para sempre.
+ *
+ * Abortar aqui NAO cancela o servidor: ele pode concluir e registrar a ruptura assim mesmo.
+ * Por isso a mensagem de expiracao diz que a busca demorou, e nao que falhou.
+ */
+const ESPERA_MAXIMA_MS = 45000
+
+/**
+ * Relata prateleira vazia e pede um substituto
+ * (POST /api/v1/roteiro/itens/{itemId}/ruptura).
+ *
+ * Devolve um resultado discriminado, porque a tela precisa distinguir tres desfechos que nao
+ * sao variacoes um do outro: houve sugestao, nao havia nada plausivel por perto, ou nao deu
+ * para perguntar.
+ */
+export async function relatarRuptura(itemId) {
+  const alvo = getLocalRoteiro().find(i => i.id === itemId || i.produtoId === itemId)
+
+  if (!sincronizado(alvo)) {
+    return {
+      estado: 'erro',
+      mensagem: 'Este item ainda não foi sincronizado com a loja. Verifique a conexão e tente de novo.'
+    }
+  }
+
+  const relogio = new AbortController()
+  const expira = setTimeout(() => relogio.abort(), ESPERA_MAXIMA_MS)
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/roteiro/itens/${alvo.idBackend}/ruptura`,
+      { method: 'POST', headers: { Accept: 'application/json' }, signal: relogio.signal })
+
+    if (response.status === 422) {
+      // A ruptura FOI registrada; o que faltou foi substituto plausivel no raio caminhavel.
+      return { estado: 'sem-substituto', itemEmFalta: alvo }
+    }
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    const sugestao = await response.json()
+    return { estado: 'sugerido', itemEmFalta: alvo, sugestao }
+  } catch (e) {
+    if (e.name === 'AbortError') {
+      return {
+        estado: 'erro',
+        mensagem: 'A busca por um substituto demorou mais que o esperado. Você pode tentar de novo.'
+      }
+    }
+    console.warn('Falha ao relatar ruptura:', e.message)
+    return {
+      estado: 'erro',
+      mensagem: 'Não foi possível falar com a loja agora. Tente novamente em instantes.'
+    }
+  } finally {
+    clearTimeout(expira)
+  }
+}
+
+/**
+ * Aceita o substituto, trocando o item da lista numa chamada so
+ * (POST /api/v1/roteiro/itens/{itemId}/substituir).
+ *
+ * O produto vai no corpo, e nao e deduzido da sugestao: o assistente pode responder diferente
+ * numa segunda chamada, e a troca precisa valer sobre o que o cliente VIU na tela.
+ *
+ * A lista devolvida pela API substitui a local inteira. Montar a troca aqui seria repetir o
+ * erro que originou o B-1 - escrever no servidor e seguir com uma versao propria da verdade.
+ */
+export async function aceitarSubstituto(itemId, produtoSubstitutoId) {
+  const alvo = getLocalRoteiro().find(i => i.id === itemId || i.produtoId === itemId)
+
+  if (!sincronizado(alvo) || !produtoSubstitutoId) {
+    return { ok: false, itens: getLocalRoteiro() }
+  }
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/roteiro/itens/${alvo.idBackend}/substituir`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ produtoSubstitutoId })
+      })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    const lista = await response.json()
+    const itens = (lista.itens || []).map(daApi)
+    saveLocalRoteiro(itens)
+    return { ok: true, itens }
+  } catch (e) {
+    console.warn('Falha ao aceitar o substituto:', e.message)
+    return { ok: false, itens: getLocalRoteiro() }
+  }
+}
+
 export function limparRoteiroLocal() {
   saveLocalRoteiro([])
   return []
