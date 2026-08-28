@@ -23,6 +23,17 @@ public record ProdutoDetalhadoResponse(
         BigDecimal preco,
         int saldoEstoque,
         UUID pontoMapaId,
+
+        /**
+         * O mesmo corredor que a listagem leva.
+         *
+         * <p>Redundante com {@code pontoMapa.corredor}, e de proposito: o contrato declara
+         * {@code ProdutoDetalhado} como um {@code allOf} de {@code Produto}, entao herda o
+         * campo e promete entrega-lo. Sem ele aqui, o contrato mentiria - e mentiu por um dia,
+         * ate a tela da ruptura receber a sugestao com o corredor vazio. Ver D-71.
+         */
+        String corredor,
+
         PontoMapaResponse pontoMapa,
         List<AtributoResponse> atributos
 ) {
@@ -41,6 +52,7 @@ public record ProdutoDetalhadoResponse(
                 produto.getPreco(),
                 produto.getSaldoEstoque(),
                 produto.getPontoMapa() != null ? produto.getPontoMapa().getId() : null,
+                produto.getPontoMapa() != null ? produto.getPontoMapa().getCorredor() : null,
                 PontoMapaResponse.de(produto.getPontoMapa()),
                 atributos.stream().map(AtributoResponse::de).toList()
         );

@@ -40,6 +40,26 @@ class ProdutoResponseTest {
     }
 
     @Test
+    @DisplayName("o detalhe leva o mesmo corredor, porque o contrato promete")
+    void detalheTambemLevaOCorredor() {
+        /*
+         * O contrato declara ProdutoDetalhado como um allOf de Produto, entao ele herda o
+         * campo e promete entrega-lo. Ficou um dia sem entregar, e so apareceu quando a tela
+         * da ruptura recebeu a sugestao com o corredor vazio - nenhuma tela quebrou, porque
+         * todas leem pontoMapa.corredor antes. O contrato e que mentia.
+         */
+        PontoMapa tintas = new PontoMapa(
+                UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 32, 10);
+
+        ProdutoDetalhadoResponse detalhe = ProdutoDetalhadoResponse.de(produtoEm(tintas));
+
+        assertThat(detalhe.corredor()).isEqualTo("Tintas");
+        assertThat(detalhe.corredor())
+                .as("os dois caminhos precisam concordar")
+                .isEqualTo(detalhe.pontoMapa().corredor());
+    }
+
+    @Test
     @DisplayName("produto sem ponto no mapa devolve corredor nulo, e nao quebra")
     void semPontoNaoQuebra() {
         /*
