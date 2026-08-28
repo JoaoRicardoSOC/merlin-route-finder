@@ -84,6 +84,7 @@
 - [D-70. Renomear uma seção é migração, não edição de string](#d-70-renomear-uma-seção-é-migração-não-edição-de-string)
 - [D-71. O corredor viaja na listagem, e não só o id do ponto](#d-71-o-corredor-viaja-na-listagem-e-não-só-o-id-do-ponto)
 - [D-72. O produto da ruptura nasce com estoque](#d-72-o-produto-da-ruptura-nasce-com-estoque)
+- [D-73. A busca compara sem acento dos dois lados, com TRANSLATE e não CONVERT](#d-73-a-busca-compara-sem-acento-dos-dois-lados-com-translate-e-não-convert)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -1787,6 +1788,46 @@ Quando a tela chegou, a resposta veio pronta: o botão *adicionar ao roteiro* ve
 **Estoque aqui é dado declarado, não estado de um ERP.** Não existe integração de inventário, então a massa é a única fonte. O endpoint de simulação ([D-40](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)) escreve por cima para encenar, e a carga devolve o valor ensaiado no próximo start. Isso deixou de atrapalhar justamente porque a ruptura não depende mais de zerar produto — e passou a ajudar: reiniciar a instância antes da banca devolve a loja ao estado ensaiado, sem ninguém precisar lembrar de nada.
 
 **Onde no código.** `infrastructure/database/seed/CatalogoDaMassa.java` — `SKU-TIN-003`, `SKU-TIN-012` e `SKU-ILU-004`; `CarregadorDadosIniciais.java` — `sincronizarEstoque`.
+
+---
+
+### D-73. A busca compara sem acento dos dois lados, com TRANSLATE e não CONVERT
+
+**Contexto.** Acentuar o catálogo ([D-70](#d-70-renomear-uma-seção-é-migração-não-edição-de-string)) inverteu um problema que já existia e o tornou mais comum: antes, quem digitava *"Lâmpada LED"* não achava nada porque o dado estava sem acento; depois, quem digita *"lampada"* não acharia porque o dado passou a ter.
+
+E é o segundo caso que importa, porque **é assim que as pessoas digitam** — ainda mais no celular, onde o acento exige segurar a tecla.
+
+**O caso que apareceu sozinho.** O primeiro chip de sugestão da tela inicial do app é *"Lâmpada LED"*. Ao migrar dois testes de filtro para Iluminação, escrevi o termo sem acento e as duas asserções vieram vazias. Medido no Oracle:
+
+| | `LIKE` | Jaro-Winkler |
+|---|---|---|
+| `Lampada LED` contra dado sem acento | acha | 87 |
+| `Lâmpada LED` contra dado sem acento | não acha | **69** |
+| qualquer combinação, dobrada | acha | 87 |
+
+O corte da busca é 70. **Errava por um ponto.**
+
+**Decisão.** Envolver os dois lados de toda comparação de texto — o `LIKE`, o `UTL_MATCH` e a ordenação por similaridade — numa função que dobra acento para a letra base.
+
+**`TRANSLATE`, e não `CONVERT`.** O caminho óbvio seria `convert(x, 'US7ASCII')`, e ele quase funciona: dobra `ç → c` e as agudas e circunflexas. Mas **não dobra o til** — `ã` e `õ` viram `?`. Medido:
+
+```
+convert('áàâãéêíóôõúüç', 'US7ASCII')  ->  aaa?eeioo?uuc
+```
+
+Til está em construção, latão, portão, mão, grão, dimensão, instalação, iluminação — boa parte do catálogo. Com `convert`, *"materiais de construcao"* continuaria não achando *"Materiais de construção"*; com `TRANSLATE`, o mesmo par dá **100**.
+
+Foi o único ponto do plano marcado como *verificar antes de escrever*, e era mesmo o furo. `NLS_SORT=BINARY_AI` também foi descartado: afeta comparação, não o texto devolvido, e o `LIKE` não o honra.
+
+**A ordenação usa a mesma forma dobrada.** Filtrar por um critério e ordenar por outro faria o primeiro resultado não ser o mais parecido.
+
+**O filtro de seção também dobra.** A tela devolve o nome que `/produtos/secoes` mandou, então casaria de qualquer jeito — mas um link digitado à mão com *"Decoracao"* não pode devolver vazio por falta de cedilha.
+
+**Os valores de característica ficaram de fora**, e de propósito: eles chegam de dentro das facetas que nós mesmos devolvemos, então sempre voltam idênticos. Dobrar dentro de um `IN` custaria complexidade sem caso de uso.
+
+**Custo de desempenho: nenhum que importe.** A função impede o uso de índice, e são 111 linhas — a busca já era varredura completa por causa do `UTL_MATCH` ([D-15](#d-15-query-nativa-com-utl_match-para-busca-tolerante-a-erro-de-digitação)).
+
+**Onde no código.** `infrastructure/database/adapter/ProdutoRepositoryAdapter.java` — `dobrado`, usado em `condicoes` e na ordenação.
 
 ---
 

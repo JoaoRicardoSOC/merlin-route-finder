@@ -152,6 +152,69 @@ class BuscaComFiltrosIntegracaoTest {
                 .anyMatch(nome -> nome.startsWith("Tinta"));
     }
 
+    // ---------------------------------------------------------------- acento
+
+    @Test
+    @DisplayName("quem digita sem acento acha o produto acentuado")
+    void semAcentoAchaComAcento() {
+        /*
+         * O caso que motivou a mudanca, e ele estava na tela inicial: o primeiro chip de
+         * sugestao do app e "Lâmpada LED". Antes de dobrar os dois lados, digitar "lampada"
+         * devolvia ZERO - o LIKE nao casa (â nao e a) e o Jaro-Winkler dava 69 contra um corte
+         * de 70. Errava por um ponto. Ver D-73.
+         */
+        List<String> achados = nomes(buscar(FiltroDeProdutos.porTermo("lampada")));
+
+        System.out.println(">>> 'lampada' achou: " + achados);
+
+        assertThat(achados)
+                .isNotEmpty()
+                .allMatch(nome -> nome.toLowerCase().startsWith("lâmpada"));
+    }
+
+    @Test
+    @DisplayName("quem digita com acento acha do mesmo jeito")
+    void comAcentoTambemAcha() {
+        assertThat(nomes(buscar(FiltroDeProdutos.porTermo("lâmpada"))))
+                .containsExactlyInAnyOrderElementsOf(
+                        nomes(buscar(FiltroDeProdutos.porTermo("lampada"))));
+    }
+
+    @Test
+    @DisplayName("acento no meio da palavra tambem dobra, inclusive til e cedilha")
+    void tilECedilhaTambemDobram() {
+        /*
+         * Til e o motivo de nao usarmos convert(x,'US7ASCII'): ele dobra cedilha mas
+         * transforma ã e õ em '?'. Estas buscas so passam com TRANSLATE.
+         *
+         * Os termos sao escolhidos entre os que aparecem em NOME de produto - a busca compara
+         * p.nome, entao "construcao" nao serviria: a palavra so existe no nome da secao e nas
+         * descricoes.
+         */
+        assertThat(nomes(buscar(FiltroDeProdutos.porTermo("sifao"))))
+                .as("til: 'sifao' precisa achar 'Sifão'")
+                .isNotEmpty()
+                .allMatch(nome -> nome.startsWith("Sifão"));
+
+        assertThat(nomes(buscar(FiltroDeProdutos.porTermo("distribuicao"))))
+                .as("til no meio: 'distribuicao' precisa achar 'Distribuição'")
+                .anyMatch(nome -> nome.contains("Distribuição"));
+
+        assertThat(nomes(buscar(FiltroDeProdutos.porTermo("pecas"))))
+                .as("cedilha: 'pecas' precisa achar 'Peças'")
+                .anyMatch(nome -> nome.contains("Peças"));
+    }
+
+    @Test
+    @DisplayName("a secao tambem casa sem acento")
+    void secaoSemAcento() {
+        // Um link digitado a mao com "Decoracao" nao pode devolver vazio por falta de cedilha.
+        assertThat(buscar(new FiltroDeProdutos(null, "Decoracao", false)))
+                .isNotEmpty()
+                .allSatisfy(produto ->
+                        assertThat(produto.getPontoMapa().getCorredor()).isEqualTo("Decoração"));
+    }
+
     @Test
     @DisplayName("termo e secao trabalham juntos")
     void termoComSecao() {

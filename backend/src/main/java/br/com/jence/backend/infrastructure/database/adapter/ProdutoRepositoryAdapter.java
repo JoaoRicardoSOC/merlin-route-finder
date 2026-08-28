@@ -46,6 +46,27 @@ public class ProdutoRepositoryAdapter implements ProdutoRepository {
              from tb_produto p
              join tb_ponto_mapa m on m.id = p.ponto_mapa_id""";
 
+    /*
+     * Dobra acento para a letra base, dos dois lados de toda comparacao de texto.
+     *
+     * <b>TRANSLATE e nao CONVERT.</b> O caminho obvio seria convert(x, 'US7ASCII'), e ele
+     * quase funciona: dobra ç para c e as agudas e circunflexas. Mas <b>nao dobra o til</b> -
+     * a e o viram '?'. Medido no Oracle da FIAP: "Materiais de construcao" nao acha
+     * "Materiais de construção", e til esta em construcao, latao, portao, mao, grao,
+     * dimensao, instalacao e iluminacao, ou seja, em boa parte do catalogo. Com TRANSLATE o
+     * mesmo par da 100.
+     *
+     * A funcao impede o uso de indice, e isso nao custa nada aqui: sao 111 linhas, e a busca
+     * ja era varredura completa por causa do UTL_MATCH.
+     */
+    private static final String ACENTOS = "áàâãéêíóôõúüçÁÀÂÃÉÊÍÓÔÕÚÜÇ";
+    private static final String SEM_ACENTOS = "aaaaeeiooouucAAAAEEIOOOUUC";
+
+    /** Envolve uma expressao SQL para que ela seja comparada sem acento e sem caixa. */
+    private static String dobrado(String expressao) {
+        return "upper(translate(%s, '%s', '%s'))".formatted(expressao, ACENTOS, SEM_ACENTOS);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public Optional<Produto> buscarPorId(UUID id) {
@@ -90,7 +111,8 @@ public class ProdutoRepositoryAdapter implements ProdutoRepository {
         // Sem termo nao ha similaridade a ordenar, e chamar UTL_MATCH com nulo nao faria
         // sentido nenhum: nesse caso a ordem e alfabetica, que e o que se espera ao navegar.
         String ordem = filtro.temTermo()
-                ? " order by utl_match.jaro_winkler_similarity(upper(p.nome), upper(:termo)) desc, p.nome"
+                ? " order by utl_match.jaro_winkler_similarity("
+                        + dobrado("p.nome") + ", " + dobrado(":termo") + ") desc, p.nome"
                 : " order by p.nome";
 
         Query consulta = entityManager
@@ -120,12 +142,21 @@ public class ProdutoRepositoryAdapter implements ProdutoRepository {
         StringBuilder onde = new StringBuilder(" where 1 = 1");
 
         if (filtro.temTermo()) {
-            onde.append("""
-                     and (upper(p.nome) like upper('%' || :termo || '%')
-                          or utl_match.jaro_winkler_similarity(upper(p.nome), upper(:termo)) > 70)""");
+            /*
+             * Os dois lados dobrados: o catalogo tem acento e a maioria das pessoas digita
+             * sem, ainda mais no celular. Sem isso, "lampada" nao acha "Lâmpada" - o LIKE nao
+             * casa e o Jaro-Winkler da 69 contra o corte de 70, um ponto de diferenca. Ver
+             * D-73.
+             */
+            onde.append(" and (" + dobrado("p.nome") + " like '%' || " + dobrado(":termo") + " || '%'"
+                    + " or utl_match.jaro_winkler_similarity("
+                    + dobrado("p.nome") + ", " + dobrado(":termo") + ") > 70)");
         }
         if (filtro.secao() != null) {
-            onde.append(" and upper(m.corredor) = upper(:secao)");
+            // Dobrado tambem: a tela manda de volta o nome que /produtos/secoes devolveu, entao
+            // casaria de qualquer jeito - mas um link digitado a mao com "Decoracao" nao pode
+            // devolver vazio so por falta de cedilha.
+            onde.append(" and " + dobrado("m.corredor") + " = " + dobrado(":secao"));
         }
         if (filtro.apenasDisponiveis()) {
             onde.append(" and p.saldo_estoque > 0");
