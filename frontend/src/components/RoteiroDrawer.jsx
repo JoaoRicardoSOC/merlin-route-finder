@@ -5,6 +5,7 @@ export default function RoteiroDrawer({
   onClose,
   items = [],
   onRemoveItem,
+  onToggleCollectItem,
   onClearAll,
   onStartRoute
 }) {
@@ -19,6 +20,8 @@ export default function RoteiroDrawer({
     const p = typeof item.preco === 'number' ? item.preco : parseFloat(item.preco) || 0
     return acc + p
   }, 0)
+
+  const collectedCount = items.filter(i => i.coletado).length
 
   return (
     <div className="modal-backdrop roteiro-drawer-backdrop" onClick={onClose}>
@@ -37,7 +40,9 @@ export default function RoteiroDrawer({
             </div>
             <div>
               <h3>Meu Roteiro</h3>
-              <p>{items.length} {items.length === 1 ? 'produto adicionado' : 'produtos adicionados'}</p>
+              <p>
+                {items.length} {items.length === 1 ? 'produto' : 'produtos'} • {collectedCount} {collectedCount === 1 ? 'coletado' : 'coletados'}
+              </p>
             </div>
           </div>
           <button
@@ -68,7 +73,20 @@ export default function RoteiroDrawer({
           ) : (
             <div className="roteiro-items-list">
               {items.map((item) => (
-                <div key={item.id} className="roteiro-item-card">
+                <div key={item.id} className={`roteiro-item-card ${item.coletado ? 'is-collected' : ''}`}>
+                  {/* Collection Toggle Checkbox */}
+                  <button
+                    type="button"
+                    className={`roteiro-check-btn ${item.coletado ? 'checked' : ''}`}
+                    onClick={() => onToggleCollectItem && onToggleCollectItem(item.id)}
+                    title={item.coletado ? 'Desmarcar coleta' : 'Marcar como coletado na prateleira'}
+                    aria-label={`Marcar ${item.nome} como coletado`}
+                  >
+                    <span className="material-symbols-outlined">
+                      {item.coletado ? 'check_circle' : 'radio_button_unchecked'}
+                    </span>
+                  </button>
+
                   <div className="roteiro-item-visual">
                     {item.imagemUrl ? (
                       <img src={item.imagemUrl} alt={item.nome} className="roteiro-item-img" />
@@ -78,10 +96,13 @@ export default function RoteiroDrawer({
                   </div>
 
                   <div className="roteiro-item-info">
-                    <h4 className="roteiro-item-name">{item.nome}</h4>
+                    <h4 className={`roteiro-item-name ${item.coletado ? 'strikethrough' : ''}`}>
+                      {item.nome}
+                    </h4>
                     <div className="roteiro-item-corredor">
                       <span className="material-symbols-outlined">location_on</span>
                       <span>{item.corredor}</span>
+                      {item.coletado && <span className="coletado-badge">Coletado</span>}
                     </div>
                     <span className="roteiro-item-price">{formatPrice(item.preco)}</span>
                   </div>
@@ -100,6 +121,7 @@ export default function RoteiroDrawer({
             </div>
           )}
         </div>
+
 
         {/* Footer with totals and action buttons */}
         {items.length > 0 && (

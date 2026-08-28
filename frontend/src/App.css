@@ -3462,11 +3462,45 @@
   border: 1px solid var(--outline-variant);
   border-radius: var(--radius-md);
   padding: 10px 12px;
-  transition: border-color var(--transition-fast);
+  transition: all var(--transition-fast);
+}
+
+.roteiro-item-card.is-collected {
+  background-color: var(--surface-container-low);
+  border-color: #BBF7D0;
+  opacity: 0.75;
 }
 
 .roteiro-item-card:hover {
   border-color: var(--primary);
+}
+
+.roteiro-check-btn {
+  background: transparent;
+  border: none;
+  color: var(--outline);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.roteiro-check-btn:hover {
+  color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.roteiro-check-btn.checked {
+  color: #16A34A;
+}
+
+.roteiro-check-btn .material-symbols-outlined {
+  font-size: 22px;
 }
 
 .roteiro-item-visual {
@@ -3508,6 +3542,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.2;
+  transition: all var(--transition-fast);
+}
+
+.roteiro-item-name.strikethrough {
+  text-decoration: line-through;
+  color: var(--on-surface-variant);
+  opacity: 0.7;
 }
 
 .roteiro-item-corredor {
@@ -3519,6 +3560,16 @@
   color: var(--primary);
   font-weight: 600;
   margin: 2px 0;
+}
+
+.coletado-badge {
+  background-color: #DCFCE7;
+  color: #15803D;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  margin-left: 4px;
 }
 
 .roteiro-item-corredor .material-symbols-outlined {
@@ -3551,6 +3602,7 @@
 .roteiro-remove-btn:active {
   transform: scale(0.92);
 }
+
 
 /* Roteiro Footer */
 .roteiro-drawer-footer {

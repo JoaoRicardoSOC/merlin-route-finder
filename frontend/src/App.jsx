@@ -351,12 +351,39 @@ function App() {
     const updated = await alternarColetaItem(itemId)
     setRoteiroItems(updated)
     const item = updated.find(i => i.id === itemId || i.produtoId === itemId)
+    
     if (item?.coletado) {
-      showToast(`Item "${item.nome}" marcado como coletado!`)
+      if (item.corredor) {
+        setCurrentLocation({
+          sector: item.corredor,
+          aisle: item.corredor,
+          code: item.sku || 'COLETA',
+          coords: null
+        })
+      }
+      showToast(`Item "${item.nome}" marcado como coletado! Posição atualizada para ${item.corredor}.`)
     } else {
+      // Revert to most recent collected item or fallback to scanned QR code
+      const lastCollected = [...updated].reverse().find(i => i.coletado)
+      if (lastCollected && lastCollected.corredor) {
+        setCurrentLocation({
+          sector: lastCollected.corredor,
+          aisle: lastCollected.corredor,
+          code: lastCollected.sku || 'COLETA',
+          coords: null
+        })
+      } else if (session?.posicaoAtual) {
+        setCurrentLocation({
+          sector: session.posicaoAtual.corredor,
+          aisle: session.posicaoAtual.corredor,
+          code: session.posicaoAtual.codigoCurto || 'ENT-01',
+          coords: `${session.posicaoAtual.coordenadaX}, ${session.posicaoAtual.coordenadaY}`
+        })
+      }
       showToast('Item desmarcado da coleta.')
     }
   }
+
 
   const handleOpenMap = (product = null) => {
     setFocusedProductForMap(product || null)
@@ -587,9 +614,11 @@ function App() {
         onClose={() => setIsRoteiroDrawerOpen(false)}
         items={roteiroItems}
         onRemoveItem={handleRemoveFromRoteiro}
+        onToggleCollectItem={handleToggleCollectItem}
         onClearAll={handleClearRoteiro}
         onStartRoute={handleStartFullRoute}
       />
+
 
       {/* Location Code & QR Scanner Modal (Plan A & Plan B) */}
       <LocationCodeModal
