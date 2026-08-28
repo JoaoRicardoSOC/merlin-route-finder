@@ -81,6 +81,16 @@ function App() {
   })
 
   const productsSectionRef = useRef(null)
+  const searchInputRef = useRef(null)
+
+  const handleHeaderSearchClick = () => {
+    if (searchInputRef.current) {
+      searchInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setTimeout(() => {
+        searchInputRef.current.focus()
+      }, 300)
+    }
+  }
 
   const showToast = (msg) => {
     setToastMessage(msg)
@@ -310,13 +320,13 @@ function App() {
       {/* Intro Split Splash Screen */}
       <SplashScreen />
 
-      {/* Header / TopAppBar with Cart / Roteiro Counter */}
+      {/* Header / TopAppBar with Search Lupa & Cart / Roteiro Counter */}
       <Header
         activeTab={activeTab}
         setActiveTab={handleTabChange}
-        onMenuClick={() => setIsSectorsDrawerOpen(true)}
         onOpenSectors={() => setIsSectorsDrawerOpen(true)}
         onOpenRoteiro={() => setIsRoteiroDrawerOpen(true)}
+        onSearchClick={handleHeaderSearchClick}
         cartCount={roteiroItems.length}
       />
 
@@ -337,8 +347,9 @@ function App() {
           onViewMap={handleOpenMap}
         />
 
-        {/* AI Smart Search */}
+        {/* AI Smart Search with Typo-Tolerant Live Update */}
         <SearchBar
+          inputRef={searchInputRef}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           suggestions={SEARCH_SUGGESTIONS}
@@ -347,47 +358,41 @@ function App() {
           }}
         />
 
-        {/* Bento Grid Actions */}
-        <BentoActions
-          currentSectorName={selectedSecao !== 'todos' ? selectedSecao : 'Iluminação'}
-          onViewProducts={() => {
-            if (selectedSecao === 'todos') {
-              handleSelectSecao('Iluminação')
-            } else {
-              handleSelectSecao(selectedSecao)
-            }
-          }}
-          onCallSpecialist={handleCallSpecialist}
-          onViewMap={handleOpenMap}
-        />
-
-        {/* Physical Store Sector Explorer (ListarSecoesUseCase) */}
-        <SectorExplorer
-          secoes={secoes}
-          selectedSecao={selectedSecao}
-          onSelectSecao={handleSelectSecao}
-          totalProductsCount={totalProductsCount}
-          isLoading={isLoadingSecoes}
-        />
-
-        {/* Active Sector Contextual Banner */}
-        <SectorBanner
-          selectedSecao={selectedSecao}
-          productCount={produtos.length}
-          onClearFilter={() => handleSelectSecao('todos')}
-          onOpenMap={handleOpenMap}
-        />
-
         {/* Products Grid Section (Vitrine do Catálogo) */}
         <section className="products-section" ref={productsSectionRef}>
           <div className="section-header-wrap">
             <div className="products-header-title-bar">
               <h2 className="section-heading">
-                {selectedSecao === 'todos' ? 'Vitrine de Produtos' : `Produtos de ${selectedSecao}`}
+                {searchQuery ? `Resultados para "${searchQuery}"` : selectedSecao === 'todos' ? 'Vitrine de Produtos' : `Produtos de ${selectedSecao}`}
               </h2>
               <span className="products-count-badge">
                 {produtos.length} {produtos.length === 1 ? 'item' : 'itens'}
               </span>
+            </div>
+
+            {/* Minimalist Sector Filter Pills (ListarSecoesUseCase) */}
+            <div className="minimal-sector-tabs-wrap">
+              <div className="minimal-sector-tabs">
+                <button
+                  type="button"
+                  className={`minimal-sector-pill ${selectedSecao === 'todos' ? 'active' : ''}`}
+                  onClick={() => handleSelectSecao('todos')}
+                >
+                  <span>Todos</span>
+                  <span className="minimal-pill-count">({totalProductsCount})</span>
+                </button>
+                {secoes.map((s) => (
+                  <button
+                    key={s.nome}
+                    type="button"
+                    className={`minimal-sector-pill ${selectedSecao === s.nome ? 'active' : ''}`}
+                    onClick={() => handleSelectSecao(s.nome)}
+                  >
+                    <span>{s.nome}</span>
+                    <span className="minimal-pill-count">({s.quantidadeProdutos})</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Quick Filter Bar: Availability switch & Drawer button */}
@@ -471,6 +476,20 @@ function App() {
             </div>
           )}
         </section>
+
+        {/* Bento Grid Actions (Atalhos Rápidos) */}
+        <BentoActions
+          currentSectorName={selectedSecao !== 'todos' ? selectedSecao : 'Iluminação'}
+          onViewProducts={() => {
+            if (selectedSecao === 'todos') {
+              handleSelectSecao('Iluminação')
+            } else {
+              handleSelectSecao(selectedSecao)
+            }
+          }}
+          onCallSpecialist={handleCallSpecialist}
+          onViewMap={handleOpenMap}
+        />
 
         {/* Featured Promotional Banner */}
         <PromoBanner

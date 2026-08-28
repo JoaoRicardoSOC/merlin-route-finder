@@ -4,20 +4,23 @@ import leroyLogo from '../assets/leroy_logo.png'
 export default function Header({
   activeTab,
   setActiveTab,
-  onMenuClick,
   onOpenSectors,
   onOpenRoteiro,
+  onSearchClick,
   cartCount = 0
 }) {
   return (
     <header className="app-header">
       <div className="header-inner">
+        {/* Left Action: Search Lupa Button */}
         <button 
-          className="icon-button mobile-menu-btn" 
-          aria-label="Abrir menu de setores" 
-          onClick={onMenuClick || onOpenSectors}
+          className="icon-button header-search-btn" 
+          aria-label="Buscar produtos no catálogo" 
+          title="Pesquisar produtos na loja"
+          onClick={onSearchClick}
+          type="button"
         >
-          <span className="material-symbols-outlined">menu</span>
+          <span className="material-symbols-outlined">search</span>
         </button>
 
         <div className="brand-logo" onClick={() => setActiveTab('home')}>
@@ -59,13 +62,14 @@ export default function Header({
           </button>
         </nav>
 
-        {/* Header Actions: Cart / Roteiro Button with Notification Badge */}
+        {/* Right Action: Cart / Roteiro Button with Notification Badge */}
         <div className="header-actions">
           <button 
             className="icon-button cart-header-btn" 
             aria-label={`Meu roteiro com ${cartCount} itens`}
             title="Abrir meu roteiro de compras"
             onClick={onOpenRoteiro}
+            type="button"
           >
             <span className="material-symbols-outlined">shopping_cart</span>
             {cartCount > 0 && (

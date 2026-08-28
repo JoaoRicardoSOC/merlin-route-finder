@@ -1,6 +1,12 @@
 import React, { useState } from 'react'
 
-export default function SearchBar({ searchQuery, setSearchQuery, onSearch, suggestions = [] }) {
+export default function SearchBar({
+  searchQuery,
+  setSearchQuery,
+  onSearch,
+  suggestions = [],
+  inputRef
+}) {
   const [isFocused, setIsFocused] = useState(false)
 
   const handleSubmit = (e) => {
@@ -14,25 +20,26 @@ export default function SearchBar({ searchQuery, setSearchQuery, onSearch, sugge
   }
 
   return (
-    <div className="search-section">
+    <div className="search-section" id="store-search-section">
       <div className="search-header">
         <label className="search-label" htmlFor="store-search">
           <span className="material-symbols-outlined search-ai-sparkle filled">auto_awesome</span>
-          Busca Inteligente com IA
+          Busca Inteligente no Catálogo
         </label>
-        <span className="search-badge">Assistente em Tempo Real</span>
+        <span className="search-badge">Tolerante a erros de digitação</span>
       </div>
 
       <form onSubmit={handleSubmit} className={`search-bar-form ${isFocused ? 'focused' : ''}`}>
         <span className="material-symbols-outlined search-icon">search</span>
         <input
+          ref={inputRef}
           id="store-search"
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholder="Ex: Como trocar lâmpada, fita LED, disjuntor..."
+          placeholder="Digite o produto (ex: tnta, furadera, disjuntor, silicone...)"
           className="search-input"
           autoComplete="off"
         />

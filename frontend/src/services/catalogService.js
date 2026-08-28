@@ -357,14 +357,55 @@ export async function fetchProdutos({ query = '', secao = '', apenasDisponiveis 
       filtered = filtered.filter(p => p.secao && p.secao.toLowerCase() === targetSecao)
     }
 
+/**
+ * Calculates Levenshtein distance for fuzzy search (mirroring Oracle's UTL_MATCH)
+ */
+function calcularSimilaridade(s1, s2) {
+  if (!s1 || !s2) return 0
+  const a = s1.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  const b = s2.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  
+  if (a.includes(b) || b.includes(a)) return 1.0
+
+  const m = a.length
+  const n = b.length
+  const d = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0))
+
+  for (let i = 0; i <= m; i++) d[i][0] = i
+  for (let j = 0; j <= n; j++) d[0][j] = j
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1
+      d[i][j] = Math.min(
+        d[i - 1][j] + 1,
+        d[i][j - 1] + 1,
+        d[i - 1][j - 1] + cost
+      )
+    }
+  }
+
+  const maxLen = Math.max(m, n)
+  return 1 - d[m][n] / maxLen
+}
+
     if (query && query.trim() !== '') {
       const q = query.trim().toLowerCase()
-      filtered = filtered.filter(p => 
-        (p.nome && p.nome.toLowerCase().includes(q)) ||
-        (p.descricao && p.descricao.toLowerCase().includes(q)) ||
-        (p.corredor && p.corredor.toLowerCase().includes(q)) ||
-        (p.sku && p.sku.toLowerCase().includes(q))
-      )
+      filtered = filtered.filter(p => {
+        const nomeMatch = p.nome && (
+          p.nome.toLowerCase().includes(q) ||
+          p.nome.toLowerCase().split(/\s+/).some(w => calcularSimilaridade(w, q) >= 0.6) ||
+          calcularSimilaridade(p.nome, q) >= 0.5
+        )
+        const descMatch = p.descricao && (
+          p.descricao.toLowerCase().includes(q) ||
+          p.descricao.toLowerCase().split(/\s+/).some(w => calcularSimilaridade(w, q) >= 0.65)
+        )
+        const corredorMatch = p.corredor && p.corredor.toLowerCase().includes(q)
+        const skuMatch = p.sku && p.sku.toLowerCase().includes(q)
+
+        return nomeMatch || descMatch || corredorMatch || skuMatch
+      })
     }
 
     if (apenasDisponiveis) {
