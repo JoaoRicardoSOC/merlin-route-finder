@@ -53,7 +53,7 @@ class ItemRoteiroControllerTest {
         when(marcarItemColetadoUseCase.executar(itemId)).thenReturn(
                 new ItemRoteiroDetalhadoResponse(itemId, produtoId, true,
                         new ProdutoResponse(produtoId, "SKU-ENC-001", "Cano PVC Soldavel 25mm 6m", null, null,
-                                new BigDecimal("28.90"), 35, UUID.randomUUID())));
+                                new BigDecimal("28.90"), 35, UUID.randomUUID(), "Encanamento")));
 
         mockMvc.perform(patch("/api/v1/roteiro/itens/{i}/coletar", itemId))
                 .andExpect(status().isOk())
@@ -70,7 +70,8 @@ class ItemRoteiroControllerTest {
         when(desmarcarItemColetadoUseCase.executar(itemId)).thenReturn(
                 new ItemRoteiroDetalhadoResponse(itemId, produtoId, false,
                         new ProdutoResponse(produtoId, "SKU-ENC-001", "Cano PVC Soldavel 25mm 6m",
-                                null, null, new BigDecimal("28.90"), 35, UUID.randomUUID())));
+                                null, null, new BigDecimal("28.90"), 35, UUID.randomUUID(),
+                                "Encanamento")));
 
         mockMvc.perform(patch("/api/v1/roteiro/itens/{i}/desmarcar", itemId))
                 .andExpect(status().isOk())
@@ -105,7 +106,8 @@ class ItemRoteiroControllerTest {
                         new ItemRoteiroDetalhadoResponse(novoItemId, substitutoId, false,
                                 new ProdutoResponse(substitutoId, "SKU-TIN-004",
                                         "Lixa d'Agua Grao 150", null, null,
-                                        new BigDecimal("4.20"), 40, UUID.randomUUID())))));
+                                        new BigDecimal("4.20"), 40, UUID.randomUUID(),
+                                        "Tintas")))));
 
         mockMvc.perform(post("/api/v1/roteiro/itens/{i}/substituir", itemId)
                         .contentType(MediaType.APPLICATION_JSON)

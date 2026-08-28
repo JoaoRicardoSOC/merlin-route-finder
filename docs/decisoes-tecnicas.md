@@ -82,6 +82,7 @@
 - [D-68. O substituto é escolhido por semelhança antes de proximidade](#d-68-o-substituto-é-escolhido-por-semelhança-antes-de-proximidade)
 - [D-69. A massa passou a ser a fonte do nome e da descrição, e sobrescreve o banco](#d-69-a-massa-passou-a-ser-a-fonte-do-nome-e-da-descrição-e-sobrescreve-o-banco)
 - [D-70. Renomear uma seção é migração, não edição de string](#d-70-renomear-uma-seção-é-migração-não-edição-de-string)
+- [D-71. O corredor viaja na listagem, e não só o id do ponto](#d-71-o-corredor-viaja-na-listagem-e-não-só-o-id-do-ponto)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -1735,6 +1736,28 @@ Por isso a migração apaga antes de renomear: prateleira com o nome de destino 
 **A ponta que ficou do outro lado.** `findSectorForProduct`, no `mapService.js`, casa a seção contra `secaoRef` **e** contra o nome do bloco. Depois desta mudança, Decoração, Elétrica e Iluminação passam a casar pelo nome do bloco, que já era acentuado — sem regressão. Mas **Materiais de construção deixa de casar**: o `secaoRef` está sem acento e o bloco se chama *Material de Construção*, no singular. São duas strings no frontend, junto do `secaoRef` do Encanamento, que nunca casou.
 
 **Onde no código.** `infrastructure/database/seed/CarregadorDadosIniciais.java` — `CORREDORES_RENOMEADOS` e `renomearCorredores`; `infrastructure/database/repository/PontoMapaJpaRepository.java` — `renomearCorredor`.
+
+---
+
+### D-71. O corredor viaja na listagem, e não só o id do ponto
+
+**Contexto.** `ProdutoResponse` levava `pontoMapaId` — um UUID — e mais nada sobre onde o produto fica. O nome do corredor só existia no detalhe, dentro de `pontoMapa`.
+
+O frontend, sem ter de onde tirar o nome, imprimiu um texto fixo: **`Corredor da Loja`**, nos 50 cards do catálogo, em cada item do roteiro e nas respostas do assistente. O cliente não tinha como saber que ali deveria haver um corredor de verdade — dado ausente vestido de conteúdo.
+
+**Por que isso é o produto, e não um detalhe.** *"Em que corredor ele está"* é a frase que separa o Merlin de um e-commerce qualquer. Ela sumiu exatamente das duas telas onde importa: a que o cliente usa para navegar e a lista com que ele anda pela loja.
+
+**Decisão.** A listagem passa a levar o **nome do corredor** junto do id.
+
+**Por que no backend e não cruzando no frontend.** A tela já busca `GET /mapa` e poderia casar cada produto pelo `pontoMapaId`. Mas aí *cada* tela que mostrasse produto precisaria lembrar de cruzar — catálogo, roteiro, resultado de busca, sugestão de substituto —, e esquecer significa voltar a imprimir o texto genérico, sem erro nenhum que denuncie. O dado é do backend, e quem esquece de cruzar é quem paga.
+
+**Custo real: nenhum.** A consulta do catálogo já faz `join tb_ponto_mapa` para poder filtrar por seção ([D-60](#d-60-uma-consulta-montada-substitui-as-duas-buscas-de-catálogo)), então o corredor já vinha carregado — ele só não estava sendo exposto. Nenhuma consulta a mais, nenhum campo novo em banco.
+
+**Nulo continua sendo estado válido.** Produto sem ponto no mapa existe: a carga avisa e segue quando uma seção não está na planta. O campo é anulável no contrato, e há teste para o caso.
+
+**O `pontoMapaId` continua vindo.** O mapa precisa dele para casar o marcador com o bloco; o nome é para o texto. Os dois têm usos diferentes e não se substituem.
+
+**Onde no código.** `application/dto/ProdutoResponse.java`; `src/main/resources/openapi/openapi.yaml` — schema `Produto`, herdado por `ProdutoDetalhado` via `allOf`.
 
 ---
 

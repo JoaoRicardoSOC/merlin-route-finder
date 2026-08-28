@@ -48,7 +48,7 @@ class ProdutoControllerTest {
 
     private ProdutoResponse produto(UUID id) {
         return new ProdutoResponse(id, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L", null, null,
-                new BigDecimal("289.90"), 12, UUID.randomUUID());
+                new BigDecimal("289.90"), 12, UUID.randomUUID(), "Tintas");
     }
 
     @Test
@@ -58,9 +58,27 @@ class ProdutoControllerTest {
                 .thenReturn(new CatalogoResponse(List.of(produto(UUID.randomUUID())), 0, 20, 1L, 1, List.of()));
 
         mockMvc.perform(get("/api/v1/produtos"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].corredor").value("Tintas"));
 
         verify(buscarProdutosUseCase).executar(null, null, null, Map.of(), null, null);
+    }
+
+    @Test
+    @DisplayName("a listagem traz o corredor, e nao so o id do ponto")
+    void listagemTrazCorredor() throws Exception {
+        /*
+         * Sem este campo a tela nao tem como dizer onde o produto fica sem cruzar cada item
+         * com GET /mapa - e enquanto ela nao cruzava, o catalogo inteiro exibia um texto
+         * generico no lugar do corredor. Ver D-71.
+         */
+        when(buscarProdutosUseCase.executar(any(), any(), any(), any(), any(), any()))
+                .thenReturn(new CatalogoResponse(List.of(produto(UUID.randomUUID())), 0, 20, 1L, 1, List.of()));
+
+        mockMvc.perform(get("/api/v1/produtos"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].corredor").value("Tintas"))
+                .andExpect(jsonPath("$.content[0].pontoMapaId").exists());
     }
 
     @Test
@@ -236,7 +254,7 @@ class ProdutoControllerTest {
         UUID produtoId = UUID.randomUUID();
         when(simularEstoqueUseCase.executar(eq(produtoId), eq(0))).thenReturn(
                 new ProdutoResponse(produtoId, "SKU-TIN-003", "Lixa para Parede Grao 120", null, null,
-                        new BigDecimal("3.50"), 0, UUID.randomUUID()));
+                        new BigDecimal("3.50"), 0, UUID.randomUUID(), "Tintas"));
 
         mockMvc.perform(ajustarEstoque(produtoId, """
                         {"saldoEstoque": 0}"""))
@@ -251,7 +269,7 @@ class ProdutoControllerTest {
         UUID produtoId = UUID.randomUUID();
         when(simularEstoqueUseCase.executar(eq(produtoId), eq(25))).thenReturn(
                 new ProdutoResponse(produtoId, "SKU-TIN-003", "Lixa para Parede Grao 120", null, null,
-                        new BigDecimal("3.50"), 25, UUID.randomUUID()));
+                        new BigDecimal("3.50"), 25, UUID.randomUUID(), "Tintas"));
 
         mockMvc.perform(ajustarEstoque(produtoId, """
                         {"saldoEstoque": 25}"""))

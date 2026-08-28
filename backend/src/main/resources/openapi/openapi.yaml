@@ -706,6 +706,10 @@ components:
         pontoMapaId:
           type: string
           format: uuid
+        corredor:
+          type: string
+          nullable: true
+          description: Corredor onde o produto está, para a tela não precisar cruzar com `GET /mapa`. Nulo se o produto não tiver ponto no mapa.
 
     ProdutoDetalhado:
       allOf:
