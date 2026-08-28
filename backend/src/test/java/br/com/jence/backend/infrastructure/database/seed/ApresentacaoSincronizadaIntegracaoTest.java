@@ -84,6 +84,27 @@ class ApresentacaoSincronizadaIntegracaoTest {
     }
 
     @Test
+    @DisplayName("o saldo em estoque tambem volta a ser o que a massa declara")
+    void oEstoqueVoltaAoDeclarado() {
+        /*
+         * Estoque ficou de fora da reconciliacao por muito tempo, e so apareceu quando a lixa
+         * da ruptura passou a nascer com saldo (D-72): a mudanca nao chegava a banco nenhum
+         * que ja tivesse o produto - ou seja, a lugar nenhum, ja que o schema e um so.
+         */
+        Produto antes = porSku("SKU-TIN-003");
+        int declarado = antes.getSaldoEstoque();
+
+        produtoRepository.salvar(antes.comSaldoEstoque(declarado + 7));
+        assertThat(porSku("SKU-TIN-003").getSaldoEstoque()).isEqualTo(declarado + 7);
+
+        carregador.run(null);
+
+        assertThat(porSku("SKU-TIN-003").getSaldoEstoque())
+                .as("a carga precisa devolver o estoque ensaiado")
+                .isEqualTo(declarado);
+    }
+
+    @Test
     @DisplayName("nome e imagem cabem nas colunas")
     void cabemNasColunas() {
         // Um estouro aqui nao falha em teste: falha na carga, e so no banco de quem rodar.

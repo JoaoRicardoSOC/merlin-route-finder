@@ -160,16 +160,44 @@ class CargaDeDadosIntegracaoTest {
     }
 
     @Test
-    void oCenarioPlantadoContinuaComEstoqueZerado() {
-        // A lixa grao 120 e o unico produto que nasce zerado: e o gatilho da demonstracao.
+    void oCenarioPlantadoContinuaEncenavel() {
+        /*
+         * A lixa precisa ter estoque, e isso e o oposto do que este teste exigia antes.
+         *
+         * A ruptura que o sistema trata e "o estoque dizia que tinha e a prateleira estava
+         * vazia" - o cliente descobre a falta na gondola, nao na tela. Produto esgotado nao
+         * entra no roteiro, essa regra e da tela, entao uma lixa zerada nunca chegaria a lista
+         * e o cenario nao teria como comecar. Ver D-72.
+         */
         assertThat(porSku("SKU-TIN-003").temDisponibilidade())
-                .as("se alguem restaurar o estoque e esquecer, a demonstracao nao dispara")
-                .isFalse();
+                .as("zerada, a lixa nao entra no roteiro e a ruptura nao tem como ser encenada")
+                .isTrue();
 
         PARES_DE_SUBSTITUICAO.values().forEach(sku ->
                 assertThat(porSku(sku).temDisponibilidade())
                         .as("o substituto %s precisa ter estoque", sku)
                         .isTrue());
+    }
+
+    @Test
+    void aindaExisteProdutoZeradoParaOFiltroFazerSentido() {
+        /*
+         * Com a lixa de volta ao estoque, o catalogo ficaria sem nenhum produto zerado - e o
+         * botao "apenas disponiveis" deixaria de mudar qualquer coisa na tela, alem de nao
+         * haver o que afirmar no teste de filtro. Dois produtos nascem zerados de proposito,
+         * escolhidos por nao participarem de nenhum par de substituicao.
+         */
+        List<Produto> zerados = todosOsProdutos().stream()
+                .filter(produto -> !produto.temDisponibilidade())
+                .toList();
+
+        System.out.println(">>> zerados: " + zerados.stream().map(Produto::getSku).toList());
+
+        assertThat(zerados).hasSizeGreaterThanOrEqualTo(2);
+        assertThat(zerados.stream().map(Produto::getSku).toList())
+                .as("um par de substituicao zerado quebraria a ruptura em vez de enfeitar o filtro")
+                .doesNotContainAnyElementsOf(PARES_DE_SUBSTITUICAO.keySet())
+                .doesNotContainAnyElementsOf(PARES_DE_SUBSTITUICAO.values());
     }
 
     private List<Produto> todosOsProdutos() {

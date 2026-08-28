@@ -48,9 +48,14 @@ import static br.com.jence.backend.infrastructure.database.seed.ProdutoDaMassa.d
  * <p><b>O volume existe para a busca, o filtro e o mapa fazerem sentido.</b> Com cinco produtos
  * por secao, paginacao nao pagina, faceta nao filtra e corredor nao parece corredor.
  *
- * <p><b>Um unico produto nasce com estoque zero</b> - a lixa grao 120 -, e e ele que encena a
- * ruptura na demonstracao. Manter esse cenario intacto ao ampliar o catalogo e o que o teste
- * de pre-filtragem espacial protege.
+ * <p><b>A lixa grao 120 nasce COM estoque, e e ela que encena a ruptura.</b> Nao ha
+ * contradicao: a ruptura que o sistema trata e "o estoque dizia que tinha e a prateleira
+ * estava vazia", entao o produto precisa poder entrar no roteiro antes de faltar. Produto
+ * esgotado nao entra - essa regra e da tela. Ver D-72.
+ *
+ * <p><b>Dois produtos nascem zerados</b> - o pincel chato e a lampada amarela -, escolhidos
+ * por nao participarem de nenhum par de substituicao. Sem nenhum zerado, o filtro "apenas
+ * disponiveis" nao mudaria nada na tela nem teria o que afirmar no teste.
  *
  * <p>As marcas sao reais e coerentes com o produto: a Leroy vende essas marcas, e um catalogo
  * com marca inventada nao se parece com uma loja.
@@ -81,7 +86,7 @@ final class CatalogoDaMassa {
                 "Rolo de lã de carneiro 23 cm com cabo, para aplicar tinta acrílica ou látex em grandes áreas. A lã solta pouco pelo e não deixa marca de emenda em parede lisa.",
                 List.of(de(MARCA, "Atlas"),de(TIPO, "Rolo de pintura"),de(MATERIAL, "Lã"),
                         de(LARGURA, "23 cm")));
-        produto("SKU-TIN-003", "Lixa para Parede Grão 120", "Tintas", "3.50", 0,
+        produto("SKU-TIN-003", "Lixa para Parede Grão 120", "Tintas", "3.50", 4,
                 "Lixa de papel grão 120 para preparar parede antes da pintura. Grão médio: remove respingos e nivela massa corrida sem abrir sulcos no reboco.",
                 List.of(de(MARCA, "Norton"),de(TIPO, "Lixa para parede"),de(GRAO, "120")));
         produto("SKU-TIN-004", "Lixa d'Água Grão 150", "Tintas", "4.20", 40,
@@ -113,7 +118,7 @@ final class CatalogoDaMassa {
                 "Bandeja plástica compatível com rolos de 23 cm, com área ondulada para tirar o excesso de tinta.",
                 List.of(de(MARCA, "Atlas"),de(TIPO, "Bandeja de pintura"),de(MATERIAL, "Plástico"),
                         de(LARGURA, "23 cm")));
-        produto("SKU-TIN-012", "Pincel Chato 2 Polegadas", "Tintas", "18.90", 35,
+        produto("SKU-TIN-012", "Pincel Chato 2 Polegadas", "Tintas", "18.90", 0,
                 "Pincel de cerdas naturais para cantos, batentes e áreas que o rolo não alcança.",
                 List.of(de(MARCA, "Atlas"),de(TIPO, "Pincel"),de(LARGURA, "2 pol")));
 
@@ -306,7 +311,7 @@ final class CatalogoDaMassa {
                 "Kit com 3 lâmpadas LED 12 W, luz branca, soquete E27. Cerca de 1.250 lumens cada, indicadas para sala e cozinha.",
                 List.of(de(MARCA, "Philips"),de(TIPO, "Lâmpada LED"),de(POTENCIA, "12 W"),
                         de(TEMPERATURA_DE_COR, "Branca"),de(QUANTIDADE, "3 un")));
-        produto("SKU-ILU-004", "Lâmpada LED 9W Amarela - kit 3", "Iluminação", "39.90", 45,
+        produto("SKU-ILU-004", "Lâmpada LED 9W Amarela - kit 3", "Iluminação", "39.90", 0,
                 "Mesma potência da versão branca, com luz amarela de 3000 K - mais aconchegante para quarto e sala.",
                 List.of(de(MARCA, "Philips"),de(TIPO, "Lâmpada LED"),de(POTENCIA, "9 W"),
                         de(TEMPERATURA_DE_COR, "Amarela"),de(QUANTIDADE, "3 un")));

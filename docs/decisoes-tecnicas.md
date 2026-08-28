@@ -83,6 +83,7 @@
 - [D-69. A massa passou a ser a fonte do nome e da descrição, e sobrescreve o banco](#d-69-a-massa-passou-a-ser-a-fonte-do-nome-e-da-descrição-e-sobrescreve-o-banco)
 - [D-70. Renomear uma seção é migração, não edição de string](#d-70-renomear-uma-seção-é-migração-não-edição-de-string)
 - [D-71. O corredor viaja na listagem, e não só o id do ponto](#d-71-o-corredor-viaja-na-listagem-e-não-só-o-id-do-ponto)
+- [D-72. O produto da ruptura nasce com estoque](#d-72-o-produto-da-ruptura-nasce-com-estoque)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -1758,6 +1759,34 @@ O frontend, sem ter de onde tirar o nome, imprimiu um texto fixo: **`Corredor da
 **O `pontoMapaId` continua vindo.** O mapa precisa dele para casar o marcador com o bloco; o nome é para o texto. Os dois têm usos diferentes e não se substituem.
 
 **Onde no código.** `application/dto/ProdutoResponse.java`; `src/main/resources/openapi/openapi.yaml` — schema `Produto`, herdado por `ProdutoDetalhado` via `allOf`.
+
+---
+
+### D-72. O produto da ruptura nasce com estoque
+
+**Contexto.** A lixa grão 120 nascia com estoque zero, e era isso que disparava a demonstração de ruptura. Fazia sentido enquanto ninguém tinha decidido se produto esgotado podia entrar no roteiro.
+
+Quando a tela chegou, a resposta veio pronta: o botão *adicionar ao roteiro* vem `disabled` para produto sem estoque. E o time confirmou a regra. Com ela, **a lixa zerada nunca chegaria à lista**, e o cenário mais importante da apresentação não teria como começar.
+
+**Decisão.** A lixa passa a nascer com **4 unidades**. Produto esgotado continua não entrando no roteiro.
+
+**Não há contradição, e a história fica melhor.** A ruptura que este sistema trata nunca foi "o app sabia que estava esgotado e deixou eu adicionar" — isso é constrangedor. É **"o estoque dizia que tinha e a prateleira estava vazia"**, que é a divergência que a [D-23](#d-23-resolução-síncrona-de-inventário-não-é-integração-com-erp) assume desde o começo que *vai* acontecer. O cliente adiciona o produto porque o sistema afirma que ele existe, caminha até lá, e descobre a falta na gôndola.
+
+**O backend já funcionava assim.** `TratarRupturaEstoqueUseCase` nunca verificou estoque zero em lugar nenhum: ele recebe um item do roteiro e trata como "o cliente foi até lá e não achou". Só a massa estava desenhada para o modelo antigo — a mudança foi um número.
+
+**Dois produtos passam a nascer zerados.** Sem nenhum, o filtro *apenas disponíveis* deixaria de mudar qualquer coisa na tela, e o teste que o cobre ficaria sem o que afirmar. Foram escolhidos o **pincel chato** e a **lâmpada amarela**, por não participarem de nenhum par de substituição — zerar um par quebraria a ruptura em vez de enfeitar o filtro. Um teste guarda exatamente isso.
+
+**Verificado antes de mexer:** Tintas fica a mais de 25 unidades de todas as outras origens de par — a mais próxima, Encanamento, dá 25,6 —, então a lixa voltar a ficar disponível **não** a coloca na lista de candidatos de nenhum par existente.
+
+**O que a demonstração ganha.** Deixa de ser um app que exibe falta de estoque e passa a ser um app que **descobre a falta pelo cliente**, registra o relato para a loja e ainda salva a venda. É o risco que levantamos no início do projeto — o Merlin poderia reproduzir a mesma ruptura silenciosa que promete resolver — resolvido em cena.
+
+**E a carga precisou aprender a reconciliar estoque.** Mudar o número na massa não chegava a banco nenhum que já tivesse o produto — e como o schema é um só para desenvolvimento, testes e demonstração ([O-21](observacoes.md#o-21-desenvolvimento-testes-e-demonstração-usam-o-mesmo-schema)), isso significa não chegar a lugar nenhum. Os testes viram a massa antiga e falharam, que é exatamente o que deveriam fazer.
+
+É a **sétima vez** que o mesmo padrão cobra: campo deixado de fora da reconciliação envelhece em silêncio ([D-51](#d-51-um-valor-de-enum-removido-precisa-sumir-também-do-banco), [D-53](#d-53-a-aplicação-repara-a-restrição-de-enum-que-o-ddl-auto-update-deixa-envelhecer), [D-56](#d-56-a-coluna-coletado-continua-sendo-gravada-mesmo-redundante), [D-59](#d-59-a-carga-completa-a-apresentação-de-produtos-que-já-estavam-gravados), [D-69](#d-69-a-massa-passou-a-ser-a-fonte-do-nome-e-da-descrição-e-sobrescreve-o-banco), [D-70](#d-70-renomear-uma-seção-é-migração-não-edição-de-string)).
+
+**Estoque aqui é dado declarado, não estado de um ERP.** Não existe integração de inventário, então a massa é a única fonte. O endpoint de simulação ([D-40](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)) escreve por cima para encenar, e a carga devolve o valor ensaiado no próximo start. Isso deixou de atrapalhar justamente porque a ruptura não depende mais de zerar produto — e passou a ajudar: reiniciar a instância antes da banca devolve a loja ao estado ensaiado, sem ninguém precisar lembrar de nada.
+
+**Onde no código.** `infrastructure/database/seed/CatalogoDaMassa.java` — `SKU-TIN-003`, `SKU-TIN-012` e `SKU-ILU-004`; `CarregadorDadosIniciais.java` — `sincronizarEstoque`.
 
 ---
 

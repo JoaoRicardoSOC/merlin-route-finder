@@ -154,13 +154,13 @@ class AtributosEFacetasIntegracaoTest {
     @Test
     @DisplayName("caracteristica combina com secao, termo e disponibilidade")
     void combinaComOsOutrosFiltros() {
-        List<String> lixaNorton = skus(new FiltroDeProdutos("lixa", "Tintas", true,
-                Map.of(AtributoProduto.MARCA, List.of("Norton"))));
+        List<String> lampadaPhilips = skus(new FiltroDeProdutos("lâmpada", "Iluminação", true,
+                Map.of(AtributoProduto.MARCA, List.of("Philips"))));
 
-        assertThat(lixaNorton)
-                .as("a lixa grao 120 tambem e Norton, mas esta zerada")
-                .contains("SKU-TIN-004")
-                .doesNotContain("SKU-TIN-003");
+        assertThat(lampadaPhilips)
+                .as("a lampada amarela tambem e Philips, mas esta zerada")
+                .contains("SKU-ILU-001")
+                .doesNotContain("SKU-ILU-004");
     }
 
     @Test

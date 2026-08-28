@@ -124,11 +124,11 @@ class BuscaComFiltrosIntegracaoTest {
     @DisplayName("sem o filtro, o produto zerado aparece")
     void zeradoApareceporPadrao() {
         /*
-         * De proposito: a ruptura tem tratamento proprio no produto, entao esconder o item
-         * zerado do catalogo apagaria justamente o cenario que a demonstracao encena.
+         * De proposito: o cliente precisa ver que o produto existe na loja para entender que
+         * ele esta esgotado. Esconder do catalogo transformaria "acabou" em "nao vendemos".
          */
         assertThat(nomes(buscar(FiltroDeProdutos.nenhum())))
-                .contains("Lixa para Parede Grão 120");
+                .contains("Pincel Chato 2 Polegadas");
     }
 
     @Test
@@ -139,7 +139,7 @@ class BuscaComFiltrosIntegracaoTest {
         assertThat(disponiveis).isNotEmpty();
         assertThat(disponiveis).allSatisfy(produto ->
                 assertThat(produto.temDisponibilidade()).isTrue());
-        assertThat(nomes(disponiveis)).doesNotContain("Lixa para Parede Grão 120");
+        assertThat(nomes(disponiveis)).doesNotContain("Pincel Chato 2 Polegadas");
     }
 
     // ---------------------------------------------------------------- termo, e termo com filtro
@@ -169,12 +169,22 @@ class BuscaComFiltrosIntegracaoTest {
     @Test
     @DisplayName("os tres filtros combinam de uma vez")
     void tresFiltrosJuntos() {
-        List<Produto> resultado = buscar(new FiltroDeProdutos("lixa", "Tintas", true));
+        /*
+         * Iluminacao, e nao Tintas, porque o teste precisa de um termo que case com VARIOS
+         * produtos da secao sendo que so um esta zerado - senao o filtro de disponibilidade
+         * esvazia o resultado e nao ha o que afirmar. "lampada" casa com cinco; a amarela e
+         * a unica sem estoque.
+         *
+         * O termo vai ACENTUADO porque este teste e sobre combinar filtros, e nao sobre
+         * tolerancia a acento - essa tem testes proprios. Sem acento, o LIKE nao casa e o
+         * Jaro-Winkler da 69 contra um corte de 70, e o resultado vem vazio (D-73).
+         */
+        List<Produto> resultado = buscar(new FiltroDeProdutos("lâmpada", "Iluminação", true));
 
         assertThat(resultado).isNotEmpty();
         assertThat(nomes(resultado))
-                .as("a lixa grao 120 esta zerada e o filtro de disponibilidade a exclui")
-                .doesNotContain("Lixa para Parede Grão 120");
+                .as("a lampada amarela esta zerada e o filtro de disponibilidade a exclui")
+                .doesNotContain("Lâmpada LED 9W Amarela - kit 3");
     }
 
     @Test

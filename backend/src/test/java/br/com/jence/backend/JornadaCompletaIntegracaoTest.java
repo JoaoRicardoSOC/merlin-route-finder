@@ -60,7 +60,10 @@ class JornadaCompletaIntegracaoTest {
 
     private final List<UUID> sessoesCriadas = new ArrayList<>();
 
-    /** A lixa grao 120 e o unico produto que nasce zerado: e o gatilho da ruptura. */
+    /**
+     * A lixa grao 120: entra no roteiro com estoque e, na prateleira, o cliente nao a acha.
+     * E o gatilho da ruptura, e o estoque positivo e condicao para ela poder entrar (D-72).
+     */
     private static final String EM_FALTA = "SKU-TIN-003";
 
     @AfterEach

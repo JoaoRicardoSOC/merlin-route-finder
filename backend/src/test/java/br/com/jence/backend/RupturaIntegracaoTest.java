@@ -30,8 +30,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * O cenario de ruptura de ponta a ponta, contra o Oracle e o Gemini reais: o cliente adiciona
- * a lixa grao 120 (zerada na massa de demonstracao) ao roteiro, chega a prateleira, encontra
- * a gondola vazia e o assistente elege o substituto.
+ * a lixa grao 120 ao roteiro, chega a prateleira e nao encontra o produto la. Ele reporta a
+ * gondola vazia, e o assistente elege o substituto.
  * <p>
  * E o card inteiro em um teste - e o mesmo roteiro que sera mostrado na banca.
  */

@@ -57,7 +57,7 @@ class SubstituicaoDeItemIntegracaoTest {
     @Autowired SessaoJpaRepository sessaoJpa;
     @Autowired RegistroRupturaJpaRepository rupturaJpa;
 
-    /** A lixa grao 120 esta zerada na massa; a lixa d'agua e o substituto plausivel. */
+    /** A lixa grao 120 e o item que some da prateleira; a lixa d'agua e o substituto. */
     private static final String EM_FALTA = "SKU-TIN-003";
     private static final String SUBSTITUTO = "SKU-TIN-004";
 

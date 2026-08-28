@@ -164,10 +164,11 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         private int produtos;
         private int apresentacoes;
         private int atributos;
+        private int estoques;
 
         private boolean nadaFeito() {
             return pontos == 0 && renomeados == 0 && produtos == 0
-                    && apresentacoes == 0 && atributos == 0;
+                    && apresentacoes == 0 && atributos == 0 && estoques == 0;
         }
     }
 
@@ -209,15 +210,17 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         criarCatalogo(secoes, skusExistentes, contagem);
         sincronizarApresentacoes(contagem);
         sincronizarAtributos(contagem);
+        sincronizarEstoque(contagem);
 
         if (contagem.nadaFeito()) {
             log.info("Massa de demonstracao ja esta completa. Nada a carregar.");
         } else {
             log.info("Carga incremental: {} ponto(s) do mapa, {} corredor(es) renomeado(s), "
-                            + "{} produto(s) criados, {} apresentacao(oes) sincronizada(s) e "
-                            + "{} produto(s) com caracteristicas atualizadas.",
+                            + "{} produto(s) criados, {} apresentacao(oes) sincronizada(s), "
+                            + "{} produto(s) com caracteristicas atualizadas e {} com estoque "
+                            + "ajustado.",
                     contagem.pontos, contagem.renomeados, contagem.produtos,
-                    contagem.apresentacoes, contagem.atributos);
+                    contagem.apresentacoes, contagem.atributos, contagem.estoques);
         }
     }
 
@@ -361,6 +364,38 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
                     declarado.nome(), declarado.descricao(), IMAGENS.get(declarado.sku()),
                     declarado.precoEmReais(), declarado.estoque(), ponto));
             contagem.produtos++;
+        }
+    }
+
+    /**
+     * Faz o saldo em estoque voltar a ser o que a massa declara.
+     *
+     * <p>Sem este passo, mudar um estoque no codigo nao chegaria a banco nenhum que ja tenha o
+     * produto - e como o schema e um so para tudo (O-21), isso significa nao chegar a lugar
+     * nenhum. Foi o que aconteceu quando a lixa da ruptura passou a nascer com estoque: os
+     * testes continuaram vendo a massa antiga.
+     *
+     * <p><b>Estoque e dado declarado aqui, e nao estado de um ERP.</b> Nao existe integracao
+     * de inventario (D-23): a massa e a unica fonte. O endpoint de simulacao (D-40) escreve
+     * por cima para encenar, e este passo devolve o valor ensaiado no proximo start - o que e
+     * util, e nao atrapalha, porque a ruptura deixou de depender de zerar produto (D-72).
+     *
+     * <p>Setima vez que o mesmo padrao aparece: campo de fora da reconciliacao envelhece em
+     * silencio. Ver D-51, D-53, D-56, D-59, D-69 e D-70.
+     */
+    private void sincronizarEstoque(Contagem contagem) {
+        Map<String, Integer> declarados = CatalogoDaMassa.produtos().stream()
+                .collect(Collectors.toMap(ProdutoDaMassa::sku, ProdutoDaMassa::estoque));
+
+        for (Produto produto : produtoRepository.buscarPaginado(0, LIMITE_DE_LEITURA).conteudo()) {
+            Integer esperado = declarados.get(produto.getSku());
+            if (esperado == null || esperado == produto.getSaldoEstoque()) {
+                continue;
+            }
+            log.info("Estoque de {} ajustado de {} para {}, como a massa declara.",
+                    produto.getSku(), produto.getSaldoEstoque(), esperado);
+            produtoRepository.salvar(produto.comSaldoEstoque(esperado));
+            contagem.estoques++;
         }
     }
 
