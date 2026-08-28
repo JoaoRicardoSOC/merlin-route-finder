@@ -1,16 +1,63 @@
 // Service for Roteiro / Shopping List (POST /api/v1/sessoes/{sessaoId}/roteiro/itens, GET, DELETE)
+//
+// O item do roteiro carrega DUAS identidades, e elas não são a mesma coisa:
+//
+//   id         identidade local, estável desde que o item aparece na tela. É a chave de React
+//              e o que os componentes passam de volta nas ações.
+//   idBackend  id do item no servidor. Nulo enquanto o POST não respondeu, ou se ele falhou.
+//
+// Antes as duas viviam no mesmo campo, e daí vinha um defeito que não parecia defeito: o item
+// nascia com um id inventado ('item-' + produtoId), o POST era feito e a RESPOSTA DESCARTADA,
+// e as ações seguintes só chamavam o servidor se o id não começasse com 'item-'. Como sempre
+// começava, marcar coletado e remover nunca saíam da tela - não às vezes, nunca.
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 const ROTEIRO_STORAGE_KEY = 'merlin_route_finder_roteiro_itens'
 
+const FORMATO_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/** Um item que ainda não existe no servidor não pode ser coletado nem removido lá. */
+function sincronizado(item) {
+  return Boolean(item && item.idBackend)
+}
+
 /**
- * Gets local stored roteiro items
+ * Converte um item vindo da API para a forma local.
+ * Usado tanto pelo GET do roteiro quanto pela resposta do POST - as duas têm a mesma forma.
+ */
+function daApi(item) {
+  return {
+    id: item.id,
+    idBackend: item.id,
+    produtoId: item.produtoId,
+    coletado: item.coletado,
+    nome: item.produto?.nome,
+    preco: item.produto?.preco,
+    corredor: item.produto?.corredor || null,
+    imagemUrl: item.produto?.imagemUrl,
+    sku: item.produto?.sku
+  }
+}
+
+/**
+ * Lê os itens guardados no aparelho.
+ *
+ * Migra o formato antigo: quem já usou o app tem itens gravados sem `idBackend`. Quando o `id`
+ * tem forma de UUID ele veio do servidor, então é também o id de lá. Sem esta linha, esses
+ * itens perderiam a capacidade de sincronizar até o próximo carregamento - regressão que
+ * ninguém veria acontecer.
  */
 export function getLocalRoteiro() {
   try {
     const data = localStorage.getItem(ROTEIRO_STORAGE_KEY)
-    return data ? JSON.parse(data) : []
-  } catch (e) {
+    const itens = data ? JSON.parse(data) : []
+
+    return itens.map(item => ({
+      ...item,
+      idBackend: item.idBackend ?? (FORMATO_UUID.test(item.id) ? item.id : null)
+    }))
+  } catch {
+    // localStorage indisponivel ou conteudo corrompido: lista vazia e um estado valido.
     return []
   }
 }
@@ -24,6 +71,19 @@ export function saveLocalRoteiro(itens) {
   } catch (e) {
     console.warn('Erro ao salvar roteiro local:', e)
   }
+}
+
+/**
+ * Lê, transforma e grava a lista num único passo síncrono.
+ *
+ * Ser síncrono é o ponto: sem `await` entre a leitura e a escrita, o ciclo é atômico frente a
+ * qualquer outra ação do usuário, porque JavaScript é single-thread. Duas adições rápidas não
+ * têm como sobrescrever uma à outra - a rede acontece antes ou depois, nunca no meio.
+ */
+function atualizarItens(transformar) {
+  const atualizados = transformar(getLocalRoteiro())
+  saveLocalRoteiro(atualizados)
+  return atualizados
 }
 
 /**
@@ -42,16 +102,7 @@ export async function consultarRoteiro(sessaoId) {
     }
 
     const data = await response.json()
-    const itens = (data.itens || []).map(item => ({
-      id: item.id,
-      produtoId: item.produtoId,
-      coletado: item.coletado,
-      nome: item.produto?.nome,
-      preco: item.produto?.preco,
-      corredor: item.produto?.corredor || 'Corredor da Loja',
-      imagemUrl: item.produto?.imagemUrl,
-      sku: item.produto?.sku
-    }))
+    const itens = (data.itens || []).map(daApi)
     saveLocalRoteiro(itens)
     return itens
   } catch (err) {
@@ -61,109 +112,124 @@ export async function consultarRoteiro(sessaoId) {
 }
 
 /**
- * Adds a product to the roteiro (POST /api/v1/sessoes/{sessaoId}/roteiro/itens)
+ * Acrescenta um produto ao roteiro (POST /api/v1/sessoes/{sessaoId}/roteiro/itens).
+ *
+ * Insere primeiro e sincroniza depois, para a lista responder na hora mesmo com a conexão ruim
+ * de dentro de uma loja. O item entra com id temporário e `idBackend` nulo; quando o servidor
+ * responde, o id de lá é gravado no item que já está na tela.
  */
 export async function adicionarAoRoteiro(sessaoId, product) {
   const produtoId = product.id
-  let currentLocal = getLocalRoteiro()
 
-  // Avoid duplicate entries locally
-  const alreadyExists = currentLocal.some(i => i.produtoId === produtoId || i.id === product.id)
-  if (alreadyExists) {
-    return currentLocal
+  const jaEstaNaLista = getLocalRoteiro()
+    .some(i => i.produtoId === produtoId || i.id === produtoId)
+  if (jaEstaNaLista) {
+    return getLocalRoteiro()
   }
 
-  const newItem = {
+  const itens = atualizarItens(atuais => [...atuais, {
     id: 'item-' + (produtoId || Math.random().toString(36).substring(2, 9)),
-    produtoId: produtoId,
+    idBackend: null,
+    produtoId,
     coletado: false,
     nome: product.nome || product.name,
     preco: product.preco ?? product.price ?? 0,
-    corredor: product.corredor || 'Corredor da Loja',
+    corredor: product.corredor || null,
     imagemUrl: product.imagemUrl || product.image || null,
     sku: product.sku || ''
+  }])
+
+  const podeSincronizar = sessaoId && produtoId
+    && !sessaoId.startsWith('sess-') && !produtoId.startsWith('prod-')
+  if (!podeSincronizar) {
+    return itens
   }
 
-  const updated = [...currentLocal, newItem]
-  saveLocalRoteiro(updated)
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/sessoes/${sessaoId}/roteiro/itens`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ produtoId })
+    })
 
-  if (sessaoId && produtoId && !sessaoId.startsWith('sess-') && !produtoId.startsWith('prod-')) {
-    try {
-      await fetch(`${API_BASE_URL}/api/v1/sessoes/${sessaoId}/roteiro/itens`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ produtoId })
-      })
-    } catch (e) {
-      console.warn('Erro na requisição de adicionar item ao backend:', e)
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} ao adicionar item`)
     }
-  }
 
-  return updated
+    // Casa por produtoId, e não por posição: é o que sobrevive a duas adições simultâneas. E o
+    // backend devolve o item existente quando o produto já está na lista (D-18), então
+    // reconciliar nunca duplica.
+    const salvo = await response.json()
+    return atualizarItens(atuais => atuais.map(
+      item => item.produtoId === produtoId ? { ...item, ...daApi(salvo), id: item.id } : item
+    ))
+  } catch (e) {
+    // O item continua na lista, sem id do servidor. As ações seguintes simplesmente não
+    // tentam sincronizar, em vez de tentar com um id que não existe lá.
+    console.warn('Item adicionado apenas localmente:', e.message)
+    return getLocalRoteiro()
+  }
 }
 
 /**
- * Removes an item from the roteiro (DELETE /api/v1/sessoes/{sessaoId}/roteiro/itens/{itemId})
+ * Remove um item do roteiro (DELETE /api/v1/sessoes/{sessaoId}/roteiro/itens/{itemId}).
  */
 export async function removerDoRoteiro(sessaoId, itemId) {
-  let currentLocal = getLocalRoteiro()
-  const updated = currentLocal.filter(i => i.id !== itemId && i.produtoId !== itemId)
-  saveLocalRoteiro(updated)
+  // Resolve o id do servidor ANTES de tirar da lista: depois de remover, não há mais onde ler.
+  const alvo = getLocalRoteiro().find(i => i.id === itemId || i.produtoId === itemId)
+  const itens = atualizarItens(atuais =>
+    atuais.filter(i => i.id !== itemId && i.produtoId !== itemId))
 
-  if (sessaoId && itemId && !sessaoId.startsWith('sess-') && !itemId.startsWith('item-')) {
-    try {
-      await fetch(`${API_BASE_URL}/api/v1/sessoes/${sessaoId}/roteiro/itens/${itemId}`, {
-        method: 'DELETE'
-      })
-    } catch (e) {
-      console.warn('Erro na requisição de remover item do backend:', e)
-    }
+  if (!sessaoId || sessaoId.startsWith('sess-') || !sincronizado(alvo)) {
+    return itens
   }
 
-  return updated
+  try {
+    await fetch(
+      `${API_BASE_URL}/api/v1/sessoes/${sessaoId}/roteiro/itens/${alvo.idBackend}`,
+      { method: 'DELETE' })
+  } catch (e) {
+    console.warn('Item removido apenas localmente:', e.message)
+  }
+
+  return itens
 }
 
 /**
- * Toggles an item collected state (PATCH /api/v1/roteiro/itens/{itemId}/coletar or /desmarcar)
+ * Marca ou desmarca um item como coletado
+ * (PATCH /api/v1/roteiro/itens/{itemId}/coletar | /desmarcar).
+ *
+ * As duas rotas são idempotentes no backend, então repetir o toque não desalinha nada.
  */
 export async function alternarColetaItem(itemId) {
-  let currentLocal = getLocalRoteiro()
-  const target = currentLocal.find(i => i.id === itemId || i.produtoId === itemId)
-  if (!target) return currentLocal
+  const alvo = getLocalRoteiro().find(i => i.id === itemId || i.produtoId === itemId)
+  if (!alvo) return getLocalRoteiro()
 
-  const willBeCollected = !target.coletado
-  const updated = currentLocal.map(i => {
-    if (i.id === itemId || i.produtoId === itemId) {
-      return { ...i, coletado: willBeCollected }
-    }
-    return i
-  })
-  saveLocalRoteiro(updated)
+  const passaAEstarColetado = !alvo.coletado
+  const itens = atualizarItens(atuais => atuais.map(
+    i => (i.id === itemId || i.produtoId === itemId)
+      ? { ...i, coletado: passaAEstarColetado }
+      : i
+  ))
 
-  // Call backend if real UUID
-  if (itemId && !itemId.startsWith('item-') && !itemId.startsWith('prod-')) {
-    try {
-      const endpoint = willBeCollected ? 'coletar' : 'desmarcar'
-      await fetch(`${API_BASE_URL}/api/v1/roteiro/itens/${itemId}/${endpoint}`, {
-        method: 'PATCH',
-        headers: { Accept: 'application/json' }
-      })
-    } catch (e) {
-      console.warn('Erro ao atualizar status de coleta no backend:', e)
-    }
+  if (!sincronizado(alvo)) {
+    return itens
   }
 
-  return updated
+  try {
+    const acao = passaAEstarColetado ? 'coletar' : 'desmarcar'
+    await fetch(`${API_BASE_URL}/api/v1/roteiro/itens/${alvo.idBackend}/${acao}`, {
+      method: 'PATCH',
+      headers: { Accept: 'application/json' }
+    })
+  } catch (e) {
+    console.warn('Coleta registrada apenas localmente:', e.message)
+  }
+
+  return itens
 }
 
-/**
- * Clears all items from the roteiro
- */
 export function limparRoteiroLocal() {
   saveLocalRoteiro([])
   return []
 }
-
