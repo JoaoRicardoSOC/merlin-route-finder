@@ -127,9 +127,43 @@ export async function removerDoRoteiro(sessaoId, itemId) {
 }
 
 /**
+ * Toggles an item collected state (PATCH /api/v1/roteiro/itens/{itemId}/coletar or /desmarcar)
+ */
+export async function alternarColetaItem(itemId) {
+  let currentLocal = getLocalRoteiro()
+  const target = currentLocal.find(i => i.id === itemId || i.produtoId === itemId)
+  if (!target) return currentLocal
+
+  const willBeCollected = !target.coletado
+  const updated = currentLocal.map(i => {
+    if (i.id === itemId || i.produtoId === itemId) {
+      return { ...i, coletado: willBeCollected }
+    }
+    return i
+  })
+  saveLocalRoteiro(updated)
+
+  // Call backend if real UUID
+  if (itemId && !itemId.startsWith('item-') && !itemId.startsWith('prod-')) {
+    try {
+      const endpoint = willBeCollected ? 'coletar' : 'desmarcar'
+      await fetch(`${API_BASE_URL}/api/v1/roteiro/itens/${itemId}/${endpoint}`, {
+        method: 'PATCH',
+        headers: { Accept: 'application/json' }
+      })
+    } catch (e) {
+      console.warn('Erro ao atualizar status de coleta no backend:', e)
+    }
+  }
+
+  return updated
+}
+
+/**
  * Clears all items from the roteiro
  */
 export function limparRoteiroLocal() {
   saveLocalRoteiro([])
   return []
 }
+

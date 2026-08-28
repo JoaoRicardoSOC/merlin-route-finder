@@ -6,6 +6,7 @@ import HomeBentoGrid from './components/HomeBentoGrid'
 import SectorsPage from './components/SectorsPage'
 import CatalogSearchPage from './components/CatalogSearchPage'
 import ProductDetailPage from './components/ProductDetailPage'
+import StoreMapPage from './components/StoreMapPage'
 import SectorsDrawer from './components/SectorsDrawer'
 import LocationCodeModal from './components/LocationCodeModal'
 import RoteiroDrawer from './components/RoteiroDrawer'
@@ -14,6 +15,8 @@ import PromoBanner from './components/PromoBanner'
 import RouteModal from './components/RouteModal'
 import SplashScreen from './components/SplashScreen'
 import BottomNav from './components/BottomNav'
+import FloatingAIChatButton from './components/FloatingAIChatButton'
+import AIChatModal from './components/AIChatModal'
 import {
   fetchSecoes,
   fetchProdutos,
@@ -29,6 +32,7 @@ import {
   consultarRoteiro,
   adicionarAoRoteiro,
   removerDoRoteiro,
+  alternarColetaItem,
   limparRoteiroLocal
 } from './services/roteiroService'
 import './App.css'
@@ -41,6 +45,7 @@ const SEARCH_SUGGESTIONS = [
   'Disjuntor 32A',
   'Cimento 50kg'
 ]
+
 
 function App() {
   const [currentView, setCurrentView] = useState('home') // 'home' | 'search' | 'sectors' | 'product-detail'
@@ -79,7 +84,9 @@ function App() {
   const [isSectorsDrawerOpen, setIsSectorsDrawerOpen] = useState(false)
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false)
   const [isFacetModalOpen, setIsFacetModalOpen] = useState(false)
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false)
   const [selectedProductForDetail, setSelectedProductForDetail] = useState(null)
+  const [focusedProductForMap, setFocusedProductForMap] = useState(null)
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
     title: '',
@@ -340,34 +347,34 @@ function App() {
     showToast('Roteiro esvaziado')
   }
 
+  const handleToggleCollectItem = async (itemId) => {
+    const updated = await alternarColetaItem(itemId)
+    setRoteiroItems(updated)
+    const item = updated.find(i => i.id === itemId || i.produtoId === itemId)
+    if (item?.coletado) {
+      showToast(`Item "${item.nome}" marcado como coletado!`)
+    } else {
+      showToast('Item desmarcado da coleta.')
+    }
+  }
+
+  const handleOpenMap = (product = null) => {
+    setFocusedProductForMap(product || null)
+    setPreviousView(currentView)
+    setCurrentView('map')
+    setActiveTab('map')
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }
+
   const handleNavigateToProduct = (product) => {
-    setModalConfig({
-      isOpen: true,
-      title: `Rota até: ${product.nome || product.name}`,
-      type: 'route',
-      data: product
-    })
+    handleOpenMap(product)
+    const prodName = product.nome || product.name || 'Produto'
+    showToast(`Exibindo no mapa da loja: ${prodName}`)
   }
 
   const handleStartFullRoute = (items) => {
-    setModalConfig({
-      isOpen: true,
-      title: `Rota Otimizada da Compra (${items.length} itens)`,
-      type: 'route',
-      data: {
-        name: `${items.length} paradas na loja`,
-        corredor: items.map(i => i.corredor).filter(Boolean).slice(0, 3).join(' ➔ ') + (items.length > 3 ? '...' : '')
-      }
-    })
-  }
-
-  const handleOpenMap = () => {
-    setModalConfig({
-      isOpen: true,
-      title: 'Planta Inteligente & Corredores da Loja',
-      type: 'map',
-      data: null
-    })
+    handleOpenMap()
+    showToast(`Traçando rota otimizada com ${items.length} paradas!`)
   }
 
   const handleCallSpecialist = () => {
@@ -384,12 +391,18 @@ function App() {
     setActiveTab(tabKey)
     if (tabKey === 'home') {
       setCurrentView('home')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } else if (tabKey === 'map') {
+      handleOpenMap()
     } else if (tabKey === 'scan') {
       setIsLocationModalOpen(true)
-    } else if (tabKey === 'projects') {
-      setIsRoteiroDrawerOpen(true)
+    } else if (tabKey === 'sectors') {
+      handleOpenSectorsPage()
+    } else if (tabKey === 'support') {
+      setIsAIChatOpen(true)
     }
   }
+
 
   // Count active facet filters
   const activeFiltersCount = Object.values(selectedAtributos).reduce(
@@ -457,9 +470,23 @@ function App() {
               }}
             />
           </div>
+        ) : currentView === 'map' ? (
+          /* ========================================================
+             2. DEDICATED STORE MAP PAGE (Interactive Interlagos Plan)
+             ======================================================== */
+          <StoreMapPage
+            roteiroItems={roteiroItems}
+            currentLocation={currentLocation}
+            onUpdateLocation={handleUpdateLocation}
+            onToggleCollectItem={handleToggleCollectItem}
+            onViewProductDetails={handleOpenProductDetailPage}
+            onOpenRoteiro={() => setIsRoteiroDrawerOpen(true)}
+            onOpenLocationModal={() => setIsLocationModalOpen(true)}
+            focusedProduct={focusedProductForMap}
+          />
         ) : currentView === 'sectors' ? (
           /* ========================================================
-             2. SECTORS PAGE VIEW (Dedicated list of departments)
+             3. SECTORS PAGE VIEW (Dedicated list of departments)
              ======================================================== */
           <SectorsPage
             secoes={secoes}
@@ -470,23 +497,18 @@ function App() {
           />
         ) : currentView === 'product-detail' ? (
           /* ========================================================
-             3. DEDICATED PRODUCT DETAIL PAGE (Full page with specs & map)
+             4. DEDICATED PRODUCT DETAIL PAGE (Full page with specs & map)
              ======================================================== */
           <ProductDetailPage
             product={selectedProductForDetail}
             onBack={handleBackFromProductDetail}
             onAddToCart={handleAddToCart}
             onNavigateToProduct={handleNavigateToProduct}
-            onViewOnMap={(product) => setModalConfig({
-              isOpen: true,
-              title: `Planta da Loja • ${product.corredor || 'Corredor do Produto'}`,
-              type: 'map',
-              data: product
-            })}
+            onViewOnMap={(product) => handleOpenMap(product)}
           />
         ) : (
           /* ========================================================
-             4. SEARCH & CATALOG RESULTS VIEW (Dedicated results page)
+             5. SEARCH & CATALOG RESULTS VIEW (Dedicated results page)
              ======================================================== */
           <CatalogSearchPage
             searchQuery={searchQuery}
@@ -513,6 +535,7 @@ function App() {
             autoFocusSearch={autoFocusSearch}
           />
         )}
+
       </main>
 
       {/* Bottom Navigation for Mobile (hidden on dedicated product detail page) */}
@@ -522,6 +545,28 @@ function App() {
           setActiveTab={handleTabChange}
         />
       )}
+
+      {/* Floating AI Assistant Chat Action Button (available in all pages) */}
+      <FloatingAIChatButton
+        isProductPage={currentView === 'product-detail'}
+        onClick={() => setIsAIChatOpen(true)}
+      />
+
+      {/* AI Assistant Chat Modal / Drawer (Passo 7 / UC-007 a UC-009) */}
+      <AIChatModal
+        isOpen={isAIChatOpen}
+        onClose={() => setIsAIChatOpen(false)}
+        sessionId={session?.id}
+        catalogProducts={produtos}
+        screenContext={{
+          view: currentView,
+          product: selectedProductForDetail,
+          selectedSecao: selectedSecao,
+          currentLocation: currentLocation
+        }}
+        onAddToCart={handleAddToCart}
+        onViewProductDetails={handleOpenProductDetailPage}
+      />
 
       {/* Dynamic Facet Filters Modal (Passo 5 do Fluxo / UC-002) */}
       <FacetFiltersModal
