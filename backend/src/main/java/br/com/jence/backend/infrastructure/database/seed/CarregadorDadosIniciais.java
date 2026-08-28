@@ -66,6 +66,29 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
     private static final List<String> TIPOS_APOSENTADOS = List.of("TOTEM");
 
     /*
+     * Corredores que trocaram de nome, do antigo para o atual.
+     *
+     * Para as secoes o risco e duplicar: a carga casa secao existente pelo nome do corredor,
+     * entao renomear na PlantaDaLoja sem este passo criaria um ponto novo e vazio, e os
+     * produtos ficariam presos ao de nome velho - a secao apareceria duas vezes no mapa, uma
+     * com tudo e outra com nada.
+     *
+     * Para a placa e o banheiro o risco e o oposto: eles sao casados por codigo curto e por
+     * tipo, entao nunca duplicam - e por isso mesmo o texto antigo ficaria gravado para
+     * sempre, e e texto que o cliente le na tela de localizacao.
+     *
+     * Renomear no lugar preserva o id, e a chave estrangeira dos produtos nao se move. Ver
+     * D-70. Entradas cujo nome antigo nao existe mais em banco nenhum podem sair daqui.
+     */
+    private static final Map<String, String> CORREDORES_RENOMEADOS = Map.of(
+            "Eletrica", "Elétrica",
+            "Iluminacao", "Iluminação",
+            "Decoracao", "Decoração",
+            "Materiais de construcao", "Materiais de construção",
+            "Sanitarios", "Sanitários",
+            "Corredor leste, junto a Iluminacao", "Corredor leste, junto a Iluminação");
+
+    /*
      * URLs publicas das fotos, coletadas do site da Leroy pelo time (O-18). Enquanto um SKU
      * nao estiver aqui, o produto responde com imagem nula - o que a tela precisa tratar, e
      * nao um estado invalido. Acrescentar uma URL aqui chega aos bancos que ja existem pelo
@@ -137,12 +160,14 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
      */
     private static final class Contagem {
         private int pontos;
+        private int renomeados;
         private int produtos;
         private int apresentacoes;
         private int atributos;
 
         private boolean nadaFeito() {
-            return pontos == 0 && produtos == 0 && apresentacoes == 0 && atributos == 0;
+            return pontos == 0 && renomeados == 0 && produtos == 0
+                    && apresentacoes == 0 && atributos == 0;
         }
     }
 
@@ -174,6 +199,7 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
           * porque uma linha com valor fora do enum faria o "add check" ser recusado.
           */
         apagarPontosDeTipoAposentado();
+        renomearCorredores(contagem);
         restricaoDeEnum.sincronizar();
 
         Map<String, PontoMapa> secoes = carregarOuCriarSecoes(contagem);
@@ -187,10 +213,11 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         if (contagem.nadaFeito()) {
             log.info("Massa de demonstracao ja esta completa. Nada a carregar.");
         } else {
-            log.info("Carga incremental: {} ponto(s) do mapa, {} produto(s) criados, "
-                            + "{} apresentacao(oes) sincronizada(s) e {} produto(s) com "
-                            + "caracteristicas atualizadas.",
-                    contagem.pontos, contagem.produtos, contagem.apresentacoes, contagem.atributos);
+            log.info("Carga incremental: {} ponto(s) do mapa, {} corredor(es) renomeado(s), "
+                            + "{} produto(s) criados, {} apresentacao(oes) sincronizada(s) e "
+                            + "{} produto(s) com caracteristicas atualizadas.",
+                    contagem.pontos, contagem.renomeados, contagem.produtos,
+                    contagem.apresentacoes, contagem.atributos);
         }
     }
 
@@ -204,6 +231,33 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
                         tipo, apagados);
             }
         }
+    }
+
+    /*
+     * Precisa rodar antes de carregarOuCriarSecoes: depois, a secao de nome novo ja teria sido
+     * criada vazia e a renomeacao esbarraria na unicidade do corredor.
+     */
+    private void renomearCorredores(Contagem contagem) {
+        CORREDORES_RENOMEADOS.forEach((antigo, novo) -> {
+            /*
+             * Limpa antes de renomear. Se uma execucao anterior ja criou a secao com o nome
+             * novo - o que acontece quando alguem roda a planta acentuada sem esta migracao -,
+             * renomear por cima deixaria duas linhas com o mesmo nome, uma com os produtos e
+             * outra vazia. A vazia nao serve para nada e ninguem a referencia.
+             */
+            int vazias = pontoMapaJpaRepository.apagarPrateleiraVaziaChamada(novo);
+            if (vazias > 0) {
+                log.info("Secao '{}' existia vazia e duplicada: {} ponto(s) apagado(s) antes "
+                        + "de renomear.", novo, vazias);
+            }
+
+            int linhas = pontoMapaJpaRepository.renomearCorredor(antigo, novo);
+            if (linhas > 0) {
+                log.info("Corredor '{}' renomeado para '{}': {} ponto(s) atualizado(s). "
+                        + "Os produtos continuam no mesmo ponto.", antigo, novo, linhas);
+                contagem.renomeados += linhas;
+            }
+        });
     }
 
     private Map<String, PontoMapa> carregarOuCriarSecoes(Contagem contagem) {
@@ -238,7 +292,7 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
      * fechar a compra, e o banheiro e uma parada que ele pode querer localizar. */
     private void criarPontosDeServicoQueFaltam(Contagem contagem) {
         criarSeNaoHouver(contagem, TipoPonto.CAIXA, "Frente de loja", 62, 88);
-        criarSeNaoHouver(contagem, TipoPonto.BANHEIRO, "Sanitarios", 52, 8);
+        criarSeNaoHouver(contagem, TipoPonto.BANHEIRO, "Sanitários", 52, 8);
     }
 
     /*
@@ -256,7 +310,7 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         criarQrCodeSeNaoHouver(contagem, "ENT-01", "Entrada da loja", 50, 92);
         criarQrCodeSeNaoHouver(contagem, "TIN-02", "Corredor de Tintas", 32, 18);
         criarQrCodeSeNaoHouver(contagem, "CEN-03", "Cruzamento central", 41, 40);
-        criarQrCodeSeNaoHouver(contagem, "ILU-04", "Corredor leste, junto a Iluminacao", 76, 42);
+        criarQrCodeSeNaoHouver(contagem, "ILU-04", "Corredor leste, junto a Iluminação", 76, 42);
         criarQrCodeSeNaoHouver(contagem, "FER-05", "Corredor oeste, junto a Ferramentas", 20, 65);
         criarQrCodeSeNaoHouver(contagem, "CAI-06", "Frente de loja, antes dos caixas", 62, 80);
     }

@@ -20,16 +20,16 @@ public enum AtributoProduto {
     TEMPERATURA_DE_COR("Temperatura de cor"),
     ACABAMENTO("Acabamento"),
     FORMATO("Formato"),
-    POTENCIA("Potencia"),
+    POTENCIA("Potência"),
     AMPERAGEM("Amperagem"),
     POLOS("Polos"),
-    GRAO("Grao"),
+    GRAO("Grão"),
     BITOLA("Bitola"),
     VOLUME("Volume"),
     PESO("Peso"),
     COMPRIMENTO("Comprimento"),
     LARGURA("Largura"),
-    DIMENSAO("Dimensao"),
+    DIMENSAO("Dimensão"),
     QUANTIDADE("Quantidade");
 
     private final String rotulo;

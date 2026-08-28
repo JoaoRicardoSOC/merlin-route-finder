@@ -61,7 +61,7 @@ class TratarRupturaEstoqueUseCaseTest {
     private static final PontoMapa TINTAS =
             new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 32, 10);
     private static final PontoMapa ELETRICA =
-            new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Eletrica", 34, 30);
+            new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Elétrica", 34, 30);
 
     private UUID sessaoId;
     private UUID itemId;
@@ -257,7 +257,7 @@ class TratarRupturaEstoqueUseCaseTest {
         assertThat(resposta.origemSugestao()).isEqualTo(OrigemSugestao.PROXIMIDADE);
         assertThat(resposta.justificativa())
                 .as("a mensagem precisa ser honesta sobre nao ter havido analise")
-                .contains("mais proximo");
+                .contains("mais próximo");
         assertThat(registroSalvo().getOrigem()).isEqualTo(OrigemSugestao.PROXIMIDADE);
     }
 

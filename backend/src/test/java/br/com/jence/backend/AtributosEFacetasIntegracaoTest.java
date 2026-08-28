@@ -204,10 +204,10 @@ class AtributosEFacetasIntegracaoTest {
     }
 
     @Test
-    @DisplayName("Amperagem aparece em Eletrica, e Grao nao")
+    @DisplayName("Amperagem aparece em Elétrica, e Grão não")
     void facetasMudamComASecao() {
         List<FacetaDeProdutos> emEletrica = produtoRepository.calcularFacetas(
-                new FiltroDeProdutos(null, "Eletrica", false));
+                new FiltroDeProdutos(null, "Elétrica", false));
 
         assertThat(faceta(emEletrica, AtributoProduto.AMPERAGEM)).isPresent();
         assertThat(faceta(emEletrica, AtributoProduto.GRAO)).isEmpty();

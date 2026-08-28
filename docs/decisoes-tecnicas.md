@@ -81,6 +81,7 @@
 - [D-67. O teto de candidatos da ruptura envelheceu com o catálogo](#d-67-o-teto-de-candidatos-da-ruptura-envelheceu-com-o-catalogo)
 - [D-68. O substituto é escolhido por semelhança antes de proximidade](#d-68-o-substituto-é-escolhido-por-semelhança-antes-de-proximidade)
 - [D-69. A massa passou a ser a fonte do nome e da descrição, e sobrescreve o banco](#d-69-a-massa-passou-a-ser-a-fonte-do-nome-e-da-descrição-e-sobrescreve-o-banco)
+- [D-70. Renomear uma seção é migração, não edição de string](#d-70-renomear-uma-seção-é-migração-não-edição-de-string)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -1704,6 +1705,36 @@ O resultado seria um banco meio corrigido: **marca nova embaixo de nome velho**,
 **Sobre os acentos, que entraram junto.** Os nomes reais têm acento e a massa não tinha nenhum. Medido no Oracle: o banco é `AL32UTF8`, o texto volta idêntico e o Maven já compila em UTF-8. O `LIKE` deixa de achar quem digita sem acento — `flexivel` não encontra *Flexível* —, mas o `JARO_WINKLER` entre as duas formas ficou entre **85 e 94**, bem acima do corte de 70 da busca ([D-15](#d-15-query-nativa-com-utl_match-para-busca-tolerante-a-erro-de-digitação)). A busca continua achando, por semelhança em vez de correspondência exata. Existe saída se um dia incomodar — `convert(nome, 'US7ASCII')` dos dois lados do `LIKE` —, e não foi aplicada porque não há caso falhando.
 
 **Onde no código.** `infrastructure/database/seed/CarregadorDadosIniciais.java` — `sincronizarApresentacoes` e o mapa `IMAGENS`; `domain/entity/Produto.java` — `comApresentacao`.
+
+---
+
+### D-70. Renomear uma seção é migração, não edição de string
+
+**Contexto.** A massa inteira foi escrita sem acento, e isso vazava para a tela do cliente em cinco lugares: chips de seção, rótulos de faceta, descrições, nomes de produto e a mensagem que o assistente mostra quando está fora do ar.
+
+Não era só feiura. O frontend indexa os metadados de setor por **nome acentuado** — `'Elétrica'`, `'Iluminação'`, `'Decoração'`, `'Materiais de construção'` —, com igualdade exata. Quatro dos dez cartões de setor caíam num texto genérico, *"Itens do catálogo Leroy Merlin"*, porque o nosso dado não casava. O Bielecky escreveu o português certo; o dado errado era o nosso.
+
+**A armadilha.** `carregarOuCriarSecoes` casa seção existente **pelo nome do corredor**. Trocar `Decoracao` por `Decoração` na [`PlantaDaLoja`](#d-58-a-planta-da-loja-não-vive-no-banco-e-é-dela-que-saem-as-coordenadas-das-seções) faria a carga concluir que a seção não existe e **criar um ponto novo, vazio**. Os dez produtos de Decoração, presos ao ponto antigo pela chave estrangeira, continuariam no ponto de nome velho.
+
+O resultado seria a seção aparecendo **duas vezes no mapa**: uma com todos os produtos e nome errado, outra com o nome certo e nada dentro. Sem erro, sem log, em todos os bancos do time e no publicado.
+
+**Decisão.** Um mapa `CORREDORES_RENOMEADOS` (nome antigo → nome atual) aplicado **antes** de `carregarOuCriarSecoes`, que atualiza `TB_PONTO_MAPA.corredor` no lugar por consulta nativa.
+
+**Vale para todo corredor, não só para seção — e pelo motivo oposto.** A placa da Iluminação e o ponto do banheiro são casados por código curto e por tipo, então nunca duplicariam. Justamente por isso o texto antigo ficaria gravado para sempre: a carga só os cria quando não existem, e nunca reescreve. E é texto que o cliente lê na tela de localização — *Sanitarios*, *Corredor leste, junto a Iluminacao*.
+
+**Renomear preserva o id**, então a chave estrangeira dos produtos não se move e nada mais precisa mudar. A ordem importa: depois de `carregarOuCriarSecoes`, o ponto de nome novo já teria sido criado e a renomeação esbarraria na unicidade do corredor.
+
+**Renomear não pode ser cego, e isso custou um banco sujo para aprender.** O servidor de desenvolvimento estava rodando com *hot reload* durante a edição: a cada compilação ele reiniciava e executava a carga. Numa dessas execuções a planta já estava acentuada e a migração ainda não existia, então a carga criou as quatro seções novas **vazias**. Quando a migração entrou, ela renomeou por cima e o banco ficou com **duas linhas por seção** — uma com todos os produtos e nome novo, outra vazia com o mesmo nome novo.
+
+Por isso a migração apaga antes de renomear: prateleira com o nome de destino e **nenhum produto dentro** é resíduo de execução parcial, ninguém a referencia, e a carga a recria em seguida se ela de fato pertencer à planta. Com isso o passo virou idempotente — roda quantas vezes for, em qualquer estado, e converge.
+
+**A sexta vez que o mesmo padrão aparece.** [D-51](#d-51-um-valor-de-enum-removido-precisa-sumir-também-do-banco), [D-53](#d-53-a-aplicação-repara-a-restrição-de-enum-que-o-ddl-auto-update-deixa-envelhecer), [D-56](#d-56-a-coluna-coletado-continua-sendo-gravada-mesmo-redundante), [D-59](#d-59-a-carga-completa-a-apresentação-de-produtos-que-já-estavam-gravados), [D-69](#d-69-a-massa-passou-a-ser-a-fonte-do-nome-e-da-descrição-e-sobrescreve-o-banco) e agora esta. Sem Flyway e com `ddl-auto: update`, **a carga é o único lugar que reconcilia banco e código** — e a lição que se repete é que renomear qualquer coisa usada como chave de busca é migração, mesmo quando parece edição de texto.
+
+**Uma entrada aqui pode sair um dia.** Quando nenhum banco tiver mais o nome antigo, a linha vira peso morto. Não há como saber isso do código, então elas ficam até alguém confirmar que todo mundo rodou a versão nova — o custo de manter é uma consulta que não atualiza nada.
+
+**A ponta que ficou do outro lado.** `findSectorForProduct`, no `mapService.js`, casa a seção contra `secaoRef` **e** contra o nome do bloco. Depois desta mudança, Decoração, Elétrica e Iluminação passam a casar pelo nome do bloco, que já era acentuado — sem regressão. Mas **Materiais de construção deixa de casar**: o `secaoRef` está sem acento e o bloco se chama *Material de Construção*, no singular. São duas strings no frontend, junto do `secaoRef` do Encanamento, que nunca casou.
+
+**Onde no código.** `infrastructure/database/seed/CarregadorDadosIniciais.java` — `CORREDORES_RENOMEADOS` e `renomearCorredores`; `infrastructure/database/repository/PontoMapaJpaRepository.java` — `renomearCorredor`.
 
 ---
 

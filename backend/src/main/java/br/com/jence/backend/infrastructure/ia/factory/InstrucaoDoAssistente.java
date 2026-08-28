@@ -76,7 +76,7 @@ public final class InstrucaoDoAssistente {
 
     /** Mostrada ao cliente quando o assistente esta fora do ar. Nao entra no historico. */
     public static String mensagemDeIndisponibilidade() {
-        return "Nao consegui consultar o assistente agora. Voce pode buscar o produto direto "
+        return "Não consegui consultar o assistente agora. Você pode buscar o produto direto "
                 + "pela tela de busca, ou tentar novamente em instantes.";
     }
 }

@@ -128,7 +128,7 @@ class BuscaComFiltrosIntegracaoTest {
          * zerado do catalogo apagaria justamente o cenario que a demonstracao encena.
          */
         assertThat(nomes(buscar(FiltroDeProdutos.nenhum())))
-                .contains("Lixa para Parede Grao 120");
+                .contains("Lixa para Parede Grão 120");
     }
 
     @Test
@@ -139,7 +139,7 @@ class BuscaComFiltrosIntegracaoTest {
         assertThat(disponiveis).isNotEmpty();
         assertThat(disponiveis).allSatisfy(produto ->
                 assertThat(produto.temDisponibilidade()).isTrue());
-        assertThat(nomes(disponiveis)).doesNotContain("Lixa para Parede Grao 120");
+        assertThat(nomes(disponiveis)).doesNotContain("Lixa para Parede Grão 120");
     }
 
     // ---------------------------------------------------------------- termo, e termo com filtro
@@ -174,7 +174,7 @@ class BuscaComFiltrosIntegracaoTest {
         assertThat(resultado).isNotEmpty();
         assertThat(nomes(resultado))
                 .as("a lixa grao 120 esta zerada e o filtro de disponibilidade a exclui")
-                .doesNotContain("Lixa para Parede Grao 120");
+                .doesNotContain("Lixa para Parede Grão 120");
     }
 
     @Test

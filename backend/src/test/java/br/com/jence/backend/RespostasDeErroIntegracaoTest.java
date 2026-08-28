@@ -273,8 +273,13 @@ class RespostasDeErroIntegracaoTest {
          */
         UUID sessao = sessaoAberta();
 
+        /*
+         * O nome da secao ganhou acento (D-70) e vai cru: o RestClient trata a string como
+         * template de URI e codifica sozinho. Codificar antes produz %25C3%25A7 - o sinal de
+         * porcentagem escapado de novo -, e a secao nao casa com nada.
+         */
         JsonNode decoracao = corpoDe(chamar(HttpMethod.GET,
-                "/api/v1/produtos?size=50&secao=Decoracao", null)).get("content");
+                "/api/v1/produtos?size=50&secao=Decoração", null)).get("content");
 
         String itemEmFalta = null;
         for (JsonNode produto : decoracao) {

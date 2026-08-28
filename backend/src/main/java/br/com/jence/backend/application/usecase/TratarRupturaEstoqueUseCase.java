@@ -101,7 +101,7 @@ public class TratarRupturaEstoqueUseCase {
 
         if (candidatos.isEmpty()) {
             return recusar(sessao.getId(), item,
-                    "Nenhum produto com estoque esta num raio caminhavel deste ponto.");
+                    "Nenhum produto com estoque está num raio caminhável deste ponto.");
         }
 
         Sugestao sugestao = eleger(emFalta, candidatos);
@@ -131,7 +131,7 @@ public class TratarRupturaEstoqueUseCase {
                 sessaoId, item.getId(), item.getProduto().getId(), motivo));
 
         throw new SubstitutoIndisponivelException(
-                "Nenhum substituto plausivel para '%s' foi encontrado nas proximidades. %s"
+                "Nenhum substituto plausível para '%s' foi encontrado nas proximidades. %s"
                         .formatted(item.getProduto().getNome(), motivo));
     }
 
@@ -211,7 +211,7 @@ public class TratarRupturaEstoqueUseCase {
 
         if (InstrucaoDeRuptura.NENHUM.equalsIgnoreCase(codigo)) {
             return Sugestao.recusada(justificativa.isBlank()
-                    ? "O assistente nao encontrou nenhum substituto adequado por perto."
+                    ? "O assistente não encontrou nenhum substituto adequado por perto."
                     : justificativa);
         }
 
@@ -266,7 +266,7 @@ public class TratarRupturaEstoqueUseCase {
 
         static Sugestao porProximidade(Produto maisProximo) {
             return new Sugestao(maisProximo,
-                    "Este e o produto disponivel mais proximo de onde voce esta. Confira na "
+                    "Este é o produto disponível mais próximo de onde você está. Confira na "
                             + "embalagem se ele atende ao seu caso antes de levar.",
                     OrigemSugestao.PROXIMIDADE);
         }

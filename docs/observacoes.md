@@ -27,6 +27,7 @@
 | [O-20](#o-20-rodar-a-suíte-deixa-um-resto-de-sessões-no-banco-de-demonstração) | Limpar sessões de teste antes da banca | Backend | Baixa |
 | [O-21](#o-21-desenvolvimento-testes-e-demonstração-usam-o-mesmo-schema) | Um schema só para tudo | Time | Média |
 | [O-22](#o-22-a-tela-inicial-do-catálogo-leva-24-segundos-no-ambiente-publicado) | Catálogo sem filtro leva 2,4 s | Frontend e time | Média |
+| [O-23](#o-23-processo-java-abandonado-trava-a-suíte-inteira-no-oracle) | Encerrar servidor e Maven pela raiz | Backend | Alta |
 | [O-11](#o-11-o-swagger-fica-exposto-no-ambiente-publicado) | Swagger em produção | — | aceita |
 | [O-12](#o-12-o-raio-de-busca-da-ruptura-é-um-palpite-informado--agora-medido) | Raio de 25 unidades — medido | — | aceita |
 | [O-15](#o-15-o-endpoint-de-simulação-de-estoque-não-tem-proteção-nenhuma) | Simulação de estoque sem proteção | — | aceita |
@@ -349,6 +350,28 @@ A tela de entrada é a mais lenta de todas, e é a única de 2,4 segundos. Abrir
 **O que não vale.** Aumentar o plano do Render resolveria de vez, e o time já decidiu ficar no gratuito. Vale lembrar que **a partida a frio (163–176 s) continua sendo o número dominante** para qualquer demonstração: 2,4 segundos incomoda, três minutos inviabiliza.
 
 **De quem.** Frontend (itens 1 e 2), time (item 3). **Urgência:** média — a tela lenta é a primeira que a banca vê.
+
+---
+
+### O-23. Processo Java abandonado trava a suíte inteira no Oracle
+
+**O quê.** Duas maneiras de deixar JVM órfã segurando transação aberta no schema compartilhado. As duas custaram tempo em 28/08, e as duas voltam a acontecer sozinhas.
+
+**Parar o Maven não para o Surefire.** Interromper `mvnw test` mata o processo do Maven, mas o **JVM filho que roda os testes sobrevive** — e sobrevive no meio de uma transação. Ele vira uma sessão `INACTIVE` que nunca faz commit nem rollback, e qualquer execução seguinte que toque as mesmas linhas fica presa esperando.
+
+Foi exatamente isso: uma sessão ociosa bloqueando outra, que bloqueava mais duas. A suíte ficou **20 minutos parada** sem sair do lugar e sem falhar — o pior formato de erro, porque não avisa.
+
+**O servidor de desenvolvimento recarrega sozinho.** Com o `spring-boot:run` aberto, o DevTools reinicia a aplicação a cada compilação — e **cada reinício executa a carga inicial**. Numa dessas, a planta já estava acentuada e a migração de renomeação ainda não existia: a carga criou as quatro seções novas vazias, e o banco ficou com a seção duplicada. Ver [D-70](decisoes-tecnicas.md#d-70-renomear-uma-seção-é-migração-não-edição-de-string), que passou a apagar a prateleira vazia justamente por causa disso.
+
+**Por que dói aqui e não doeria em outro projeto.** Porque o schema é um só para tudo ([O-21](#o-21-desenvolvimento-testes-e-demonstração-usam-o-mesmo-schema)). Num banco local descartável, um lock preso se resolve derrubando o banco. No da FIAP, **não temos privilégio para derrubar sessão** — `alter system kill session` responde `ORA-01031`. Só resta esperar o Oracle colher a conexão morta, o que levou cerca de meia hora.
+
+**O que fazer.**
+
+- **Fechar o servidor de desenvolvimento antes de editar o backend.** Se ele estiver no ar durante as edições, ele executa versões intermediárias do código contra o banco de verdade.
+- **Ao interromper a suíte, conferir se sobrou JVM.** No Windows: `Get-CimInstance Win32_Process -Filter "Name='java.exe'"` mostra o horário de início e a linha de comando — as do Surefire aparecem com `-jar ...\surefire`. Encerrar essas pela raiz libera o lock na hora.
+- **Não confundir com falha de teste.** Suíte parada sem sair do lugar por mais de dois minutos é lock, não lentidão. `select sid, blocking_session from v$session where username = user` responde em um segundo.
+
+**De quem.** Backend. **Urgência:** alta — um lock preso na véspera da gravação custaria meia hora que não vamos ter.
 
 ---
 

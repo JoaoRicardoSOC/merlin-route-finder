@@ -199,7 +199,7 @@ class ConversarComAssistenteUseCaseTest {
 
         ChatMensagemResponse resposta = useCase.executar(sessaoId, "o que preciso para pintar?");
 
-        assertThat(resposta.conteudo()).contains("Nao consegui consultar o assistente");
+        assertThat(resposta.conteudo()).contains("Não consegui consultar o assistente");
 
         // so a pergunta do cliente foi salva: a falha nao entra no historico
         verify(chatMensagemRepository, times(1)).salvar(any());

@@ -97,8 +97,8 @@ class PreFiltragemEspacialIntegracaoTest {
         Produto emFalta = lixaEmFalta();
 
         assertThat(candidatos())
-                .as("Tintas fica em (32,10) e Materiais de construcao em (14,80): fora do raio")
-                .noneMatch(p -> p.getPontoMapa().getCorredor().equals("Materiais de construcao"))
+                .as("Tintas fica em (32,10) e Materiais de construção em (14,80): fora do raio")
+                .noneMatch(p -> p.getPontoMapa().getCorredor().equals("Materiais de construção"))
                 .allSatisfy(p -> assertThat(
                         emFalta.getPontoMapa().calcularDistanciaPara(p.getPontoMapa()))
                         .isLessThanOrEqualTo(TratarRupturaEstoqueUseCase.RAIO_DE_BUSCA));

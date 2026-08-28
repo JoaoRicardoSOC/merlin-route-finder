@@ -23,14 +23,14 @@ public final class PlantaDaLoja {
             //             rotulo                      x   y   larg  alt      centro
             new BlocoMapa("Tintas",                    20,  4,  24,  12),  // (32, 10)
             new BlocoMapa("Ferragens",                 17, 24,  10,  16),  // (22, 32)
-            new BlocoMapa("Eletrica",                  29, 22,  10,  16),  // (34, 30)
+            new BlocoMapa("Elétrica",                  29, 22,  10,  16),  // (34, 30)
             new BlocoMapa("Encanamento",               42, 22,  12,  16),  // (48, 30)
             new BlocoMapa("Cozinhas",                  56, 22,  12,  16),  // (62, 30)
-            new BlocoMapa("Iluminacao",                70, 24,  12,  16),  // (76, 32)
+            new BlocoMapa("Iluminação",                70, 24,  12,  16),  // (76, 32)
             new BlocoMapa("Jardim",                    27, 44,  18,  12),  // (36, 50)
             new BlocoMapa("Ferramentas",               14, 48,  12,  14),  // (20, 55)
-            new BlocoMapa("Decoracao",                 80, 47,  16,  16),  // (88, 55)
-            new BlocoMapa("Materiais de construcao",    4, 73,  20,  14)); // (14, 80)
+            new BlocoMapa("Decoração",                 80, 47,  16,  16),  // (88, 55)
+            new BlocoMapa("Materiais de construção",    4, 73,  20,  14)); // (14, 80)
 
     private PlantaDaLoja() {
     }
