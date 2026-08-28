@@ -30,17 +30,10 @@ export default function SplashScreen({ onFinish }) {
       aria-hidden="true"
     >
       {/* Left split door */}
-      <div className="splash-door splash-door-left">
-        <div className="splash-door-pattern" />
-      </div>
+      <div className="splash-door splash-door-left" />
 
       {/* Right split door */}
-      <div className="splash-door splash-door-right">
-        <div className="splash-door-pattern" />
-      </div>
-
-      {/* Center Seam Glow Line */}
-      <div className="splash-seam-glow" />
+      <div className="splash-door splash-door-right" />
 
       {/* Center Brand Elements */}
       <div className="splash-center-content">
