@@ -1,7 +1,12 @@
 import React from 'react'
 import { SECTOR_METADATA, DEFAULT_SECTOR_META } from '../services/catalogService'
 
-export default function ProductCard({ product, onAddToCart, onNavigateToProduct }) {
+export default function ProductCard({
+  product,
+  onAddToCart,
+  onNavigateToProduct,
+  onViewDetails
+}) {
   const formatPrice = (price) => {
     if (typeof price !== 'number') {
       price = parseFloat(price) || 0
@@ -12,7 +17,6 @@ export default function ProductCard({ product, onAddToCart, onNavigateToProduct 
     })
   }
 
-  // Normalize fields between backend ProdutoResponse and local format
   const name = product.nome || product.name || 'Produto sem nome'
   const specs = product.descricao || product.specs || ''
   const price = product.preco ?? product.price ?? 0
@@ -24,12 +28,18 @@ export default function ProductCard({ product, onAddToCart, onNavigateToProduct 
 
   const meta = SECTOR_METADATA[secao] || DEFAULT_SECTOR_META
   const icon = product.icon || meta.icon || 'inventory_2'
-
   const isOutOfStock = stock <= 0
+
+  const handleCardClick = () => {
+    if (onViewDetails) {
+      onViewDetails(product)
+    }
+  }
 
   return (
     <div className={`product-card ${isOutOfStock ? 'out-of-stock' : ''}`}>
-      <div className="product-visual">
+      {/* Clickable Visual Area */}
+      <div className="product-visual" onClick={handleCardClick} role="button" tabIndex={0}>
         {image ? (
           <img src={image} alt={name} className="product-img" loading="lazy" />
         ) : (
@@ -50,12 +60,12 @@ export default function ProductCard({ product, onAddToCart, onNavigateToProduct 
       </div>
 
       <div className="product-content">
-        <div className="product-header">
+        <div className="product-header" onClick={handleCardClick} role="button" tabIndex={0}>
           <h3 className="product-name">{name}</h3>
           {specs && <p className="product-specs">{specs}</p>}
         </div>
 
-        <div className="product-stock-location">
+        <div className="product-stock-location" onClick={handleCardClick} role="button" tabIndex={0}>
           <div className={`stock-info ${isOutOfStock ? 'stock-zero' : ''}`}>
             <span className="material-symbols-outlined stock-icon">
               {isOutOfStock ? 'warning' : 'inventory_2'}
@@ -71,26 +81,36 @@ export default function ProductCard({ product, onAddToCart, onNavigateToProduct 
         </div>
 
         <div className="product-footer">
-          <div className="price-block">
+          <div className="price-block" onClick={handleCardClick} role="button" tabIndex={0}>
             <span className="price-label">À vista</span>
             <span className="price-value">{formatPrice(price)}</span>
           </div>
 
           <div className="product-actions">
             <button
+              type="button"
               className="action-btn route-btn"
-              onClick={() => onNavigateToProduct({ ...product, name, corredor, price, stock })}
+              onClick={(e) => {
+                e.stopPropagation()
+                onNavigateToProduct({ ...product, name, corredor, price, stock })
+              }}
               title="Traçar rota até este produto na loja"
               aria-label={`Traçar rota até ${name}`}
             >
               <span className="material-symbols-outlined">near_me</span>
             </button>
             <button
+              type="button"
               className={`action-btn cart-btn ${isOutOfStock ? 'btn-disabled' : ''}`}
-              onClick={() => !isOutOfStock && onAddToCart({ ...product, name, corredor, price, stock })}
-              title={isOutOfStock ? 'Produto indisponível' : 'Adicionar à lista de compras'}
+              onClick={(e) => {
+                e.stopPropagation()
+                if (!isOutOfStock) {
+                  onAddToCart({ ...product, name, corredor, price, stock })
+                }
+              }}
+              title={isOutOfStock ? 'Produto indisponível' : 'Adicionar ao roteiro de compras'}
               disabled={isOutOfStock}
-              aria-label={`Adicionar ${name} à lista`}
+              aria-label={`Adicionar ${name} ao roteiro`}
             >
               <span className="material-symbols-outlined">
                 {isOutOfStock ? 'block' : 'add_shopping_cart'}

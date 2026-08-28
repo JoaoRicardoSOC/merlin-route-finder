@@ -7,6 +7,8 @@ import SectorExplorer from './components/SectorExplorer'
 import SectorBanner from './components/SectorBanner'
 import SectorsDrawer from './components/SectorsDrawer'
 import LocationCodeModal from './components/LocationCodeModal'
+import ProductDetailModal from './components/ProductDetailModal'
+import RoteiroDrawer from './components/RoteiroDrawer'
 import ProductCard from './components/ProductCard'
 import PromoBanner from './components/PromoBanner'
 import RouteModal from './components/RouteModal'
@@ -23,6 +25,12 @@ import {
   recentrarPosicao,
   normalizarCodigo
 } from './services/sessionService'
+import {
+  consultarRoteiro,
+  adicionarAoRoteiro,
+  removerDoRoteiro,
+  limparRoteiroLocal
+} from './services/roteiroService'
 import './App.css'
 
 const SEARCH_SUGGESTIONS = [
@@ -39,7 +47,6 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSecao, setSelectedSecao] = useState('todos')
   const [apenasDisponiveis, setApenasDisponiveis] = useState(false)
-  const [cartCount, setCartCount] = useState(0)
   const [toastMessage, setToastMessage] = useState(null)
 
   // Data states
@@ -48,6 +55,10 @@ function App() {
   const [totalProductsCount, setTotalProductsCount] = useState(0)
   const [isLoadingSecoes, setIsLoadingSecoes] = useState(true)
   const [isLoadingProdutos, setIsLoadingProdutos] = useState(true)
+
+  // Roteiro / Cart items state
+  const [roteiroItems, setRoteiroItems] = useState([])
+  const [isRoteiroDrawerOpen, setIsRoteiroDrawerOpen] = useState(false)
 
   // Session & Location state (UC-001)
   const [session, setSession] = useState(null)
@@ -61,6 +72,7 @@ function App() {
   // Drawer & Modals state
   const [isSectorsDrawerOpen, setIsSectorsDrawerOpen] = useState(false)
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false)
+  const [selectedProductForDetail, setSelectedProductForDetail] = useState(null)
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
     title: '',
@@ -87,7 +99,7 @@ function App() {
     }
   }
 
-  // 1. Initialize or Resume Session (UC-001)
+  // 1. Initialize or Resume Session (UC-001) & Load Roteiro
   useEffect(() => {
     let isMounted = true
     async function initSession() {
@@ -107,6 +119,10 @@ function App() {
               showToast(`Sessão iniciada na placa: ${urlCode} (${sess.posicaoAtual.corredor})`)
             }
           }
+
+          // Load existing items in roteiro for this session
+          const items = await consultarRoteiro(sess.id)
+          if (isMounted) setRoteiroItems(items)
         }
       } catch (err) {
         console.error('Erro ao inicializar sessão:', err)
@@ -219,11 +235,25 @@ function App() {
     }
   }
 
-  const handleAddToCart = (product) => {
-    setCartCount(prev => prev + 1)
+  // Roteiro Actions
+  const handleAddToCart = async (product) => {
+    const updated = await adicionarAoRoteiro(session?.id, product)
+    setRoteiroItems(updated)
     const prodName = product.nome || product.name
     const corredor = product.corredor || 'Corredor da Loja'
-    showToast(`"${prodName}" adicionado à lista! (${corredor})`)
+    showToast(`"${prodName}" adicionado ao seu roteiro! (${corredor})`)
+  }
+
+  const handleRemoveFromRoteiro = async (itemId) => {
+    const updated = await removerDoRoteiro(session?.id, itemId)
+    setRoteiroItems(updated)
+    showToast('Item removido do roteiro')
+  }
+
+  const handleClearRoteiro = () => {
+    limparRoteiroLocal()
+    setRoteiroItems([])
+    showToast('Roteiro esvaziado')
   }
 
   const handleNavigateToProduct = (product) => {
@@ -232,6 +262,18 @@ function App() {
       title: `Rota até: ${product.nome || product.name}`,
       type: 'route',
       data: product
+    })
+  }
+
+  const handleStartFullRoute = (items) => {
+    setModalConfig({
+      isOpen: true,
+      title: `Rota Otimizada da Compra (${items.length} itens)`,
+      type: 'route',
+      data: {
+        name: `${items.length} paradas na loja`,
+        corredor: items.map(i => i.corredor).filter(Boolean).slice(0, 3).join(' ➔ ') + (items.length > 3 ? '...' : '')
+      }
     })
   }
 
@@ -258,6 +300,8 @@ function App() {
     setActiveTab(tabKey)
     if (tabKey === 'scan') {
       setIsLocationModalOpen(true)
+    } else if (tabKey === 'projects') {
+      setIsRoteiroDrawerOpen(true)
     }
   }
 
@@ -266,13 +310,14 @@ function App() {
       {/* Intro Split Splash Screen */}
       <SplashScreen />
 
-      {/* Header / TopAppBar */}
+      {/* Header / TopAppBar with Cart / Roteiro Counter */}
       <Header
         activeTab={activeTab}
         setActiveTab={handleTabChange}
         onMenuClick={() => setIsSectorsDrawerOpen(true)}
         onOpenSectors={() => setIsSectorsDrawerOpen(true)}
-        onProfileClick={() => showToast('Perfil do cliente Leroy Merlin')}
+        onOpenRoteiro={() => setIsRoteiroDrawerOpen(true)}
+        cartCount={roteiroItems.length}
       />
 
       {/* Main Canvas */}
@@ -333,7 +378,7 @@ function App() {
           onOpenMap={handleOpenMap}
         />
 
-        {/* Products Grid Section */}
+        {/* Products Grid Section (Vitrine do Catálogo) */}
         <section className="products-section" ref={productsSectionRef}>
           <div className="section-header-wrap">
             <div className="products-header-title-bar">
@@ -345,7 +390,7 @@ function App() {
               </span>
             </div>
 
-            {/* Quick Filter Bar: Availability switch */}
+            {/* Quick Filter Bar: Availability switch & Drawer button */}
             <div className="catalog-filters-bar">
               <label className="toggle-availability-label">
                 <input
@@ -420,6 +465,7 @@ function App() {
                   product={prod}
                   onAddToCart={handleAddToCart}
                   onNavigateToProduct={handleNavigateToProduct}
+                  onViewDetails={(product) => setSelectedProductForDetail(product)}
                 />
               ))}
             </div>
@@ -439,6 +485,25 @@ function App() {
       <BottomNav
         activeTab={activeTab}
         setActiveTab={handleTabChange}
+      />
+
+      {/* Roteiro / Shopping List Drawer */}
+      <RoteiroDrawer
+        isOpen={isRoteiroDrawerOpen}
+        onClose={() => setIsRoteiroDrawerOpen(false)}
+        items={roteiroItems}
+        onRemoveItem={handleRemoveFromRoteiro}
+        onClearAll={handleClearRoteiro}
+        onStartRoute={handleStartFullRoute}
+      />
+
+      {/* Product Detail Modal (UC-003) */}
+      <ProductDetailModal
+        isOpen={!!selectedProductForDetail}
+        onClose={() => setSelectedProductForDetail(null)}
+        product={selectedProductForDetail}
+        onAddToCart={handleAddToCart}
+        onNavigateToProduct={handleNavigateToProduct}
       />
 
       {/* Location Code & QR Scanner Modal (Plan A & Plan B) */}

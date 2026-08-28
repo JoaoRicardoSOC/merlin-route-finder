@@ -6,7 +6,8 @@ export default function Header({
   setActiveTab,
   onMenuClick,
   onOpenSectors,
-  onProfileClick
+  onOpenRoteiro,
+  cartCount = 0
 }) {
   return (
     <header className="app-header">
@@ -58,13 +59,20 @@ export default function Header({
           </button>
         </nav>
 
+        {/* Header Actions: Cart / Roteiro Button with Notification Badge */}
         <div className="header-actions">
           <button 
-            className="icon-button profile-btn" 
-            aria-label="Minha conta"
-            onClick={onProfileClick}
+            className="icon-button cart-header-btn" 
+            aria-label={`Meu roteiro com ${cartCount} itens`}
+            title="Abrir meu roteiro de compras"
+            onClick={onOpenRoteiro}
           >
-            <span className="material-symbols-outlined">account_circle</span>
+            <span className="material-symbols-outlined">shopping_cart</span>
+            {cartCount > 0 && (
+              <span className="cart-badge-counter animate-pop" aria-hidden="true">
+                {cartCount > 99 ? '99+' : cartCount}
+              </span>
+            )}
           </button>
         </div>
       </div>
