@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -183,6 +184,41 @@ class RespostasDeErroIntegracaoTest {
         assertThat(erro.get("message").asText())
                 .as("a mensagem precisa dizer qual valor foi recusado")
                 .contains("nao-e-um-uuid");
+    }
+
+    @Test
+    @DisplayName("400 quando a query string nao e texto valido, e nao 500")
+    void queryIndecodificavel() {
+        /*
+         * %E2 e o "â" em latin-1, e nao forma um caractere valido em UTF-8. Um cliente que
+         * codifique errado cai aqui. Antes a resposta era 500 com "Ocorreu um erro
+         * inesperado" - jogava no cliente a impressao de defeito no servidor, e ainda escondia
+         * a causa. E erro do pedido.
+         *
+         * A URI vai como objeto, e nao como String: o RestClient trata String como template e
+         * escaparia o proprio sinal de porcentagem, transformando %E2 em %25E2 - que e texto
+         * valido e nao reproduziria nada. Foi assim que este teste falhou na primeira tentativa.
+         *
+         * A excecao nasce no Tomcat, antes de qualquer controlador existir, e por isso a
+         * auditoria de respostas de erro nao a tinha alcancado. Ver D-74.
+         */
+        URI uri = URI.create("http://localhost:" + porta + "/api/v1/produtos?query=L%E2mpada");
+
+        ResponseEntity<String> resposta = builder.build()
+                .method(HttpMethod.GET).uri(uri)
+                .retrieve().onStatus(status -> true, (req, res) -> { })
+                .toEntity(String.class);
+
+        assertThat(resposta.getStatusCode().value())
+                .as("parametro mal codificado e erro do cliente, nao do servidor")
+                .isEqualTo(400);
+
+        JsonNode erro = corpoDe(resposta);
+        assertThat(erro.get("status").asInt()).isEqualTo(400);
+        assertThat(erro.get("path").asText()).isEqualTo("/api/v1/produtos");
+        assertThat(erro.get("message").asText())
+                .as("a mensagem precisa apontar a codificacao, que e onde esta o problema")
+                .containsIgnoringCase("UTF-8");
     }
 
     // ---------------------------------------------------------------- 404

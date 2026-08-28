@@ -6,6 +6,7 @@ import br.com.jence.backend.domain.exception.SubstitutoIndisponivelException;
 import br.com.jence.backend.presentation.response.StandardError;
 import br.com.jence.backend.presentation.response.StandardError.ValidationError;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.tomcat.util.http.InvalidParameterException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -197,6 +198,38 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+    }
+
+    /**
+     * Requisicao cujo texto nao e decodificavel - tipicamente a query string em latin-1.
+     *
+     * <p>Cai aqui, e nao no tratador generico, porque <b>e erro do pedido e nao nosso</b>. Antes
+     * respondia 500 com "Ocorreu um erro inesperado", o que joga no cliente a impressao de
+     * defeito no servidor e ainda esconde a causa real: os bytes enviados nao formam texto
+     * valido no charset da conexao.
+     *
+     * <p>A excecao e do Tomcat, e nao do Spring - por isso a auditoria de respostas de erro nao
+     * a tinha coberto: ela nasce antes de qualquer controlador existir. Tratar o tipo especifico
+     * em vez da superclasse e deliberado: {@code InvalidParameterException} estende
+     * {@code IllegalStateException}, que em todo o resto do codigo significa bug nosso e deve
+     * mesmo continuar virando 500.
+     *
+     * <p>Acoplar o tratador ao Tomcat tem uma falha benigna: trocando de container, este
+     * tratador simplesmente nunca dispara, e a resposta volta a ser a generica. Nada quebra.
+     */
+    @ExceptionHandler(InvalidParameterException.class)
+    public ResponseEntity<StandardError> handleTextoIndecodificavel(InvalidParameterException ex,
+                                                                    HttpServletRequest request) {
+        StandardError response = new StandardError(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Requisição Inválida",
+                "Não foi possível ler os parâmetros enviados. Verifique se a requisição está "
+                        + "codificada em UTF-8.",
+                request.getRequestURI(),
+                null
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler(Exception.class)

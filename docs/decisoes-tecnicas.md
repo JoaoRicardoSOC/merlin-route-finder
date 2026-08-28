@@ -85,6 +85,7 @@
 - [D-71. O corredor viaja na listagem, e não só o id do ponto](#d-71-o-corredor-viaja-na-listagem-e-não-só-o-id-do-ponto)
 - [D-72. O produto da ruptura nasce com estoque](#d-72-o-produto-da-ruptura-nasce-com-estoque)
 - [D-73. A busca compara sem acento dos dois lados, com TRANSLATE e não CONVERT](#d-73-a-busca-compara-sem-acento-dos-dois-lados-com-translate-e-não-convert)
+- [D-74. Requisição indecodificável é 400, e o tratador é acoplado ao Tomcat de propósito](#d-74-requisição-indecodificável-é-400-e-o-tratador-é-acoplado-ao-tomcat-de-propósito)
 - [D-38. Ruptura de estoque: o modelo escolhe, mas quem responde é o banco](#d-38-ruptura-de-estoque-o-modelo-escolhe-mas-quem-responde-é-o-banco)
 - [D-39. A ruptura vira registro no banco, e o relato não altera o estoque](#d-39-a-ruptura-vira-registro-no-banco-e-o-relato-não-altera-o-estoque)
 - [D-40. Existe um endpoint que só serve à demonstração, e ele é assumidamente desprotegido](#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido)
@@ -1828,6 +1829,22 @@ Foi o único ponto do plano marcado como *verificar antes de escrever*, e era me
 **Custo de desempenho: nenhum que importe.** A função impede o uso de índice, e são 111 linhas — a busca já era varredura completa por causa do `UTL_MATCH` ([D-15](#d-15-query-nativa-com-utl_match-para-busca-tolerante-a-erro-de-digitação)).
 
 **Onde no código.** `infrastructure/database/adapter/ProdutoRepositoryAdapter.java` — `dobrado`, usado em `condicoes` e na ordenação.
+
+---
+
+### D-74. Requisição indecodificável é 400, e o tratador é acoplado ao Tomcat de propósito
+
+**Contexto.** Um cliente que mandasse a query string em latin-1 recebia **500** com *"Ocorreu um erro inesperado. Tente novamente em instantes."* — a mensagem joga no cliente a impressão de defeito no servidor e esconde a causa real, que é o pedido estar mal codificado.
+
+A auditoria de respostas de erro, feita em 25/08, não tinha alcançado esse caso porque **a exceção não é do Spring: é do Tomcat**, e nasce antes de qualquer controlador existir. Nenhum teste que passasse pela camada de aplicação chegaria nela.
+
+**Decisão.** Um `@ExceptionHandler` para `org.apache.tomcat.util.http.InvalidParameterException`, devolvendo 400 no mesmo formato dos outros erros, com mensagem que aponta a codificação.
+
+**Por que o tipo específico e não a superclasse.** `InvalidParameterException` estende `IllegalStateException` — que em todo o resto do código significa **bug nosso** e deve mesmo continuar virando 500. Tratar a superclasse transformaria defeito de servidor em erro de cliente, escondendo exatamente o que o 500 existe para denunciar.
+
+**O acoplamento ao container é deliberado, e falha bem.** Importar uma classe do Tomcat na camada de apresentação é acoplamento mais forte do que o Jakarta que já está ali. Aceito porque a alternativa — inspecionar nome de classe em tempo de execução — é frágil sem ser mais desacoplada. E a falha é benigna: **trocando de container, este tratador simplesmente nunca dispara** e a resposta volta a ser a genérica. Nada quebra, só se perde a precisão.
+
+**Onde no código.** `presentation/advice/GlobalExceptionHandler.java`.
 
 ---
 
