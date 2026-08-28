@@ -1,15 +1,14 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import Header from './components/Header'
 import LocationStatus from './components/LocationStatus'
 import SearchBar from './components/SearchBar'
-import BentoActions from './components/BentoActions'
+import HomeBentoGrid from './components/HomeBentoGrid'
+import CatalogSearchPage from './components/CatalogSearchPage'
 import SectorsDrawer from './components/SectorsDrawer'
 import LocationCodeModal from './components/LocationCodeModal'
 import ProductDetailModal from './components/ProductDetailModal'
 import RoteiroDrawer from './components/RoteiroDrawer'
 import FacetFiltersModal from './components/FacetFiltersModal'
-import ActiveFilterChips from './components/ActiveFilterChips'
-import ProductCard from './components/ProductCard'
 import PromoBanner from './components/PromoBanner'
 import RouteModal from './components/RouteModal'
 import SplashScreen from './components/SplashScreen'
@@ -43,12 +42,15 @@ const SEARCH_SUGGESTIONS = [
 ]
 
 function App() {
+  const [currentView, setCurrentView] = useState('home') // 'home' | 'search'
   const [activeTab, setActiveTab] = useState('home')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSecao, setSelectedSecao] = useState('todos')
   const [apenasDisponiveis, setApenasDisponiveis] = useState(false)
   const [selectedAtributos, setSelectedAtributos] = useState({})
   const [toastMessage, setToastMessage] = useState(null)
+  const [autoFocusSearch, setAutoFocusSearch] = useState(false)
+  const [isGlidingSearch, setIsGlidingSearch] = useState(false)
 
   // Data states
   const [secoes, setSecoes] = useState([])
@@ -82,18 +84,6 @@ function App() {
     type: '',
     data: null
   })
-
-  const productsSectionRef = useRef(null)
-  const searchInputRef = useRef(null)
-
-  const handleHeaderSearchClick = () => {
-    if (searchInputRef.current) {
-      searchInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      setTimeout(() => {
-        searchInputRef.current.focus()
-      }, 300)
-    }
-  }
 
   const showToast = (msg) => {
     setToastMessage(msg)
@@ -196,6 +186,23 @@ function App() {
     return () => clearTimeout(timer)
   }, [loadProdutos])
 
+  // Navigation to search view with smooth glide transition
+  const handleOpenSearchPage = (shouldFocus = true, initialQuery = '') => {
+    if (initialQuery) setSearchQuery(initialQuery)
+    setIsGlidingSearch(true)
+    setTimeout(() => {
+      setAutoFocusSearch(shouldFocus ? Date.now() : false)
+      setCurrentView('search')
+      setIsGlidingSearch(false)
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    }, 180)
+  }
+
+  const handleBackToHome = () => {
+    setCurrentView('home')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   // Handle manual or scanned location update (PUT /api/v1/sessoes/{id}/posicao)
   const handleUpdateLocation = async (codigoPonto) => {
     if (!codigoPonto) return
@@ -235,8 +242,10 @@ function App() {
 
   const handleSelectSecao = (secaoNome) => {
     setSelectedSecao(secaoNome)
-    // Clear attribute filters on section change so new dynamic facets apply
     setSelectedAtributos({})
+    if (currentView !== 'search') {
+      setCurrentView('search')
+    }
     if (secaoNome !== 'todos') {
       const meta = SECTOR_METADATA[secaoNome] || DEFAULT_SECTOR_META
       showToast(`Filtrando pelo setor: ${secaoNome} (${meta.corredor})`)
@@ -335,7 +344,9 @@ function App() {
   // Handle bottom navigation tab clicks
   const handleTabChange = (tabKey) => {
     setActiveTab(tabKey)
-    if (tabKey === 'scan') {
+    if (tabKey === 'home') {
+      setCurrentView('home')
+    } else if (tabKey === 'scan') {
       setIsLocationModalOpen(true)
     } else if (tabKey === 'projects') {
       setIsRoteiroDrawerOpen(true)
@@ -359,214 +370,84 @@ function App() {
         setActiveTab={handleTabChange}
         onOpenSectors={() => setIsSectorsDrawerOpen(true)}
         onOpenRoteiro={() => setIsRoteiroDrawerOpen(true)}
-        onSearchClick={handleHeaderSearchClick}
+        onSearchClick={() => handleOpenSearchPage(true)}
         cartCount={roteiroItems.length}
       />
 
-      {/* Main Canvas */}
+      {/* Main Canvas Viewport */}
       <main className="main-content">
-        {/* Welcome Section */}
-        <section className="welcome-section">
-          <h1 className="welcome-title">Bem-vindo à Leroy Merlin!</h1>
-          <p className="welcome-subtitle">
-            Encontre produtos com facilidade, explore os corredores temáticos pelo mapa inteligente e trace a rota ideal para sua compra na loja.
-          </p>
-        </section>
+        {currentView === 'home' ? (
+          /* ========================================================
+             1. HOME VIEW (Clean, minimalist green cards, search & hero)
+             ======================================================== */
+          <div className={`home-view-container animate-fade-in ${isGlidingSearch ? 'is-transitioning' : ''}`}>
+            {/* Welcome Section */}
+            <section className="welcome-section">
+              <h1 className="welcome-title">Bem-vindo à Leroy Merlin!</h1>
+              <p className="welcome-subtitle">
+                Encontre produtos com facilidade, explore os corredores pelo mapa inteligente e trace sua rota de compras.
+              </p>
+            </section>
 
-        {/* Location Status Chip (QR Code & Placa Indicator) */}
-        <LocationStatus
-          location={currentLocation}
-          onChangeLocation={() => setIsLocationModalOpen(true)}
-          onViewMap={handleOpenMap}
-        />
+            {/* Location Status Chip (QR Code & Placa Indicator) */}
+            <LocationStatus
+              location={currentLocation}
+              onClick={() => setIsLocationModalOpen(true)}
+            />
 
-        {/* AI Smart Search with Typo-Tolerant Live Update */}
-        <SearchBar
-          inputRef={searchInputRef}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          suggestions={SEARCH_SUGGESTIONS}
-          onSearch={(query) => {
-            if (query) showToast(`Buscando no catálogo: "${query}"`)
-          }}
-        />
+            {/* Home Search Bar (Submitting / searching transitions to search view) */}
+            <SearchBar
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              suggestions={SEARCH_SUGGESTIONS}
+              onSearch={(query) => handleOpenSearchPage(false, query)}
+              isGliding={isGlidingSearch}
+            />
 
-        {/* Products Grid Section (Vitrine do Catálogo) */}
-        <section className="products-section" ref={productsSectionRef}>
-          <div className="section-header-wrap">
-            <div className="products-header-title-bar">
-              <h2 className="section-heading">
-                {searchQuery ? `Resultados para "${searchQuery}"` : selectedSecao === 'todos' ? 'Vitrine de Produtos' : `Produtos de ${selectedSecao}`}
-              </h2>
-              <span className="products-count-badge">
-                {produtos.length} {produtos.length === 1 ? 'item' : 'itens'}
-              </span>
-            </div>
+            {/* Minimalist Green Bento Action Grid (Mapa, Setores, Chamar Especialista) */}
+            <HomeBentoGrid
+              onOpenMap={handleOpenMap}
+              onOpenSectors={() => setIsSectorsDrawerOpen(true)}
+              onCallSpecialist={handleCallSpecialist}
+            />
 
-            {/* Minimalist Sector Filter Pills (ListarSecoesUseCase) */}
-            <div className="minimal-sector-tabs-wrap">
-              <div className="minimal-sector-tabs">
-                <button
-                  type="button"
-                  className={`minimal-sector-pill ${selectedSecao === 'todos' ? 'active' : ''}`}
-                  onClick={() => handleSelectSecao('todos')}
-                >
-                  <span>Todos</span>
-                  <span className="minimal-pill-count">({totalProductsCount})</span>
-                </button>
-                {secoes.map((s) => (
-                  <button
-                    key={s.nome}
-                    type="button"
-                    className={`minimal-sector-pill ${selectedSecao === s.nome ? 'active' : ''}`}
-                    onClick={() => handleSelectSecao(s.nome)}
-                  >
-                    <span>{s.nome}</span>
-                    <span className="minimal-pill-count">({s.quantidadeProdutos})</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Quick Filter Bar: Availability, Facet Characteristics Modal Button & Sectors */}
-            <div className="catalog-filters-bar">
-              <div className="filters-left-group">
-                {/* Dynamic Characteristics Filter Button */}
-                <button
-                  type="button"
-                  className={`characteristics-filter-btn ${activeFiltersCount > 0 ? 'has-active' : ''}`}
-                  onClick={() => setIsFacetModalOpen(true)}
-                  title="Filtrar por marca, grão, bitola, amperagem, etc."
-                >
-                  <span className="material-symbols-outlined">tune</span>
-                  <span>Filtros</span>
-                  {activeFiltersCount > 0 && (
-                    <span className="filter-count-badge">{activeFiltersCount}</span>
-                  )}
-                </button>
-
-                {/* Quick Availability Switch */}
-                <label className="toggle-availability-label">
-                  <input
-                    type="checkbox"
-                    checked={apenasDisponiveis}
-                    onChange={(e) => setApenasDisponiveis(e.target.checked)}
-                    className="toggle-checkbox"
-                  />
-                  <span className="toggle-custom-slider"></span>
-                  <span className="toggle-text">Apenas disponíveis hoje</span>
-                </label>
-              </div>
-
-              <button
-                type="button"
-                className="view-all-sectors-btn"
-                onClick={() => setIsSectorsDrawerOpen(true)}
-              >
-                <span className="material-symbols-outlined">menu_open</span>
-                <span>Todos os Setores</span>
-              </button>
-            </div>
-
-            {/* Active Filter Chips Row */}
-            <ActiveFilterChips
-              selectedAtributos={selectedAtributos}
-              facetas={facetas}
-              apenasDisponiveis={apenasDisponiveis}
-              onToggleDisponiveis={setApenasDisponiveis}
-              onRemoveAtributo={handleRemoveAtributo}
-              onClearAll={handleClearAllFilters}
+            {/* Featured Promotional Banner */}
+            <PromoBanner
+              onExplore={() => {
+                handleSelectSecao('Iluminação')
+                showToast('Exibindo novidades do setor de Iluminação!')
+              }}
             />
           </div>
-
-          {isLoadingProdutos ? (
-            <div className="products-grid">
-              {[1, 2, 3, 4, 5, 6].map((idx) => (
-                <div key={idx} className="product-card-skeleton">
-                  <div className="skeleton-visual"></div>
-                  <div className="skeleton-body">
-                    <div className="skeleton-line title"></div>
-                    <div className="skeleton-line text"></div>
-                    <div className="skeleton-line short"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : produtos.length === 0 ? (
-            <div className="empty-catalog-state">
-              <span className="material-symbols-outlined empty-icon">search_off</span>
-              <h3 className="empty-title">Nenhum produto encontrado</h3>
-              <p className="empty-desc">
-                Não encontramos itens para a combinação de filtros selecionada{' '}
-                {selectedSecao !== 'todos' && <strong>em {selectedSecao}</strong>}
-                {searchQuery && <span> com o termo "<em>{searchQuery}</em>"</span>}.
-              </p>
-              <div className="empty-actions">
-                {activeFiltersCount > 0 && (
-                  <button
-                    type="button"
-                    className="empty-action-btn primary"
-                    onClick={handleClearAllFilters}
-                  >
-                    Limpar características e filtros
-                  </button>
-                )}
-                {selectedSecao !== 'todos' && (
-                  <button
-                    type="button"
-                    className="empty-action-btn"
-                    onClick={() => handleSelectSecao('todos')}
-                  >
-                    Ver todas as seções
-                  </button>
-                )}
-                {searchQuery && (
-                  <button
-                    type="button"
-                    className="empty-action-btn"
-                    onClick={() => setSearchQuery('')}
-                  >
-                    Limpar pesquisa
-                  </button>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="products-grid">
-              {produtos.map((prod) => (
-                <ProductCard
-                  key={prod.id || prod.sku}
-                  product={prod}
-                  onAddToCart={handleAddToCart}
-                  onNavigateToProduct={handleNavigateToProduct}
-                  onViewDetails={(product) => setSelectedProductForDetail(product)}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Bento Grid Actions (Atalhos Rápidos) */}
-        <BentoActions
-          currentSectorName={selectedSecao !== 'todos' ? selectedSecao : 'Iluminação'}
-          onViewProducts={() => {
-            if (selectedSecao === 'todos') {
-              handleSelectSecao('Iluminação')
-            } else {
-              handleSelectSecao(selectedSecao)
-            }
-          }}
-          onCallSpecialist={handleCallSpecialist}
-          onViewMap={handleOpenMap}
-        />
-
-        {/* Featured Promotional Banner */}
-        <PromoBanner
-          onExplore={() => {
-            handleSelectSecao('Iluminação')
-            showToast('Exibindo novidades do setor de Iluminação inteligente!')
-          }}
-        />
+        ) : (
+          /* ========================================================
+             2. SEARCH & CATALOG RESULTS VIEW (Dedicated results page)
+             ======================================================== */
+          <CatalogSearchPage
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            onBackToHome={handleBackToHome}
+            secoes={secoes}
+            selectedSecao={selectedSecao}
+            onSelectSecao={handleSelectSecao}
+            totalProductsCount={totalProductsCount}
+            produtos={produtos}
+            isLoadingProdutos={isLoadingProdutos}
+            apenasDisponiveis={apenasDisponiveis}
+            setApenasDisponiveis={setApenasDisponiveis}
+            activeFiltersCount={activeFiltersCount}
+            onOpenFacetModal={() => setIsFacetModalOpen(true)}
+            selectedAtributos={selectedAtributos}
+            facetas={facetas}
+            onRemoveAtributo={handleRemoveAtributo}
+            onClearAllFilters={handleClearAllFilters}
+            onOpenSectorsDrawer={() => setIsSectorsDrawerOpen(true)}
+            onAddToCart={handleAddToCart}
+            onNavigateToProduct={handleNavigateToProduct}
+            onViewProductDetails={(product) => setSelectedProductForDetail(product)}
+            autoFocusSearch={autoFocusSearch}
+          />
+        )}
       </main>
 
       {/* Bottom Navigation for Mobile */}

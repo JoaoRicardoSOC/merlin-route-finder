@@ -138,93 +138,126 @@
 }
 
 /* --------------------------------------------------------------------------
-   Location Status Chip (Centered Mobile Card)
+   Modern Minimalist Location Status Card
    -------------------------------------------------------------------------- */
-.location-chip-card {
-  background-color: var(--surface-container-low);
-  border: 1px solid var(--outline-variant);
+.modern-location-status-card {
+  background: linear-gradient(135deg, rgba(0, 107, 39, 0.04) 0%, rgba(0, 107, 39, 0.09) 100%);
+  border: 1px solid rgba(0, 107, 39, 0.18);
   border-radius: var(--radius-lg);
-  padding: 14px 16px;
+  padding: 10px 16px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
   gap: 12px;
-  margin: 0 auto 28px auto;
+  margin: 0 auto 20px auto;
   width: 100%;
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(0, 107, 39, 0.06);
+  transition: all var(--transition-fast);
+  cursor: pointer;
 }
 
-.location-chip-card:active {
+.modern-location-status-card:hover {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, rgba(0, 107, 39, 0.07) 0%, rgba(0, 107, 39, 0.13) 100%);
+  transform: translateY(-1px);
+}
+
+.modern-location-status-card:active {
   transform: scale(0.99);
 }
 
-.location-icon-wrapper {
-  background-color: var(--primary-container);
-  color: var(--on-primary-container);
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-full);
+/* Pulsing beacon dot */
+.modern-location-beacon {
+  position: relative;
+  width: 12px;
+  height: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 107, 39, 0.2);
 }
 
-.location-info {
+.beacon-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--primary);
+  border-radius: var(--radius-full);
+  z-index: 2;
+}
+
+.beacon-ping {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background-color: var(--primary);
+  border-radius: var(--radius-full);
+  opacity: 0.4;
+  animation: beaconPulse 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes beaconPulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.modern-location-content {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  text-align: left;
+  gap: 1px;
 }
 
-.location-label {
-  display: block;
+.modern-location-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modern-location-label {
   font-family: var(--font-label);
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: var(--text-muted);
-  margin-bottom: 2px;
 }
 
-.location-value {
-  font-family: var(--font-headline);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--primary);
-  line-height: 1.3;
-}
-
-.aisle-badge {
-  font-weight: 600;
-  color: var(--on-surface-variant);
-  display: inline-block;
-}
-
-.location-change-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  min-height: 38px;
-  padding: 8px 16px;
-  background-color: var(--surface);
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--radius-md);
-  color: var(--primary);
+.modern-plate-tag {
   font-family: var(--font-label);
-  font-size: 13px;
-  font-weight: 600;
-  transition: all var(--transition-fast);
+  font-size: 10.5px;
+  font-weight: 750;
+  color: var(--primary);
+  background-color: rgba(0, 107, 39, 0.12);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.02em;
 }
 
-.location-change-btn:active {
-  background-color: var(--primary-light);
-  border-color: var(--primary);
+.modern-location-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-headline);
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--on-surface);
+}
+
+.modern-pin-icon {
+  font-size: 16px;
+  color: var(--primary);
+}
+
+.modern-coords-tag {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
 }
 
 /* --------------------------------------------------------------------------
@@ -3978,5 +4011,304 @@
     border-radius: var(--radius-lg);
     max-width: 540px;
     animation: scaleUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+/* ==========================================================================
+   FEATURE: HOME MINIMALIST BENTO GRID & DEDICATED SEARCH PAGE
+   ========================================================================== */
+
+.animate-fade-in {
+  animation: fadeInFast 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInFast {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Home Minimalist Bento Grid */
+.home-bento-section {
+  margin: 16px 0 24px 0;
+  width: 100%;
+}
+
+.home-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.bento-card-green {
+  background: linear-gradient(135deg, rgba(0, 107, 39, 0.04) 0%, rgba(0, 107, 39, 0.08) 100%);
+  border: 1.5px solid rgba(0, 107, 39, 0.16);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-medium);
+  min-height: 125px;
+  position: relative;
+  overflow: hidden;
+}
+
+.bento-card-green:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  background: linear-gradient(135deg, rgba(0, 107, 39, 0.08) 0%, rgba(0, 107, 39, 0.14) 100%);
+  box-shadow: 0 4px 14px rgba(0, 107, 39, 0.12);
+}
+
+.bento-card-green:active {
+  transform: scale(0.97);
+}
+
+.bento-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.bento-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background-color: var(--primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 107, 39, 0.25);
+}
+
+.bento-icon-box .material-symbols-outlined {
+  font-size: 22px;
+}
+
+.bento-arrow {
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  transition: transform var(--transition-fast);
+}
+
+.bento-card-green:hover .bento-arrow {
+  transform: translateX(3px);
+}
+
+.bento-badge-tag {
+  font-family: var(--font-label);
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  background-color: var(--primary);
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.bento-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bento-card-title {
+  font-family: var(--font-headline);
+  font-size: 14.5px;
+  font-weight: 750;
+  color: var(--on-surface);
+  line-height: 1.25;
+}
+
+.bento-card-desc {
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Dedicated Search Page View */
+.search-page-view {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 40px;
+}
+
+.search-page-top-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background-color: var(--surface);
+  padding: 4px 0 10px 0;
+  position: sticky;
+  top: 60px;
+  z-index: 40;
+}
+
+.search-back-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--surface-container-high);
+  color: var(--on-surface);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.search-back-btn:hover {
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.search-back-btn:active {
+  transform: scale(0.92);
+}
+
+.search-page-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  position: relative;
+  background-color: var(--surface-container-low);
+  border: 1.5px solid var(--outline);
+  border-radius: var(--radius-full);
+  padding: 0 14px;
+  transition: all var(--transition-fast);
+}
+
+.search-page-input-wrap:focus-within {
+  border-color: var(--primary);
+  background-color: var(--surface);
+  box-shadow: 0 0 0 3px rgba(0, 107, 39, 0.12);
+}
+
+.search-input-icon {
+  color: var(--primary);
+  font-size: 20px;
+  margin-right: 8px;
+}
+
+.search-page-input {
+  flex: 1;
+  height: 42px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--on-surface);
+  outline: none;
+}
+
+.search-page-clear-btn {
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.search-page-clear-btn:hover {
+  color: var(--on-surface);
+}
+
+.search-page-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.search-results-info-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0 2px 0;
+}
+
+.search-results-heading {
+  font-family: var(--font-headline);
+  font-size: 16.5px;
+  font-weight: 750;
+  color: var(--on-surface);
+}
+
+/* ==========================================================================
+   SMOOTH GLIDE TRANSITION FOR SEARCH BAR (HOME -> TOP)
+   ========================================================================== */
+
+/* Gliding state on home */
+.home-view-container.is-transitioning .welcome-section,
+.home-view-container.is-transitioning .modern-location-status-card,
+.home-view-container.is-transitioning .home-bento-section,
+.home-view-container.is-transitioning .promo-banner {
+  opacity: 0.2;
+  transform: translateY(10px) scale(0.98);
+  transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.search-bar-gliding {
+  transform: translateY(-80px) scale(0.98);
+  opacity: 0.95;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+  pointer-events: none;
+}
+
+/* Search bar arriving smoothly at the top */
+.search-bar-glided-top {
+  animation: searchArriveTop 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes searchArriveTop {
+  0% {
+    transform: translateY(60px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Search results content rising smoothly right beneath the search bar */
+.search-results-content-appear {
+  animation: searchContentRise 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes searchContentRise {
+  0% {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  60% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (min-width: 768px) {
+  .home-bento-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
