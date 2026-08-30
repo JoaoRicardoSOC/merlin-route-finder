@@ -383,6 +383,8 @@ O trabalho de **avisar quando a loja não responde** saiu da lista em 30/08, e e
 
 O que os restantes têm em comum continua sendo que **o backend já entrega a informação certa** — falta a tela usá-la em vez de repassar o erro cru.
 
+Os oito viraram cards em [`backlog-fechamento.md`](backlog-fechamento.md), no bloco `[FRONTEND]`, cada um com o que fazer e como verificar.
+
 **A forma do erro é sempre a mesma.** Auditado por teste em 25/08/2026: todo erro da API — de 400 a 500, em qualquer endpoint — devolve os mesmos seis campos, com `status` repetido no corpo, o `path` que falhou, e **nunca detalhe interno**. Um tratamento só resolve todos.
 
 > **Decida pelo `status`, não pelo texto de `error`.** O status é contrato; o texto é para humano ler e pode ser reescrito.

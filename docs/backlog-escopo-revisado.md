@@ -24,7 +24,9 @@
 > | G-1/G-2 | a tela para de afirmar coisas que não acontecem — dois botões mortos e cinco textos removidos |
 > | — | o chat para de fabricar a resposta da IA e os produtos dela |
 >
-> **O que continua na fila**, em ordem: apagar o catálogo inventado do frontend, a paginação (61 dos 111 produtos fora de alcance na visão "Todos"), e os nove acabamentos de tela em [`quebras-de-fluxo.md`](quebras-de-fluxo.md).
+> **Os dois primeiros da fila caíram em 30/08:** o catálogo inventado do frontend foi apagado e o catálogo passou a paginar, alcançando os 111 produtos.
+>
+> **Tudo que resta, de todas as áreas, está em [`backlog-fechamento.md`](backlog-fechamento.md)** — cards prontos para o Trello, com verificação própria.
 
 ---
 

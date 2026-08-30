@@ -6,6 +6,8 @@
 >
 > Cada item traz: **o quê**, **por que importa**, **de quem é** e o **prazo** que o pressiona, quando há.
 >
+> **Para executar**, e não só entender: [`backlog-fechamento.md`](backlog-fechamento.md) transforma tudo que está aberto aqui — mais o que não é observação, como a publicação do frontend e o vídeo — em cards prontos para o Trello.
+>
 > Última atualização: **30/08/2026** — depois de reauditar as pendências de tela contra o frontend, que não existia quando a maioria destes itens foi escrita.
 
 ---
@@ -22,6 +24,7 @@
 | [O-08](#o-08-o-der-não-tem-a-tabela-de-registro-de-ruptura) | DER desatualizado | Vicentini | **Alta** |
 | [O-24](#o-24-os-diagramas-da-sprint-1-desenham-o-produto-que-a-mentoria-derrubou) | Diagramas desenham totem, handoff e rota | Vicentini e time | **Alta — antes da banca** |
 | [O-29](#o-29-duas-pastas-de-documentação-estão-vazias-desde-o-primeiro-dia) | `docs/arquitetura` e `docs/casos_de_uso` vazias | Time | Baixa |
+| [O-30](#o-30-a-sessão-duplicada-na-abertura-é-do-strictmode-e-só-em-desenvolvimento) | Sessão duplicada é do StrictMode, **não é defeito** | — | esclarecida |
 | [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | Tela de código manual e arte da placa | Bielecky, Marcela e time | Alta |
 | [O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens) | Coletar as imagens dos produtos | Time | Média |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
@@ -446,6 +449,27 @@ O que existe no lugar de proteção: marcação explícita como `[Demonstracao]`
 **Duas saídas, e as duas servem:** apagar as pastas, ou pôr em cada uma um arquivo curto apontando para onde o assunto está documentado. A segunda é melhor para quem chega procurando pelo nome da pasta.
 
 **De quem.** Time.
+
+---
+
+### O-30. A sessão duplicada na abertura é do StrictMode, e só em desenvolvimento
+
+**O quê.** Fica registrado para ninguém reabrir: **abrir o app não cria duas sessões em produção.** Cria uma.
+
+**Por que este item existe.** A observação circulou duas vezes como defeito grave — "cada abertura do app cria duas sessões, e a órfã fica no banco de demonstração". **É falso**, e a correção veio de medir a build de produção em vez da de desenvolvimento.
+
+**O que foi medido em 30/08/2026**, servindo o `dist` na mesma porta e repetindo o teste:
+
+| Cenário | Desenvolvimento | Produção |
+|---|---|---|
+| Primeira abertura, armazenamento limpo | 2 × `POST /sessoes` | **1 × `POST`** |
+| Recarga com sessão guardada | trio de `GET` repetido 4× | **1 `GET` sessão + 1 `GET` roteiro** |
+
+**A causa é o React StrictMode**, que invoca cada efeito duas vezes **apenas em desenvolvimento**, de propósito, para revelar efeitos não idempotentes. A demonstração e o ambiente publicado rodam a build de produção, onde isso não acontece.
+
+**Por que não pôr uma guarda para silenciar.** Seria trocar um custo pequeno por perder um sinal: o StrictMode existe justamente para denunciar efeito que cria recurso. O custo real — cada recarga em desenvolvimento gasta duas sessões no schema compartilhado — já está coberto pela [O-20](#o-20-rodar-a-suíte-deixa-um-resto-de-sessões-no-banco-de-demonstração), que manda limpar antes da banca.
+
+**Lição de método, e é o motivo de isto ficar escrito.** A versão de 28/08 deste registro trazia a ressalva certa — *"a compilação de produção não faria isso"*. Ela foi **perdida numa reescrita** e o item voltou à lista como grave. Medir de novo antes de planejar é o que impediu o card de existir.
 
 ---
 
