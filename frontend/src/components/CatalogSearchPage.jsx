@@ -11,6 +11,9 @@ export default function CatalogSearchPage({
   onSelectSecao,
   totalProductsCount,
   produtos = [],
+  totalDeProdutos = 0,
+  onCarregarMais,
+  isCarregandoMais = false,
   isLoadingProdutos,
   falhaAoCarregar = false,
   onTentarNovamente,
@@ -29,6 +32,13 @@ export default function CatalogSearchPage({
   autoFocusSearch = false
 }) {
   const searchInputRef = useRef(null)
+
+  /*
+   * Lê o que está na tela contra o total do recorte, e não a página contra o total de páginas.
+   * Se uma resposta vier menor que o esperado, o botão some sozinho em vez de prometer uma
+   * página que não existe.
+   */
+  const temMaisParaCarregar = produtos.length > 0 && produtos.length < totalDeProdutos
 
   // Ensure persistent focus upon arrival and cursor positioning at the end
   useEffect(() => {
@@ -180,8 +190,12 @@ export default function CatalogSearchPage({
               ? 'Todos os Produtos'
               : `Produtos de ${selectedSecao}`}
           </h2>
+          {/* O "de" só aparece quando há mais do que está na tela: com tudo carregado,
+              "111 de 111" seria ruído. */}
           <span className="products-count-badge">
-            {produtos.length} {produtos.length === 1 ? 'item' : 'itens'}
+            {temMaisParaCarregar
+              ? `${produtos.length} de ${totalDeProdutos} itens`
+              : `${produtos.length} ${produtos.length === 1 ? 'item' : 'itens'}`}
           </span>
         </div>
 
@@ -272,6 +286,21 @@ export default function CatalogSearchPage({
                 onViewDetails={onViewProductDetails}
               />
             ))}
+          </div>
+        )}
+
+        {temMaisParaCarregar && !isLoadingProdutos && (
+          <div className="carregar-mais">
+            <button
+              type="button"
+              className="empty-action-btn"
+              onClick={onCarregarMais}
+              disabled={isCarregandoMais}
+            >
+              {isCarregandoMais
+                ? 'Carregando…'
+                : `Carregar mais (${totalDeProdutos - produtos.length} restantes)`}
+            </button>
           </div>
         )}
       </div>

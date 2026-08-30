@@ -2422,6 +2422,14 @@
   margin-bottom: 18px;
 }
 
+/* Botão de carregar a próxima página do catálogo. Regra própria em vez de reusar
+   .empty-actions: o nome diria a coisa errada num estado que não está vazio. */
+.carregar-mais {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
 .empty-actions {
   display: flex;
   gap: 10px;

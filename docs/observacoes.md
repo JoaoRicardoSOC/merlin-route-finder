@@ -18,7 +18,6 @@
 | [O-02](#o-02-senha-do-oracle-passou-por-canal-de-conversa) | Senha do Oracle exposta | João Ricardo | Média |
 | [O-05](#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição) | Botão de ruptura sem trava — **medido, continua aberto** | Frontend | Alta |
 | [O-26](#o-26-o-convite-do-mapa-vazio-promete-uma-rota-que-não-existe) | Texto do mapa promete rota calculada | Frontend | Média |
-| [O-28](#o-28-a-visão-todos-do-catálogo-não-pagina) | Catálogo sem paginação: 61 de 111 inalcançáveis | Frontend | Alta |
 | [O-06](#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar) | Retomar a sessão pelo `localStorage` | Bielecky e Marcela | Alta |
 | [O-08](#o-08-o-der-não-tem-a-tabela-de-registro-de-ruptura) | DER desatualizado | Vicentini | **Alta** |
 | [O-24](#o-24-os-diagramas-da-sprint-1-desenham-o-produto-que-a-mentoria-derrubou) | Diagramas desenham totem, handoff e rota | Vicentini e time | **Alta — antes da banca** |
@@ -35,7 +34,7 @@
 | [O-12](#o-12-o-raio-de-busca-da-ruptura-é-um-palpite-informado--agora-medido) | Raio de 25 unidades — medido | — | aceita |
 | [O-15](#o-15-o-endpoint-de-simulação-de-estoque-não-tem-proteção-nenhuma) | Simulação de estoque sem proteção | — | aceita |
 
-**Encerradas:** [O-03](#o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado) (deploy no ar) · [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela) (selo da ruptura) · [O-27](#o-27-as-22-imagens-coletadas-não-têm-para-onde-ir--medição-errada-o-mecanismo-já-existia) (imagens já aplicadas) · [O-25](#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai--apagado) (catálogo inventado apagado) · [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar--sem-objeto) · [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado--sem-objeto) · [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo) · [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) · [O-16](#o-16-o-token-continua-na-url-do-pwa--a-preocupação-deixou-de-existir)
+**Encerradas:** [O-03](#o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado) (deploy no ar) · [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela) (selo da ruptura) · [O-27](#o-27-as-22-imagens-coletadas-não-têm-para-onde-ir--medição-errada-o-mecanismo-já-existia) (imagens já aplicadas) · [O-25](#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai--apagado) (catálogo inventado apagado) · [O-28](#o-28-a-visão-todos-do-catálogo-não-pagina--os-111-passaram-a-ser-alcançáveis) (catálogo pagina) · [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar--sem-objeto) · [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado--sem-objeto) · [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo) · [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) · [O-16](#o-16-o-token-continua-na-url-do-pwa--a-preocupação-deixou-de-existir)
 
 ---
 
@@ -232,7 +231,23 @@ Cinco textos assim já saíram da tela no card de honestidade de 28/08. Este pas
 
 ---
 
-### O-28. A visão "Todos" do catálogo não pagina
+### O-28. ~~A visão "Todos" do catálogo não pagina~~ — os 111 passaram a ser alcançáveis
+
+> [!NOTE]
+> **Encerrada em 30/08/2026.** Entrou "Carregar mais" abaixo da grade, e os três contadores passaram a dizer a verdade.
+>
+> **Medido no navegador, com o backend real:**
+>
+> | | Antes | Depois |
+> |---|---|---|
+> | Produtos alcançáveis em "Todos" | 50 | **111**, em dois toques |
+> | Selo acima da grade | `50 itens` | `50 de 111` → `100 de 111` → `111 itens` |
+> | Botão do modal de filtros | `Ver 50 produtos` | `Ver 111 produtos` |
+> | Repetidos ao paginar | — | **nenhum**: 111 cartões, 111 nomes distintos |
+>
+> **A guarda de corrida foi testada de propósito:** pedir mais e trocar de seção no mesmo instante deixa só os itens da seção nova. Ver [D-78](decisoes-tecnicas.md#d-78-paginação-com-duas-funções-separadas-e-botão-em-vez-de-rolagem-infinita).
+>
+> **Fica um ajuste possível, com outra medição:** o tamanho da página continua 50, e baixá-lo para 20 aliviaria os 2,4 s de abertura da [O-22](#o-22-a-tela-inicial-do-catálogo-leva-24-segundos-no-ambiente-publicado). Não foi feito aqui porque é outra decisão.
 
 **O quê.** A tela de catálogo carrega uma página só. Com 111 produtos, **61 não são alcançáveis** sem usar filtro ou busca.
 

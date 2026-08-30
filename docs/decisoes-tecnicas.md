@@ -43,6 +43,7 @@
 - [D-75. A tela não fabrica resposta da IA quando não consegue perguntar](#d-75-a-tela-não-fabrica-resposta-da-ia-quando-não-consegue-perguntar)
 - [D-76. O cartão de produto no chat exige que a IA tenha escrito o nome](#d-76-o-cartão-de-produto-no-chat-exige-que-a-ia-tenha-escrito-o-nome)
 - [D-77. O catálogo lança quando não consegue perguntar, e a tela distingue isso de "não há"](#d-77-o-catálogo-lança-quando-não-consegue-perguntar-e-a-tela-distingue-isso-de-não-há)
+- [D-78. Paginação com duas funções separadas, e botão em vez de rolagem infinita](#d-78-paginação-com-duas-funções-separadas-e-botão-em-vez-de-rolagem-infinita)
 
 **Persistência**
 - [D-10. Entidades JPA espelho, separadas das de domínio](#d-10-entidades-jpa-espelho-separadas-das-de-domínio)
@@ -1914,6 +1915,42 @@ O custo foi baixo porque os quatro pontos de chamada já tinham `try/catch` — 
 **O que morreu junto.** Uma implementação de distância de Levenshtein de 28 linhas, que existia só para o filtro local — e que estava declarada **dentro do bloco `catch`** de `fetchProdutos`. O arquivo caiu de 383 para 120 linhas.
 
 **Onde no código.** `frontend/src/services/catalogService.js`, `frontend/src/App.jsx`, `frontend/src/components/CatalogSearchPage.jsx`, `frontend/src/components/SectorsPage.jsx`.
+
+---
+
+### D-78. Paginação com duas funções separadas, e botão em vez de rolagem infinita
+
+**O problema.** A tela pedia uma página de 50 produtos e parava ali. Com 111 no catálogo, **61 não tinham como aparecer** sem o cliente adivinhar um termo de busca ou entrar numa seção — e os que ficavam de fora começavam no "J", por ordem alfabética. O backend já devolvia `totalElements`, `totalPages` e `page` na mesma resposta; a tela lia `content` e descartava o resto.
+
+Junto vinham dois contadores errados: o selo acima da grade dizia "50 itens" e o botão do modal de filtros, "Ver 50 produtos".
+
+**Decisão 1: duas funções, não uma com a página nas dependências.**
+
+`loadProdutos` continua trazendo a **página 0 e substituindo** a lista, com o debounce de 200 ms de sempre. `carregarMaisProdutos` traz a **próxima e acrescenta**, sem debounce.
+
+A alternativa óbvia era pôr a página nas dependências do `useCallback` existente. Ela foi descartada porque mistura duas intenções que não são a mesma: *"mudei o que procuro"* precisa reiniciar do começo, e *"quero ver mais"* precisa continuar de onde parou. No mesmo caminho, tocar em "carregar mais" passaria pelo debounce da busca, e trocar de seção competiria com a paginação pelo mesmo estado.
+
+**Decisão 2: uma guarda de sequência, porque o `append` é perigoso.**
+
+Substituir uma lista é idempotente; **acrescentar não é**. Se o cliente troca de seção enquanto uma página está em voo, a resposta antiga chegaria depois e seria acrescentada ao recorte novo — misturando duas listas sem nenhum erro aparecer.
+
+Um contador em `useRef` incrementado a cada busca resolve: a resposta só escreve no estado se o número dela ainda for o corrente. **Verificado no navegador**: pedir mais e trocar para Jardim no mesmo instante deixa exatamente os 11 itens de Jardim, sem contaminação.
+
+**Decisão 3: o botão aparece por `produtos.length < totalElements`, não por `page < totalPages`.**
+
+A primeira condição lê o que está **na tela** contra o total do recorte; a segunda lê o que se **supõe** ter sido carregado. Se uma resposta vier menor que o pedido, a segunda prometeria uma página que não existe — a primeira faz o botão sumir sozinho.
+
+**Decisão 4: botão, e não rolagem infinita.** As duas resolveriam. O botão ganhou por razões deste projeto, não por serem melhores em geral:
+
+- **a banca precisa ver.** Um toque que muda o selo de "50 de 111" para "100 de 111" é prova visível de que o catálogo é grande; rolagem infinita carrega em silêncio e, no vídeo, não se distingue de uma lista curta;
+- **é narrável** durante a apresentação;
+- **é testável sem observador de interseção**, e não cria a necessidade de um "voltar ao topo".
+
+A paginação em si é o que este card monta. O gatilho é trocável depois, sobre a mesma base.
+
+**Detalhe do texto.** O selo só diz "de" quando há mais do que está na tela: com tudo carregado, "111 de 111" seria ruído, e vira "111 itens".
+
+**Onde no código.** `frontend/src/App.jsx`, `frontend/src/components/CatalogSearchPage.jsx`.
 
 ---
 

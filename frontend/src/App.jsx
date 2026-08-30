@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import Header from './components/Header'
 import LocationStatus from './components/LocationStatus'
 import SearchBar from './components/SearchBar'
@@ -78,6 +78,20 @@ function App() {
    */
   const [falhaSecoes, setFalhaSecoes] = useState(false)
   const [falhaProdutos, setFalhaProdutos] = useState(false)
+
+  /*
+   * Paginação do catálogo. `totalDeProdutos` é o total do recorte atual — não o que está na
+   * tela —, e é ele que decide se ainda há o que carregar.
+   */
+  const [paginaAtual, setPaginaAtual] = useState(0)
+  const [totalDeProdutos, setTotalDeProdutos] = useState(0)
+  const [isCarregandoMais, setIsCarregandoMais] = useState(false)
+  /*
+   * Guarda contra resposta atrasada: se o cliente troca de filtro enquanto uma página está em
+   * voo, a resposta antiga chegaria e seria acrescentada à lista nova. Só a busca corrente
+   * pode escrever no estado.
+   */
+  const buscaCorrente = useRef(0)
 
   // Roteiro / Cart items state
   const [roteiroItems, setRoteiroItems] = useState([])
@@ -186,8 +200,15 @@ function App() {
     return () => { isMounted = false }
   }, [])
 
+  const TAMANHO_DA_PAGINA = 50
+
   // 3. Load products based on sector, query, availability and dynamic attribute facets (UC-002 / Passo 5)
+  /*
+   * Busca a PRIMEIRA página e substitui a lista. É o caminho de "mudei o que procuro", e roda
+   * com debounce a cada mudança de filtro. Ver `carregarMaisProdutos` para o outro caminho.
+   */
   const loadProdutos = useCallback(async () => {
+    const daBusca = ++buscaCorrente.current
     setIsLoadingProdutos(true)
     try {
       const response = await fetchProdutos({
@@ -196,22 +217,62 @@ function App() {
         apenasDisponiveis: apenasDisponiveis,
         atributos: selectedAtributos,
         page: 0,
-        size: 50
+        size: TAMANHO_DA_PAGINA
       })
+      if (daBusca !== buscaCorrente.current) return
       setProdutos(response.content || [])
       setFacetas(response.facetas || [])
+      setTotalDeProdutos(response.totalElements ?? (response.content || []).length)
+      setPaginaAtual(0)
       setFalhaProdutos(false)
     } catch (err) {
+      if (daBusca !== buscaCorrente.current) return
       console.error('Erro ao buscar produtos:', err)
       // Limpa a lista junto: manter o resultado anterior na tela depois de uma falha faria o
       // aviso de indisponibilidade conviver com produtos, e um dos dois estaria mentindo.
       setProdutos([])
       setFacetas([])
+      setTotalDeProdutos(0)
+      setPaginaAtual(0)
       setFalhaProdutos(true)
     } finally {
-      setIsLoadingProdutos(false)
+      if (daBusca === buscaCorrente.current) setIsLoadingProdutos(false)
     }
   }, [searchQuery, selectedSecao, apenasDisponiveis, selectedAtributos])
+
+  /*
+   * Busca a PRÓXIMA página e acrescenta. É o caminho de "quero ver mais", e não passa pelo
+   * debounce: é toque direto do cliente, e esperar 200 ms aqui seria só lentidão.
+   *
+   * Separado de `loadProdutos` de propósito. Pôr a página nas dependências dela faria as duas
+   * intenções competirem pelo mesmo caminho — trocar de seção e pedir mais itens não são a
+   * mesma coisa e não devem se atropelar.
+   */
+  const carregarMaisProdutos = useCallback(async () => {
+    const daBusca = buscaCorrente.current
+    const proxima = paginaAtual + 1
+    setIsCarregandoMais(true)
+    try {
+      const response = await fetchProdutos({
+        query: searchQuery,
+        secao: selectedSecao === 'todos' ? '' : selectedSecao,
+        apenasDisponiveis: apenasDisponiveis,
+        atributos: selectedAtributos,
+        page: proxima,
+        size: TAMANHO_DA_PAGINA
+      })
+      // O filtro mudou enquanto esta página vinha: a lista já é outra, e acrescentar aqui
+      // misturaria dois recortes.
+      if (daBusca !== buscaCorrente.current) return
+      setProdutos(anteriores => [...anteriores, ...(response.content || [])])
+      setTotalDeProdutos(response.totalElements ?? 0)
+      setPaginaAtual(proxima)
+    } catch (err) {
+      console.error('Erro ao carregar mais produtos:', err)
+    } finally {
+      setIsCarregandoMais(false)
+    }
+  }, [searchQuery, selectedSecao, apenasDisponiveis, selectedAtributos, paginaAtual])
 
   // Debounced search & filtering
   useEffect(() => {
@@ -649,6 +710,9 @@ function App() {
             onSelectSecao={handleSelectSecao}
             totalProductsCount={totalProductsCount}
             produtos={produtos}
+            totalDeProdutos={totalDeProdutos}
+            onCarregarMais={carregarMaisProdutos}
+            isCarregandoMais={isCarregandoMais}
             falhaAoCarregar={falhaProdutos}
             onTentarNovamente={loadProdutos}
             isLoadingProdutos={isLoadingProdutos}
@@ -710,7 +774,7 @@ function App() {
         onClearAtributos={handleClearAllFilters}
         apenasDisponiveis={apenasDisponiveis}
         onToggleDisponiveis={setApenasDisponiveis}
-        totalResultsCount={produtos.length}
+        totalResultsCount={totalDeProdutos}
       />
 
       {/* Roteiro / Shopping List Drawer */}
