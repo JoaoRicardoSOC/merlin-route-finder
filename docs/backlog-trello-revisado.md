@@ -2,6 +2,15 @@
 
 > Reescrita completa do backlog de backend (34 cards), organizada nas 4 fases definidas em [`planejamento-tecnico.md`](planejamento-tecnico.md), após a análise de cobertura de ponta a ponta feita em 17/08/2026. Cada card traz uma tag de status: **[NOVO]**, **[REESCRITO]**, **[MODIFICADO]** (descrição ajustada, título mantido) ou **[INALTERADO]** (descrição escrita aqui pela primeira vez, título e escopo mantidos). Prefixo `[BACKEND]` omitido abaixo por brevidade — manter ao colar no Trello.
 
+> [!IMPORTANT]
+> **Registro histórico, de 18/08/2026. Metade deste backlog descreve um produto que não existe.**
+>
+> **Fases 0 e 1** — entidades de domínio, mapeamento JPA, adaptadores, sessão, catálogo, roteiro e os endpoints REST correspondentes: **implementadas**, exceto os cards de handoff e do algoritmo de rota.
+>
+> **Fases 2 e 3** — **substituídas** por [`backlog-escopo-revisado.md`](backlog-escopo-revisado.md), escrito depois da mentoria de 24/08. Todo card que fale de **totem**, **handoff**, **JWT** ou **cálculo de rota** descreve funcionalidade que foi removida do sistema de propósito.
+>
+> **Fase 4** — o posicionamento autoral por bússola e acelerômetro continua reservado ao NEXT, e continua não construído.
+
 ## Fase 0 — Fundacional
 
 **Definição de Contrato de API (OpenAPI Specification 3.0) - Padrão API-First** `[INALTERADO]`

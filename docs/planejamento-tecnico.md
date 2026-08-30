@@ -2,6 +2,22 @@
 
 > Documento de registro do planejamento técnico do backend e da integração, realizado em 17/08/2026, na sequência do alinhamento de negócio registrado em [`contexto-e-planejamento.md`](contexto-e-planejamento.md). Escopo: João, Caio e Claude (backend/integração) — frontend fica com Bielecky/Marcela, banco com Vicentini.
 
+> [!IMPORTANT]
+> **Registro histórico, de 17/08/2026.** A estratégia de fases foi superada pela mentoria de 24/08; as decisões técnicas, não.
+>
+> **O que continua valendo — e quase tudo aqui se confirmou na prática:**
+>
+> - **Seção 2** — Google Gemini como LLM, e a **simulação animada da caminhada** como resposta à demo da banca. As duas seguem de pé.
+> - **Seção 4** — as convenções de arquitetura hexagonal e o desenho de pastas. É o backend que existe hoje, pasta por pasta.
+> - **Seção 5**, em quatro dos cinco pontos: a busca começou em `LIKE` e **evoluiu para `JARO_WINKLER_SIMILARITY` como previsto**; o agendador de TTL usa `@Scheduled`; o Gemini é chamado por `RestClient` com a chave em variável de ambiente; e o endpoint de simulação de estoque foi implementado.
+>
+> **O que caiu:**
+>
+> - **Seção 3 inteira** — as quatro fases foram desenhadas em torno do handoff e da rota calculada. O escopo vigente está em [`backlog-escopo-revisado.md`](backlog-escopo-revisado.md).
+> - **Seção 5**, no ponto do **JWT de handoff**: a biblioteca `jjwt` chegou a entrar e foi removida com o recurso.
+> - **Seção 6** — o roteiro de verificação passa por `handoff`/`validate`, endpoints que não existem mais.
+> - **Seção 7** — os "próximos passos" foram concluídos entre 18 e 25/08.
+
 ## 1. Contexto
 
 O fator decisivo do planejamento é o prazo: **13/09/2026** é o corte do vídeo "seletiva" (precisa mostrar um MVP funcionando) e a rubrica da Sprint 2 (25 pts) pesa quase tudo em "ter algo funcionando, usável, implantado e bem demonstrado" — não em sofisticação técnica (ver seção 7 de `contexto-e-planejamento.md`). O backlog atual no Trello (25 cards, listados na seção 6 do mesmo documento) foi escrito antes dessa análise e de forma isolada, então este planejamento prioriza e reagrupa esse trabalho em fases, resolve as decisões técnicas que estavam em aberto, e responde ao problema mais urgente: como demonstrar a navegação/rota na banca final (21/09), que é 100% online e sem acesso a uma loja real.

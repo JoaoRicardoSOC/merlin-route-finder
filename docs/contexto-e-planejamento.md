@@ -2,6 +2,29 @@
 
 > Documento de registro da etapa de alinhamento de contexto (negócio, equipe, metodologia e regras do Challenge) realizada em 17/08/2026, antes do início do planejamento técnico. Serve como fonte única de verdade para decisões já tomadas nesta fase.
 
+> [!IMPORTANT]
+> **Registro histórico, de 17/08/2026. Parte dele foi superada pela mentoria de 24/08.** Fica aqui inteiro, e não reescrito, porque o raciocínio que levou até aqui é parte da defesa do projeto — apagar faria parecer que nunca mudamos de ideia.
+>
+> **O que continua valendo, e não existe em nenhum outro lugar:**
+>
+> - **Seção 1** — o desafio da FIAP, as três dores mapeadas e os eixos de avaliação. Nada disso mudou.
+> - **Seção 5** — a equipe e a divisão de responsabilidades.
+> - **Seção 7** — os **prazos oficiais**, a **rubrica de 30 pontos** e a restrição de tecnologia da Fase 7. Esta é a **única fonte** desses dados no repositório.
+> - **Seção 4**, em três dos seis pontos: carrinho sem limite de itens, IA ancorada por *function calling* e escopo fechado do assistente. Os três foram implementados como previsto.
+>
+> **O que caiu, e onde está a verdade de hoje:**
+>
+> | Seção | O que dizia | Onde ler o que vale |
+> |---|---|---|
+> | 2 | jornada em dois aparelhos, com totem e handoff por QR | [`fluxo-do-cliente.md`](fluxo-do-cliente.md) |
+> | 3 | os diagramas da Sprint 1 como fonte de verdade | desenham o totem, o handoff e a rota — ver O-24 em [`observacoes.md`](observacoes.md) |
+> | 4 | refinamento 2-opt e *hardening* do token de handoff | o handoff não existe mais |
+> | 6 | backlog de 25 cards | substituído duas vezes: [`backlog-trello-revisado.md`](backlog-trello-revisado.md), depois [`backlog-escopo-revisado.md`](backlog-escopo-revisado.md) |
+> | 8 | demonstração da banca "em aberto" | **resolvida**: simulação animada dentro do próprio app |
+> | 9 | cinco perguntas em aberto | **todas respondidas** — Gemini como LLM, Jaro-Winkler na busca, uma credencial Oracle para o time, e a demo acima |
+>
+> O motivo das duas quedas de raiz — **sem totem** e **sem rota calculada** — está em [`fluxo-do-cliente.md`](fluxo-do-cliente.md) e na D-49 de [`decisoes-tecnicas.md`](decisoes-tecnicas.md#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada).
+
 ## 1. O desafio (FIAP Challenge 2026)
 
 **Empresa parceira:** Leroy Merlin — maior rede de varejo do Brasil em casa/construção/reforma/bricolagem. Lojas de até 10.000m², grande variedade de produtos técnicos, clientes com níveis de conhecimento muito distintos, forte dependência de vendedores especializados.
