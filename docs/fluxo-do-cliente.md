@@ -269,18 +269,22 @@ Esse segundo caminho não é detalhe: **o sistema tem um fluxo inteiro dedicado 
 
 ## Resumo das telas, para o frontend
 
+> **Atualizado em 30/08/2026.** Esta tabela pedia oito telas quando não existia nenhuma. **As oito existem.** O que a coluna de estado registra agora é o que foi verificado no navegador, contra o backend real.
+
 | # | Tela | Estado |
 |---|---|---|
-| 1 | Entrada pelo QR / carregamento | nova |
-| 2 | Home do catálogo, com busca e filtros | nova |
-| 3 | Detalhe do produto | nova |
-| 4 | Chat com o assistente | nova |
-| 5 | Lista de compras | nova |
-| 6 | **Mapa** | nova, e é o centro do produto |
-| 7 | Prateleira vazia e substituto | nova |
-| 8 | Encerramento | nova |
+| 1 | Entrada pelo QR / carregamento | **feita** — com plano B: digitar o código, e com exemplo do formato |
+| 2 | Home do catálogo, com busca e filtros | **feita** — facetas dinâmicas incluídas. Falta **paginação**: 61 dos 111 produtos não são alcançáveis na visão "Todos" |
+| 3 | Detalhe do produto | **feita** |
+| 4 | Chat com o assistente | **feita** — e desde 30/08 ela admite quando não consegue perguntar, em vez de inventar a resposta |
+| 5 | Lista de compras | **feita** — *local-first*, com coleta funcionando desde 28/08 |
+| 6 | **Mapa** | **feita** — e desde 28/08 deixa de apontar corredor errado quando não sabe onde o produto está |
+| 7 | Prateleira vazia e substituto | **feita** em 28/08 — era a última funcionalidade sem porta de entrada |
+| 8 | Encerramento | **feita** — reconhece o encerramento com itens pendentes sem cobrar |
 
-Mais a **navegação permanente** entre catálogo, lista, mapa e assistente, presente em todas elas.
+Mais a **navegação permanente** entre catálogo, lista, mapa e assistente, presente em todas elas — **feita**.
+
+**O que falta na tela** não é tela nova: são nove acabamentos, listados em [`quebras-de-fluxo.md`](quebras-de-fluxo.md), e o catálogo inventado que precisa sair antes de qualquer aviso de indisponibilidade fazer sentido.
 
 Nenhuma tela de totem, nenhuma tela de leitura de QR de transferência, nenhuma tela de rota.
 
@@ -328,4 +332,9 @@ Busca tolerante a erro de digitação, detalhe de produto, lista de compras sem 
 | 6 | Imagens dos produtos | **decidido: URLs públicas da Leroy**, coletadas manualmente pelo time a partir da lista de produtos da massa |
 | 7 | Avaliações de produto | **decidido: fora** — nota inventada custa credibilidade |
 
-O item 6 merece explicação: `ListaRoteiro`, `ItemRoteiro` e as rotas `/roteiro/...` foram batizados quando existia uma rota calculada. Sem ela, "roteiro" descreve algo que o sistema não faz mais. Renomear deixa o código honesto, mas atinge entidades, endpoints, contrato e testes — e o contrato é o que a dupla de frontend consome. **Se for feito, tem que ser antes de a integração começar.**
+**O item 2 merece explicação** — e ele venceu por circunstância: `ListaRoteiro`, `ItemRoteiro` e as rotas `/roteiro/...` foram batizados quando existia uma rota calculada. Sem ela, "roteiro" descreve algo que o sistema não faz mais. Renomear deixa o código honesto, mas atinge entidades, endpoints, contrato e testes — e o contrato é o que a dupla de frontend consome. **Se for feito, tem que ser antes de a integração começar.**
+
+> [!NOTE]
+> **Atualizado em 30/08/2026: o prazo passou.** A integração começou em 27/08 e está concluída — o frontend inteiro consome `/roteiro/...`. Renomear agora atinge entidades, endpoints, contrato, testes **e a tela**, a duas semanas do vídeo, sem mudar nada que o cliente veja.
+>
+> **A recomendação passa a ser não renomear**, e explicar na banca: o nome guarda a história do produto, e a história — a mentoria ter derrubado a rota calculada — é um dos pontos mais fortes que temos para contar.

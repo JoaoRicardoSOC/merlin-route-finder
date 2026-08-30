@@ -6,6 +6,26 @@
 >
 > **Cada card faz uma coisa só**, tem verificação própria e cabe num commit. A ordem importa onde está dito.
 
+> [!NOTE]
+> **Estado em 30/08/2026: os treze cards estão feitos**, entre 24 e 25/08, cada um com o seu commit e a sua verificação. Este documento fica como registro do que foi pedido e por quê.
+>
+> **O que veio depois deles não está aqui**, e foi mais do que os treze:
+>
+> **28/08 — cinco correções que só a integração com a tela revelou.** Os acentos que quebravam a ligação de 4 dos 10 cartões de setor; o corredor que a listagem não levava; a lixa da ruptura que nascia sem estoque; a busca que não comparava sem acento dos dois lados; e um 500 que devia ser 400.
+>
+> **28 a 30/08 — seis cards de frontend**, conduzidos por aqui porque nasceram da integração:
+>
+> | | O quê |
+> |---|---|
+> | B-1 | o roteiro guarda o id do servidor — sem isso, coletar e remover **nunca** saíam da tela |
+> | B-2 | **a tela da ruptura**, a única funcionalidade que não tinha porta de entrada |
+> | — | dois cortes de organização: uma função de formatar preço no lugar de oito cópias, e os metadados de setor fora da camada de serviço |
+> | B-3 | o mapa para de apontar o corredor errado, e passa a admitir que não sabe |
+> | G-1/G-2 | a tela para de afirmar coisas que não acontecem — dois botões mortos e cinco textos removidos |
+> | — | o chat para de fabricar a resposta da IA e os produtos dela |
+>
+> **O que continua na fila**, em ordem: apagar o catálogo inventado do frontend, a paginação (61 dos 111 produtos fora de alcance na visão "Todos"), e os nove acabamentos de tela em [`quebras-de-fluxo.md`](quebras-de-fluxo.md).
+
 ---
 
 ## Antes de tudo

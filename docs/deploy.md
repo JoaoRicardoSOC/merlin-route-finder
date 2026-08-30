@@ -142,7 +142,12 @@ Dois valores no painel do Render, sem recompilar nada:
 |---|---|
 | `CORS_ALLOWED_ORIGINS` | a URL do frontend, sem barra no fim — ex.: `https://merlin-route-finder.vercel.app` |
 
-Se Totem e Mobile forem publicados separadamente, `CORS_ALLOWED_ORIGINS` aceita as duas separadas por vírgula.
+`CORS_ALLOWED_ORIGINS` aceita várias origens separadas por vírgula, se houver mais de um endereço de frontend.
+
+> [!WARNING]
+> **Enquanto o frontend não estiver publicado, esta variável tem que continuar vazia.** Vazia, o backend cai no padrão do `application.yml`, que libera `localhost:5173` — e é assim que o time desenvolve. Preencher com a URL de produção **antes** de haver produção derruba o ambiente local de todo mundo, com o sintoma clássico e enganoso: a API responde no Postman e o navegador bloqueia.
+>
+> Medido em 30/08: um servidor de desenvolvimento subiu na porta 5174 em vez da 5173 e todas as chamadas voltaram **403**. A causa foi a mesma — origem fora da lista.
 
 Salvar reinicia o serviço. **Este é o passo que fecha a integração** — antes dele o navegador bloqueia as chamadas do frontend, mesmo com a API respondendo normalmente.
 

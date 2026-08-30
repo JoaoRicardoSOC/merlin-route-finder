@@ -6,12 +6,16 @@
 >
 > Cada quebra traz: **o que acontece**, **o que o cliente vê** e **de quem é a solução**.
 >
-> **Auditado contra o código em 25/08/2026**, depois de os treze cards do escopo revisado ficarem prontos. Cada cenário abre com uma linha dizendo de quem ele é:
+> **Auditado duas vezes.** Em **25/08/2026** contra o backend, depois de os treze cards do escopo revisado ficarem prontos — e naquele momento **não existia frontend**, então tudo que dependia de tela ficou pendente por definição. Em **30/08/2026** contra o app que passou a existir: as quatorze pendências de tela foram abertas uma a uma no código.
+>
+> **Cinco já estavam resolvidas** e ninguém tinha registrado. As outras nove continuam abertas, agora com o que **já existe** anotado em cada uma — o que resta é menor do que a marcação sugeria.
+>
+> Cada cenário abre com uma linha dizendo de quem ele é:
 >
 > | | |
 > |---|---|
-> | ✅ | **resolvido no backend** — com a decisão e o teste que provam |
-> | 🎨 | **é do frontend** — o backend já entrega o que a tela precisa |
+> | ✅ | **resolvido** — com a decisão, o teste ou a tela que provam |
+> | 🎨 | **falta na tela** — o backend já entrega o que ela precisa |
 > | 🚫 | **não pode acontecer** — o esquema ou um teste impedem |
 > | 💬 | **decidido** — escolhemos não tratar, e o motivo está dito |
 
@@ -37,7 +41,13 @@ E o cenário é banal — o cliente monta quinze itens, recebe uma ligação, co
 
 ### 🎨 Loja de 10.000 m², paredes de concreto, e um produto que só funciona online
 
-> **Frontend.** Guardar lista e mapa no aparelho, avisar quando cair, enfileirar as marcações. O backend não muda — `GET /mapa` já é livre de sessão justamente para poder ser guardado.
+> **Frontend — uma das três saídas está pronta.** Reauditado em 30/08.
+>
+> - **Saída 2, guardar a lista no aparelho: feita.** O roteiro é *local-first* — grava no aparelho primeiro, e o servidor é espelho. Foi o que fez o app continuar funcionando quando derrubamos o backend de propósito.
+> - **Saída 1, avisar bem: pela metade.** O chat passou a admitir que não conseguiu falar com a loja (D-75). O resto da tela, não.
+> - **Saída 3, enfileirar as marcações: não feita.** `alternarColetaItem` grava local e ignora a resposta; o servidor fica para trás sem nada reenviar.
+>
+> **E apareceu um problema que a auditoria de 25/08 não tinha como prever:** quando a API não responde, o catálogo devolve **produtos inventados** em vez de avisar. É pior que o erro cru que este cenário queria evitar — ver [O-25](observacoes.md).
 
 Toda ação do cliente é uma chamada de rede: ver o mapa, marcar item, perguntar ao assistente. **No fundo de um corredor de materiais de construção, o sinal cai.**
 
@@ -81,7 +91,9 @@ A loja remanejou uma seção, o ponto saiu do banco, mas o adesivo continua na p
 
 ### 🎨 A sessão guardada no aparelho já expirou
 
-> **Frontend.** `GET /sessoes/{id}` já responde o status antes de qualquer escrita. Ver [O-06](observacoes.md#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar).
+> **Frontend — a mecânica está feita, a mensagem não.** Reauditado em 30/08. `obterOuCriarSessao` consulta a sessão guardada **antes** de usá-la e, se o status não for `ACTIVE`, cria outra (`sessionService.js:184`). Ninguém mais bate em erro na primeira ação.
+>
+> **Falta a frase.** A troca é silenciosa: a lista anterior desaparece e o cliente não fica sabendo por quê. É o "sua sessão anterior expirou" que este cenário pedia. Ver [O-06](observacoes.md#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar).
 
 **O que o cliente vê:** hoje, erro na primeira ação.
 
@@ -101,7 +113,9 @@ Está correto e já implementado ([D-41](decisoes-tecnicas.md#d-41-sessão-encer
 
 ### 🎨 Duas abas abertas na mesma sessão
 
-> **Frontend.** O banco está seguro e medido ([D-48](decisoes-tecnicas.md#d-48-gravar-pelo-agregado-é-seguro-aqui--e-a-investigação-que-provou-isso-depois-de-duas-hipóteses-erradas)); o que falta é recarregar a lista ao voltar para a aba.
+> **Frontend — aberta.** Reauditado em 30/08: não existe nenhum ouvinte de `visibilitychange` nem de `focus` no app. O banco continua seguro e medido ([D-48](decisoes-tecnicas.md#d-48-gravar-pelo-agregado-é-seguro-aqui--e-a-investigação-que-provou-isso-depois-de-duas-hipóteses-erradas)); as duas telas continuam discordando.
+>
+> **É a mesma causa** do cenário "marcar item que outra aba removeu", mais abaixo. Um ouvinte só resolve os dois.
 
 O cliente abre o link duas vezes sem perceber.
 
@@ -117,7 +131,9 @@ O cliente abre o link duas vezes sem perceber.
 
 ### 🎨 A busca não acha nada
 
-> **Frontend.** O backend devolve página vazia, como deve. A oportunidade é da tela: transformar o beco sem saída na porta de entrada do assistente.
+> **Frontend — o estado vazio existe; a porta para o assistente, não.** Reauditado em 30/08. `CatalogSearchPage.jsx:200` mostra o que foi procurado e em qual seção, e oferece três saídas: limpar filtros, ver todas as seções, limpar a busca. Nada de tela branca.
+>
+> **Falta exatamente o que este cenário queria:** nenhuma dessas saídas leva ao assistente. O beco deixou de ser sem saída, mas ainda não virou porta de entrada do recurso mais forte do sistema.
 
 Mesmo com a tolerância a erro de digitação, o cliente pode procurar algo que a loja não tem.
 
@@ -125,9 +141,11 @@ Mesmo com a tolerância a erro de digitação, o cliente pode procurar algo que 
 
 Transformar o beco sem saída na porta de entrada do recurso mais forte do sistema.
 
-### 🎨 O filtro devolve lista vazia
+### ✅ O filtro devolve lista vazia
 
-> **Frontend — e com uma ajuda que ele talvez não saiba que tem.** Junto da página vazia vêm as **facetas do recorte**: a tela pode mostrar exatamente quais filtros ainda têm resultado, em vez de só oferecer "limpar tudo" ([D-63](decisoes-tecnicas.md#d-63-as-facetas-ignoram-a-escolha-do-cliente-sobre-elas-mesmas)).
+> **Resolvido na tela.** Verificado em 30/08: `CatalogSearchPage.jsx:209` oferece "Limpar características e filtros" quando há filtro ativo, e "Ver todas as seções" quando o recorte é de seção. O cliente nunca fica sem saída, que era o que este cenário exigia.
+>
+> **Fica a oportunidade, não a pendência:** as **facetas do recorte** vêm na mesma resposta e permitiriam dizer *quais* filtros ainda têm resultado, em vez de só oferecer limpar ([D-63](decisoes-tecnicas.md#d-63-as-facetas-ignoram-a-escolha-do-cliente-sobre-elas-mesmas)). Melhoria, não correção.
 
 "Jardim" + "só disponíveis" pode não sobrar nada.
 
@@ -153,9 +171,11 @@ Já devolve `404` limpo, com JSON no formato de sempre. **O frontend precisa mos
 
 Implementado. E a resposta de indisponibilidade **não entra no histórico** — o assistente não deve "lembrar" de ter estado fora do ar.
 
-### 🎨 A resposta demora oito segundos
+### ✅ A resposta demora oito segundos
 
-> **Frontend.** Indicar que o assistente está pensando e **travar o campo** — o limite por minuto da cota gratuita torna isso proteção, não só estética ([O-01](observacoes.md#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada)).
+> **Resolvido na tela, inclusive na parte que protege a cota.** Verificado em 30/08 no `AIChatModal.jsx`: indicador de "pensando" enquanto espera (linha 322), campo e botão desabilitados por `disabled={isLoading}` (linhas 358 e 364), e `if (!text || isLoading) return` barrando o reenvio na origem (linha 133).
+>
+> As duas razões do cenário estão cobertas: o cliente vê que não travou, e um toque duplo não gasta duas chamadas da cota gratuita ([O-01](observacoes.md#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada)).
 
 Medido na instância publicada. Sem aviso, o cliente acha que travou e toca de novo.
 
@@ -169,7 +189,11 @@ Recusa educada em uma frase, e oferta de ajuda com o projeto dele. Está sob tes
 
 ### 🎨 A conexão cai no meio da pergunta
 
-> **Frontend.** O histórico com pergunta sem resposta está correto — é o que de fato aconteceu. Falta exibir isso com um botão de tentar de novo.
+> **Frontend — a conversa deixou de parecer corrompida; falta o botão.** Reauditado em 30/08. A pergunta não fica mais pendurada sozinha: quando a chamada não dá certo, o assistente responde que não conseguiu falar com a loja (D-75).
+>
+> **Antes disso havia coisa pior que uma conversa corrompida:** a tela **inventava** uma resposta e a assinava como sendo da IA, com corredores que não existem na nossa planta.
+>
+> **Falta o "tentar de novo".** Hoje o cliente precisa redigitar a pergunta.
 
 A pergunta já foi salva; a resposta não veio.
 
@@ -187,15 +211,21 @@ A pergunta já foi salva; a resposta não veio.
 
 Entre a busca e o toque, o produto sumiu. Devolve `404`.
 
-### 🎨 Remover item que a outra aba já removeu
+### ✅ Remover item que a outra aba já removeu
 
-> **Frontend — e a decisão de manter o 404 é deliberada.** Devolver 204 sempre esconderia um id errado, que é um defeito de verdade; o 404 carrega informação que o 204 apaga. A tela trata "item não está na lista" como sucesso, porque o cliente conseguiu o que queria.
+> **Resolvido — e por construção, não por tratamento de erro.** Verificado em 30/08: `removerDoRoteiro` tira o item da lista local **antes** da chamada e nunca lê a resposta (`roteiroService.js:177`). Um 404 do servidor é estruturalmente incapaz de virar erro na tela, porque o item já saiu.
+>
+> É mais forte do que o que este cenário pedia. Ele sugeria tratar o 404 como sucesso; o desenho *local-first* fez o caso desaparecer.
+>
+> **A decisão de o backend manter o 404 continua deliberada:** devolver 204 sempre esconderia id errado, que é defeito de verdade. O 404 carrega informação que o 204 apaga.
 
 Devolve `404`. **O frontend deveria tratar como sucesso**: o cliente queria que o item saísse, e ele saiu. Mostrar erro para quem conseguiu o que queria é confuso.
 
-### 🎨 O mapa com a lista vazia
+### ✅ O mapa com a lista vazia
 
-> **Frontend.** O backend devolve a planta e a posição normalmente; o convite é da tela.
+> **Resolvido na tela, com um defeito de texto anexo.** Verificado em 30/08: `StoreMapPage.jsx:711` mostra a loja com o convite "Sua lista está vazia. Adicione produtos na vitrine para traçar a melhor rota." Não é mais um mapa vazio sem explicação.
+>
+> **Mas a frase promete o que o sistema não faz.** "Traçar a melhor rota" é justamente o recurso que a mentoria mandou tirar — o mapa mostra posições, e quem escolhe o caminho é o cliente ([D-49](decisoes-tecnicas.md#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada)). É o mesmo tipo de afirmação falsa que o card de honestidade da tela inicial já limpou em outros cinco lugares, e este passou. Registrado como [O-26](observacoes.md).
 
 O cliente vai ao mapa antes de escolher qualquer coisa.
 
@@ -229,9 +259,11 @@ Se não houver nem isso — sessão que começou sem posição —, o mapa fica 
 
 ### 🎨 Marcar item que outra aba removeu
 
-> **Frontend.** 404; recarregar a lista e seguir.
+> **Frontend — o erro já não aparece; a divergência sim.** Reauditado em 30/08. `alternarColetaItem` muda o estado local antes da chamada e não lê a resposta (`roteiroService.js:204`), então o 404 não vira erro na tela.
+>
+> **O que continua aberto** é a aba ficar marcando item que já não existe no servidor. **Mesma causa e mesma correção** do cenário "duas abas abertas na mesma sessão": recarregar a lista ao voltar para a aba.
 
-Devolve `404`. O frontend recarrega a lista e segue.
+Devolve `404`. O frontend precisa recarregar a lista ao reganhar o foco.
 
 ---
 
@@ -273,7 +305,9 @@ O sistema já ignora produto repetido, então **o item em falta sai e nada é du
 
 ### 🎨 O cliente relata ruptura no mesmo item duas vezes
 
-> **Frontend.** Repetir é proposital — dois relatos são dois dados para a loja. O que falta é **travar o botão em voo**, porque cada relato custa duas chamadas da cota ([O-05](observacoes.md#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição)).
+> **Frontend — aberta, e agora medida.** Reauditado em 30/08. O botão tem `disabled={!item.idBackend}` (`RoteiroDrawer.jsx:118`), que guarda contra **item ainda não sincronizado** — não contra toque duplo com a requisição em voo. Nenhum estado de carregamento chega até ele.
+>
+> Repetir continua proposital: dois relatos são dois dados para a loja. O que falta é o **travamento em voo**, porque cada relato custa duas chamadas da cota ([O-05](observacoes.md#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição)).
 
 Cada toque é um relato novo, **de propósito** — duas visitas frustradas à prateleira são dois dados para a loja.
 
@@ -283,11 +317,11 @@ Mas cada relato custa duas chamadas ao Gemini. **O botão precisa travar enquant
 
 ## Encerramento
 
-### 🎨 O cliente encerra com itens não coletados
+### ✅ O cliente encerra com itens não coletados
 
-> **Frontend.** O backend permite, e precisa permitir. A confirmação é da tela.
+> **Resolvido na tela, e com o tom certo.** Verificado em 30/08: `FimJornadaModal.jsx:57` reconhece o caso sem cobrar — *"Você coletou 3 de 5 itens da sua lista e pode seguir para o pagamento com o que já tem."* Aceita o encerramento sem insistir, que era a parte difícil do pedido.
 
-Permitido, e precisa ser. **A tela deve reconhecer**: "você está encerrando com 2 itens não coletados. Quer mesmo?" — e aceitar o sim sem insistir.
+Permitido, e precisa ser. A tela reconhece e segue.
 
 ### ✅ Ele encerra e volta pelo aparelho
 
@@ -301,7 +335,9 @@ Sessão concluída: leitura sim, escrita não. Já tratado.
 
 ### 🎨 A instância dorme e demora dois minutos para acordar
 
-> **Frontend, e o time já decidiu seguir no plano gratuito.** Medido de novo em 25/08 com o catálogo maior: **176 segundos**. A tela precisa mostrar "preparando o sistema" em vez de parecer travada — **isso vai acontecer em alguma demonstração**.
+> **Frontend — aberta.** Reauditado em 30/08: o app tem tela de abertura, mas **nenhuma detecção de que o servidor está acordando** — nada de `navigator.onLine`, nenhum aviso de espera longa. Medido de novo em 25/08 com o catálogo maior: **176 segundos**.
+>
+> O time decidiu seguir no plano gratuito e aquecer antes de apresentar. A tela ainda precisa mostrar "preparando o sistema" em vez de parecer travada — **isso vai acontecer em alguma demonstração**.
 
 Medido: **134 segundos** no plano gratuito, por causa do décimo de CPU.
 
@@ -311,19 +347,38 @@ Para o vídeo e a banca, o aquecimento resolve. Vale a tela mostrar "preparando 
 
 ### 🎨 O backend está fora do ar
 
-> **Frontend.** O erro já sai limpo, sem vazar detalhe interno, e está sob teste.
+> **Frontend — um pedaço virou humano, o outro virou ficção.** Reauditado em 30/08.
+>
+> - **O chat:** resolvido. Diz que não conseguiu falar com a loja e oferece o caminho que funciona (D-75).
+> - **O roteiro:** funciona offline por desenho *local-first*.
+> - **O catálogo:** **piorou em vez de melhorar.** Em vez de avisar, devolve um catálogo inventado — produtos que a loja não tem, em corredores que não existem. Ver [O-25](observacoes.md).
 
-Já devolve erro limpo, sem vazar detalhe interno — está sob teste. Falta o frontend transformar isso numa mensagem humana.
+O backend devolve erro limpo, sem vazar detalhe interno, e está sob teste. Falta a tela transformar isso numa mensagem humana **em vez de preencher o vazio com dado falso**.
 
 ---
 
 ## O que sai daqui como trabalho
 
-**Nada de backend.** Os 30 cenários foram auditados contra o código em 25/08/2026, depois dos treze cards do escopo revisado: 14 estão resolvidos e provados por teste, 1 é impossível pelo esquema, 1 foi decidido conscientemente, e **os 14 restantes são de tela**.
+**Nada de backend.** Os 30 cenários foram auditados em 25/08/2026 contra o código do servidor, e **reauditados em 30/08/2026 contra o app**, que não existia na primeira passagem.
+
+| | 25/08 | 30/08 |
+|---|---|---|
+| Resolvidos | 14 | **19** |
+| Impossível pelo esquema | 1 | 1 |
+| Decidido conscientemente | 1 | 1 |
+| Falta na tela | 14 | **9** |
+
+**Cinco pendências já estavam resolvidas** e ninguém tinha registrado: o filtro sem resultado, a espera do assistente, remover item que a outra aba já removeu, o mapa com a lista vazia e o encerramento com itens pendentes. Duas delas — remover item e marcar item — foram resolvidas **por construção**: o desenho *local-first* fez o caso deixar de existir, em vez de tratá-lo.
 
 ### O que o frontend precisa tratar
 
-Nenhum destes é trabalho grande. O que eles têm em comum é que **o backend já entrega a informação certa** — falta a tela usá-la em vez de repassar o erro cru.
+Nove cenários, e **três pares compartilham causa** — então são menos correções do que itens:
+
+- **Recarregar ao voltar para a aba** resolve "duas abas abertas" e "marcar item que outra aba removeu".
+- **Avisar quando a loja não responde** cobre "o backend está fora do ar" e parte de "loja de 10.000 m²" — e antes disso precisa **apagar o catálogo inventado**, que hoje preenche o silêncio com dado falso ([O-25](observacoes.md)).
+- **Uma frase quando a sessão vira outra** fecha "sessão expirada".
+
+O que eles têm em comum continua sendo que **o backend já entrega a informação certa** — falta a tela usá-la em vez de repassar o erro cru, ou pior, de inventar o que não sabe.
 
 **A forma do erro é sempre a mesma.** Auditado por teste em 25/08/2026: todo erro da API — de 400 a 500, em qualquer endpoint — devolve os mesmos seis campos, com `status` repetido no corpo, o `path` que falhou, e **nunca detalhe interno**. Um tratamento só resolve todos.
 
