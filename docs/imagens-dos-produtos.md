@@ -14,7 +14,7 @@
 >
 > **A ordem certa é a 2 antes da 1.** Enquanto o campo não existir, cada URL coletada é trabalho que não vira nada, e ninguém consegue conferir se a foto que escolheu era a certa.
 >
-> Registrado como [O-27](observacoes.md).
+> Registrado como [O-27](observacoes.md#o-27-as-22-imagens-coletadas-não-têm-para-onde-ir).
 
 ## O que fazer
 

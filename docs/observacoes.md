@@ -6,7 +6,7 @@
 >
 > Cada item traz: **o quê**, **por que importa**, **de quem é** e o **prazo** que o pressiona, quando há.
 >
-> Última atualização: 22/08/2026 (backlog concluído; resta o deploy).
+> Última atualização: **30/08/2026** — depois de reauditar as pendências de tela contra o frontend, que não existia quando a maioria destes itens foi escrita.
 
 ---
 
@@ -16,10 +16,15 @@
 |---|---|---|---|
 | [O-01](#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada) | Chave do Gemini e cota gratuita (afeta a suíte) | João Ricardo | **Alta — 13/09** |
 | [O-02](#o-02-senha-do-oracle-passou-por-canal-de-conversa) | Senha do Oracle exposta | João Ricardo | Média |
-| [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade) | `origemSugestao` na tela | Bielecky e Marcela | Alta |
-| [O-05](#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição) | Botão de ruptura sem trava | Bielecky e Marcela | Alta |
+| [O-25](#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai) | **Catálogo inventado no frontend** | Backend/integração | **Alta — antes do vídeo** |
+| [O-27](#o-27-as-22-imagens-coletadas-não-têm-para-onde-ir) | Imagens coletadas sem destino na massa | Backend/integração | **Alta — antes do vídeo** |
+| [O-05](#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição) | Botão de ruptura sem trava — **medido, continua aberto** | Frontend | Alta |
+| [O-26](#o-26-o-convite-do-mapa-vazio-promete-uma-rota-que-não-existe) | Texto do mapa promete rota calculada | Frontend | Média |
+| [O-28](#o-28-a-visão-todos-do-catálogo-não-pagina) | Catálogo sem paginação: 61 de 111 inalcançáveis | Frontend | Alta |
 | [O-06](#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar) | Retomar a sessão pelo `localStorage` | Bielecky e Marcela | Alta |
 | [O-08](#o-08-o-der-não-tem-a-tabela-de-registro-de-ruptura) | DER desatualizado | Vicentini | **Alta** |
+| [O-24](#o-24-os-diagramas-da-sprint-1-desenham-o-produto-que-a-mentoria-derrubou) | Diagramas desenham totem, handoff e rota | Vicentini e time | **Alta — antes da banca** |
+| [O-29](#o-29-duas-pastas-de-documentação-estão-vazias-desde-o-primeiro-dia) | `docs/arquitetura` e `docs/casos_de_uso` vazias | Time | Baixa |
 | [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | Tela de código manual e arte da placa | Bielecky, Marcela e time | Alta |
 | [O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens) | Coletar as imagens dos produtos | Time | Média |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
@@ -32,7 +37,7 @@
 | [O-12](#o-12-o-raio-de-busca-da-ruptura-é-um-palpite-informado--agora-medido) | Raio de 25 unidades — medido | — | aceita |
 | [O-15](#o-15-o-endpoint-de-simulação-de-estoque-não-tem-proteção-nenhuma) | Simulação de estoque sem proteção | — | aceita |
 
-**Encerradas:** [O-03](#o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado) (deploy no ar) · [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar--sem-objeto) · [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado--sem-objeto) · [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo) · [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) · [O-16](#o-16-o-token-continua-na-url-do-pwa--a-preocupação-deixou-de-existir)
+**Encerradas:** [O-03](#o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado) (deploy no ar) · [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela) (selo da ruptura) · [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar--sem-objeto) · [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado--sem-objeto) · [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo) · [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) · [O-16](#o-16-o-token-continua-na-url-do-pwa--a-preocupação-deixou-de-existir)
 
 ---
 
@@ -85,6 +90,15 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 
 ### O-19. A entrada tem um plano B, e ele é uma tela que ainda não existe
 
+> [!IMPORTANT]
+> **Reauditada em 30/08/2026 — a tela existe, o aviso não.**
+>
+> **Feito:** o modal de localização tem os dois planos, com exemplo do formato — escanear o QR ou digitar o código. É uma das partes mais bem resolvidas do frontend, porque antecipa a falha que de fato acontece na loja.
+>
+> **Continua aberto, e é a metade que este item avisava:** `App.jsx:130` faz `if (sess.posicaoAtual)` **sem `else`**. Quando o código é desconhecido, o backend cria a sessão com posição nula de propósito ([D-54](decisoes-tecnicas.md#d-54-a-entrada-aceita-o-código-da-placa-num-campo-só-e-código-desconhecido-não-recusa-a-sessão)) e **não devolve erro** — então a tela não tem o que tratar e simplesmente não diz nada. O cliente digita errado, entra sem posição, e não entende por que o mapa não mostra onde ele está. É exatamente o cenário descrito abaixo.
+>
+> **A arte da placa** continua com o time, e continua não feita.
+
 **O quê.** Duas coisas, decididas em 25/08/2026:
 
 1. **uma tela de entrada manual** — o cliente digita o código de localização quando escanear o QR não deu certo;
@@ -99,7 +113,12 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 **De quem.** Bielecky e Marcela (a tela); time (a arte da placa).
 
 ---
-### O-04. `origemSugestao` não pode ser rotulado como IA quando for `PROXIMIDADE`
+### O-04. ~~`origemSugestao` não pode ser rotulado como IA quando for `PROXIMIDADE`~~ — resolvida na tela
+
+> [!NOTE]
+> **Encerrada em 30/08/2026.** O `RupturaModal` mostra **dois selos diferentes**, escolhidos pelo campo: *"Sugestão do assistente"* com ícone de brilho quando a origem é `ASSISTENTE_IA`, e *"Disponível mais próximo"* com ícone de bússola quando é `PROXIMIDADE` (`RupturaModal.jsx:71`). A tela não afirma mais análise que não houve.
+>
+> O texto abaixo fica como registro do porquê.
 
 **O quê.** A resposta de `POST /api/v1/roteiro/itens/{itemId}/ruptura` traz o campo `origemSugestao`, com dois valores possíveis:
 
@@ -113,6 +132,11 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 ---
 
 ### O-05. O botão "Prateleira Vazia" precisa travar durante a requisição
+
+> [!IMPORTANT]
+> **Reauditada em 30/08/2026 — continua aberta, e agora está medida.** O botão tem `disabled={!item.idBackend}` (`RoteiroDrawer.jsx:118`), que é outra guarda: impede tocar em item **ainda não sincronizado** com o servidor. Nenhum estado de carregamento chega até ele, então **o toque duplo continua passando**.
+>
+> A correção é pequena: o `App.jsx` já carrega o estado `isCarregando` do fluxo de ruptura para o modal — falta descê-lo até o botão que dispara.
 
 **O quê.** Desabilitar o botão enquanto a chamada de ruptura estiver em voo.
 
@@ -152,6 +176,64 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 ---
 
 
+### O-25. O frontend carrega um catálogo inventado, e o mostra quando a API cai
+
+**O quê.** `catalogService.js` tem uma lista de produtos escrita à mão e a devolve quando a chamada à API não dá certo. Ela precisa sair.
+
+**Por que importa, e por que é a mais urgente da lista.** Não é dado desatualizado: são **produtos que a loja não tem, em corredores que não existem**, apresentados como se fossem o catálogo real. E aparecem exatamente quando ninguém consegue conferir — com o servidor fora do ar.
+
+O efeito se espalha. Enquanto essa lista existir:
+
+- a **busca** devolve resultados falsos e o cliente sai procurando algo que não está lá;
+- o **mapa** desenha marcadores em produtos inventados;
+- qualquer aviso honesto de indisponibilidade que a gente escreva vira mentira, porque a tela ao lado continua mostrando uma loja cheia.
+
+**O motivo de ela existir é legítimo, e acabou.** Bielecky precisava de dados para desenvolver antes de o backend estar de pé. Ele está de pé, publicado, e com 111 produtos reais.
+
+**Ordem.** Este é o primeiro da fila, e vem antes de qualquer trabalho de "avisar quando a loja não responde" ([`quebras-de-fluxo.md`](quebras-de-fluxo.md)) — não adianta escrever o aviso enquanto o silêncio continua sendo preenchido com ficção.
+
+**De quem.** Backend/integração.
+
+---
+
+### O-26. O convite do mapa vazio promete uma rota que não existe
+
+**O quê.** Com a lista vazia, o mapa diz *"Adicione produtos na vitrine para traçar a melhor rota"* (`StoreMapPage.jsx:711`). Trocar por uma frase que descreva o que o mapa faz: mostrar onde o cliente está e onde está cada item.
+
+**Por que importa.** "Traçar a melhor rota" é o recurso que a mentoria da Leroy mandou tirar ([D-49](decisoes-tecnicas.md#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada)). A frase promete à banca justamente aquilo que decidimos não fazer — e se alguém adicionar produtos esperando ver um caminho traçado, o que vai encontrar são marcadores.
+
+Cinco textos assim já saíram da tela no card de honestidade de 28/08. Este passou porque só aparece com a lista vazia, que é um estado que ninguém revisita depois da primeira vez.
+
+**De quem.** Frontend.
+
+---
+
+### O-27. As 22 imagens coletadas não têm para onde ir
+
+**O quê.** Abrir o campo de imagem em `ProdutoDaMassa` e fazer a carga aplicá-lo, para que as URLs já coletadas cheguem à tela.
+
+**Por que importa.** `Produto` tem `imagemUrl`, a API o entrega, e a tela sabe exibi-lo — o Card 8 do escopo revisado fez essa parte. O que não existe é o **último elo**: o registro da massa (`CatalogoDaMassa.java:76`) guarda sku, nome, seção, preço, estoque, descrição e atributos, e nenhuma imagem. Então nada nunca preenche o campo.
+
+Consequência prática: as 22 URLs coletadas até agora são trabalho parado, e quem coletar mais não tem como conferir se escolheu a foto certa.
+
+**A ordem importa e é contraintuitiva:** abrir o campo **antes** de terminar a coleta. Com o campo aberto, cada URL nova aparece na tela no mesmo dia; sem ele, coletar 89 fotos é encher uma tabela que ninguém lê.
+
+**De quem.** Backend/integração (o campo); time (o resto da coleta, ver [`imagens-dos-produtos.md`](imagens-dos-produtos.md)).
+
+---
+
+### O-28. A visão "Todos" do catálogo não pagina
+
+**O quê.** A tela de catálogo carrega uma página só. Com 111 produtos, **61 não são alcançáveis** sem usar filtro ou busca.
+
+**Por que importa.** O catálogo foi de 29 para 111 produtos justamente para a paginação paginar, a faceta filtrar e o corredor parecer corredor ([O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens)). Sem paginar na tela, mais da metade desse esforço não chega ao cliente — e a demonstração mostra uma loja menor do que a que construímos.
+
+O backend já pagina: a resposta traz total, página atual e tamanho. É trabalho de tela.
+
+**De quem.** Frontend.
+
+---
+
 ## Para o banco e os diagramas (Vicentini)
 
 ### O-08. O DER não tem a tabela de registro de ruptura
@@ -187,6 +269,22 @@ A distinção vale a pena manter em mente conforme o repositório cresce:
 - **Caso à parte:** este próprio `observacoes.md`. As pendências resolvidas até lá devem ter saído da lista; o que sobrar são limitações assumidas conscientemente, e **isso conta a favor** — mostra que o time sabia onde estavam os limites.
 
 **De quem.** Time. **Quando:** antes do envio ao portal, no fim do ano.
+
+---
+
+### O-24. Os diagramas da Sprint 1 desenham o produto que a mentoria derrubou
+
+**O quê.** Os cinco PDFs em `docs/diagramas/` — C4, DER, casos de uso, classes e sequência — são de antes de 24/08/2026. Precisam ser refeitos ou explicitamente rotulados como Sprint 1.
+
+**Por que importa.** Eles ainda desenham **totem**, **handoff com JWT** e **rota calculada**: três coisas que foram removidas do sistema de propósito. O diagrama de sequência inteiro descreve o handoff, que não existe. O C4 mostra dois containers de frontend, e existe um.
+
+E o problema não é interno: **diagrama é o que a banca olha primeiro**, antes de qualquer código. Um avaliador que compare o C4 com a demonstração vai ver dois produtos diferentes — e a conclusão natural dele será que não entregamos o que projetamos, quando o que aconteceu foi o contrário: mudamos o projeto porque a Leroy mandou.
+
+**O DER tem um problema a mais**, já registrado em separado: falta a tabela de registro de ruptura ([O-08](#o-08-o-der-não-tem-a-tabela-de-registro-de-ruptura)).
+
+**O caminho mais barato**, se refazer os cinco não couber no prazo: carimbar cada um como "Sprint 1 — anterior à revisão de escopo" e refazer só o **C4** e o **DER**, que são os dois que a banca costuma abrir.
+
+**De quem.** Vicentini (DER) e time (os demais).
 
 ---
 
@@ -311,6 +409,18 @@ As 25 unidades do grid 0–100 foram escolhidas por julgamento: é a ordem de gr
 Aceito por três motivos: a API não tem autenticação em endpoint nenhum, então ele não abre uma categoria nova de exposição; desligá-lo em produção derrotaria o propósito, já que é justamente o ambiente publicado que será demonstrado; e o dano é reversível pelo próprio endpoint, sobre massa de demonstração.
 
 O que existe no lugar de proteção: marcação explícita como `[Demonstracao]` no Swagger e log em nível **WARN** a cada alteração. **Se o projeto ganhar autenticação em algum momento, este endpoint é o primeiro que precisa entrar atrás dela.** Ver [D-40](decisoes-tecnicas.md#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido).
+
+---
+
+### O-29. Duas pastas de documentação estão vazias desde o primeiro dia
+
+**O quê.** `docs/arquitetura/` e `docs/casos_de_uso/` só têm `.gitkeep`, criados em 10/08/2026, e nunca receberam arquivo.
+
+**Por que importa.** Pouco, e é por isso que está aqui e não acima. Mas pasta vazia num repositório que vai ser avaliado sugere trabalho planejado e não feito — e neste caso é o contrário: o conteúdo existe, só mora em outro lugar. A arquitetura está em [`decisoes-tecnicas.md`](decisoes-tecnicas.md) e em `planejamento-tecnico.md`; os casos de uso, no contrato OpenAPI e em [`fluxo-do-cliente.md`](fluxo-do-cliente.md).
+
+**Duas saídas, e as duas servem:** apagar as pastas, ou pôr em cada uma um arquivo curto apontando para onde o assunto está documentado. A segunda é melhor para quem chega procurando pelo nome da pasta.
+
+**De quem.** Time.
 
 ---
 

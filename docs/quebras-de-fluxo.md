@@ -47,7 +47,7 @@ E o cenário é banal — o cliente monta quinze itens, recebe uma ligação, co
 > - **Saída 1, avisar bem: pela metade.** O chat passou a admitir que não conseguiu falar com a loja (D-75). O resto da tela, não.
 > - **Saída 3, enfileirar as marcações: não feita.** `alternarColetaItem` grava local e ignora a resposta; o servidor fica para trás sem nada reenviar.
 >
-> **E apareceu um problema que a auditoria de 25/08 não tinha como prever:** quando a API não responde, o catálogo devolve **produtos inventados** em vez de avisar. É pior que o erro cru que este cenário queria evitar — ver [O-25](observacoes.md).
+> **E apareceu um problema que a auditoria de 25/08 não tinha como prever:** quando a API não responde, o catálogo devolve **produtos inventados** em vez de avisar. É pior que o erro cru que este cenário queria evitar — ver [O-25](observacoes.md#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai).
 
 Toda ação do cliente é uma chamada de rede: ver o mapa, marcar item, perguntar ao assistente. **No fundo de um corredor de materiais de construção, o sinal cai.**
 
@@ -225,7 +225,7 @@ Devolve `404`. **O frontend deveria tratar como sucesso**: o cliente queria que 
 
 > **Resolvido na tela, com um defeito de texto anexo.** Verificado em 30/08: `StoreMapPage.jsx:711` mostra a loja com o convite "Sua lista está vazia. Adicione produtos na vitrine para traçar a melhor rota." Não é mais um mapa vazio sem explicação.
 >
-> **Mas a frase promete o que o sistema não faz.** "Traçar a melhor rota" é justamente o recurso que a mentoria mandou tirar — o mapa mostra posições, e quem escolhe o caminho é o cliente ([D-49](decisoes-tecnicas.md#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada)). É o mesmo tipo de afirmação falsa que o card de honestidade da tela inicial já limpou em outros cinco lugares, e este passou. Registrado como [O-26](observacoes.md).
+> **Mas a frase promete o que o sistema não faz.** "Traçar a melhor rota" é justamente o recurso que a mentoria mandou tirar — o mapa mostra posições, e quem escolhe o caminho é o cliente ([D-49](decisoes-tecnicas.md#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada)). É o mesmo tipo de afirmação falsa que o card de honestidade da tela inicial já limpou em outros cinco lugares, e este passou. Registrado como [O-26](observacoes.md#o-26-o-convite-do-mapa-vazio-promete-uma-rota-que-não-existe).
 
 O cliente vai ao mapa antes de escolher qualquer coisa.
 
@@ -279,11 +279,11 @@ Devolve `422`, e a ruptura **fica registrada mesmo assim** — para a loja, "o c
 
 ### ✅ A IA está fora do ar na hora da ruptura
 
-> **Backend — resolvido.** Cai para o mais próximo, com `origemSugestao = PROXIMIDADE`. **A tela não pode chamar isso de recomendação inteligente** ([O-04](observacoes.md#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade)).
+> **Backend — resolvido.** Cai para o mais próximo, com `origemSugestao = PROXIMIDADE`. **A tela não pode chamar isso de recomendação inteligente** ([O-04](observacoes.md#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela)).
 
 Cai para o produto disponível mais próximo, com justificativa honesta e o campo `origemSugestao` marcando `PROXIMIDADE`.
 
-**A tela não pode chamar isso de recomendação inteligente** — ver [O-04](observacoes.md#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade).
+**A tela não pode chamar isso de recomendação inteligente** — ver [O-04](observacoes.md#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela).
 
 ### 💬 O substituto sugerido acabou também
 
@@ -351,7 +351,7 @@ Para o vídeo e a banca, o aquecimento resolve. Vale a tela mostrar "preparando 
 >
 > - **O chat:** resolvido. Diz que não conseguiu falar com a loja e oferece o caminho que funciona (D-75).
 > - **O roteiro:** funciona offline por desenho *local-first*.
-> - **O catálogo:** **piorou em vez de melhorar.** Em vez de avisar, devolve um catálogo inventado — produtos que a loja não tem, em corredores que não existem. Ver [O-25](observacoes.md).
+> - **O catálogo:** **piorou em vez de melhorar.** Em vez de avisar, devolve um catálogo inventado — produtos que a loja não tem, em corredores que não existem. Ver [O-25](observacoes.md#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai).
 
 O backend devolve erro limpo, sem vazar detalhe interno, e está sob teste. Falta a tela transformar isso numa mensagem humana **em vez de preencher o vazio com dado falso**.
 
@@ -375,7 +375,7 @@ O backend devolve erro limpo, sem vazar detalhe interno, e está sob teste. Falt
 Nove cenários, e **três pares compartilham causa** — então são menos correções do que itens:
 
 - **Recarregar ao voltar para a aba** resolve "duas abas abertas" e "marcar item que outra aba removeu".
-- **Avisar quando a loja não responde** cobre "o backend está fora do ar" e parte de "loja de 10.000 m²" — e antes disso precisa **apagar o catálogo inventado**, que hoje preenche o silêncio com dado falso ([O-25](observacoes.md)).
+- **Avisar quando a loja não responde** cobre "o backend está fora do ar" e parte de "loja de 10.000 m²" — e antes disso precisa **apagar o catálogo inventado**, que hoje preenche o silêncio com dado falso ([O-25](observacoes.md#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai)).
 - **Uma frase quando a sessão vira outra** fecha "sessão expirada".
 
 O que eles têm em comum continua sendo que **o backend já entrega a informação certa** — falta a tela usá-la em vez de repassar o erro cru, ou pior, de inventar o que não sabe.
