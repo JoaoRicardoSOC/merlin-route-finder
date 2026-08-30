@@ -12,6 +12,8 @@ export default function CatalogSearchPage({
   totalProductsCount,
   produtos = [],
   isLoadingProdutos,
+  falhaAoCarregar = false,
+  onTentarNovamente,
   apenasDisponiveis,
   setApenasDisponiveis,
   activeFiltersCount,
@@ -196,6 +198,26 @@ export default function CatalogSearchPage({
                 </div>
               </div>
             ))}
+          </div>
+        ) : falhaAoCarregar ? (
+          /* Antes do estado vazio, e nunca junto dele: "nenhum produto encontrado" afirma que
+             procuramos e não há. Quando a loja não responde, não chegamos a procurar. */
+          <div className="empty-catalog-state">
+            <span className="material-symbols-outlined empty-icon">cloud_off</span>
+            <h3 className="empty-title">Não conseguimos falar com a loja</h3>
+            <p className="empty-desc">
+              O catálogo não respondeu agora, então não dá para mostrar os produtos. Não é que
+              a loja não tenha o que você procura — é que não conseguimos consultar.
+            </p>
+            <div className="empty-actions">
+              <button
+                type="button"
+                className="empty-action-btn primary"
+                onClick={onTentarNovamente}
+              >
+                Tentar de novo
+              </button>
+            </div>
           </div>
         ) : produtos.length === 0 ? (
           <div className="empty-catalog-state">

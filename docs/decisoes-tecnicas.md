@@ -42,6 +42,7 @@
 **Frontend**
 - [D-75. A tela não fabrica resposta da IA quando não consegue perguntar](#d-75-a-tela-não-fabrica-resposta-da-ia-quando-não-consegue-perguntar)
 - [D-76. O cartão de produto no chat exige que a IA tenha escrito o nome](#d-76-o-cartão-de-produto-no-chat-exige-que-a-ia-tenha-escrito-o-nome)
+- [D-77. O catálogo lança quando não consegue perguntar, e a tela distingue isso de "não há"](#d-77-o-catálogo-lança-quando-não-consegue-perguntar-e-a-tela-distingue-isso-de-não-há)
 
 **Persistência**
 - [D-10. Entidades JPA espelho, separadas das de domínio](#d-10-entidades-jpa-espelho-separadas-das-de-domínio)
@@ -1887,6 +1888,32 @@ Diferente da [D-75](#d-75-a-tela-não-fabrica-resposta-da-ia-quando-não-consegu
 **O gancho para o backend fica.** A leitura de `produtosRecomendados` continua sendo a primeira coisa que a função faz, embora nada a preencha hoje. É por ali que o caso correto entra, no dia em que o assistente devolver os produtos que citou.
 
 **Onde no código.** `frontend/src/components/AIChatModal.jsx`.
+
+---
+
+### D-77. O catálogo lança quando não consegue perguntar, e a tela distingue isso de "não há"
+
+**O problema.** `catalogService.js` guardava **202 linhas de produtos e seções escritos à mão** e as devolvia sempre que a API não respondia. Não era dado velho: os SKUs eram `ILU-001` enquanto o banco usa `SKU-ILU-001`, os corredores não existiam na planta, e um produto trazia `tag: "Mais Vendido"` — afirmação de venda sem nenhum dado por trás. Tudo isso aparecia como se fosse a loja, exatamente quando ninguém tinha como conferir.
+
+Era também a raiz de outro defeito já corrigido: o motor falso do chat ([D-75](#d-75-a-tela-não-fabrica-resposta-da-ia-quando-não-consegue-perguntar)) filtrava **esta** lista, então sugeria produto inexistente em corredor inexistente.
+
+**A razão de existir era legítima e acabou.** A dupla de frontend precisava de dados antes de o backend subir. Ele está de pé, publicado, com 111 produtos reais.
+
+**Decisão.** As três funções — `fetchSecoes`, `fetchProdutos`, `fetchProdutoDetalhe` — **lançam** quando não conseguem falar com a API.
+
+**Por que lançar e não devolver lista vazia.** Esta é a parte que importa, e a alternativa parecia mais segura: bastava trocar a ficção por `[]` e nenhuma tela quebraria.
+
+Só que a tela então diria **"Nenhum produto encontrado"** — e essa frase afirma *procuramos e não há*, quando a verdade é *não conseguimos procurar*. Seria a mesma doença em grau menor: o código preenchendo com um valor plausível o lugar de uma informação que não tem. A distinção entre as duas frases é o produto inteiro deste card, e **só uma exceção carrega essa informação** até quem decide o que desenhar.
+
+O custo foi baixo porque os quatro pontos de chamada já tinham `try/catch` — usavam só para registrar no console.
+
+**Dois sinalizadores de falha, não um.** `App.jsx` guarda `falhaSecoes` e `falhaProdutos` separados, cada um escrito pelo próprio carregador. Com um só, as seções carregando com sucesso apagariam a falha dos produtos, e a tela voltaria a afirmar que procurou.
+
+**A lista é limpa junto com a falha.** No `catch`, `setProdutos([])`. Manter o resultado anterior faria o aviso de indisponibilidade conviver com produtos na mesma tela, e um dos dois estaria mentindo.
+
+**O que morreu junto.** Uma implementação de distância de Levenshtein de 28 linhas, que existia só para o filtro local — e que estava declarada **dentro do bloco `catch`** de `fetchProdutos`. O arquivo caiu de 383 para 120 linhas.
+
+**Onde no código.** `frontend/src/services/catalogService.js`, `frontend/src/App.jsx`, `frontend/src/components/CatalogSearchPage.jsx`, `frontend/src/components/SectorsPage.jsx`.
 
 ---
 

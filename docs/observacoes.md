@@ -16,7 +16,6 @@
 |---|---|---|---|
 | [O-01](#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada) | Chave do Gemini e cota gratuita (afeta a suíte) | João Ricardo | **Alta — 13/09** |
 | [O-02](#o-02-senha-do-oracle-passou-por-canal-de-conversa) | Senha do Oracle exposta | João Ricardo | Média |
-| [O-25](#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai) | **Catálogo inventado no frontend** | Backend/integração | **Alta — antes do vídeo** |
 | [O-05](#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição) | Botão de ruptura sem trava — **medido, continua aberto** | Frontend | Alta |
 | [O-26](#o-26-o-convite-do-mapa-vazio-promete-uma-rota-que-não-existe) | Texto do mapa promete rota calculada | Frontend | Média |
 | [O-28](#o-28-a-visão-todos-do-catálogo-não-pagina) | Catálogo sem paginação: 61 de 111 inalcançáveis | Frontend | Alta |
@@ -36,7 +35,7 @@
 | [O-12](#o-12-o-raio-de-busca-da-ruptura-é-um-palpite-informado--agora-medido) | Raio de 25 unidades — medido | — | aceita |
 | [O-15](#o-15-o-endpoint-de-simulação-de-estoque-não-tem-proteção-nenhuma) | Simulação de estoque sem proteção | — | aceita |
 
-**Encerradas:** [O-03](#o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado) (deploy no ar) · [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela) (selo da ruptura) · [O-27](#o-27-as-22-imagens-coletadas-não-têm-para-onde-ir--medição-errada-o-mecanismo-já-existia) (imagens já aplicadas) · [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar--sem-objeto) · [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado--sem-objeto) · [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo) · [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) · [O-16](#o-16-o-token-continua-na-url-do-pwa--a-preocupação-deixou-de-existir)
+**Encerradas:** [O-03](#o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado) (deploy no ar) · [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela) (selo da ruptura) · [O-27](#o-27-as-22-imagens-coletadas-não-têm-para-onde-ir--medição-errada-o-mecanismo-já-existia) (imagens já aplicadas) · [O-25](#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai--apagado) (catálogo inventado apagado) · [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar--sem-objeto) · [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado--sem-objeto) · [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo) · [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) · [O-16](#o-16-o-token-continua-na-url-do-pwa--a-preocupação-deixou-de-existir)
 
 ---
 
@@ -175,7 +174,16 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 ---
 
 
-### O-25. O frontend carrega um catálogo inventado, e o mostra quando a API cai
+### O-25. ~~O frontend carrega um catálogo inventado, e o mostra quando a API cai~~ — apagado
+
+> [!NOTE]
+> **Encerrada em 30/08/2026.** As 202 linhas de produtos e seções escritos à mão saíram, e com elas o filtro local e uma implementação de Levenshtein que só existia para servi-lo. O arquivo caiu de 383 para 120 linhas.
+>
+> **No lugar, as funções lançam** — e a tela distingue *"procuramos e não há"* de *"não conseguimos procurar"*, que era o ponto. Devolver lista vazia teria sido a mesma doença em grau menor. Ver [D-77](decisoes-tecnicas.md#d-77-o-catálogo-lança-quando-não-consegue-perguntar-e-a-tela-distingue-isso-de-não-há).
+>
+> **Verificado com o backend derrubado de verdade**, não simulado: catálogo e setores mostram o aviso honesto, zero produtos na tela, e "tentar de novo" recupera quando o servidor volta.
+>
+> O texto abaixo fica como registro do porquê.
 
 **O quê.** `catalogService.js` tem uma lista de produtos escrita à mão e a devolve quando a chamada à API não dá certo. Ela precisa sair.
 

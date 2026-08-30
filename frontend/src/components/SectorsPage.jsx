@@ -6,7 +6,8 @@ export default function SectorsPage({
   totalProductsCount = 0,
   onSelectSector,
   onBackToHome,
-  isLoading = false
+  isLoading = false,
+  falhaAoCarregar = false
 }) {
   const [sectorSearch, setSectorSearch] = useState('')
 
@@ -67,6 +68,16 @@ export default function SectorsPage({
           {[1, 2, 3, 4, 5, 6].map((idx) => (
             <div key={idx} className="sector-card-skeleton"></div>
           ))}
+        </div>
+      ) : falhaAoCarregar ? (
+        /* Mesma distinção da tela de catálogo: não achar seção é diferente de não conseguir
+           perguntar quais existem. */
+        <div className="empty-catalog-state">
+          <span className="material-symbols-outlined empty-icon">cloud_off</span>
+          <h3 className="empty-title">Não conseguimos falar com a loja</h3>
+          <p className="empty-desc">
+            Os setores não carregaram agora. Assim que a conexão voltar, eles aparecem aqui.
+          </p>
         </div>
       ) : filteredSecoes.length === 0 ? (
         <div className="empty-catalog-state">

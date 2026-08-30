@@ -1,240 +1,73 @@
-// Service for Catalog & Sections exploration (ListarSecoesUseCase & SecaoResponse)
+// Catálogo da loja: seções, busca de produtos e detalhe.
+//
+// Estas funções lançam quando não conseguem falar com a API, em vez de devolver alguma coisa.
+// Existiam aqui 202 linhas de produtos e seções escritos à mão, devolvidas sempre que a
+// chamada falhava — um catálogo inventado, com SKUs que não são os nossos e corredores que
+// não existem na planta, apresentado como se fosse a loja. Aparecia exatamente quando ninguém
+// tinha como conferir.
+//
+// Devolver lista vazia no lugar seria a mesma doença em grau menor: a tela diria "nenhum
+// produto encontrado", que afirma *procuramos e não há* quando a verdade é *não conseguimos
+// procurar*. Quem chama precisa saber a diferença, e só uma exceção carrega essa informação.
+//
+// Ver D-77.
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 
-// Fallback sections dataset mirroring backend's ListarSecoesUseCase response
-const FALLBACK_SECOES = [
-  { nome: 'Tintas', quantidadeProdutos: 12 },
-  { nome: 'Ferragens', quantidadeProdutos: 11 },
-  { nome: 'Elétrica', quantidadeProdutos: 11 },
-  { nome: 'Encanamento', quantidadeProdutos: 12 },
-  { nome: 'Cozinhas', quantidadeProdutos: 10 },
-  { nome: 'Iluminação', quantidadeProdutos: 11 },
-  { nome: 'Jardim', quantidadeProdutos: 11 },
-  { nome: 'Ferramentas', quantidadeProdutos: 12 },
-  { nome: 'Decoração', quantidadeProdutos: 10 },
-  { nome: 'Materiais de construção', quantidadeProdutos: 11 }
-]
-
-// Fallback products dataset mirroring CatalogoDaMassa
-const FALLBACK_PRODUTOS = [
-  // Iluminação
-  {
-    id: 'prod-ilu-01',
-    sku: 'ILU-001',
-    nome: 'Lâmpada LED Bulbo 9W 6500K Bivolt',
-    descricao: 'Lâmpada LED econômica com luz branca fria de alta eficiência e vida útil de 25.000h.',
-    preco: 14.90,
-    saldoEstoque: 12,
-    secao: 'Iluminação',
-    corredor: 'Corredor A12',
-    tag: 'Mais Vendido'
-  },
-  {
-    id: 'prod-ilu-02',
-    sku: 'ILU-002',
-    nome: 'Fita LED Smart RGB 5 Metros Wi-Fi',
-    descricao: 'Fita inteligente compatível com Alexa e Google Assistant com 16 milhões de cores.',
-    preco: 89.90,
-    saldoEstoque: 6,
-    secao: 'Iluminação',
-    corredor: 'Corredor A12',
-    tag: 'Smart Home'
-  },
-  {
-    id: 'prod-ilu-03',
-    sku: 'ILU-003',
-    nome: 'Plafon LED Sobrepor Quadrado 24W 4000K',
-    descricao: 'Plafon moderno em alumínio branco com luz neutra, ideal para salas e cozinhas.',
-    preco: 49.90,
-    saldoEstoque: 9,
-    secao: 'Iluminação',
-    corredor: 'Corredor A13',
-    tag: 'Recomendado'
-  },
-  // Tintas
-  {
-    id: 'prod-tin-01',
-    sku: 'TIN-001',
-    nome: 'Tinta Acrílica Fosca Branco Neve 18L',
-    descricao: 'Tinta premium lavável para ambientes internos e externos, alto rendimento.',
-    preco: 389.90,
-    saldoEstoque: 15,
-    secao: 'Tintas',
-    corredor: 'Corredor C01',
-    tag: 'Destaque'
-  },
-  {
-    id: 'prod-tin-02',
-    sku: 'TIN-002',
-    nome: 'Rolo de Pintura Antigota 23cm com Cabo',
-    descricao: 'Rolo de microfibra sintética ideal para tintas acrílicas e látex sem respingos.',
-    preco: 22.50,
-    saldoEstoque: 18,
-    secao: 'Tintas',
-    corredor: 'Corredor C02',
-    tag: 'Essencial'
-  },
-  {
-    id: 'prod-tin-03',
-    sku: 'TIN-003',
-    nome: 'Lixa para Madeira Grão 120 (Folha)',
-    descricao: 'Lixa para acabamento fino em madeira e nivelamento de massa.',
-    preco: 2.90,
-    saldoEstoque: 0,
-    secao: 'Tintas',
-    corredor: 'Corredor C03',
-    tag: 'Ruptura (Simulação)'
-  },
-  // Ferramentas
-  {
-    id: 'prod-fer-01',
-    sku: 'FER-001',
-    nome: 'Parafusadeira e Furadeira de Impacto 12V',
-    descricao: 'Bateria de lítio, mandril de aperto rápido, 2 velocidades e luz de LED integrada.',
-    preco: 299.90,
-    saldoEstoque: 8,
-    secao: 'Ferramentas',
-    corredor: 'Corredor A08',
-    tag: 'Oferta Especial'
-  },
-  {
-    id: 'prod-fer-02',
-    sku: 'FER-002',
-    nome: 'Trena Manual Emborrachada 5m com Trava',
-    descricao: 'Fita de aço fosco antirreflexo com ponta magnética e corpo anatômico antichoque.',
-    preco: 24.90,
-    saldoEstoque: 22,
-    secao: 'Ferramentas',
-    corredor: 'Corredor A09',
-    tag: 'Mais Vendido'
-  },
-  // Elétrica
-  {
-    id: 'prod-ele-01',
-    sku: 'ELE-001',
-    nome: 'Disjuntor Bipolar Din 32A Curva C',
-    descricao: 'Proteção confiável contra sobrecarga e curto-circuito em redes residenciais.',
-    preco: 34.90,
-    saldoEstoque: 20,
-    secao: 'Elétrica',
-    corredor: 'Corredor A14',
-    tag: 'Segurança'
-  },
-  {
-    id: 'prod-ele-02',
-    sku: 'ELE-002',
-    nome: 'Cabo Flexível 2,5mm² 750V Rolo 100m Azul',
-    descricao: 'Condutor de cobre eletrolítico antichama para instalações elétricas seguras.',
-    preco: 189.90,
-    saldoEstoque: 14,
-    secao: 'Elétrica',
-    corredor: 'Corredor A15',
-    tag: 'Destaque'
-  },
-  // Encanamento
-  {
-    id: 'prod-enc-01',
-    sku: 'ENC-001',
-    nome: 'Tubo Soldável PVC 25mm (3/4") Barra 3m',
-    descricao: 'Tubo para condução de água fria predial com alta resistência e fácil soldagem.',
-    preco: 18.90,
-    saldoEstoque: 35,
-    secao: 'Encanamento',
-    corredor: 'Corredor B04',
-    tag: 'Construção'
-  },
-  // Ferragens
-  {
-    id: 'prod-frg-01',
-    sku: 'FRG-001',
-    nome: 'Fechadura Externa de Embutir Inox Escovado',
-    descricao: 'Fechadura de alta segurança com cilindro monobloco e maçaneta anatômica.',
-    preco: 129.90,
-    saldoEstoque: 11,
-    secao: 'Ferragens',
-    corredor: 'Corredor B01',
-    tag: 'Qualidade'
-  },
-  // Cozinhas
-  {
-    id: 'prod-coz-01',
-    sku: 'COZ-001',
-    nome: 'Torneira Gourmet Monocomando Extensível Inox',
-    descricao: 'Ducha flexível com 2 jatos, rotação 360° e acabamento anticorrosivo.',
-    preco: 249.90,
-    saldoEstoque: 7,
-    secao: 'Cozinhas',
-    corredor: 'Corredor D02',
-    tag: 'Design Moderno'
-  },
-  // Jardim
-  {
-    id: 'prod-jar-01',
-    sku: 'JAR-001',
-    nome: 'Mangueira de Jardim Flexível Trançada 20m',
-    descricao: 'Acompanha esguicho regulável e conexões de engate rápido com proteção UV.',
-    preco: 59.90,
-    saldoEstoque: 16,
-    secao: 'Jardim',
-    corredor: 'Corredor E02',
-    tag: 'Jardinagem'
-  },
-  // Decoração
-  {
-    id: 'prod-dec-01',
-    sku: 'DEC-001',
-    nome: 'Espelho Redondo Adnet com Alça de Couro 60cm',
-    descricao: 'Design contemporâneo com moldura em alumínio preto e fivela regulável.',
-    preco: 119.90,
-    saldoEstoque: 9,
-    secao: 'Decoração',
-    corredor: 'Corredor C05',
-    tag: 'Tendência'
-  },
-  // Materiais de Construção
-  {
-    id: 'prod-mat-01',
-    sku: 'MAT-001',
-    nome: 'Cimento CP II-E-32 Todas as Obras 50kg',
-    descricao: 'Cimento versátil de alta resistência e secagem rápida para concreto e argamassa.',
-    preco: 36.90,
-    saldoEstoque: 40,
-    secao: 'Materiais de construção',
-    corredor: 'Corredor F01',
-    tag: 'Básico da Obra'
-  }
-]
-
 /**
- * Lists physical catalog sections with product count (GET /api/v1/produtos/secoes)
- * Backed by backend's ListarSecoesUseCase -> List<SecaoResponse>
+ * Seções físicas do catálogo, com a contagem de produtos de cada uma.
+ * GET /api/v1/produtos/secoes
+ *
+ * Lista vazia é resposta legítima, não falha: uma loja sem seção cadastrada é um estado
+ * possível, e antes ele era confundido com erro.
  */
 export async function fetchSecoes() {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/produtos/secoes`, {
-      headers: {
-        'Accept': 'application/json'
-      }
-    })
+  const response = await fetch(`${API_BASE_URL}/api/v1/produtos/secoes`, {
+    headers: { Accept: 'application/json' }
+  })
 
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status} ao buscar seções`)
-    }
-
-    const data = await response.json()
-    if (Array.isArray(data) && data.length > 0) {
-      return data
-    }
-    return FALLBACK_SECOES
-  } catch (err) {
-    console.warn('API /produtos/secoes indisponível, usando catálogo local:', err.message)
-    return FALLBACK_SECOES
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} ao buscar seções`)
   }
+
+  const data = await response.json()
+  return Array.isArray(data) ? data : []
 }
 
 /**
- * Searches and filters catalog products (GET /api/v1/produtos)
- * Supports secao, query, apenasDisponiveis, page, size
+ * Monta os parâmetros da busca de produtos.
+ *
+ * As características viajam como `atributo=CHAVE:valor` repetido, e aceitam os dois formatos
+ * que a tela usa: o mapa de seleção das facetas e a lista já pronta.
+ */
+function parametrosDaBusca({ query, secao, apenasDisponiveis, atributos, page, size }) {
+  const params = new URLSearchParams()
+
+  if (query && query.trim() !== '') params.append('query', query.trim())
+  if (secao && secao.trim() !== '' && secao !== 'todos') params.append('secao', secao.trim())
+  if (apenasDisponiveis) params.append('apenasDisponiveis', 'true')
+
+  if (Array.isArray(atributos)) {
+    atributos.forEach(item => {
+      if (item && item.includes(':')) params.append('atributo', item)
+    })
+  } else if (atributos && typeof atributos === 'object') {
+    Object.entries(atributos).forEach(([chave, valores]) => {
+      const lista = Array.isArray(valores) ? valores : [valores]
+      lista.forEach(valor => {
+        if (valor) params.append('atributo', `${chave}:${valor}`)
+      })
+    })
+  }
+
+  params.append('page', String(page))
+  params.append('size', String(size))
+  return params
+}
+
+/**
+ * Busca paginada do catálogo, com filtro por seção, disponibilidade e características.
+ * GET /api/v1/produtos
  */
 export async function fetchProdutos({
   query = '',
@@ -244,140 +77,44 @@ export async function fetchProdutos({
   page = 0,
   size = 50
 } = {}) {
-  try {
-    const params = new URLSearchParams()
-    if (query && query.trim() !== '') params.append('query', query.trim())
-    if (secao && secao.trim() !== '' && secao !== 'todos') params.append('secao', secao.trim())
-    if (apenasDisponiveis) params.append('apenasDisponiveis', 'true')
+  const params = parametrosDaBusca({ query, secao, apenasDisponiveis, atributos, page, size })
 
-    // Append repeated 'atributo' query params: atributo=CHAVE:valor
-    if (Array.isArray(atributos)) {
-      atributos.forEach(item => {
-        if (item && item.includes(':')) params.append('atributo', item)
-      })
-    } else if (atributos && typeof atributos === 'object') {
-      Object.entries(atributos).forEach(([chave, valores]) => {
-        if (Array.isArray(valores)) {
-          valores.forEach(v => {
-            if (v) params.append('atributo', `${chave}:${v}`)
-          })
-        } else if (valores) {
-          params.append('atributo', `${chave}:${valores}`)
-        }
-      })
-    }
+  const response = await fetch(`${API_BASE_URL}/api/v1/produtos?${params.toString()}`, {
+    headers: { Accept: 'application/json' }
+  })
 
-    params.append('page', page.toString())
-    params.append('size', size.toString())
-
-    const response = await fetch(`${API_BASE_URL}/api/v1/produtos?${params.toString()}`, {
-      headers: {
-        'Accept': 'application/json'
-      }
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status} ao buscar produtos`)
-    }
-
-    const data = await response.json()
-    return {
-      content: data.content || [],
-      page: data.page || 0,
-      size: data.size || size,
-      totalElements: data.totalElements ?? (data.content ? data.content.length : 0),
-      totalPages: data.totalPages || 1,
-      facetas: data.facetas || []
-    }
-  } catch (err) {
-    console.warn('API /produtos indisponível, usando filtro local:', err.message)
-    
-    // Filter fallback data locally
-    let filtered = [...FALLBACK_PRODUTOS]
-
-    if (secao && secao.trim() !== '' && secao !== 'todos') {
-      const targetSecao = secao.trim().toLowerCase()
-      filtered = filtered.filter(p => p.secao && p.secao.toLowerCase() === targetSecao)
-    }
-
-/**
- * Calculates Levenshtein distance for fuzzy search (mirroring Oracle's UTL_MATCH)
- */
-function calcularSimilaridade(s1, s2) {
-  if (!s1 || !s2) return 0
-  const a = s1.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-  const b = s2.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-  
-  if (a.includes(b) || b.includes(a)) return 1.0
-
-  const m = a.length
-  const n = b.length
-  const d = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0))
-
-  for (let i = 0; i <= m; i++) d[i][0] = i
-  for (let j = 0; j <= n; j++) d[0][j] = j
-
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1
-      d[i][j] = Math.min(
-        d[i - 1][j] + 1,
-        d[i][j - 1] + 1,
-        d[i - 1][j - 1] + cost
-      )
-    }
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} ao buscar produtos`)
   }
 
-  const maxLen = Math.max(m, n)
-  return 1 - d[m][n] / maxLen
-}
+  const data = await response.json()
+  const content = data.content || []
 
-    if (query && query.trim() !== '') {
-      const q = query.trim().toLowerCase()
-      filtered = filtered.filter(p => {
-        const nomeMatch = p.nome && (
-          p.nome.toLowerCase().includes(q) ||
-          p.nome.toLowerCase().split(/\s+/).some(w => calcularSimilaridade(w, q) >= 0.6) ||
-          calcularSimilaridade(p.nome, q) >= 0.5
-        )
-        const descMatch = p.descricao && (
-          p.descricao.toLowerCase().includes(q) ||
-          p.descricao.toLowerCase().split(/\s+/).some(w => calcularSimilaridade(w, q) >= 0.65)
-        )
-        const corredorMatch = p.corredor && p.corredor.toLowerCase().includes(q)
-        const skuMatch = p.sku && p.sku.toLowerCase().includes(q)
-
-        return nomeMatch || descMatch || corredorMatch || skuMatch
-      })
-    }
-
-    if (apenasDisponiveis) {
-      filtered = filtered.filter(p => p.saldoEstoque > 0)
-    }
-
-    return {
-      content: filtered,
-      page: 0,
-      size: size,
-      totalElements: filtered.length,
-      totalPages: 1,
-      facetas: []
-    }
+  return {
+    content,
+    page: data.page || 0,
+    size: data.size || size,
+    totalElements: data.totalElements ?? content.length,
+    totalPages: data.totalPages || 1,
+    facetas: data.facetas || []
   }
 }
 
 /**
- * Gets product details by ID (GET /api/v1/produtos/{id})
+ * Detalhe de um produto, com descrição e características.
+ * GET /api/v1/produtos/{id}
+ *
+ * Quem chama já parte do produto que a listagem entregou e usa esta resposta para enriquecê-lo,
+ * então a falha aqui é menos grave: a tela continua mostrando o que já tinha em mãos.
  */
 export async function fetchProdutoDetalhe(produtoId) {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/produtos/${produtoId}`)
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status} ao buscar detalhe do produto`)
-    }
-    return await response.json()
-  } catch (err) {
-    console.warn('API /produtos/{id} indisponível, buscando no fallback:', err.message)
-    return FALLBACK_PRODUTOS.find(p => p.id === produtoId) || null
+  const response = await fetch(`${API_BASE_URL}/api/v1/produtos/${produtoId}`, {
+    headers: { Accept: 'application/json' }
+  })
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} ao buscar o detalhe do produto`)
   }
+
+  return await response.json()
 }

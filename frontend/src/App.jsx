@@ -70,6 +70,14 @@ function App() {
   const [totalProductsCount, setTotalProductsCount] = useState(0)
   const [isLoadingSecoes, setIsLoadingSecoes] = useState(true)
   const [isLoadingProdutos, setIsLoadingProdutos] = useState(true)
+  /*
+   * Falha ao falar com a loja, um sinalizador por carregador.
+   *
+   * Dois, e não um compartilhado: as seções carregarem com sucesso apagariam a falha dos
+   * produtos, e a tela voltaria a afirmar que procurou quando não conseguiu procurar.
+   */
+  const [falhaSecoes, setFalhaSecoes] = useState(false)
+  const [falhaProdutos, setFalhaProdutos] = useState(false)
 
   // Roteiro / Cart items state
   const [roteiroItems, setRoteiroItems] = useState([])
@@ -162,9 +170,14 @@ function App() {
           setSecoes(data)
           const sum = data.reduce((acc, curr) => acc + (curr.quantidadeProdutos || 0), 0)
           setTotalProductsCount(sum)
+          setFalhaSecoes(false)
         }
       } catch (err) {
         console.error('Erro ao carregar seções:', err)
+        if (isMounted) {
+          setSecoes([])
+          setFalhaSecoes(true)
+        }
       } finally {
         if (isMounted) setIsLoadingSecoes(false)
       }
@@ -187,8 +200,14 @@ function App() {
       })
       setProdutos(response.content || [])
       setFacetas(response.facetas || [])
+      setFalhaProdutos(false)
     } catch (err) {
       console.error('Erro ao buscar produtos:', err)
+      // Limpa a lista junto: manter o resultado anterior na tela depois de uma falha faria o
+      // aviso de indisponibilidade conviver com produtos, e um dos dois estaria mentindo.
+      setProdutos([])
+      setFacetas([])
+      setFalhaProdutos(true)
     } finally {
       setIsLoadingProdutos(false)
     }
@@ -604,6 +623,7 @@ function App() {
             onSelectSector={handleSelectSecao}
             onBackToHome={handleBackToHome}
             isLoading={isLoadingSecoes}
+            falhaAoCarregar={falhaSecoes}
           />
         ) : currentView === 'product-detail' ? (
           /* ========================================================
@@ -629,6 +649,8 @@ function App() {
             onSelectSecao={handleSelectSecao}
             totalProductsCount={totalProductsCount}
             produtos={produtos}
+            falhaAoCarregar={falhaProdutos}
+            onTentarNovamente={loadProdutos}
             isLoadingProdutos={isLoadingProdutos}
             apenasDisponiveis={apenasDisponiveis}
             setApenasDisponiveis={setApenasDisponiveis}

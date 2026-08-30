@@ -44,10 +44,10 @@ E o cenário é banal — o cliente monta quinze itens, recebe uma ligação, co
 > **Frontend — uma das três saídas está pronta.** Reauditado em 30/08.
 >
 > - **Saída 2, guardar a lista no aparelho: feita.** O roteiro é *local-first* — grava no aparelho primeiro, e o servidor é espelho. Foi o que fez o app continuar funcionando quando derrubamos o backend de propósito.
-> - **Saída 1, avisar bem: pela metade.** O chat passou a admitir que não conseguiu falar com a loja (D-75). O resto da tela, não.
-> - **Saída 3, enfileirar as marcações: não feita.** `alternarColetaItem` grava local e ignora a resposta; o servidor fica para trás sem nada reenviar.
+> - **Saída 1, avisar bem: feita.** Catálogo, setores e chat dizem que não conseguiram falar com a loja, cada um com a frase certa para o seu caso ([D-75](decisoes-tecnicas.md#d-75-a-tela-não-fabrica-resposta-da-ia-quando-não-consegue-perguntar) e [D-77](decisoes-tecnicas.md#d-77-o-catálogo-lança-quando-não-consegue-perguntar-e-a-tela-distingue-isso-de-não-há)).
+> - **Saída 3, enfileirar as marcações: não feita.** `alternarColetaItem` grava local e ignora a resposta; o servidor fica para trás sem nada reenviar. **É o que resta deste cenário.**
 >
-> **E apareceu um problema que a auditoria de 25/08 não tinha como prever:** quando a API não responde, o catálogo devolve **produtos inventados** em vez de avisar. É pior que o erro cru que este cenário queria evitar — ver [O-25](observacoes.md#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai).
+> O catálogo inventado que preenchia o silêncio com produtos falsos foi apagado em 30/08 — era o que impedia qualquer aviso honesto de ser verdade.
 
 Toda ação do cliente é uma chamada de rede: ver o mapa, marcar item, perguntar ao assistente. **No fundo de um corredor de materiais de construção, o sinal cai.**
 
@@ -345,15 +345,17 @@ O time decidiu seguir no gratuito e aquecer a aplicação antes de apresentar. *
 
 Para o vídeo e a banca, o aquecimento resolve. Vale a tela mostrar "preparando o sistema..." em vez de parecer travada, porque **isso vai acontecer em alguma demonstração**.
 
-### 🎨 O backend está fora do ar
+### ✅ O backend está fora do ar
 
-> **Frontend — um pedaço virou humano, o outro virou ficção.** Reauditado em 30/08.
+> **Resolvido nas três frentes.** Verificado em 30/08 **com o backend derrubado de verdade**, não simulado:
 >
-> - **O chat:** resolvido. Diz que não conseguiu falar com a loja e oferece o caminho que funciona (D-75).
-> - **O roteiro:** funciona offline por desenho *local-first*.
-> - **O catálogo:** **piorou em vez de melhorar.** Em vez de avisar, devolve um catálogo inventado — produtos que a loja não tem, em corredores que não existem. Ver [O-25](observacoes.md#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai).
+> - **O catálogo e os setores:** dizem que não conseguiram falar com a loja, com zero produtos na tela e um botão de tentar de novo que funciona quando o servidor volta ([D-77](decisoes-tecnicas.md#d-77-o-catálogo-lança-quando-não-consegue-perguntar-e-a-tela-distingue-isso-de-não-há)).
+> - **O chat:** admite que não conseguiu perguntar, e oferece o caminho que funciona ([D-75](decisoes-tecnicas.md#d-75-a-tela-não-fabrica-resposta-da-ia-quando-não-consegue-perguntar)).
+> - **O roteiro:** continua funcionando pelo desenho *local-first*.
+>
+> **A parte difícil não era mostrar erro, era escolher a frase.** "Nenhum produto encontrado" afirma que procuramos e não há; a tela precisa dizer que não conseguiu procurar. São dois estados separados no código, e um teste confirma que não se confundem.
 
-O backend devolve erro limpo, sem vazar detalhe interno, e está sob teste. Falta a tela transformar isso numa mensagem humana **em vez de preencher o vazio com dado falso**.
+O backend devolve erro limpo, sem vazar detalhe interno, e está sob teste. A tela transforma isso numa mensagem humana, sem preencher o vazio com dado falso.
 
 ---
 
@@ -363,22 +365,23 @@ O backend devolve erro limpo, sem vazar detalhe interno, e está sob teste. Falt
 
 | | 25/08 | 30/08 |
 |---|---|---|
-| Resolvidos | 14 | **19** |
+| Resolvidos | 14 | **20** |
 | Impossível pelo esquema | 1 | 1 |
 | Decidido conscientemente | 1 | 1 |
-| Falta na tela | 14 | **9** |
+| Falta na tela | 14 | **8** |
 
 **Cinco pendências já estavam resolvidas** e ninguém tinha registrado: o filtro sem resultado, a espera do assistente, remover item que a outra aba já removeu, o mapa com a lista vazia e o encerramento com itens pendentes. Duas delas — remover item e marcar item — foram resolvidas **por construção**: o desenho *local-first* fez o caso deixar de existir, em vez de tratá-lo.
 
 ### O que o frontend precisa tratar
 
-Nove cenários, e **três pares compartilham causa** — então são menos correções do que itens:
+Oito cenários, e **um par ainda compartilha causa**:
 
 - **Recarregar ao voltar para a aba** resolve "duas abas abertas" e "marcar item que outra aba removeu".
-- **Avisar quando a loja não responde** cobre "o backend está fora do ar" e parte de "loja de 10.000 m²" — e antes disso precisa **apagar o catálogo inventado**, que hoje preenche o silêncio com dado falso ([O-25](observacoes.md#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai)).
 - **Uma frase quando a sessão vira outra** fecha "sessão expirada".
 
-O que eles têm em comum continua sendo que **o backend já entrega a informação certa** — falta a tela usá-la em vez de repassar o erro cru, ou pior, de inventar o que não sabe.
+O trabalho de **avisar quando a loja não responde** saiu da lista em 30/08, e ele dependia de uma limpeza antes: enquanto o catálogo inventado preenchesse o silêncio com produtos falsos, nenhum aviso honesto poderia ser verdade.
+
+O que os restantes têm em comum continua sendo que **o backend já entrega a informação certa** — falta a tela usá-la em vez de repassar o erro cru.
 
 **A forma do erro é sempre a mesma.** Auditado por teste em 25/08/2026: todo erro da API — de 400 a 500, em qualquer endpoint — devolve os mesmos seis campos, com `status` repetido no corpo, o `path` que falhou, e **nunca detalhe interno**. Um tratamento só resolve todos.
 
