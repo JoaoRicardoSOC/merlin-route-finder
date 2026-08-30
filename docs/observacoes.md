@@ -17,7 +17,6 @@
 | [O-01](#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada) | Chave do Gemini e cota gratuita (afeta a suíte) | João Ricardo | **Alta — 13/09** |
 | [O-02](#o-02-senha-do-oracle-passou-por-canal-de-conversa) | Senha do Oracle exposta | João Ricardo | Média |
 | [O-25](#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai) | **Catálogo inventado no frontend** | Backend/integração | **Alta — antes do vídeo** |
-| [O-27](#o-27-as-22-imagens-coletadas-não-têm-para-onde-ir) | Imagens coletadas sem destino na massa | Backend/integração | **Alta — antes do vídeo** |
 | [O-05](#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição) | Botão de ruptura sem trava — **medido, continua aberto** | Frontend | Alta |
 | [O-26](#o-26-o-convite-do-mapa-vazio-promete-uma-rota-que-não-existe) | Texto do mapa promete rota calculada | Frontend | Média |
 | [O-28](#o-28-a-visão-todos-do-catálogo-não-pagina) | Catálogo sem paginação: 61 de 111 inalcançáveis | Frontend | Alta |
@@ -37,7 +36,7 @@
 | [O-12](#o-12-o-raio-de-busca-da-ruptura-é-um-palpite-informado--agora-medido) | Raio de 25 unidades — medido | — | aceita |
 | [O-15](#o-15-o-endpoint-de-simulação-de-estoque-não-tem-proteção-nenhuma) | Simulação de estoque sem proteção | — | aceita |
 
-**Encerradas:** [O-03](#o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado) (deploy no ar) · [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela) (selo da ruptura) · [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar--sem-objeto) · [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado--sem-objeto) · [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo) · [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) · [O-16](#o-16-o-token-continua-na-url-do-pwa--a-preocupação-deixou-de-existir)
+**Encerradas:** [O-03](#o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado) (deploy no ar) · [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela) (selo da ruptura) · [O-27](#o-27-as-22-imagens-coletadas-não-têm-para-onde-ir--medição-errada-o-mecanismo-já-existia) (imagens já aplicadas) · [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar--sem-objeto) · [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado--sem-objeto) · [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo) · [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) · [O-16](#o-16-o-token-continua-na-url-do-pwa--a-preocupação-deixou-de-existir)
 
 ---
 
@@ -208,17 +207,20 @@ Cinco textos assim já saíram da tela no card de honestidade de 28/08. Este pas
 
 ---
 
-### O-27. As 22 imagens coletadas não têm para onde ir
+### O-27. ~~As 22 imagens coletadas não têm para onde ir~~ — medição errada, o mecanismo já existia
 
-**O quê.** Abrir o campo de imagem em `ProdutoDaMassa` e fazer a carga aplicá-lo, para que as URLs já coletadas cheguem à tela.
-
-**Por que importa.** `Produto` tem `imagemUrl`, a API o entrega, e a tela sabe exibi-lo — o Card 8 do escopo revisado fez essa parte. O que não existe é o **último elo**: o registro da massa (`CatalogoDaMassa.java:76`) guarda sku, nome, seção, preço, estoque, descrição e atributos, e nenhuma imagem. Então nada nunca preenche o campo.
-
-Consequência prática: as 22 URLs coletadas até agora são trabalho parado, e quem coletar mais não tem como conferir se escolheu a foto certa.
-
-**A ordem importa e é contraintuitiva:** abrir o campo **antes** de terminar a coleta. Com o campo aberto, cada URL nova aparece na tela no mesmo dia; sem ele, coletar 89 fotos é encher uma tabela que ninguém lê.
-
-**De quem.** Backend/integração (o campo); time (o resto da coleta, ver [`imagens-dos-produtos.md`](imagens-dos-produtos.md)).
+> [!NOTE]
+> **Encerrada em 30/08/2026, no mesmo dia em que foi aberta, porque estava errada.**
+>
+> **O que a medição contra a API mostrou:** 22 dos 111 produtos respondem com `imagemUrl` preenchida — exatamente os 22 declarados, nenhum faltando. O documento de coleta e o código concordam SKU a SKU, e nenhuma URL coletada pelo time se perdeu.
+>
+> **Por que o erro aconteceu.** Procurei `http` no `CatalogoDaMassa.java` e achei zero, e concluí que não havia caminho. As URLs não moram lá: moram num `Map<String,String> IMAGENS` no `CarregadorDadosIniciais.java`, aplicado quando o produto nasce e propagado aos bancos já existentes por `sincronizarApresentacoes`.
+>
+> **A separação é deliberada**, e o próprio código explica: acrescentar uma foto não deve exigir mexer na lista de 111 produtos. Uma linha no mapa basta, e ela chega sozinha aos bancos que já rodaram.
+>
+> **Fica registrada em vez de apagada**, porque o erro tem valor: é a segunda vez em uma semana que confundi *"o arquivo não tem"* com *"o sistema não faz"* — a primeira foi o mapa, quando medi a função em vez do caminho. É exatamente o que o fluxo de trabalho do time já manda não fazer.
+>
+> **O que continua aberto** é só a coleta manual das outras 89, que é do time e está em [`imagens-dos-produtos.md`](imagens-dos-produtos.md).
 
 ---
 

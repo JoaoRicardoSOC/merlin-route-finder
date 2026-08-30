@@ -2,19 +2,14 @@
 
 > **Documento de trabalho.** Some antes da entrega final, junto com os outros ([O-17](observacoes.md#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final)).
 
-> [!IMPORTANT]
-> **Estado em 30/08/2026: 22 de 111 URLs coletadas, e nenhuma aplicada.**
+> [!NOTE]
+> **Estado em 30/08/2026: 22 de 111 coletadas, e as 22 estão no ar.**
 >
-> As 22 estão paradas nesta tabela. Elas não têm para onde ir: `ProdutoDaMassa`, em `CatalogoDaMassa.java`, guarda sku, nome, seção, preço, estoque, descrição e atributos — **não tem campo de imagem**. A entidade `Produto` tem `imagemUrl` e a API já a entrega; o que falta é o caminho entre a tabela abaixo e a carga.
+> Medido contra a API: 22 produtos respondem com `imagemUrl` preenchida, exatamente os 22 desta tabela. Nada do que o time coletou se perdeu.
 >
-> São duas coisas separadas, e a segunda não depende da primeira estar completa:
+> **Acrescentar uma foto é uma linha de código**, e vale a pena saber disso antes de coletar as próximas: a URL entra no mapa `IMAGENS` do `CarregadorDadosIniciais.java`, e a carga a aplica sozinha — inclusive nos bancos que já existem, sem precisar recriar produto nenhum. Preencher a tabela abaixo e avisar é suficiente.
 >
-> 1. **coletar o resto** — trabalho do time, incremental, priorizado pelos produtos que aparecem na demonstração;
-> 2. **abrir o campo na massa** — card de backend, pequeno, e que faz as 22 já coletadas aparecerem na tela.
->
-> **A ordem certa é a 2 antes da 1.** Enquanto o campo não existir, cada URL coletada é trabalho que não vira nada, e ninguém consegue conferir se a foto que escolheu era a certa.
->
-> Registrado como [O-27](observacoes.md#o-27-as-22-imagens-coletadas-não-têm-para-onde-ir).
+> **Faltam 89**, e a prioridade continua sendo a de sempre: os produtos que aparecem na tela durante a demonstração. Produto sem foto não quebra nada — a tela trata imagem nula.
 
 ## O que fazer
 
