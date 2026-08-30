@@ -24,7 +24,7 @@ export async function consultarHistoricoChat(sessaoId) {
  * Enviar mensagem ao assistente virtual com Contexto de Tela
  * POST /api/v1/sessoes/{sessaoId}/chat/mensagens
  */
-export async function enviarMensagemChat(sessaoId, conteudo, catalogProducts = [], screenContext = null) {
+export async function enviarMensagemChat(sessaoId, conteudo, screenContext = null) {
   if (!conteudo || !conteudo.trim()) return null
 
   // Construir mensagem contextualizada para o modelo de IA
@@ -41,6 +41,7 @@ export async function enviarMensagemChat(sessaoId, conteudo, catalogProducts = [
     }
   }
 
+  // Sem sessao nao ha a quem perguntar, e o caminho abaixo ja e o unico honesto.
   if (sessaoId) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/sessoes/${sessaoId}/chat/mensagens`, {
@@ -55,84 +56,38 @@ export async function enviarMensagemChat(sessaoId, conteudo, catalogProducts = [
       if (response.ok) {
         return await response.json()
       }
+
+      console.warn('O backend recusou a mensagem de chat. Status:', response.status)
     } catch (err) {
-      console.warn('Falha na requisição de chat ao backend, usando motor inteligente com contexto de tela:', err)
+      console.warn('Falha na requisição de chat ao backend:', err)
     }
   }
 
-  // Fallback inteligente com consciência de contexto de tela
-  return fallbackAssistenteIAComContexto(conteudo, catalogProducts, screenContext)
+  return assistenteIndisponivel()
 }
 
 /**
- * Motor de Fallback Grounded com Consciência Contextual
+ * A resposta quando não foi possível falar com a loja.
+ *
+ * Existia aqui, no lugar dela, um motor de palavras-chave que escrevia a resposta do assistente
+ * à mão e a devolvia marcada como `ASSISTANT` — com corredores que não existem na nossa planta
+ * ("A12 a A16", "C01 a C03") e produtos tirados da lista que a tela tivesse em mãos, que nesse
+ * exato cenário é o catálogo de desenvolvimento. Ele fabricava a funcionalidade principal do
+ * projeto justamente quando ela não estava disponível, e a tela não tinha como distinguir.
+ *
+ * Repare que este texto não é o mesmo do backend: quando o assistente cai mas o servidor
+ * responde, quem fala é o backend, e ele diz que o assistente está fora. Aqui a loja inteira
+ * não respondeu — são situações diferentes e o cliente precisa saber qual das duas.
+ *
+ * Sem `produtosRecomendados`: não sabemos nada sobre a pergunta, então não há o que sugerir.
  */
-function fallbackAssistenteIAComContexto(pergunta, catalogProducts = [], screenContext = null) {
-  const p = pergunta.toLowerCase()
-
-  // 1. Contexto de Produto Específico (quando o usuário está na página de produto)
-  if (screenContext?.view === 'product-detail' && screenContext.product) {
-    const prod = screenContext.product
-    const nome = prod.nome || prod.name || 'este produto'
-    const desc = prod.descricao || ''
-    const corredor = prod.corredor || 'Corredor da Loja'
-    const secao = prod.secao || 'Geral'
-
-    let respostaContextual = ''
-    if (p.includes('serve') || p.includes('pra que') || p.includes('para que') || p.includes('o que é') || p.includes('funciona') || p.includes('aplicação')) {
-      respostaContextual = `O produto **${nome}** ${desc ? 'é ' + desc.toLowerCase() : 'é indicado para uso em reformas e instalações'}. Ele fica localizado no **${corredor}** (Setor de ${secao}).`
-    } else if (p.includes('onde') || p.includes('corredor') || p.includes('local') || p.includes('achar')) {
-      respostaContextual = `O item **${nome}** está localizado no **${corredor}** da loja. Você pode clicar no botão de rota ou adicionar ao seu roteiro para encontrá-lo!`
-    } else if (p.includes('voltagem') || p.includes('especifica') || p.includes('marca') || p.includes('tamanho') || p.includes('medida')) {
-      const attrs = prod.atributos?.map(a => `• ${a.rotulo || a.chave}: ${a.valor}`).join('\n') || ''
-      respostaContextual = `Aqui estão as especificações técnicas de **${nome}**:\n${attrs || desc}\nEle está disponível no **${corredor}**.`
-    } else {
-      respostaContextual = `Sobre o item **${nome}** (${corredor}): ${desc ? desc + '.' : 'Excelente opção para o seu projeto.'} Posso te ajudar com os materiais complementares ou ferramentas para sua instalação?`
-    }
-
-    return {
-      id: 'local-' + Date.now(),
-      remetente: 'ASSISTANT',
-      conteudo: respostaContextual,
-      enviadoEm: new Date().toISOString(),
-      produtosRecomendados: [prod]
-    }
-  }
-
-  // 2. Contexto Geral de Loja e Projetos
-  let respostaTexto = ''
-  let produtosSugeridos = []
-
-  if (p.includes('pintar') || p.includes('parede') || p.includes('tinta') || p.includes('pincel') || p.includes('rolo')) {
-    respostaTexto = 'Para pintar uma parede com acabamento profissional e sem sujeira, você precisará preparar a superfície e aplicar a tinta adequada. Na nossa loja você encontra tudo nos corredores de Tintas (C01 a C03):'
-    produtosSugeridos = catalogProducts.filter(item => 
-      ['SKU-TIN-001', 'SKU-TIN-002', 'SKU-TIN-004', 'SKU-TIN-006', 'SKU-TIN-008'].includes(item.sku) ||
-      (item.secao === 'Tintas' && ['Tinta', 'Rolo', 'Fita', 'Lixa'].some(k => item.nome.includes(k)))
-    ).slice(0, 4)
-  } else if (p.includes('tomada') || p.includes('fio') || p.includes('eletric') || p.includes('disjuntor') || p.includes('220v') || p.includes('luz') || p.includes('lâmpada')) {
-    respostaTexto = 'Para iluminação e instalações elétricas seguras, temos disjuntores, cabos e lâmpadas econômicas na seção de Elétrica e Iluminação (Corredores A12 a A16):'
-    produtosSugeridos = catalogProducts.filter(item => 
-      item.secao === 'Elétrica' || item.secao === 'Iluminação'
-    ).slice(0, 4)
-  } else if (p.includes('jardim') || p.includes('planta') || p.includes('vaso') || p.includes('rega')) {
-    respostaTexto = 'Para cuidar do seu jardim ou montar um espaço verde aconchegante, separei os materiais essenciais localizados no setor de Jardinagem (Corredores E01 a E03):'
-    produtosSugeridos = catalogProducts.filter(item => item.secao === 'Jardim').slice(0, 4)
-  } else if (p.includes('furar') || p.includes('ferramenta') || p.includes('parafus') || p.includes('furadeira')) {
-    respostaTexto = 'Para montagens e perfurações em alvenaria ou madeira, você encontra ferramentas elétricas de alta performance e fixadores no Corredor A08 a A11:'
-    produtosSugeridos = catalogProducts.filter(item => item.secao === 'Ferramentas' || item.secao === 'Ferragens').slice(0, 4)
-  } else if (p.includes('pia') || p.includes('cozinha') || p.includes('torneira') || p.includes('sifao') || p.includes('tubo')) {
-    respostaTexto = 'Para reformas hidráulicas e instalação de bancadas na cozinha ou banheiro, os materiais indicados estão nos Corredores B04 a B06 e D01 a D04:'
-    produtosSugeridos = catalogProducts.filter(item => item.secao === 'Encanamento' || item.secao === 'Cozinhas').slice(0, 4)
-  } else {
-    respostaTexto = `Entendi sua dúvida sobre "${pergunta}". No catálogo desta loja temos materiais técnicos e ferramentas especializadas. Veja algumas opções diretamente disponíveis nos nossos corredores:`
-    produtosSugeridos = catalogProducts.slice(0, 3)
-  }
-
+function assistenteIndisponivel() {
   return {
     id: 'local-' + Date.now(),
     remetente: 'ASSISTANT',
-    conteudo: respostaTexto,
-    enviadoEm: new Date().toISOString(),
-    produtosRecomendados: produtosSugeridos
+    conteudo: 'Não consegui falar com a loja agora, então não posso responder sua pergunta. '
+      + 'Enquanto isso, você pode procurar o que precisa direto pela busca do catálogo — '
+      + 'ou chamar um de nossos vendedores no corredor.',
+    enviadoEm: new Date().toISOString()
   }
 }

@@ -96,8 +96,20 @@ export default function AIChatModal({
 
   if (!isOpen) return null
 
-  // Function to extract or correlate products cited in message content
+  /*
+   * Os produtos que o assistente citou, para mostrar o cartao de cada um embaixo da resposta.
+   *
+   * A regra e estrita de proposito: so entra o produto cujo nome completo ou SKU aparece
+   * escrito na resposta. Antes bastavam duas palavras de quatro letras baterem, e isso
+   * pendurava cartoes que a IA nunca recomendou - o backend nao devolve campo de recomendacao,
+   * entao todo cartao aqui era palpite nosso exibido como escolha dela. Com a regra estrita,
+   * mostrar o cartao passa a ser afirmacao verdadeira: o assistente escreveu aquele nome.
+   *
+   * Se a resposta nao nomear nenhum produto por extenso, o certo e nao mostrar cartao nenhum.
+   * Nao afrouxar a regra para faze-los aparecer.
+   */
   const extractCitedProducts = (msg) => {
+    // Gancho para o dia em que o backend disser quais produtos citou. Hoje nada preenche.
     if (msg.produtosRecomendados && msg.produtosRecomendados.length > 0) {
       return msg.produtosRecomendados
     }
@@ -108,13 +120,11 @@ export default function AIChatModal({
 
     const content = msg.conteudo.toLowerCase()
     return catalogProducts.filter(p => {
-      const name = (p.nome || p.name || '').toLowerCase()
       const sku = (p.sku || '').toLowerCase()
       if (sku && content.includes(sku)) return true
-      
-      const words = name.split(' ').filter(w => w.length > 3)
-      const matches = words.filter(w => content.includes(w))
-      return matches.length >= 2 || (name.length > 5 && content.includes(name))
+
+      const nome = (p.nome || p.name || '').toLowerCase()
+      return nome.length > 5 && content.includes(nome)
     }).slice(0, 3)
   }
 
@@ -134,7 +144,7 @@ export default function AIChatModal({
     setIsLoading(true)
 
     try {
-      const response = await enviarMensagemChat(sessionId, text, catalogProducts, screenContext)
+      const response = await enviarMensagemChat(sessionId, text, screenContext)
       if (response) {
         setMessages(prev => [...prev, response])
       }

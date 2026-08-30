@@ -1,6 +1,6 @@
 # Merlin Route Finder — Decisões Técnicas
 
-> Registro das decisões técnicas não convencionais tomadas no backend, com o raciocínio por trás de cada uma. Existe para que qualquer integrante do time — ou um avaliador do projeto — entenda **por que** o código está do jeito que está, sem precisar vasculhar arquivo por arquivo.
+> Registro das decisões técnicas não convencionais tomadas no projeto — backend e frontend —, com o raciocínio por trás de cada uma. Existe para que qualquer integrante do time — ou um avaliador do projeto — entenda **por que** o código está do jeito que está, sem precisar vasculhar arquivo por arquivo.
 >
 > Complementa [`contexto-e-planejamento.md`](contexto-e-planejamento.md) (o que o projeto é) e [`planejamento-tecnico.md`](planejamento-tecnico.md) (como o trabalho foi organizado).
 >
@@ -38,6 +38,10 @@
 - [D-29. Uso único do token pela ausência no banco](#d-29-uso-único-do-token-pela-ausência-no-banco)
 - [D-44. O token de handoff sai da URL, e o QR Code passa a ser regenerável](#d-44-o-token-de-handoff-sai-da-url-e-o-qr-code-passa-a-ser-regenerável)
 - [D-09. Relação com a sessão é unidirecional](#d-09-relação-com-a-sessão-é-unidirecional)
+
+**Frontend**
+- [D-75. A tela não fabrica resposta da IA quando não consegue perguntar](#d-75-a-tela-não-fabrica-resposta-da-ia-quando-não-consegue-perguntar)
+- [D-76. O cartão de produto no chat exige que a IA tenha escrito o nome](#d-76-o-cartão-de-produto-no-chat-exige-que-a-ia-tenha-escrito-o-nome)
 
 **Persistência**
 - [D-10. Entidades JPA espelho, separadas das de domínio](#d-10-entidades-jpa-espelho-separadas-das-de-domínio)
@@ -1845,6 +1849,46 @@ A auditoria de respostas de erro, feita em 25/08, não tinha alcançado esse cas
 **O acoplamento ao container é deliberado, e falha bem.** Importar uma classe do Tomcat na camada de apresentação é acoplamento mais forte do que o Jakarta que já está ali. Aceito porque a alternativa — inspecionar nome de classe em tempo de execução — é frágil sem ser mais desacoplada. E a falha é benigna: **trocando de container, este tratador simplesmente nunca dispara** e a resposta volta a ser a genérica. Nada quebra, só se perde a precisão.
 
 **Onde no código.** `presentation/advice/GlobalExceptionHandler.java`.
+
+### D-75. A tela não fabrica resposta da IA quando não consegue perguntar
+
+**O problema.** `enviarMensagemChat` chamava o backend e, quando a chamada não dava certo, não mostrava erro: caía num motor de palavras-chave de 68 linhas que devolvia uma mensagem marcada como `remetente: 'ASSISTANT'` — indistinguível de uma resposta real, porque o modal trata todo `ASSISTANT` igual.
+
+Não era uma camada de ficção, eram três. O texto era escrito à mão. Os corredores citados — `A12 a A16`, `C01 a C03`, `E01 a E03` — não existem na nossa planta. E os produtos sugeridos saíam da lista que a tela tivesse em mãos, que **nesse exato cenário** é o catálogo de desenvolvimento do frontend, com SKUs que não são os nossos.
+
+O motor fabricava a funcionalidade principal do projeto justamente quando ela não estava disponível.
+
+**Ele disparava mais fácil do que parecia.** Não dependia de o servidor estar fora. O backend devolve 404 para sessão inexistente e 409 para sessão expirada, e os dois caem no `!response.ok` — bastava a sessão vencer, com tudo de pé, para o cliente conversar com o motor falso. Havia ainda um terceiro caminho: sem `sessaoId`, nenhuma requisição era sequer tentada.
+
+**Decisão.** O motor sai inteiro. No lugar, uma mensagem honesta de indisponibilidade, para onde convergem os três caminhos de falha.
+
+**Por que não rotulá-lo como "resposta offline".** Era a alternativa considerada, e ela dependia de os produtos sugeridos serem reais — e eles não são, justamente no estado em que o motor rodava. Rotular honestamente uma resposta que recomenda produto inexistente em corredor inexistente não a torna honesta; só muda o lugar da invenção. Um ajudante offline de verdade fica possível depois que o catálogo inventado sair do frontend, e aí com premissa que se sustenta.
+
+**São dois textos diferentes de propósito, e isso importa.** Quando o assistente cai mas o servidor responde, quem fala é o backend, com a mensagem da [D-35](#d-35-o-cliente-de-ia-falha-explicitamente-o-fallback-é-de-quem-chama): *o assistente está fora*. Este texto novo só aparece quando **a loja inteira** não respondeu. Foram verificados lado a lado no navegador, no mesmo lugar da tela, e são distinguíveis.
+
+**Sobrou um diagnóstico onde não havia nenhum.** O código antigo engolia o status silenciosamente. O novo registra `O backend recusou a mensagem de chat. Status: N` — e foi exatamente esse aviso que denunciou, no primeiro teste, um 403 de CORS que o motor falso vinha escondendo.
+
+**Onde no código.** `frontend/src/services/chatService.js`.
+
+---
+
+### D-76. O cartão de produto no chat exige que a IA tenha escrito o nome
+
+**O problema.** `extractCitedProducts` pegava o texto da resposta do assistente, cortava em palavras de quatro letras ou mais e pendurava o cartão de um produto embaixo da mensagem quando **duas** delas batessem com algum nome do catálogo.
+
+Diferente da [D-75](#d-75-a-tela-não-fabrica-resposta-da-ia-quando-não-consegue-perguntar), esse rodava também nas respostas **reais**. E o `ChatMensagemResponse` não tem campo de recomendação: o backend nunca diz quais produtos citou. Então todo cartão que aparecia sob uma resposta era palpite do frontend, exibido como escolha da IA.
+
+**Decisão.** O cartão passa a exigir **nome completo ou SKU** escrito na resposta.
+
+**A mudança não é de rigor, é de natureza.** Com duas palavras soltas, o cartão era uma inferência nossa sobre o que a IA quis dizer. Com o nome inteiro, ele é uma afirmação verificável sobre o que ela escreveu — se o assistente digitou o nome do produto, mostrar aquele produto é verdade.
+
+**Nenhum cartão é resultado aceitável.** Se a resposta não nomear produto por extenso, o certo é não mostrar cartão. A regra não deve ser afrouxada para fazê-los aparecer: seria voltar ao palpite com outra roupa.
+
+**O gancho para o backend fica.** A leitura de `produtosRecomendados` continua sendo a primeira coisa que a função faz, embora nada a preencha hoje. É por ali que o caso correto entra, no dia em que o assistente devolver os produtos que citou.
+
+**Onde no código.** `frontend/src/components/AIChatModal.jsx`.
+
+---
 
 ---
 
