@@ -44,6 +44,8 @@
 - [D-76. O cartão de produto no chat exige que a IA tenha escrito o nome](#d-76-o-cartão-de-produto-no-chat-exige-que-a-ia-tenha-escrito-o-nome)
 - [D-77. O catálogo lança quando não consegue perguntar, e a tela distingue isso de "não há"](#d-77-o-catálogo-lança-quando-não-consegue-perguntar-e-a-tela-distingue-isso-de-não-há)
 - [D-78. Paginação com duas funções separadas, e botão em vez de rolagem infinita](#d-78-paginação-com-duas-funções-separadas-e-botão-em-vez-de-rolagem-infinita)
+- [D-79. O texto sobre o verde da marca é escuro, e o verde que carrega texto é outro](#d-79-o-texto-sobre-o-verde-da-marca-é-escuro-e-o-verde-que-carrega-texto-é-outro)
+- [D-80. Movimento reduzido usa duração de 0,01ms, e não `animation: none`](#d-80-movimento-reduzido-usa-duração-de-001ms-e-não-animation-none)
 
 **Persistência**
 - [D-10. Entidades JPA espelho, separadas das de domínio](#d-10-entidades-jpa-espelho-separadas-das-de-domínio)
@@ -1951,6 +1953,75 @@ A paginação em si é o que este card monta. O gatilho é trocável depois, sob
 **Detalhe do texto.** O selo só diz "de" quando há mais do que está na tela: com tudo carregado, "111 de 111" seria ruído, e vira "111 itens".
 
 **Onde no código.** `frontend/src/App.jsx`, `frontend/src/components/CatalogSearchPage.jsx`.
+
+---
+
+### D-79. O texto sobre o verde da marca é escuro, e o verde que carrega texto é outro
+
+**O problema.** O `#78be20` é o verde da Leroy e é legítimo como identidade — mas é **claro**. Estava sendo usado de duas formas que reprovam na acessibilidade:
+
+- como **fundo de botão sob texto branco**: 2,29:1;
+- como **cor de letra e de ícone** sobre superfícies claras: 2,19 a 2,29:1.
+
+O mínimo é 4,5:1 para texto e 3:1 para elemento gráfico. **Treze elementos reprovavam só na tela inicial.**
+
+**A decisão, tomada pelo time entre duas saídas que passavam:**
+
+| | Contraste |
+|---|---|
+| Escurecer o **botão** (`#008037`) e manter texto branco | 5,07:1 |
+| **Manter o verde vivo** e escurecer o **texto** (`#1b3800`) | **5,69:1** |
+
+Ficou a segunda. Ela mantém a cor da marca dominante na tela — que é o ponto de um app feito para uma marca — e ainda dá contraste melhor. O preço é ser menos convencional: texto escuro sobre verde vivo não é o botão que a maioria dos sites usa.
+
+**A regra que fica, e cabe numa frase:** *o verde vivo pinta superfície e borda; o verde escuro carrega texto e ícone; sobre o verde vivo, o texto é quase preto.*
+
+**Quatro tokens fazem o trabalho, e por isso a correção é pequena:**
+
+```
+--on-primary:    #ffffff → #1b3800   (o texto sobre o verde vivo)
+--primary-dark:  #008037 → #00702f   (o verde que carrega texto)
+--text-muted:    #6e7668 → #5d6457   (o cinza secundário)
+--primary:       #78be20             (inalterado — segue pintando tudo)
+```
+
+**Por que `--primary-dark` também precisou escurecer.** O `#008037` passava sobre branco (5,07) e reprovava por **meio décimo** sobre os cartões de setor tingidos de verde: 4,49. `#00702f` sobe para 5,53 lá e 6,25 sobre branco.
+
+**Por que `--text-muted` entrou junto.** Ele passava sobre o fundo da página (4,51) e caía para 3,96 em qualquer superfície tingida — e é o cinza de quase todo rótulo secundário do app.
+
+**Três armadilhas que só apareceram medindo:**
+
+1. **O banner promocional precisou de branco explícito.** Dos 32 usos de `--on-primary`, 29 estão sobre o verde vivo e um está sobre o gradiente **escuro** do banner. Sem tratar esse, ele viraria texto quase preto sobre verde escuro.
+
+2. **O título do banner já estava errado antes desta mudança.** Ele é um `<h3>`, e a regra global `h1..h6 { color: var(--on-surface) }` **vence a herança** — ela mira o elemento, a herança não. O resultado era cinza-escuro sobre verde escuro, **2,52:1**, com a descrição branca logo abaixo no mesmo cartão. Ninguém tinha notado.
+
+3. **Seis lugares escreviam `#ffffff` à mão** sobre o verde vivo, escapando do token — a pílula de seção ativa, o contador dentro dela, a bolha do cliente no chat, o selo de contagem de filtros. Passaram a usar `var(--on-primary)`.
+
+**Onde no código.** `frontend/src/index.css` (os tokens), `frontend/src/App.css`.
+
+---
+
+### D-80. Movimento reduzido usa duração de 0,01ms, e não `animation: none`
+
+**O problema.** O app tem 18 conjuntos de quadros-chave, 40 animações e 78 transições — e **14 animações infinitas**: pulsos de sinalizador, esqueletos de carregamento, brilho do assistente, varredura do leitor, tracejado do mapa. `prefers-reduced-motion` **não aparecia nenhuma vez** no CSS.
+
+Quem tem sensibilidade vestibular e liga "reduzir movimento" no sistema recebia todas elas. Não é preferência estética: movimento constante causa enjoo e desorientação de verdade.
+
+**A decisão está no valor, não na existência do bloco.** A versão que quase todo mundo escreve é `animation: none !important`, e ela tem um efeito colateral que passa despercebido: **os esqueletos de carregamento somem**. Eles não são enfeite — comunicam que algo está acontecendo. Com `none`, a tela fica vazia em vez de "carregando", e quem pediu para reduzir movimento perde informação em vez de ganhar conforto.
+
+**A forma correta:**
+
+```css
+animation-duration: 0.01ms !important;
+animation-iteration-count: 1 !important;
+transition-duration: 0.01ms !important;
+```
+
+A animação roda uma vez, em tempo imperceptível, e **pinta o quadro final**. O esqueleto continua visível e parado; o pulso não pulsa.
+
+**Como foi verificado, e o que não deu para verificar.** A ferramenta de navegador desta sessão não emula `prefers-reduced-motion`. O que foi possível provar é que o navegador **analisou** a regra corretamente — a consulta ao CSSOM devolve a condição `(prefers-reduced-motion: reduce)` e as quatro declarações com `!important` no lugar. A aplicação em si é semântica de CSS, não depende de nós.
+
+**Onde no código.** `frontend/src/App.css`, no fim do arquivo.
 
 ---
 

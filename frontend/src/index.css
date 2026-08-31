@@ -2,11 +2,23 @@
   /* Brand & Core Colors (Leroy Merlin Minimalist Design System - Stitch) */
   --primary: #78be20;
   --primary-hover: #68a719;
-  --primary-dark: #008037;
+  /* Escurecido de #008037 para #00702f: o valor antigo dava 4,49 sobre os cartões de setor
+     tingidos de verde, meio décimo abaixo do mínimo. Agora 5,53 lá e 6,25 sobre branco. */
+  --primary-dark: #00702f;
   --primary-container: #78be20;
   --primary-light: #f3f9ea;
   --primary-fixed: #acf758;
-  --on-primary: #ffffff;
+  /*
+   * Quase-preto, e não branco.
+   *
+   * O verde da marca (#78be20) é claro: branco por cima dá 2,29:1, quando o mínimo para texto
+   * é 4,5:1. Escurecer o texto em vez de escurecer o botão mantém a cor da Leroy dominante na
+   * tela e dá 5,69:1 — melhor que a alternativa convencional de fundo escuro com texto branco.
+   *
+   * Só o banner promocional não usa este token: lá o fundo é escuro, e o branco é explícito.
+   * Ver D-79.
+   */
+  --on-primary: #1b3800;
   --on-primary-container: #1b3800;
 
   /* Surfaces & Backgrounds */
@@ -26,7 +38,9 @@
   --on-surface: #1d1d1b;
   --on-surface-variant: #414937;
   --on-secondary: #ffffff;
-  --text-muted: #6e7668;
+  /* Escurecido de #6e7668 para #5d6457: o antigo passava sobre o fundo da página (4,51) e
+     reprovava em qualquer superfície tingida — 3,96 na mais escura. Agora 5,15 no pior caso. */
+  --text-muted: #5d6457;
 
   /* Accents & Status */
   --accent-gold: #e5a900;

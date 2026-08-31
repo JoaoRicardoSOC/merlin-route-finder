@@ -150,6 +150,22 @@ Enquanto o frontend não estiver publicado, essa variável **tem que continuar v
 
 ---
 
+## [FRONTEND] — acessibilidade, fechada em 30/08
+
+> ### A-1, A-2 e A-3 — **FEITOS**
+>
+> Três correções que vieram da avaliação de interface, e que a rubrica paga (5 pontos de usabilidade no Projeto, 4,5 no Deploy):
+>
+> **A-1. O verde da marca parou de reprovar.** De **13 elementos reprovados para 1** na tela inicial — e esse é o ícone de estrela, decorativo, cujo mínimo é 3:1 e ele passa com 4,23. Catálogo, mapa, setores e chat: zero. Quatro tokens fizeram o trabalho, e o verde vivo continua pintando tudo. Ver [D-79](decisoes-tecnicas.md#d-79-o-texto-sobre-o-verde-da-marca-é-escuro-e-o-verde-que-carrega-texto-é-outro).
+>
+> **A-2. O movimento respeita quem pediu para parar.** As 14 animações infinitas param sob `prefers-reduced-motion`, e os esqueletos de carregamento **continuam visíveis** — o detalhe que a versão ingênua erra. Ver [D-80](decisoes-tecnicas.md#d-80-movimento-reduzido-usa-duração-de-001ms-e-não-animation-none).
+>
+> **A-3. Um erro deixou de derrubar o app para tela branca.** Testado quebrando um componente de propósito: a tela de recuperação aparece, e a pilha completa vai para o console — a barreira não engole o defeito.
+>
+> **Três achados de brinde, que só apareceram medindo:** o título do banner era cinza-escuro sobre verde escuro (**2,52:1**) desde antes, porque a regra global de `h1..h6` vence a herança de cor; seis lugares escreviam branco à mão, fora do alcance do token; e `--text-muted` reprovava em toda superfície tingida.
+>
+> **O que a auditoria achou e ficou de fora, com motivo:** [O-32](observacoes.md#o-32-a-paleta-de-cores-por-setor-reprova-no-contraste-e-é-decisão-de-identidade) (cores por setor — é identidade visual, decisão da dupla), [O-33](observacoes.md#o-33-oito-alvos-de-toque-abaixo-de-44px-e-o-projeto-define-esse-mínimo) (alvos de toque) e [O-34](observacoes.md#o-34-a-aba-do-qr-code-manda-apontar-uma-câmera-que-não-existe) (o texto do QR).
+
 ## [FRONTEND] — acabamentos
 
 Onze cards. **Nenhum é trabalho grande**, e o que eles têm em comum é que o backend já entrega a informação certa — falta a tela usá-la. Três pares compartilham causa, então são menos correções do que itens.

@@ -24,6 +24,9 @@
 | [O-29](#o-29-duas-pastas-de-documentação-estão-vazias-desde-o-primeiro-dia) | `docs/arquitetura` e `docs/casos_de_uso` vazias | Time | Baixa |
 | [O-30](#o-30-a-sessão-duplicada-na-abertura-é-do-strictmode-e-só-em-desenvolvimento) | Sessão duplicada é do StrictMode, **não é defeito** | — | esclarecida |
 | [O-31](#o-31-o-assistente-não-nomeia-produtos-por-extenso-e-por-isso-nenhum-cartão-aparece) | Cartões do chat estão dormentes — **medido** | Backend, se o time quiser | Baixa |
+| [O-32](#o-32-a-paleta-de-cores-por-setor-reprova-no-contraste-e-é-decisão-de-identidade) | Cores por setor reprovam — **medidas** | Frontend e time | Média |
+| [O-33](#o-33-oito-alvos-de-toque-abaixo-de-44px-e-o-projeto-define-esse-mínimo) | Alvos de toque abaixo de 44px | Frontend | Média |
+| [O-34](#o-34-a-aba-do-qr-code-manda-apontar-uma-câmera-que-não-existe) | A aba do QR manda apontar câmera inexistente | Frontend | Média |
 | [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
 | [O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens) | Coletar as imagens dos produtos | Time | Média |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
@@ -522,6 +525,64 @@ O que existe no lugar de proteção: marcação explícita como `[Demonstracao]`
 2. **pedir ao assistente que cite os produtos pelo nome completo**, ajustando o prompt no backend. Aí os cartões passam a aparecer, com a mesma regra estrita. É card de backend, pequeno, e melhora a demonstração.
 
 **Não é saída:** afrouxar a regra do cartão. Foi o que existia antes, e pendurava produto que a IA nunca recomendou.
+
+---
+
+### O-32. A paleta de cores por setor reprova no contraste, e é decisão de identidade
+
+**O quê.** Os dez tons de `constants/setores.js` — um por seção — são usados como cor de ícone sobre fundos tingidos da mesma família. **Medidos em 30/08/2026**, no mapa e na tela de setores:
+
+| Ícone | Cor | Contraste | Mínimo |
+|---|---|---|---|
+| `bolt`, `lightbulb`, `construction` | `#f59e0b` | **1,93** | 3,0 |
+| `bathtub` | `#06b6d4` | **2,18** | 3,0 |
+| `countertops`, `yard` | `#10b981` | **2,28** | 3,0 |
+| `plumbing` | `#0ea5e9` | **2,42** | 3,0 |
+| `texture` | `#d97706` | **2,86** | 3,0 |
+| outros seis | — | 3,16 a 4,42 | 3,0 |
+
+**Por que não entrou no card de acessibilidade de 30/08.** Aquele card corrigiu o verde da marca, que é **um** sistema de cor com regra clara. Este é outro: **dez cores escolhidas para diferenciar seções**, e escurecê-las mexe na identidade visual que a dupla de frontend desenhou. Corrigir sem conversar seria decidir por eles.
+
+**Duas saídas, e a segunda é mais barata do que parece.**
+
+1. **Escurecer os dez tons** até 3:1 sobre os fundos tingidos. Mantém a lógica de "uma cor por seção", muda o visual.
+2. **Escurecer só o fundo tingido**, mantendo as cores. O contraste sobe sem tocar na paleta — e o ícone continua colorido do mesmo jeito.
+
+**Atenuante honesto:** são ícones **acompanhados do nome da seção escrito ao lado**. Ninguém depende da cor para saber que corredor é aquele — ela é reforço, não a informação. Por isso é média, e não alta.
+
+**De quem.** Frontend, com o time.
+
+---
+
+### O-33. Oito alvos de toque abaixo de 44px, e o projeto define esse mínimo
+
+**O quê.** Medido em 375 px na tela inicial:
+
+- **seis chips de sugestão** ("Lâmpada LED", "Tinta Acrílica"…): **30px de altura**
+- **botão de busca**: 40 × 40
+- **campo de busca**: 40 de altura
+
+**Por que importa.** O app é usado **em pé, num corredor, com uma mão** — muitas vezes a outra segurando um produto. Alvo pequeno erra mais nessa situação do que sentado no sofá.
+
+**O detalhe que chama atenção:** `--min-touch-target: 44px` **está definido nos tokens e é usado em doze lugares**. Não é desconhecimento do padrão — é aplicação incompleta dele.
+
+**Correção sugerida, que não muda o desenho.** Nos chips, `min-height: 44px` com o preenchimento vertical distribuído mantém a aparência de pílula fina e dobra a área de toque. É o tipo de erro que só aparece com a mão, e não no monitor.
+
+**De quem.** Frontend.
+
+---
+
+### O-34. A aba do QR Code manda apontar uma câmera que não existe
+
+**O quê.** A aba "Plano A: QR Code" do modal de localização diz *"Aponte a câmera para o QR Code da placa do corredor"*. **Não há `<video>`, não há `<canvas>`, não há leitor** — verificado. A instrução não leva a lugar nenhum.
+
+**E o mais interessante: o fluxo do QR funciona.** O cliente escaneia com a **câmera nativa do celular**, que abre a URL com `?ponto=TIN-02`, e o app entra já posicionado — testado com placa válida e inválida. O aplicativo **nunca precisou de leitor próprio**. Só a tela descreve errado.
+
+**É correção de texto, não de código.** Algo como *"escaneie a placa com a câmera do seu celular — ela abre o app já na sua posição"*. Os botões de simulação abaixo são honestos e podem ficar: dizem "SIMULE" com todas as letras.
+
+**Dois detalhes na mesma tela.** Ela lista **todas as placas da loja** com `Coord: (50, 92)` — coordenadas cruas do nosso sistema de eixos, que não significam nada para o cliente. Numa loja real, uma lista de todas as placas derrotaria o propósito do QR.
+
+**De quem.** Frontend.
 
 ---
 
