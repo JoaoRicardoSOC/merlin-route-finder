@@ -34,7 +34,11 @@ export default function ProductDetailPage({
   const price = detailedProduct.preco ?? detailedProduct.price ?? 0
   const stock = detailedProduct.saldoEstoque ?? detailedProduct.stock ?? 0
   const secao = detailedProduct.secao || ''
-  const corredor = detailedProduct.pontoMapa?.corredor || detailedProduct.corredor || (secao && SECTOR_METADATA[secao]?.corredor) || 'Corredor da Loja'
+  /*
+   * Sem valor genérico de reserva: espaço em branco comunica ausência, "Corredor da Loja"
+   * comunica presença — e mente. Onde não sabemos, a tela diz "não informado".
+   */
+  const corredor = detailedProduct.pontoMapa?.corredor || detailedProduct.corredor || (secao && SECTOR_METADATA[secao]?.corredor) || null
   const image = detailedProduct.imagemUrl || detailedProduct.image || null
   const sku = detailedProduct.sku || 'SKU-000'
   const atributos = detailedProduct.atributos || []
@@ -125,7 +129,7 @@ export default function ProductDetailPage({
           </div>
           <div className="product-page-loc-content">
             <span className="product-page-loc-label">Localização Física na Loja</span>
-            <strong className="product-page-loc-value">{corredor}</strong>
+            <strong className="product-page-loc-value">{corredor || 'Não informada'}</strong>
           </div>
           <div className="product-page-loc-actions">
             <button
@@ -174,7 +178,7 @@ export default function ProductDetailPage({
               </div>
               <div className="product-spec-row">
                 <span className="product-spec-key">Corredor de Armazenamento</span>
-                <span className="product-spec-value">{corredor}</span>
+                <span className="product-spec-value">{corredor || 'Não informado'}</span>
               </div>
             </div>
           )}

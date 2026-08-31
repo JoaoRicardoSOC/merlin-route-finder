@@ -1,7 +1,15 @@
 import React from 'react'
 
+/**
+ * Onde o cliente está — ou o convite para descobrir, quando ainda não sabemos.
+ *
+ * Sem posição, este cartão não inventa a entrada da loja: ele diz que não sabe e convida a
+ * escanear uma placa. É o dado que separa este produto de um catálogo online, e afirmá-lo
+ * errado é pior que admitir a ausência.
+ */
 export default function LocationStatus({ location, onClick }) {
-  const aisleText = location?.aisle || 'Entrada Principal da Loja'
+  const semPosicao = !location?.aisle
+  const aisleText = location?.aisle || 'Escaneie uma placa para aparecer aqui'
   const codeBadge = location?.code ? `Placa ${location.code}` : null
 
   return (
@@ -18,7 +26,9 @@ export default function LocationStatus({ location, onClick }) {
 
       <div className="modern-location-content">
         <div className="modern-location-top">
-          <span className="modern-location-label">Você está em</span>
+          <span className="modern-location-label">
+            {semPosicao ? 'Ainda não sabemos onde você está' : 'Você está em'}
+          </span>
           {codeBadge && <span className="modern-plate-tag">{codeBadge}</span>}
         </div>
         <div className="modern-location-name">

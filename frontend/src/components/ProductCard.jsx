@@ -13,7 +13,11 @@ export default function ProductCard({
   const price = product.preco ?? product.price ?? 0
   const stock = product.saldoEstoque ?? product.stock ?? 0
   const secao = product.secao || ''
-  const corredor = product.corredor || (secao && SECTOR_METADATA[secao]?.corredor) || 'Corredor da Loja'
+  /*
+   * Sem valor genérico de reserva: espaço em branco comunica ausência, "Corredor da Loja"
+   * comunica presença — e mente. A linha inteira some quando não sabemos onde o produto está.
+   */
+  const corredor = product.corredor || (secao && SECTOR_METADATA[secao]?.corredor) || null
   const image = product.imagemUrl || product.image || null
   const tag = product.tag || (stock === 0 ? 'Sem Estoque (Ruptura)' : stock <= 5 ? 'Últimas Unidades' : null)
 
@@ -65,10 +69,12 @@ export default function ProductCard({
               {isOutOfStock ? 'Estoque Esgotado' : `${stock} un. disponíveis`}
             </span>
           </div>
-          <div className="location-info-tag">
-            <span className="material-symbols-outlined loc-pin-icon filled">location_on</span>
-            <span className="aisle-name">{corredor}</span>
-          </div>
+          {corredor && (
+            <div className="location-info-tag">
+              <span className="material-symbols-outlined loc-pin-icon filled">location_on</span>
+              <span className="aisle-name">{corredor}</span>
+            </div>
+          )}
         </div>
 
         <div className="product-footer">

@@ -708,7 +708,7 @@ export default function StoreMapPage({
                 </p>
               ) : (
                 <p className="next-stop-text">
-                  Sua lista está vazia. Adicione produtos na vitrine para traçar a melhor rota.
+                  Sua lista está vazia. Adicione produtos e eles aparecem aqui no mapa, junto de onde você está.
                 </p>
               )}
             </div>

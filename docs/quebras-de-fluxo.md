@@ -89,11 +89,11 @@ A loja remanejou uma seção, o ponto saiu do banco, mas o adesivo continua na p
 
 **Deveria ver:** "não reconhecemos este ponto — procure outro QR Code por perto". E a sessão deveria começar mesmo assim, **sem posição inicial**, em vez de não começar. Melhor um mapa sem o "você está aqui" do que nenhum sistema.
 
-### 🎨 A sessão guardada no aparelho já expirou
+### ✅ A sessão guardada no aparelho já expirou
 
-> **Frontend — a mecânica está feita, a mensagem não.** Reauditado em 30/08. `obterOuCriarSessao` consulta a sessão guardada **antes** de usá-la e, se o status não for `ACTIVE`, cria outra (`sessionService.js:184`). Ninguém mais bate em erro na primeira ação.
+> **Resolvido.** A mecânica já existia: `obterOuCriarSessao` consulta a sessão guardada antes de usá-la e cria outra se o status não for `ACTIVE`.
 >
-> **Falta a frase.** A troca é silenciosa: a lista anterior desaparece e o cliente não fica sabendo por quê. É o "sua sessão anterior expirou" que este cenário pedia. Ver [O-06](observacoes.md#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar).
+> **Entrou a frase que faltava** — *"Sua sessão anterior expirou. Começamos uma nova."* A detecção não exigiu mexer no serviço: o `App` guarda o id **antes** da chamada e compara com o que volta. Id diferente ⇒ houve troca. Ver [O-06](observacoes.md#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar).
 
 **O que o cliente vê:** hoje, erro na primeira ação.
 
@@ -227,7 +227,7 @@ Devolve `404`. **O frontend deveria tratar como sucesso**: o cliente queria que 
 
 > **Resolvido na tela, com um defeito de texto anexo.** Verificado em 30/08: `StoreMapPage.jsx:711` mostra a loja com o convite "Sua lista está vazia. Adicione produtos na vitrine para traçar a melhor rota." Não é mais um mapa vazio sem explicação.
 >
-> **Mas a frase promete o que o sistema não faz.** "Traçar a melhor rota" é justamente o recurso que a mentoria mandou tirar — o mapa mostra posições, e quem escolhe o caminho é o cliente ([D-49](decisoes-tecnicas.md#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada)). É o mesmo tipo de afirmação falsa que o card de honestidade da tela inicial já limpou em outros cinco lugares, e este passou. Registrado como [O-26](observacoes.md#o-26-o-convite-do-mapa-vazio-promete-uma-rota-que-não-existe).
+> **Mas a frase promete o que o sistema não faz.** "Traçar a melhor rota" é justamente o recurso que a mentoria mandou tirar — o mapa mostra posições, e quem escolhe o caminho é o cliente ([D-49](decisoes-tecnicas.md#d-49-o-escopo-revisado-retirou-o-totem-e-a-rota-calculada)). É o mesmo tipo de afirmação falsa que o card de honestidade da tela inicial já limpou em outros cinco lugares, e este passou. Registrado como [O-26](observacoes.md#o-26-o-convite-do-mapa-vazio-promete-uma-rota-que-não-existe--corrigido).
 
 O cliente vai ao mapa antes de escolher qualquer coisa.
 
@@ -367,18 +367,16 @@ O backend devolve erro limpo, sem vazar detalhe interno, e está sob teste. A te
 
 | | 25/08 | 30/08 |
 |---|---|---|
-| Resolvidos | 14 | **22** |
+| Resolvidos | 14 | **23** |
 | Impossível pelo esquema | 1 | 1 |
 | Decidido conscientemente | 1 | 1 |
-| Falta na tela | 14 | **6** |
+| Falta na tela | 14 | **5** |
 
 **Cinco pendências já estavam resolvidas** e ninguém tinha registrado: o filtro sem resultado, a espera do assistente, remover item que a outra aba já removeu, o mapa com a lista vazia e o encerramento com itens pendentes. Duas delas — remover item e marcar item — foram resolvidas **por construção**: o desenho *local-first* fez o caso deixar de existir, em vez de tratá-lo.
 
 ### O que o frontend precisa tratar
 
-Seis cenários. O par que compartilhava causa **caiu junto**: um ouvinte de foco resolveu "duas abas abertas" e "marcar item que outra aba removeu" de uma vez.
-
-- **Uma frase quando a sessão vira outra** fecha "sessão expirada".
+Cinco cenários. Os pares que compartilhavam causa caíram: um ouvinte de foco resolveu "duas abas abertas" e "marcar item que outra aba removeu" de uma vez, e a frase da sessão trocada fechou "sessão expirada".
 
 O trabalho de **avisar quando a loja não responde** saiu da lista em 30/08, e ele dependia de uma limpeza antes: enquanto o catálogo inventado preenchesse o silêncio com produtos falsos, nenhum aviso honesto poderia ser verdade.
 

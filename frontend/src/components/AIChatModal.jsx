@@ -215,9 +215,11 @@ export default function AIChatModal({
                 {screenContext.product.nome || screenContext.product.name}
               </strong>
             </div>
-            <span className="chat-context-aisle-pill">
-              {screenContext.product.corredor || 'Corredor da Loja'}
-            </span>
+            {screenContext.product.corredor && (
+              <span className="chat-context-aisle-pill">
+                {screenContext.product.corredor}
+              </span>
+            )}
           </div>
         )}
 

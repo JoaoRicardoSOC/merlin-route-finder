@@ -99,12 +99,15 @@ function App() {
 
   // Session & Location state (UC-001)
   const [session, setSession] = useState(null)
-  const [currentLocation, setCurrentLocation] = useState({
-    sector: 'Entrada Principal da Loja',
-    aisle: 'Entrada da Loja',
-    code: 'ENT-01',
-    coords: '50, 92'
-  })
+  /*
+   * Nasce nula, e não na entrada da loja.
+   *
+   * O padrão anterior afirmava que o cliente estava em ENT-01 antes de qualquer placa ser
+   * lida — e continuava afirmando quando o código escaneado não era reconhecido, caso em que
+   * o backend devolve posição nula de propósito (D-54). O aviso dizia a verdade e o chip ao
+   * lado dizia o contrário.
+   */
+  const [currentLocation, setCurrentLocation] = useState(null)
 
   // Drawer & Modals state
   const [isSectorsDrawerOpen, setIsSectorsDrawerOpen] = useState(false)
@@ -145,10 +148,21 @@ function App() {
     let isMounted = true
     async function initSession() {
       const urlCode = getUrlPlateCode()
+      /*
+       * Guardado ANTES da chamada: se voltar um id diferente, a sessão anterior não valia mais
+       * e o serviço criou outra. É a única forma de saber, e não exige mexer no sessionService.
+       */
+      const idAnterior = localStorage.getItem('merlin_route_finder_session_id')
       try {
         const sess = await obterOuCriarSessao(urlCode)
         if (isMounted && sess) {
           setSession(sess)
+
+          // A lista anterior sumiu junto com a sessão; sem esta frase, o cliente não sabe por quê.
+          if (idAnterior && sess.id !== idAnterior) {
+            showToast('Sua sessão anterior expirou. Começamos uma nova.')
+          }
+
           if (sess.posicaoAtual) {
             setCurrentLocation({
               sector: sess.posicaoAtual.corredor || 'Loja Leroy Merlin',
@@ -159,6 +173,18 @@ function App() {
             if (urlCode) {
               showToast(`Sessão iniciada na placa: ${urlCode} (${sess.posicaoAtual.corredor})`)
             }
+          } else {
+            /*
+             * Código de placa que a loja não reconhece.
+             *
+             * O backend NÃO devolve erro nesse caso, de propósito (D-54): barrar a entrada por
+             * causa de um adesivo riscado seria pior que entrar sem posição. Como não vem erro,
+             * a tela não tinha o que tratar e simplesmente calava — e o cliente ficava sem
+             * entender por que o mapa não o mostrava.
+             */
+            showToast(urlCode
+              ? `Não encontramos a localização "${urlCode}". Você pode continuar e escanear outra placa depois.`
+              : 'Não sabemos onde você está. Escaneie uma placa para o mapa mostrar sua posição.')
           }
 
           // Load existing items in roteiro for this session
@@ -386,7 +412,12 @@ function App() {
           })
           showToast(`Posição atualizada para: ${updated.posicaoAtual.corredor} (Placa ${codigoPonto})`)
         } else {
-          showToast(`Placa ${codigoPonto} registrada.`)
+          /*
+           * Dizia "Placa X registrada", que soa como sucesso — e a posição continuava a
+           * anterior, ou nenhuma. O cliente digitava errado e seguia achando que acertou.
+           */
+          setCurrentLocation(null)
+          showToast(`Não encontramos a localização "${codigoPonto}". Confira o código na placa e tente de novo.`)
         }
       } else {
         const sess = await obterOuCriarSessao(codigoPonto)
@@ -453,8 +484,10 @@ function App() {
     const updated = await adicionarAoRoteiro(session?.id, product)
     setRoteiroItems(updated)
     const prodName = product.nome || product.name
-    const corredor = product.corredor || 'Corredor da Loja'
-    showToast(`"${prodName}" adicionado ao seu roteiro! (${corredor})`)
+    // Sem corredor, o aviso sai sem a localização em vez de inventar uma genérica.
+    showToast(product.corredor
+      ? `"${prodName}" adicionado ao seu roteiro! (${product.corredor})`
+      : `"${prodName}" adicionado ao seu roteiro!`)
   }
 
   const handleRemoveFromRoteiro = async (itemId) => {

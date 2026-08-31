@@ -38,7 +38,11 @@ export default function ProductDetailModal({
   const price = detailedProduct.preco ?? detailedProduct.price ?? 0
   const stock = detailedProduct.saldoEstoque ?? detailedProduct.stock ?? 0
   const secao = detailedProduct.secao || ''
-  const corredor = detailedProduct.pontoMapa?.corredor || detailedProduct.corredor || (secao && SECTOR_METADATA[secao]?.corredor) || 'Corredor da Loja'
+  /*
+   * Sem valor genérico de reserva: espaço em branco comunica ausência, "Corredor da Loja"
+   * comunica presença — e mente. Onde não sabemos, a tela diz "não informado".
+   */
+  const corredor = detailedProduct.pontoMapa?.corredor || detailedProduct.corredor || (secao && SECTOR_METADATA[secao]?.corredor) || null
   const image = detailedProduct.imagemUrl || detailedProduct.image || null
   const sku = detailedProduct.sku || 'SKU-000'
   const atributos = detailedProduct.atributos || []
@@ -95,7 +99,7 @@ export default function ProductDetailModal({
             </div>
             <div className="detail-loc-text">
               <span className="detail-loc-label">Localização Física na Loja</span>
-              <strong className="detail-loc-value">{corredor}</strong>
+              <strong className="detail-loc-value">{corredor || 'Não informada'}</strong>
             </div>
             <button
               type="button"
@@ -153,7 +157,7 @@ export default function ProductDetailModal({
                 </div>
                 <div className="attribute-row">
                   <span className="attribute-key">Corredor:</span>
-                  <span className="attribute-val">{corredor}</span>
+                  <span className="attribute-val">{corredor || 'Não informado'}</span>
                 </div>
               </div>
             )}

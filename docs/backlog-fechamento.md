@@ -178,7 +178,13 @@ Onze cards. **Nenhum é trabalho grande**, e o que eles têm em comum é que o b
 
 ---
 
-### F-3. Avisar quando o código da placa não é reconhecido
+### F-3. ~~Avisar quando o código da placa não é reconhecido~~ — **FEITO em 30/08/2026**
+
+> ✅ Entrou nos **dois** caminhos, não só no previsto: ao entrar pela URL **e** ao recentrar pelo modal. O segundo dizia *"Placa X registrada"*, que soava como sucesso enquanto a posição não mudava.
+>
+> **E um defeito maior apareceu no caminho:** o chip de localização tinha `ENT-01 / Entrada da Loja` como valor inicial fixo, então afirmava que o cliente estava na entrada antes de qualquer placa ser lida. A posição passa a nascer nula e o chip a dizer *"Ainda não sabemos onde você está"*.
+>
+> Verificado: `QQQ-77` avisa e o chip admite; `TIN-02` atualiza para "Corredor de Tintas".
 
 **O que fazer.** Um `else` no `if (sess.posicaoAtual)` do `App.jsx`, com uma mensagem do tipo *"não encontramos essa localização; você pode continuar e tentar de novo depois"*.
 
@@ -188,7 +194,9 @@ Onze cards. **Nenhum é trabalho grande**, e o que eles têm em comum é que o b
 
 ---
 
-### F-4. Avisar quando a sessão anterior expirou
+### F-4. ~~Avisar quando a sessão anterior expirou~~ — **FEITO em 30/08/2026**
+
+> ✅ *"Sua sessão anterior expirou. Começamos uma nova."* A detecção não exigiu mexer no `sessionService`: o `App` guarda o id **antes** da chamada e compara com o que volta.
 
 **O que fazer.** Uma frase — *"sua sessão anterior expirou, começamos uma nova"* — quando a sessão guardada não vale mais.
 
@@ -238,7 +246,9 @@ Onze cards. **Nenhum é trabalho grande**, e o que eles têm em comum é que o b
 
 ---
 
-### F-9. Corrigir o convite do mapa vazio
+### F-9. ~~Corrigir o convite do mapa vazio~~ — **FEITO em 30/08/2026**
+
+> ✅ *"Adicione produtos e eles aparecem aqui no mapa, junto de onde você está."* Verificado: nenhuma das frases que prometiam rota aparece mais.
 
 **O que fazer.** Trocar *"Adicione produtos na vitrine para traçar a melhor rota"* por uma frase que descreva o que o mapa faz: mostrar onde o cliente está e onde está cada item.
 
@@ -248,7 +258,13 @@ Onze cards. **Nenhum é trabalho grande**, e o que eles têm em comum é que o b
 
 ---
 
-### F-10. Remover os quatro `'Corredor da Loja'`
+### F-10. ~~Remover os `'Corredor da Loja'`~~ — **FEITO em 30/08/2026**
+
+> ✅ Eram **cinco**, não quatro. Nos cartões e no chat a linha some quando não há corredor; nas duas telas de detalhe, onde o campo tem rótulo próprio, vira *"Não informado"*.
+>
+> **O `App.jsx` que eu temia já estava protegido:** ali o corredor viraria a posição do cliente, mas um `if (posicaoAtual)` já barrava o caso. O que havia era um aviso de "adicionado ao roteiro" com o corredor genérico — esse sim corrigido.
+>
+> Sem regressão: os seis primeiros cartões do catálogo continuam mostrando Jardim, Ferramentas, Iluminação.
 
 **O que fazer.** Em `App.jsx`, `ProductCard.jsx`, `ProductDetailModal.jsx` e `AIChatModal.jsx`, omitir a linha do corredor quando não houver corredor, em vez de escrever um texto genérico.
 

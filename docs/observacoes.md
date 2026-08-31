@@ -19,14 +19,13 @@
 | [O-01](#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada) | Chave do Gemini e cota gratuita (afeta a suíte) | João Ricardo | **Alta — 13/09** |
 | [O-02](#o-02-senha-do-oracle-passou-por-canal-de-conversa) | Senha do Oracle exposta | João Ricardo | Média |
 | [O-05](#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição) | Botão de ruptura sem trava — **medido, continua aberto** | Frontend | Alta |
-| [O-26](#o-26-o-convite-do-mapa-vazio-promete-uma-rota-que-não-existe) | Texto do mapa promete rota calculada | Frontend | Média |
 | [O-06](#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar) | Retomar a sessão pelo `localStorage` | Bielecky e Marcela | Alta |
 | [O-08](#o-08-o-der-não-tem-a-tabela-de-registro-de-ruptura) | DER desatualizado | Vicentini | **Alta** |
 | [O-24](#o-24-os-diagramas-da-sprint-1-desenham-o-produto-que-a-mentoria-derrubou) | Diagramas desenham totem, handoff e rota | Vicentini e time | **Alta — antes da banca** |
 | [O-29](#o-29-duas-pastas-de-documentação-estão-vazias-desde-o-primeiro-dia) | `docs/arquitetura` e `docs/casos_de_uso` vazias | Time | Baixa |
 | [O-30](#o-30-a-sessão-duplicada-na-abertura-é-do-strictmode-e-só-em-desenvolvimento) | Sessão duplicada é do StrictMode, **não é defeito** | — | esclarecida |
 | [O-31](#o-31-o-assistente-não-nomeia-produtos-por-extenso-e-por-isso-nenhum-cartão-aparece) | Cartões do chat estão dormentes — **medido** | Backend, se o time quiser | Baixa |
-| [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | Tela de código manual e arte da placa | Bielecky, Marcela e time | Alta |
+| [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
 | [O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens) | Coletar as imagens dos produtos | Time | Média |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
 | [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final) | Limpar documentos de trabalho | Time | fim do ano |
@@ -38,7 +37,7 @@
 | [O-12](#o-12-o-raio-de-busca-da-ruptura-é-um-palpite-informado--agora-medido) | Raio de 25 unidades — medido | — | aceita |
 | [O-15](#o-15-o-endpoint-de-simulação-de-estoque-não-tem-proteção-nenhuma) | Simulação de estoque sem proteção | — | aceita |
 
-**Encerradas:** [O-03](#o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado) (deploy no ar) · [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela) (selo da ruptura) · [O-27](#o-27-as-22-imagens-coletadas-não-têm-para-onde-ir--medição-errada-o-mecanismo-já-existia) (imagens já aplicadas) · [O-25](#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai--apagado) (catálogo inventado apagado) · [O-28](#o-28-a-visão-todos-do-catálogo-não-pagina--os-111-passaram-a-ser-alcançáveis) (catálogo pagina) · [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar--sem-objeto) · [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado--sem-objeto) · [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo) · [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) · [O-16](#o-16-o-token-continua-na-url-do-pwa--a-preocupação-deixou-de-existir)
+**Encerradas:** [O-03](#o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado) (deploy no ar) · [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela) (selo da ruptura) · [O-27](#o-27-as-22-imagens-coletadas-não-têm-para-onde-ir--medição-errada-o-mecanismo-já-existia) (imagens já aplicadas) · [O-25](#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai--apagado) (catálogo inventado apagado) · [O-28](#o-28-a-visão-todos-do-catálogo-não-pagina--os-111-passaram-a-ser-alcançáveis) (catálogo pagina) · [O-26](#o-26-o-convite-do-mapa-vazio-promete-uma-rota-que-não-existe--corrigido) (texto do mapa) · [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar--sem-objeto) · [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado--sem-objeto) · [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo) · [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) · [O-16](#o-16-o-token-continua-na-url-do-pwa--a-preocupação-deixou-de-existir)
 
 ---
 
@@ -91,7 +90,17 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 
 ### O-19. A entrada tem um plano B, e ele é uma tela que ainda não existe
 
-> [!IMPORTANT]
+> [!NOTE]
+> **Atualizada em 30/08/2026 — a metade de tela está fechada.**
+>
+> **Feito:** o aviso de código não reconhecido entrou, nos **dois** caminhos — ao entrar pela URL e ao recentrar pelo modal. Verificado no navegador: `QQQ-77` devolve *"Não encontramos a localização; confira o código na placa e tente de novo"*, e `TIN-02` continua atualizando para "Corredor de Tintas".
+>
+> **E um defeito maior apareceu no caminho:** o chip de localização tinha `ENT-01 / Entrada da Loja` como valor inicial fixo, então afirmava que o cliente estava na entrada **antes de qualquer placa ser lida** — e continuava afirmando com código desconhecido. O aviso dizia a verdade e o chip ao lado dizia o contrário. A posição passa a nascer **nula**, e o chip a dizer *"Ainda não sabemos onde você está"*.
+>
+> **Continua aberto, e é do time:** a **arte da placa** com QR, URL curta e código legível.
+
+<details><summary>O registro original, de quando a tela não existia</summary>
+
 > **Reauditada em 30/08/2026 — a tela existe, o aviso não.**
 >
 > **Feito:** o modal de localização tem os dois planos, com exemplo do formato — escanear o QR ou digitar o código. É uma das partes mais bem resolvidas do frontend, porque antecipa a falha que de fato acontece na loja.
@@ -99,6 +108,8 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 > **Continua aberto, e é a metade que este item avisava:** `App.jsx:130` faz `if (sess.posicaoAtual)` **sem `else`**. Quando o código é desconhecido, o backend cria a sessão com posição nula de propósito ([D-54](decisoes-tecnicas.md#d-54-a-entrada-aceita-o-código-da-placa-num-campo-só-e-código-desconhecido-não-recusa-a-sessão)) e **não devolve erro** — então a tela não tem o que tratar e simplesmente não diz nada. O cliente digita errado, entra sem posição, e não entende por que o mapa não mostra onde ele está. É exatamente o cenário descrito abaixo.
 >
 > **A arte da placa** continua com o time, e continua não feita.
+
+</details>
 
 **O quê.** Duas coisas, decididas em 25/08/2026:
 
@@ -206,7 +217,12 @@ O efeito se espalha. Enquanto essa lista existir:
 
 ---
 
-### O-26. O convite do mapa vazio promete uma rota que não existe
+### O-26. ~~O convite do mapa vazio promete uma rota que não existe~~ — corrigido
+
+> [!NOTE]
+> **Encerrada em 30/08/2026.** O texto passou a descrever o que o mapa faz: *"Adicione produtos e eles aparecem aqui no mapa, junto de onde você está."*
+>
+> Verificado no navegador: com a lista vazia, nenhuma das três frases que prometiam rota aparece na tela.
 
 **O quê.** Com a lista vazia, o mapa diz *"Adicione produtos na vitrine para traçar a melhor rota"* (`StoreMapPage.jsx:711`). Trocar por uma frase que descreva o que o mapa faz: mostrar onde o cliente está e onde está cada item.
 
