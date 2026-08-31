@@ -111,11 +111,13 @@ Ele encerrou, agradeceu, e abre a página de novo pelo aparelho.
 
 Está correto e já implementado ([D-41](decisoes-tecnicas.md#d-41-sessão-encerrada-continua-legível-mas-não-gravável)). **O frontend precisa tratar esse 409 como "jornada encerrada, quer começar outra?"**, e não como falha.
 
-### 🎨 Duas abas abertas na mesma sessão
+### ✅ Duas abas abertas na mesma sessão
 
-> **Frontend — aberta.** Reauditado em 30/08: não existe nenhum ouvinte de `visibilitychange` nem de `focus` no app. O banco continua seguro e medido ([D-48](decisoes-tecnicas.md#d-48-gravar-pelo-agregado-é-seguro-aqui--e-a-investigação-que-provou-isso-depois-de-duas-hipóteses-erradas)); as duas telas continuam discordando.
+> **Resolvido na tela.** A lista se reconcilia com o servidor quando a aba volta a ficar visível — `visibilitychange` para troca de aba e volta de outro aplicativo, `focus` para troca de janela.
 >
-> **É a mesma causa** do cenário "marcar item que outra aba removeu", mais abaixo. Um ouvinte só resolve os dois.
+> **Verificado em 30/08**, sem recarregar a página: item adicionado, removido pelo servidor como se fosse a outra aba, e ao voltar o foco a lista foi de **1 para 0** — inclusive no armazenamento local.
+>
+> Usa o mesmo caminho da abertura do app: `consultarRoteiro` traz a lista do servidor e grava por cima. O banco nunca esteve em risco, e continua medido ([D-48](decisoes-tecnicas.md#d-48-gravar-pelo-agregado-é-seguro-aqui--e-a-investigação-que-provou-isso-depois-de-duas-hipóteses-erradas)).
 
 O cliente abre o link duas vezes sem perceber.
 
@@ -257,13 +259,13 @@ A posição do cliente vem do último item coletado. Se ele desmarcar o único q
 
 Se não houver nem isso — sessão que começou sem posição —, o mapa fica sem o "você está aqui", e a tela deve dizer isso em vez de mostrar um marcador inventado.
 
-### 🎨 Marcar item que outra aba removeu
+### ✅ Marcar item que outra aba removeu
 
-> **Frontend — o erro já não aparece; a divergência sim.** Reauditado em 30/08. `alternarColetaItem` muda o estado local antes da chamada e não lê a resposta (`roteiroService.js:204`), então o 404 não vira erro na tela.
+> **Resolvido, e pelas duas pontas.** O erro nunca aparecia: `alternarColetaItem` muda o estado local antes da chamada e não lê a resposta (`roteiroService.js:204`), então o 404 não vira erro na tela.
 >
-> **O que continua aberto** é a aba ficar marcando item que já não existe no servidor. **Mesma causa e mesma correção** do cenário "duas abas abertas na mesma sessão": recarregar a lista ao voltar para a aba.
+> **O que faltava** era a divergência entre as abas, e ela caiu junto com o cenário acima: ao voltar o foco, a lista se reconcilia com o servidor.
 
-Devolve `404`. O frontend precisa recarregar a lista ao reganhar o foco.
+Devolve `404`, e a tela nunca o expõe. Ao reganhar o foco, a lista se corrige.
 
 ---
 
@@ -365,18 +367,17 @@ O backend devolve erro limpo, sem vazar detalhe interno, e está sob teste. A te
 
 | | 25/08 | 30/08 |
 |---|---|---|
-| Resolvidos | 14 | **20** |
+| Resolvidos | 14 | **22** |
 | Impossível pelo esquema | 1 | 1 |
 | Decidido conscientemente | 1 | 1 |
-| Falta na tela | 14 | **8** |
+| Falta na tela | 14 | **6** |
 
 **Cinco pendências já estavam resolvidas** e ninguém tinha registrado: o filtro sem resultado, a espera do assistente, remover item que a outra aba já removeu, o mapa com a lista vazia e o encerramento com itens pendentes. Duas delas — remover item e marcar item — foram resolvidas **por construção**: o desenho *local-first* fez o caso deixar de existir, em vez de tratá-lo.
 
 ### O que o frontend precisa tratar
 
-Oito cenários, e **um par ainda compartilha causa**:
+Seis cenários. O par que compartilhava causa **caiu junto**: um ouvinte de foco resolveu "duas abas abertas" e "marcar item que outra aba removeu" de uma vez.
 
-- **Recarregar ao voltar para a aba** resolve "duas abas abertas" e "marcar item que outra aba removeu".
 - **Uma frase quando a sessão vira outra** fecha "sessão expirada".
 
 O trabalho de **avisar quando a loja não responde** saiu da lista em 30/08, e ele dependia de uma limpeza antes: enquanto o catálogo inventado preenchesse o silêncio com produtos falsos, nenhum aviso honesto poderia ser verdade.

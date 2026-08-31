@@ -154,7 +154,11 @@ Enquanto o frontend não estiver publicado, essa variável **tem que continuar v
 
 Onze cards. **Nenhum é trabalho grande**, e o que eles têm em comum é que o backend já entrega a informação certa — falta a tela usá-la. Três pares compartilham causa, então são menos correções do que itens.
 
-### F-1. Recarregar a lista ao voltar para a aba — fecha dois problemas de uma vez
+### F-1. ~~Recarregar a lista ao voltar para a aba~~ — **FEITO em 30/08/2026**
+
+> ✅ Dois gatilhos, porque cobrem situações diferentes: `visibilitychange` para troca de aba e volta de outro aplicativo no celular, `focus` para troca de janela.
+>
+> **Verificado sem recarregar a página:** item adicionado, removido pelo servidor como se fosse a outra aba, e ao voltar o foco a lista foi de **1 para 0** — inclusive no armazenamento local. Fecha também o cenário "marcar item que outra aba removeu".
 
 **O que fazer.** Um ouvinte de `visibilitychange` (ou `focus`) que recarrega o roteiro quando a aba volta a ficar visível.
 

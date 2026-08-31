@@ -202,6 +202,41 @@ function App() {
 
   const TAMANHO_DA_PAGINA = 50
 
+  /*
+   * Recarrega a lista quando a aba volta a ficar visível.
+   *
+   * Duas abas abertas discordavam: marcar ou remover numa não chegava à outra, e o cliente
+   * via duas verdades sobre a própria lista. O banco nunca esteve em risco — as escritas não
+   * se atropelam, está medido —, o problema era só a tela não perguntar de novo.
+   *
+   * Usa o mesmo caminho da abertura do app: `consultarRoteiro` traz a lista do servidor e o
+   * serviço reconcilia pelo id do backend. Não é mesclagem nova.
+   *
+   * Dois gatilhos, porque cobrem situações diferentes: `visibilitychange` pega a troca de aba
+   * e a volta de outro aplicativo no celular; `focus` pega a troca de JANELA, que nem sempre
+   * muda a visibilidade. Recarregar duas vezes não custa nada — é uma leitura.
+   */
+  useEffect(() => {
+    if (!session?.id) return
+
+    async function recarregarAoVoltar() {
+      if (document.visibilityState === 'hidden') return
+      try {
+        setRoteiroItems(await consultarRoteiro(session.id))
+      } catch (err) {
+        // Sem rede, a lista local continua valendo: ela é a fonte enquanto o servidor não responde.
+        console.warn('Não deu para reconciliar a lista ao voltar para a aba:', err)
+      }
+    }
+
+    document.addEventListener('visibilitychange', recarregarAoVoltar)
+    window.addEventListener('focus', recarregarAoVoltar)
+    return () => {
+      document.removeEventListener('visibilitychange', recarregarAoVoltar)
+      window.removeEventListener('focus', recarregarAoVoltar)
+    }
+  }, [session?.id])
+
   // 3. Load products based on sector, query, availability and dynamic attribute facets (UC-002 / Passo 5)
   /*
    * Busca a PRIMEIRA página e substitui a lista. É o caminho de "mudei o que procuro", e roda
