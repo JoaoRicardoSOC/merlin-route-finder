@@ -51,6 +51,12 @@ const SEARCH_SUGGESTIONS = [
 ]
 
 
+/** Quantos produtos o catálogo pede por página. */
+const TAMANHO_DA_PAGINA = 50
+
+/** Acima de quatro segundos já não parece lentidão da rede, parece tela travada. */
+const ESPERA_ATE_AVISAR_MS = 4000
+
 function App() {
   const [currentView, setCurrentView] = useState('home') // 'home' | 'search' | 'sectors' | 'product-detail'
   const [previousView, setPreviousView] = useState('home')
@@ -78,6 +84,14 @@ function App() {
    */
   const [falhaSecoes, setFalhaSecoes] = useState(false)
   const [falhaProdutos, setFalhaProdutos] = useState(false)
+  /*
+   * O servidor publicado dorme e leva quase dois minutos para acordar — 106 s e 109 s nas duas
+   * medições de 30/08. Sem aviso, a tela fica parada nesse tempo todo e parece travada.
+   *
+   * NÃO é um estado de erro: a indisponibilidade tem aviso próprio, com outro texto. Este aqui
+   * diz "está vindo, espere", e some no primeiro desfecho — sucesso ou falha.
+   */
+  const [servidorAcordando, setServidorAcordando] = useState(false)
 
   /*
    * Paginação do catálogo. `totalDeProdutos` é o total do recorte atual — não o que está na
@@ -92,6 +106,21 @@ function App() {
    * pode escrever no estado.
    */
   const buscaCorrente = useRef(0)
+  /*
+   * Trava síncrona da ruptura, e ela precisa ser um ref.
+   *
+   * Havia uma guarda por estado (`if (isBuscandoSubstituto) return`) e o botão ficava
+   * desabilitado — as duas falharam no teste: três toques com 80 ms de intervalo, que é toque
+   * duplo humano, dispararam três chamadas. O motivo é o mesmo nas duas: `useState` só chega
+   * ao próximo render, e o fecho do manipulador continua vendo o valor antigo até lá.
+   *
+   * Aqui isso não é só desperdício. Cada relato custa DUAS chamadas ao Gemini, e a cota
+   * gratuita é de cinco por minuto: dois toques acidentais podem derrubar a sugestão seguinte
+   * para o cálculo de proximidade bem no meio da demonstração.
+   *
+   * O `disabled` do botão continua, mas pelo outro motivo: mostrar que está em andamento.
+   */
+  const rupturaEmVoo = useRef(false)
 
   // Roteiro / Cart items state
   const [roteiroItems, setRoteiroItems] = useState([])
@@ -202,6 +231,11 @@ function App() {
   // 2. Load sections from backend (ListarSecoesUseCase / SecaoResponse)
   useEffect(() => {
     let isMounted = true
+    // Só a primeira carga arma o aviso: depois disso o servidor já está de pé.
+    const avisoDeEspera = setTimeout(() => {
+      if (isMounted) setServidorAcordando(true)
+    }, ESPERA_ATE_AVISAR_MS)
+
     async function loadSecoes() {
       setIsLoadingSecoes(true)
       try {
@@ -219,14 +253,19 @@ function App() {
           setFalhaSecoes(true)
         }
       } finally {
-        if (isMounted) setIsLoadingSecoes(false)
+        clearTimeout(avisoDeEspera)
+        if (isMounted) {
+          setIsLoadingSecoes(false)
+          setServidorAcordando(false)
+        }
       }
     }
     loadSecoes()
-    return () => { isMounted = false }
+    return () => {
+      isMounted = false
+      clearTimeout(avisoDeEspera)
+    }
   }, [])
-
-  const TAMANHO_DA_PAGINA = 50
 
   /*
    * Recarrega a lista quando a aba volta a ficar visível.
@@ -508,7 +547,8 @@ function App() {
   }
 
   const handleRelatarRuptura = async (itemId) => {
-    if (isBuscandoSubstituto) return
+    if (rupturaEmVoo.current) return
+    rupturaEmVoo.current = true
 
     const item = roteiroItems.find(i => i.id === itemId || i.produtoId === itemId)
     setRupturaItem(item)
@@ -519,6 +559,7 @@ function App() {
       setRupturaResultado(await relatarRuptura(itemId))
     } finally {
       // Em qualquer caminho: sem isto, um erro deixaria o modal girando para sempre.
+      rupturaEmVoo.current = false
       setIsBuscandoSubstituto(false)
     }
   }
@@ -856,6 +897,7 @@ function App() {
         onStartRoute={handleStartFullRoute}
         onEncerrarJornada={() => setIsFimJornadaModalOpen(true)}
         onRelatarRuptura={handleRelatarRuptura}
+        isBuscandoSubstituto={isBuscandoSubstituto}
       />
 
       {/* Prateleira vazia e substituto (Passo 12 / UC-013) */}
@@ -897,6 +939,17 @@ function App() {
         onSelectSecao={handleSelectSecao}
         onOpenMap={handleOpenMap}
       />
+
+      {/*
+        * Espera longa da primeira chamada — tipicamente o servidor publicado acordando.
+        * Fica acima do aviso passageiro porque não é passageiro: dura o que a espera durar.
+        */}
+      {servidorAcordando && (
+        <div className="aviso-acordando" role="status">
+          <span className="material-symbols-outlined">hourglass_top</span>
+          <span>Preparando o sistema… a primeira abertura do dia leva até dois minutos.</span>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {toastMessage && (

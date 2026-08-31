@@ -8,6 +8,7 @@ export default function RoteiroDrawer({
   onRemoveItem,
   onToggleCollectItem,
   onRelatarRuptura,
+  isBuscandoSubstituto = false,
   onClearAll,
   onStartRoute,
   onEncerrarJornada
@@ -115,10 +116,23 @@ export default function RoteiroDrawer({
                         type="button"
                         className="roteiro-ruptura-btn"
                         onClick={() => onRelatarRuptura && onRelatarRuptura(item.id)}
-                        disabled={!item.idBackend}
-                        title={item.idBackend
-                          ? 'Não encontrei este produto na prateleira'
-                          : 'Item ainda não sincronizado com a loja'}
+                        /*
+                         * Duas guardas com motivos diferentes, e antes só existia a primeira:
+                         *
+                         * `!item.idBackend` impede tocar em item que ainda não chegou ao
+                         * servidor — a chamada de ruptura precisa do id de lá.
+                         *
+                         * `isBuscandoSubstituto` impede o toque duplo com a requisição em voo.
+                         * Repetir o relato é proposital (duas visitas frustradas são dois dados
+                         * para a loja), mas o toque acidental custa DUAS chamadas ao Gemini, e
+                         * a cota gratuita é de cinco por minuto.
+                         */
+                        disabled={!item.idBackend || isBuscandoSubstituto}
+                        title={!item.idBackend
+                          ? 'Item ainda não sincronizado com a loja'
+                          : isBuscandoSubstituto
+                          ? 'Procurando um substituto…'
+                          : 'Não encontrei este produto na prateleira'}
                         aria-label={`Não encontrei ${item.nome} na prateleira`}
                       >
                         <span className="material-symbols-outlined">production_quantity_limits</span>

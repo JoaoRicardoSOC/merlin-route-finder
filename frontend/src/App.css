@@ -2422,6 +2422,31 @@
   margin-bottom: 18px;
 }
 
+/* Aviso de espera longa na primeira carga — o servidor publicado acordando.
+   Fixo no topo, discreto, e sem o vermelho de erro: não é falha, é demora. */
+.aviso-acordando {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: var(--surface-container);
+  border-bottom: 1px solid var(--outline-variant);
+  color: var(--on-surface);
+  font-family: var(--font-label);
+  font-size: 13px;
+  text-align: center;
+}
+
+.aviso-acordando .material-symbols-outlined {
+  font-size: 18px;
+}
+
 /* Botão de carregar a próxima página do catálogo. Regra própria em vez de reusar
    .empty-actions: o nome diria a coisa errada num estado que não está vazio. */
 .carregar-mais {

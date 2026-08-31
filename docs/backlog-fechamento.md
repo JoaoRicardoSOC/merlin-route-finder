@@ -168,7 +168,11 @@ Onze cards. **Nenhum é trabalho grande**, e o que eles têm em comum é que o b
 
 ---
 
-### F-2. Travar o botão de "prateleira vazia" durante a requisição
+### F-2. ~~Travar o botão de "prateleira vazia" durante a requisição~~ — **FEITO em 30/08/2026**
+
+> ✅ E a correção óbvia não bastou. `disabled` mais guarda por `useState` deixaram passar **cinco** chamadas em cinco toques no mesmo tique: estado só chega ao próximo render. Com uma trava em `useRef`, síncrona, os mesmos cinco toques viram **uma**.
+>
+> Relatos separados por segundos continuam passando, e devem — duas visitas frustradas são dois dados para a loja.
 
 **O que fazer.** Descer o estado de carregamento até o botão em `RoteiroDrawer.jsx`. O `App` já tem esse estado e já o passa para o modal.
 
@@ -226,7 +230,11 @@ Onze cards. **Nenhum é trabalho grande**, e o que eles têm em comum é que o b
 
 ---
 
-### F-7. Avisar que o sistema está acordando
+### F-7. ~~Avisar que o sistema está acordando~~ — **FEITO em 30/08/2026**
+
+> ✅ Faixa no topo passando de quatro segundos na primeira carga: *"Preparando o sistema… a primeira abertura do dia leva até dois minutos."* Some no primeiro desfecho, sucesso ou falha.
+>
+> Verificado atrasando a resposta de propósito. A partida a frio foi medida hoje em **106 s e 109 s**.
 
 **O que fazer.** Detectar a espera longa da primeira chamada e mostrar "preparando o sistema…" em vez de parecer travado.
 

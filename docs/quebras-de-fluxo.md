@@ -305,15 +305,19 @@ Ele já tinha escolhido aquele produto antes. Aceitar criaria duplicata.
 
 O sistema já ignora produto repetido, então **o item em falta sai e nada é duplicado** — mas o cliente precisa entender o que aconteceu, senão parece que a ação não funcionou.
 
-### 🎨 O cliente relata ruptura no mesmo item duas vezes
+### ✅ O cliente relata ruptura no mesmo item duas vezes
 
-> **Frontend — aberta, e agora medida.** Reauditado em 30/08. O botão tem `disabled={!item.idBackend}` (`RoteiroDrawer.jsx:118`), que guarda contra **item ainda não sincronizado** — não contra toque duplo com a requisição em voo. Nenhum estado de carregamento chega até ele.
+> **Resolvido, e a primeira tentativa não bastou.** O toque duplo é barrado por uma trava **síncrona**, num `useRef`.
 >
-> Repetir continua proposital: dois relatos são dois dados para a loja. O que falta é o **travamento em voo**, porque cada relato custa duas chamadas da cota ([O-05](observacoes.md#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição)).
+> **Por que não deu para usar estado.** Havia uma guarda por `useState` e o botão ganhou `disabled` — as duas falharam no teste: cinco toques no mesmo tique dispararam cinco chamadas. `useState` só chega ao próximo render, e até lá o fecho do manipulador continua vendo o valor antigo. Com o `useRef`, os mesmos cinco toques viram **uma** chamada.
+>
+> **Repetir de propósito continua funcionando**, e é o comportamento certo: relatos separados por segundos passam, porque duas visitas frustradas à prateleira são dois dados para a loja. O que a trava impede é a rajada acidental, que custaria duas chamadas do Gemini por toque.
+>
+> O `disabled` continua no botão, mas pelo outro motivo: mostrar que está em andamento. Ver [O-05](observacoes.md#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição--resolvida-com-trava-síncrona).
 
 Cada toque é um relato novo, **de propósito** — duas visitas frustradas à prateleira são dois dados para a loja.
 
-Mas cada relato custa duas chamadas ao Gemini. **O botão precisa travar enquanto a requisição está em voo** — ver [O-05](observacoes.md#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição).
+Mas cada relato custa duas chamadas ao Gemini. **O botão precisa travar enquanto a requisição está em voo** — ver [O-05](observacoes.md#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição--resolvida-com-trava-síncrona).
 
 ---
 
@@ -335,11 +339,13 @@ Sessão concluída: leitura sim, escrita não. Já tratado.
 
 ## Infraestrutura
 
-### 🎨 A instância dorme e demora dois minutos para acordar
+### ✅ A instância dorme e demora dois minutos para acordar
 
-> **Frontend — aberta.** Reauditado em 30/08: o app tem tela de abertura, mas **nenhuma detecção de que o servidor está acordando** — nada de `navigator.onLine`, nenhum aviso de espera longa. Medido de novo em 25/08 com o catálogo maior: **176 segundos**.
+> **Resolvido na tela.** Passando de quatro segundos sem resposta na primeira carga, aparece uma faixa no topo: *"Preparando o sistema… a primeira abertura do dia leva até dois minutos."*
 >
-> O time decidiu seguir no plano gratuito e aquecer antes de apresentar. A tela ainda precisa mostrar "preparando o sistema" em vez de parecer travada — **isso vai acontecer em alguma demonstração**.
+> **Não é um estado de erro, e o desenho separa os dois:** a indisponibilidade tem aviso próprio, com outro texto. Este diz "está vindo, espere", e some no primeiro desfecho — sucesso ou falha.
+>
+> **Verificado** atrasando a resposta de propósito: a faixa aparece durante a espera e some quando a carga termina. A partida a frio foi medida em **106 s e 109 s** em 30/08, contra os 176 s de 25/08.
 
 Medido: **134 segundos** no plano gratuito, por causa do décimo de CPU.
 
@@ -367,16 +373,16 @@ O backend devolve erro limpo, sem vazar detalhe interno, e está sob teste. A te
 
 | | 25/08 | 30/08 |
 |---|---|---|
-| Resolvidos | 14 | **23** |
+| Resolvidos | 14 | **25** |
 | Impossível pelo esquema | 1 | 1 |
 | Decidido conscientemente | 1 | 1 |
-| Falta na tela | 14 | **5** |
+| Falta na tela | 14 | **3** |
 
 **Cinco pendências já estavam resolvidas** e ninguém tinha registrado: o filtro sem resultado, a espera do assistente, remover item que a outra aba já removeu, o mapa com a lista vazia e o encerramento com itens pendentes. Duas delas — remover item e marcar item — foram resolvidas **por construção**: o desenho *local-first* fez o caso deixar de existir, em vez de tratá-lo.
 
 ### O que o frontend precisa tratar
 
-Cinco cenários. Os pares que compartilhavam causa caíram: um ouvinte de foco resolveu "duas abas abertas" e "marcar item que outra aba removeu" de uma vez, e a frase da sessão trocada fechou "sessão expirada".
+Três cenários, e nenhum deles é grande: oferecer o assistente quando a busca não acha nada, um botão de "tentar de novo" no chat, e reenviar as marcações feitas offline — o único que é funcionalidade nova, e não acabamento.
 
 O trabalho de **avisar quando a loja não responde** saiu da lista em 30/08, e ele dependia de uma limpeza antes: enquanto o catálogo inventado preenchesse o silêncio com produtos falsos, nenhum aviso honesto poderia ser verdade.
 
@@ -401,7 +407,7 @@ Os oito viraram cards em [`backlog-fechamento.md`](backlog-fechamento.md), no bl
 - **`posicaoAtual` nula** — o código da placa não foi reconhecido, ou a sessão nasceu sem placa. Precisa avisar; se ignorar, o cliente digita errado e não entende por que o mapa não o localiza.
 - **`imagemUrl` nula** — a coleta das URLs é incremental ([O-18](observacoes.md#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens)). Produto sem foto é normal, não defeito.
 
-**Travas em botão.** Duas, pelo mesmo motivo — cada toque custa cota do Gemini, que é de cinco por minuto: o botão de **prateleira vazia** ([O-05](observacoes.md#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição)) e o campo do **assistente**, que leva cerca de oito segundos.
+**Travas em botão.** Duas, pelo mesmo motivo — cada toque custa cota do Gemini, que é de cinco por minuto: o botão de **prateleira vazia** ([O-05](observacoes.md#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição--resolvida-com-trava-síncrona)) e o campo do **assistente**, que leva cerca de oito segundos.
 
 **Telas que ainda não existem.** A de **digitar o código de localização** ([O-19](observacoes.md#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe)) e a de **"preparando o sistema"** para a partida a frio de 176 segundos, que vai acontecer em alguma demonstração.
 
