@@ -80,10 +80,14 @@ export async function enviarMensagemChat(sessaoId, conteudo, screenContext = nul
  * não respondeu — são situações diferentes e o cliente precisa saber qual das duas.
  *
  * Sem `produtosRecomendados`: não sabemos nada sobre a pergunta, então não há o que sugerir.
+ *
+ * O campo `falhou` existe para a tela poder oferecer "tentar de novo" só aqui, e não embaixo
+ * de toda resposta. É um campo local, que nunca vem do servidor.
  */
 function assistenteIndisponivel() {
   return {
     id: 'local-' + Date.now(),
+    falhou: true,
     remetente: 'ASSISTANT',
     conteudo: 'Não consegui falar com a loja agora, então não posso responder sua pergunta. '
       + 'Enquanto isso, você pode procurar o que precisa direto pela busca do catálogo — '

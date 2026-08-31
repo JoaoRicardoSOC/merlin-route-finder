@@ -210,7 +210,9 @@ Onze cards. **Nenhum é trabalho grande**, e o que eles têm em comum é que o b
 
 ---
 
-### F-5. Oferecer o assistente quando a busca não acha nada
+### F-5. ~~Oferecer o assistente quando a busca não acha nada~~ — **FEITO em 30/08/2026**
+
+> ✅ As três saídas que já existiam eram formas de **refazer a mesma busca**; nenhuma de mudar de pergunta. "Perguntar ao assistente" entrou em destaque, acima delas. Verificado: "pergolado de bambu" chega ao chat em um toque.
 
 **O que fazer.** Acrescentar um botão "perguntar ao assistente" ao estado vazio da busca, ao lado dos que já existem.
 
@@ -220,7 +222,11 @@ Onze cards. **Nenhum é trabalho grande**, e o que eles têm em comum é que o b
 
 ---
 
-### F-6. Botão de "tentar de novo" no chat
+### F-6. ~~Botão de "tentar de novo" no chat~~ — **FEITO em 30/08/2026**
+
+> ✅ Reenvia a última pergunta sem redigitar. Aparece **só** na mensagem que a tela gerou por não conseguir falar com a loja — decidido por um campo `falhou`, e não por interpretar o texto. Resposta que veio do servidor não ganha botão.
+>
+> Entrou junto um sexto `'Corredor Loja'` — grafia diferente, que o grep anterior não pegou.
 
 **O que fazer.** Quando a mensagem falha, mostrar um botão que reenvia a mesma pergunta.
 

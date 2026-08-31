@@ -131,11 +131,13 @@ O cliente abre o link duas vezes sem perceber.
 
 ## Catálogo e busca
 
-### 🎨 A busca não acha nada
+### ✅ A busca não acha nada
 
-> **Frontend — o estado vazio existe; a porta para o assistente, não.** Reauditado em 30/08. `CatalogSearchPage.jsx:200` mostra o que foi procurado e em qual seção, e oferece três saídas: limpar filtros, ver todas as seções, limpar a busca. Nada de tela branca.
+> **Resolvido, e era o que faltava.** O estado vazio já dizia o que foi procurado e oferecia três saídas — mas as três eram formas de **refazer a mesma busca**, e nenhuma de mudar de pergunta.
 >
-> **Falta exatamente o que este cenário queria:** nenhuma dessas saídas leva ao assistente. O beco deixou de ser sem saída, mas ainda não virou porta de entrada do recurso mais forte do sistema.
+> Entrou **"Perguntar ao assistente"**, em destaque, acima das outras. Ele é o único que responde *"o que eu uso para isso?"*, que é a pergunta de quem não achou o que procurava.
+>
+> **Verificado:** buscar "pergolado de bambu" e chegar ao chat em um toque.
 
 Mesmo com a tolerância a erro de digitação, o cliente pode procurar algo que a loja não tem.
 
@@ -189,13 +191,15 @@ Medido na instância publicada. Sem aviso, o cliente acha que travou e toca de n
 
 Recusa educada em uma frase, e oferta de ajuda com o projeto dele. Está sob teste.
 
-### 🎨 A conexão cai no meio da pergunta
+### ✅ A conexão cai no meio da pergunta
 
-> **Frontend — a conversa deixou de parecer corrompida; falta o botão.** Reauditado em 30/08. A pergunta não fica mais pendurada sozinha: quando a chamada não dá certo, o assistente responde que não conseguiu falar com a loja (D-75).
+> **Resolvido.** A pergunta não fica pendurada sozinha ([D-75](decisoes-tecnicas.md#d-75-a-tela-não-fabrica-resposta-da-ia-quando-não-consegue-perguntar)), e agora há um **"tentar de novo"** que reenvia a última pergunta sem redigitar.
 >
-> **Antes disso havia coisa pior que uma conversa corrompida:** a tela **inventava** uma resposta e a assinava como sendo da IA, com corredores que não existem na nossa planta.
+> **O botão aparece só onde faz sentido.** A mensagem que a tela gera quando não conseguiu falar com a loja carrega um campo `falhou`, e é ele que decide — não o texto. Resposta que veio do servidor não ganha botão, mesmo quando informa que o assistente está fora: aí quem falou foi a loja, e a mensagem dela se sustenta sozinha.
 >
-> **Falta o "tentar de novo".** Hoje o cliente precisa redigitar a pergunta.
+> **Verificado** derrubando só a chamada de chat: o botão aparece, e ao restaurar a conexão ele reenvia a pergunta e traz resposta.
+
+**Antes disso havia coisa pior que uma conversa corrompida:** a tela inventava uma resposta e a assinava como sendo da IA, com corredores que não existem na nossa planta.
 
 A pergunta já foi salva; a resposta não veio.
 
@@ -373,16 +377,16 @@ O backend devolve erro limpo, sem vazar detalhe interno, e está sob teste. A te
 
 | | 25/08 | 30/08 |
 |---|---|---|
-| Resolvidos | 14 | **25** |
+| Resolvidos | 14 | **27** |
 | Impossível pelo esquema | 1 | 1 |
 | Decidido conscientemente | 1 | 1 |
-| Falta na tela | 14 | **3** |
+| Falta na tela | 14 | **1** |
 
 **Cinco pendências já estavam resolvidas** e ninguém tinha registrado: o filtro sem resultado, a espera do assistente, remover item que a outra aba já removeu, o mapa com a lista vazia e o encerramento com itens pendentes. Duas delas — remover item e marcar item — foram resolvidas **por construção**: o desenho *local-first* fez o caso deixar de existir, em vez de tratá-lo.
 
 ### O que o frontend precisa tratar
 
-Três cenários, e nenhum deles é grande: oferecer o assistente quando a busca não acha nada, um botão de "tentar de novo" no chat, e reenviar as marcações feitas offline — o único que é funcionalidade nova, e não acabamento.
+**Um cenário**, e ele não é acabamento: **reenviar as marcações feitas offline**. É funcionalidade nova, com fila no aparelho e reconciliação, e fica de fora do lote de acabamentos por decisão — é invisível na demonstração, porque a lista do cliente está sempre certa; quem fica desatualizado é o servidor.
 
 O trabalho de **avisar quando a loja não responde** saiu da lista em 30/08, e ele dependia de uma limpeza antes: enquanto o catálogo inventado preenchesse o silêncio com produtos falsos, nenhum aviso honesto poderia ser verdade.
 

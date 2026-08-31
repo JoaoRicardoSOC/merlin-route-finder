@@ -2422,6 +2422,33 @@
   margin-bottom: 18px;
 }
 
+/* "Tentar de novo" embaixo da mensagem em que o assistente não conseguiu responder.
+   Discreto: é um caminho de recuperação, não a ação principal da conversa. */
+.chat-tentar-de-novo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-variant);
+  background-color: transparent;
+  color: var(--on-surface);
+  font-family: var(--font-label);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chat-tentar-de-novo .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.chat-tentar-de-novo:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 /* Aviso de espera longa na primeira carga — o servidor publicado acordando.
    Fixo no topo, discreto, e sem o vermelho de erro: não é falha, é demora. */
 .aviso-acordando {

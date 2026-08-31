@@ -824,6 +824,7 @@ function App() {
             isCarregandoMais={isCarregandoMais}
             falhaAoCarregar={falhaProdutos}
             onTentarNovamente={loadProdutos}
+            onPerguntarAoAssistente={() => setIsAIChatOpen(true)}
             isLoadingProdutos={isLoadingProdutos}
             apenasDisponiveis={apenasDisponiveis}
             setApenasDisponiveis={setApenasDisponiveis}

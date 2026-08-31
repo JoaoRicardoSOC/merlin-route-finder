@@ -14,6 +14,14 @@ export default function AIChatModal({
   const [messages, setMessages] = useState([])
   const [inputText, setInputText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+
+  /*
+   * A última pergunta do cliente, para o botão de tentar de novo.
+   *
+   * Quando a chamada falha, o assistente responde que não conseguiu falar com a loja — mas
+   * até aqui o cliente precisava redigitar tudo para tentar outra vez.
+   */
+  const [ultimaPergunta, setUltimaPergunta] = useState(null)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
 
@@ -131,6 +139,7 @@ export default function AIChatModal({
   const handleSendMessage = async (textToSend) => {
     const text = (textToSend || inputText).trim()
     if (!text || isLoading) return
+    setUltimaPergunta(text)
 
     const userMessage = {
       id: 'user-' + Date.now(),
@@ -153,6 +162,7 @@ export default function AIChatModal({
         ...prev,
         {
           id: 'err-' + Date.now(),
+          falhou: true,
           remetente: 'ASSISTANT',
           conteudo: 'Desculpe, tive uma instabilidade momentânea na conexão. Por favor, tente novamente ou consulte um de nossos vendedores no corredor.',
           enviadoEm: new Date().toISOString()
@@ -263,6 +273,19 @@ export default function AIChatModal({
                 <div className={`chat-bubble ${isAssistant ? 'assistant-bubble' : 'user-bubble'}`}>
                   <p className="chat-bubble-text">{msg.conteudo}</p>
 
+                  {/* Só embaixo da mensagem que falhou, e só se houver pergunta para repetir. */}
+                  {msg.falhou && ultimaPergunta && (
+                    <button
+                      type="button"
+                      className="chat-tentar-de-novo"
+                      onClick={() => handleSendMessage(ultimaPergunta)}
+                      disabled={isLoading}
+                    >
+                      <span className="material-symbols-outlined">refresh</span>
+                      Tentar de novo
+                    </button>
+                  )}
+
                   {/* Cited / Recommended Products Cards */}
                   {citedProducts && citedProducts.length > 0 && (
                     <div className="chat-cited-products-grid">
@@ -282,7 +305,7 @@ export default function AIChatModal({
                             <div className="chat-product-meta-row">
                               <span className="chat-product-corredor">
                                 <span className="material-symbols-outlined">location_on</span>
-                                {prod.pontoMapa?.corredor || prod.corredor || 'Corredor Loja'}
+                                {prod.pontoMapa?.corredor || prod.corredor}
                               </span>
                               <span className="chat-product-price">
                                 {formatPrice(prod.preco || prod.price)}

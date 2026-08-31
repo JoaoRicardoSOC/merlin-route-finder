@@ -17,6 +17,7 @@ export default function CatalogSearchPage({
   isLoadingProdutos,
   falhaAoCarregar = false,
   onTentarNovamente,
+  onPerguntarAoAssistente,
   apenasDisponiveis,
   setApenasDisponiveis,
   activeFiltersCount,
@@ -242,6 +243,23 @@ export default function CatalogSearchPage({
               {selectedSecao !== 'todos' && <strong>em {selectedSecao}</strong>}
               {searchQuery && <span> com o termo "<em>{searchQuery}</em>"</span>}.
             </p>
+            {/*
+              * A saída mais útil quando a loja não tem o que foi procurado: o assistente é o
+              * único que responde "o que eu uso para isso?". Sem isto o estado vazio oferecia
+              * três formas de refazer a mesma busca, e nenhuma de mudar de pergunta.
+              */}
+            {onPerguntarAoAssistente && (
+              <div className="empty-actions">
+                <button
+                  type="button"
+                  className="empty-action-btn primary"
+                  onClick={onPerguntarAoAssistente}
+                >
+                  <span className="material-symbols-outlined">smart_toy</span>
+                  Perguntar ao assistente
+                </button>
+              </div>
+            )}
             <div className="empty-actions">
               {activeFiltersCount > 0 && (
                 <button
