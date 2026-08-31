@@ -8,7 +8,7 @@
 >
 > **Para executar**, e não só entender: [`backlog-fechamento.md`](backlog-fechamento.md) transforma tudo que está aberto aqui — mais o que não é observação, como a publicação do frontend e o vídeo — em cards prontos para o Trello.
 >
-> Última atualização: **30/08/2026** — depois de reauditar as pendências de tela contra o frontend, que não existia quando a maioria destes itens foi escrita.
+> Última atualização: **30/08/2026** — depois de fechar dez dos onze acabamentos de tela. Das trinta quebras de fluxo, **27 estão resolvidas**; a única de tela que resta é reenviar as marcações feitas offline, que é funcionalidade nova e não acabamento.
 
 ---
 

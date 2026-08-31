@@ -13,7 +13,7 @@
 | Bloco | Cards | Quem |
 |---|---|---|
 | Entrega e publicação | 3 | João Ricardo e time | *(2 fechados em 30/08)*
-| Frontend — acabamentos | 11 | Bielecky e Marcela |
+| Frontend — acabamentos | 1 | Bielecky e Marcela | *(10 fechados em 30/08)*
 | Banco e diagramas | 3 | Vicentini |
 | Decisões e trabalho do time | 4 | Time |
 | Backend e operação | 3 | João Ricardo e Caio |
@@ -288,7 +288,17 @@ Onze cards. **Nenhum é trabalho grande**, e o que eles têm em comum é que o b
 
 ---
 
-### F-11. Reduzir o ruído da tela inicial
+### F-11. ~~Reduzir o ruído da tela inicial~~ — **FEITO em 30/08/2026**
+
+> ✅ **20 → 17 alvos de toque**, medidos em 375 px, com os cinco destinos da barra inferior intactos.
+>
+> **O botão flutuante não foi removido, e o plano estava errado.** A barra inferior é **escondida na página de produto** — remover o flutuante por completo deixaria o assistente inalcançável justamente na tela onde ele mais serve, que é onde ele recebe o produto como contexto. Ele passou a aparecer **só ali**. Verificado nas cinco telas: ausente onde a barra existe, presente onde ela não existe.
+>
+> **Saíram os dois cartões de "Ações Rápidas"** e, com eles, o componente `HomeBentoGrid` e **240 linhas de CSS órfão** — parte já estava morta desde que o `BentoActions` foi removido em 28/08 e ninguém tinha limpado.
+>
+> **O chip de localização** perdeu as coordenadas cruas (`(50, 92)`, que são saída de depuração), ganhou peso no nome do corredor e passou a dizer que é tocável — o que ele sempre foi, sem nada indicar.
+
+<details><summary>O registro original</summary>
 
 Três ajustes que andam juntos e cabem num card só:
 
@@ -297,6 +307,8 @@ Três ajustes que andam juntos e cabem num card só:
 3. **O botão flutuante do assistente cobre conteúdo** em toda tela, e o assistente já está na barra inferior.
 
 **Verificar:** contar os alvos de toque da home depois — a meta é ficar abaixo de 15, sem perder nenhum destino.
+
+</details>
 
 ---
 

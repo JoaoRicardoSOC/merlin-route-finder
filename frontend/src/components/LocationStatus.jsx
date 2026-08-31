@@ -34,10 +34,19 @@ export default function LocationStatus({ location, onClick }) {
         <div className="modern-location-name">
           <span className="material-symbols-outlined modern-pin-icon filled">location_on</span>
           <strong>{aisleText}</strong>
-          {location?.coords && (
-            <span className="modern-coords-tag">({location.coords})</span>
-          )}
         </div>
+        {/*
+          * As coordenadas saíram daqui.
+          *
+          * `(50, 92)` é saída de depuração: números do nosso sistema de eixos, que não
+          * significam nada para quem está na loja e competiam por atenção com o corredor, que
+          * é a única informação acionável do cartão.
+          *
+          * No lugar, o convite — porque o cartão sempre foi tocável e nada dizia isso.
+          */}
+        <span className="modern-location-acao">
+          {semPosicao ? 'Toque para informar onde você está' : 'Toque para atualizar'}
+        </span>
       </div>
     </div>
   )

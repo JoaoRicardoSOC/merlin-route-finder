@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import Header from './components/Header'
 import LocationStatus from './components/LocationStatus'
 import SearchBar from './components/SearchBar'
-import HomeBentoGrid from './components/HomeBentoGrid'
 import SectorsPage from './components/SectorsPage'
 import CatalogSearchPage from './components/CatalogSearchPage'
 import ProductDetailPage from './components/ProductDetailPage'
@@ -754,12 +753,6 @@ function App() {
               isGliding={isGlidingSearch}
             />
 
-            {/* Bento de acoes rapidas: mapa e setores */}
-            <HomeBentoGrid
-              onOpenMap={handleOpenMap}
-              onOpenSectors={handleOpenSectorsPage}
-            />
-
             {/* Featured Promotional Banner */}
             <PromoBanner
               onExplore={() => {
@@ -853,10 +846,19 @@ function App() {
       )}
 
       {/* Floating AI Assistant Chat Action Button (available in all pages) */}
-      <FloatingAIChatButton
-        isProductPage={currentView === 'product-detail'}
-        onClick={() => setIsAIChatOpen(true)}
-      />
+      {/*
+        * Só na página de produto, que é a única onde a barra inferior não aparece.
+        *
+        * Nas demais ele duplicava o "Assistente" da barra e cobria conteúdo em toda captura de
+        * tela. Aqui ele não é redundância: é o único caminho até o assistente — e é a tela onde
+        * ele mais serve, porque recebe o produto que o cliente está vendo como contexto.
+        */}
+      {currentView === 'product-detail' && (
+        <FloatingAIChatButton
+          isProductPage
+          onClick={() => setIsAIChatOpen(true)}
+        />
+      )}
 
       {/* AI Assistant Chat Modal / Drawer (Passo 7 / UC-007 a UC-009) */}
       <AIChatModal
