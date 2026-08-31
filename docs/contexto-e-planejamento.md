@@ -137,6 +137,13 @@ Nenhum card está em andamento — todos no backlog. Não existe nenhum protóti
 - Sprint 1º semestre → 5 pts (já entregue).
 - Sprint 2º semestre → 25 pts, dividido em:
   - **Vídeo Pitch (5 pts):** 0,5 duração ≤3min; 0,5 PDF com nomes + link do vídeo + link do deploy; 1,0 criatividade/edição; **3,0 clareza na apresentação da solução e demonstração do projeto**.
+
+> [!NOTE]
+> **Os dois limites de duração não se contradizem: são dois vídeos.** Confirmado pelo time.
+>
+> O de **até 5 minutos**, com prazo em **13/09**, é o da *seletiva* — um portão, que define quem passa para a banca final e, dela, para o NEXT. O de **até 3 minutos** é a *entrega avaliada*, que vale os 5 pontos desta linha e vai ao portal da faculdade no fim do ano, junto do repositório; é o mais básico dos dois.
+>
+> Os cards de cada um estão em [`backlog-fechamento.md`](backlog-fechamento.md), bloco `[ENTREGA]`.
   - **Deploy (5 pts):** 0,5 link do deploy funcionando (qualquer provedor, ex. Vercel); **4,5 usabilidade/UX do MVP implantado**.
   - **Projeto (15 pts):** **10 pts implementação da solução** (MVP funcional demonstrando a proposta de valor, fluxo básico testável, resolve o problema de forma clara e aplicável); **5 pts usabilidade/UX**.
 

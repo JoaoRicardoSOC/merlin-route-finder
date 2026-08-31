@@ -12,7 +12,7 @@
 
 | Bloco | Cards | Quem |
 |---|---|---|
-| Entrega e publicação | 6 | João Ricardo e time |
+| Entrega e publicação | 5 | João Ricardo e time |
 | Frontend — acabamentos | 11 | Bielecky e Marcela |
 | Banco e diagramas | 3 | Vicentini |
 | Decisões e trabalho do time | 4 | Time |
@@ -26,6 +26,17 @@
 ## [ENTREGA] — vale ponto direto na rubrica
 
 Este bloco vem primeiro porque **é o único que vale nota por si só**. A rubrica dá 25 pontos à Sprint 2, e 10 deles dependem de coisas que ainda não existem.
+
+> ### São dois vídeos, com finalidades diferentes
+>
+> Confirmado com o time. Não é contradição no material — são duas entregas:
+>
+> | | Duração | Quando | Para quê |
+> |---|---|---|---|
+> | **Seletiva** | até **5 min** | **13/09/2026** | Passar para a **banca final** (21/09) e, dela, para o **NEXT** (24/10). É um portão, não uma nota. |
+> | **Pitch do portal** | até **3 min** | fim do ano, junto do repositório | É a **entrega avaliada**: vale os 5 pontos de Vídeo Pitch da rubrica, e é o vídeo mais básico dos dois. |
+>
+> **O que isso muda na prática:** o de 13/09 é o que corre contra o relógio e o que precisa mostrar o MVP funcionando de verdade — ele decide se existe banca. O de 3 minutos é feito depois, com calma, e é onde entram os critérios de duração, PDF e edição.
 
 ### E-1. Publicar o frontend na Vercel
 
@@ -59,24 +70,9 @@ Enquanto o frontend não estiver publicado, essa variável **tem que continuar v
 
 ---
 
-### E-3. Confirmar com o professor a duração exigida do vídeo
+### E-3. Escrever o roteiro do vídeo da seletiva — até 5 minutos, 13/09
 
-**O material oficial se contradiz**, e são 0,5 ponto mais o risco de refazer a edição:
-
-- o cronograma diz que o vídeo da seletiva é de **até 5 minutos**;
-- a tabela de pontuação dá 0,5 ponto por **duração de até 3 minutos**.
-
-**O que fazer.** Perguntar qual vale, antes de escrever o roteiro — a diferença entre 3 e 5 minutos muda o que cabe na demonstração.
-
-**Verificar:** resposta registrada, e o roteiro do E-4 escrito para o tempo confirmado.
-
-**De quem:** qualquer um do time, com o professor.
-
----
-
-### E-4. Escrever o roteiro do vídeo
-
-**O que fazer.** Roteiro cena a cena, com o tempo de cada bloco, dentro do limite confirmado no E-3. Sugestão de espinha, que segue o caminho que o sistema realmente faz:
+**O que fazer.** Roteiro cena a cena, com o tempo de cada bloco. Sugestão de espinha, que segue o caminho que o sistema realmente faz:
 
 1. o problema — o "último metro" numa loja de 10.000 m²;
 2. entrada pela placa de QR, com o plano B de digitar o código;
@@ -90,27 +86,36 @@ Enquanto o frontend não estiver publicado, essa variável **tem que continuar v
 > - **o assistente pode ficar indisponível ao vivo.** Já aconteceu duas vezes (503 do Google em 28/08). O sistema degrada com uma mensagem honesta, e mostrar isso é ponto a favor, não contra;
 > - **a partida a frio leva ~110 segundos.** O primeiro passo do roteiro, antes de a câmera ligar, é aquecer a aplicação.
 
-**Verificar:** roteiro lido em voz alta cronometrado, dentro do limite.
+**Verificar:** roteiro lido em voz alta e cronometrado, **abaixo de 5 minutos** com folga — cronometrar lendo, não estimando.
 
 **De quem:** time.
 
 ---
 
-### E-5. Gravar e editar o vídeo
+### E-4. Gravar e editar o vídeo da seletiva
 
-**O que fazer.** Gravar seguindo o E-4, com a aplicação aquecida e o banco limpo (ver O-3).
+**O que fazer.** Gravar seguindo o E-3, com a aplicação **aquecida** e o banco limpo (ver O-3).
 
-**Verificar:** duração dentro do limite; a demonstração mostra o MVP funcionando de verdade, não slides.
+**Por que a ordem importa:** este é o vídeo que decide se existe banca final. Se algo tiver que ser cortado por tempo, corte a introdução — nunca a cena da prateleira vazia, que é a única que mostra a IA decidindo com dados reais da loja.
+
+**Verificar:** duração abaixo de 5 minutos; a demonstração mostra o MVP funcionando de verdade, não slides.
 
 **De quem:** time.
 
 ---
 
-### E-6. Montar o PDF de entrega
+### E-5. O vídeo do portal (até 3 min) e o PDF — a entrega avaliada
 
-**O que fazer.** Um PDF com **nomes de todos os integrantes**, **link do vídeo** e **link do deploy** — os três itens que a rubrica cobra (0,5 ponto).
+> **Não é para agora.** Fica registrado para não ser esquecido depois da seletiva. Sem data confirmada — vai junto do repositório, no fim do ano.
 
-**Verificar:** os dois links abrem de uma máquina que não é a de quem montou.
+**O que fazer.** Duas peças que andam juntas na rubrica:
+
+1. **o vídeo pitch de até 3 minutos** — mais básico que o da seletiva, e provavelmente uma redução dele;
+2. **um PDF** com **nomes de todos os integrantes**, **link do vídeo** e **link do deploy**.
+
+**O que a rubrica paga (5 pontos no total):** 0,5 pela duração dentro de 3 minutos · 0,5 pelo PDF completo · 1,0 por criatividade e edição · **3,0 por clareza na apresentação da solução e na demonstração** — de longe a maior linha, e a que depende do que já está construído.
+
+**Verificar:** os dois links do PDF abrem de uma máquina que não é a de quem montou; o vídeo fecha abaixo de 3 minutos.
 
 **De quem:** time.
 
