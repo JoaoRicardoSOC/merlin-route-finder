@@ -4,7 +4,11 @@
 >
 > O que já está pronto no repositório: [`backend/Dockerfile`](../backend/Dockerfile), [`backend/.dockerignore`](../backend/.dockerignore) e [`render.yaml`](../render.yaml).
 >
-> **Publicado em 23/08/2026** em `https://merlin-route-finder-api.onrender.com`. O guia segue válido para recriar o serviço ou publicar a partir de outra credencial.
+> **Backend publicado em 23/08/2026** em `https://merlin-route-finder-api.onrender.com`.
+>
+> **Frontend publicado em 30/08/2026** em `https://merlin-route-finder.vercel.app` — raiz `frontend`, preset Vite, com `VITE_API_BASE_URL` apontando para o Render. A jornada inteira foi verificada no ambiente publicado no mesmo dia, incluindo a ruptura com o Gemini real.
+>
+> O guia segue válido para recriar qualquer um dos dois.
 
 ---
 

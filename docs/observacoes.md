@@ -25,6 +25,7 @@
 | [O-24](#o-24-os-diagramas-da-sprint-1-desenham-o-produto-que-a-mentoria-derrubou) | Diagramas desenham totem, handoff e rota | Vicentini e time | **Alta — antes da banca** |
 | [O-29](#o-29-duas-pastas-de-documentação-estão-vazias-desde-o-primeiro-dia) | `docs/arquitetura` e `docs/casos_de_uso` vazias | Time | Baixa |
 | [O-30](#o-30-a-sessão-duplicada-na-abertura-é-do-strictmode-e-só-em-desenvolvimento) | Sessão duplicada é do StrictMode, **não é defeito** | — | esclarecida |
+| [O-31](#o-31-o-assistente-não-nomeia-produtos-por-extenso-e-por-isso-nenhum-cartão-aparece) | Cartões do chat estão dormentes — **medido** | Backend, se o time quiser | Baixa |
 | [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | Tela de código manual e arte da placa | Bielecky, Marcela e time | Alta |
 | [O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens) | Coletar as imagens dos produtos | Time | Média |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
@@ -470,6 +471,27 @@ O que existe no lugar de proteção: marcação explícita como `[Demonstracao]`
 **Por que não pôr uma guarda para silenciar.** Seria trocar um custo pequeno por perder um sinal: o StrictMode existe justamente para denunciar efeito que cria recurso. O custo real — cada recarga em desenvolvimento gasta duas sessões no schema compartilhado — já está coberto pela [O-20](#o-20-rodar-a-suíte-deixa-um-resto-de-sessões-no-banco-de-demonstração), que manda limpar antes da banca.
 
 **Lição de método, e é o motivo de isto ficar escrito.** A versão de 28/08 deste registro trazia a ressalva certa — *"a compilação de produção não faria isso"*. Ela foi **perdida numa reescrita** e o item voltou à lista como grave. Medir de novo antes de planejar é o que impediu o card de existir.
+
+---
+
+### O-31. O assistente não nomeia produtos por extenso, e por isso nenhum cartão aparece
+
+**O quê.** Uma decisão em aberto para o time, não um defeito. O chat pode mostrar cartões dos produtos que o assistente citou, mas na prática **nenhum aparece** — e isso agora está medido, não suposto.
+
+**A medição, no ambiente publicado, com o Gemini real** (30/08/2026). Pergunta: *"O que eu preciso para pintar uma parede?"*. Resposta:
+
+> *"Para pintar uma parede, você precisará de tinta acrílica e lixa para parede, encontradas no corredor de Tintas. Também recomendamos o uso de rolo de lã, bandeja para pintura e fita crepe, todos disponíveis no mesmo corredor de Tintas."*
+
+**Cartões exibidos: zero.** A resposta é boa e está ancorada — cita o corredor **Tintas**, que existe na nossa planta. Mas nomeia os produtos **genericamente** ("tinta acrílica", "rolo de lã"), e a regra da [D-76](decisoes-tecnicas.md#d-76-o-cartão-de-produto-no-chat-exige-que-a-ia-tenha-escrito-o-nome) exige nome completo ou SKU.
+
+**Isso é o comportamento projetado, e a D-76 previu exatamente este resultado**: *"se a resposta não nomear nenhum produto por extenso, o certo é não mostrar cartão nenhum. Não afrouxar a regra para fazê-los aparecer."*
+
+**A decisão que fica para o time.** Duas saídas honestas, e nenhuma é urgente:
+
+1. **deixar como está** — respostas em texto, sem cartões. É o mais simples e não mente;
+2. **pedir ao assistente que cite os produtos pelo nome completo**, ajustando o prompt no backend. Aí os cartões passam a aparecer, com a mesma regra estrita. É card de backend, pequeno, e melhora a demonstração.
+
+**Não é saída:** afrouxar a regra do cartão. Foi o que existia antes, e pendurava produto que a IA nunca recomendou.
 
 ---
 

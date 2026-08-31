@@ -12,7 +12,7 @@
 
 | Bloco | Cards | Quem |
 |---|---|---|
-| Entrega e publicação | 5 | João Ricardo e time |
+| Entrega e publicação | 3 | João Ricardo e time | *(2 fechados em 30/08)*
 | Frontend — acabamentos | 11 | Bielecky e Marcela |
 | Banco e diagramas | 3 | Vicentini |
 | Decisões e trabalho do time | 4 | Time |
@@ -38,9 +38,27 @@ Este bloco vem primeiro porque **é o único que vale nota por si só**. A rubri
 >
 > **O que isso muda na prática:** o de 13/09 é o que corre contra o relógio e o que precisa mostrar o MVP funcionando de verdade — ele decide se existe banca. O de 3 minutos é feito depois, com calma, e é onde entram os critérios de duração, PDF e edição.
 
-### E-1. Publicar o frontend na Vercel
+### E-1. ~~Publicar o frontend na Vercel~~ — **FEITO em 30/08/2026**
 
-> **É o maior item aberto do projeto inteiro, e não estava em nenhuma lista até hoje.**
+> ### ✅ No ar: https://merlin-route-finder.vercel.app
+>
+> Publicado a partir de `main`, raiz `frontend`, preset Vite, com `VITE_API_BASE_URL` apontando para o Render. **Verificado que a variável entrou na build**, e não só no painel: a URL do Render está embutida no `assets/index-*.js` servido.
+>
+> **A jornada inteira foi percorrida no ambiente publicado**, contra o backend real e o Gemini real:
+>
+> | Passo | Resultado |
+> |---|---|
+> | Sessão criada na entrada | `b6eb52c8-…`, posição "Placa ENT01" |
+> | Catálogo com paginação | 50 de 111 → **100 de 111** num toque |
+> | Adicionar ao roteiro | item nasce **com `idBackend`** — a correção do B-1 vale em produção |
+> | **Prateleira vazia** | selo **"Sugestão do assistente"**, sugeriu `Lixa d'Água Grão 150` para a `Lixa para Parede Grão 120`, corredor Tintas, R$ 4,20, com justificativa coerente do Gemini |
+> | Aceitar o substituto | lista trocou, item novo sincronizado |
+> | Assistente no chat | respondeu citando o corredor **Tintas**, que existe na nossa planta |
+> | Sem substituto plausível | testado com o adubo: recusou corretamente, e registrou o aviso |
+>
+> Os 5 pontos de deploy da rubrica deixam de estar zerados, e o PDF de entrega já tem o link que faltava.
+
+**O texto abaixo fica como registro do que era o problema.**
 
 O backend está publicado e responde (`https://merlin-route-finder-api.onrender.com`, verificado em 30/08: **200 em 109 s** de partida a frio). **O frontend não está publicado em lugar nenhum** — não há `vercel.json` nem projeto criado.
 
@@ -54,7 +72,18 @@ O backend está publicado e responde (`https://merlin-route-finder-api.onrender.
 
 ---
 
-### E-2. Preencher `CORS_ALLOWED_ORIGINS` no Render — **depois** do E-1, e só depois
+### E-2. ~~Preencher `CORS_ALLOWED_ORIGINS` no Render~~ — **FEITO em 30/08/2026**
+
+> ✅ **Preenchido com as duas origens**, e as duas foram verificadas por requisição direta:
+>
+> ```
+> Origin: https://merlin-route-finder.vercel.app  →  access-control-allow-origin: https://merlin-route-finder.vercel.app
+> Origin: http://localhost:5173                  →  access-control-allow-origin: http://localhost:5173
+> ```
+>
+> **O ambiente do time continua vivo** — era o risco principal deste card.
+>
+> **O texto abaixo fica como registro**, e continua valendo para quem for mexer nessa variável de novo.
 
 Enquanto o frontend não estiver publicado, essa variável **tem que continuar vazia**: vazia, o backend libera `localhost:5173`, e é assim que o time desenvolve.
 
