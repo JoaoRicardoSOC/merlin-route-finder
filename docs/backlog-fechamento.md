@@ -164,7 +164,7 @@ Enquanto o frontend não estiver publicado, essa variável **tem que continuar v
 >
 > **Três achados de brinde, que só apareceram medindo:** o título do banner era cinza-escuro sobre verde escuro (**2,52:1**) desde antes, porque a regra global de `h1..h6` vence a herança de cor; seis lugares escreviam branco à mão, fora do alcance do token; e `--text-muted` reprovava em toda superfície tingida.
 >
-> **O que a auditoria achou e ficou de fora, com motivo:** [O-32](observacoes.md#o-32-a-paleta-de-cores-por-setor-reprova-no-contraste-e-é-decisão-de-identidade) (cores por setor — é identidade visual, decisão da dupla), [O-33](observacoes.md#o-33-oito-alvos-de-toque-abaixo-de-44px-e-o-projeto-define-esse-mínimo) (alvos de toque) e [O-34](observacoes.md#o-34-a-aba-do-qr-code-manda-apontar-uma-câmera-que-não-existe) (o texto do QR).
+> **O que a auditoria achou e ficou de fora, com motivo:** [O-32](observacoes.md#o-32-a-paleta-de-cores-por-setor-reprova-no-contraste-e-é-decisão-de-identidade) (cores por setor — é identidade visual, decisão da dupla), [O-33](observacoes.md#o-33-oito-alvos-de-toque-abaixo-de-44px-e-o-projeto-define-esse-mínimo) (alvos de toque) e [O-34](observacoes.md#o-34-a-aba-do-qr-code-manda-apontar-uma-câmera-que-não-existe--corrigida) (o texto do QR).
 
 ## [FRONTEND] — acabamentos
 

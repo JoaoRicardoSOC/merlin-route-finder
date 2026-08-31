@@ -111,6 +111,20 @@ Ele encerrou, agradeceu, e abre a página de novo pelo aparelho.
 
 Está correto e já implementado ([D-41](decisoes-tecnicas.md#d-41-sessão-encerrada-continua-legível-mas-não-gravável)). **O frontend precisa tratar esse 409 como "jornada encerrada, quer começar outra?"**, e não como falha.
 
+### ✅ O cliente toca num item de navegação que abre modal
+
+> **Resolvido em 31/08/2026, e este cenário não existia na auditoria.** Ele veio de uso real: tocar em "Scan & Rota" abria o modal e o item continuava marcado depois de fechá-lo — **e continuava marcado mesmo indo para Setores**.
+>
+> **A raiz eram duas verdades sobre a mesma coisa:** `currentView`, que sabe a tela desenhada, e um `activeTab` paralelo, que nem todo caminho atualizava. O destaque passou a ser **derivado** da tela, e o estado paralelo saiu.
+>
+> **A regra que fica:** *modal não é lugar*. Um destaque de navegação afirma "você está aqui"; um modal acontece por cima de onde o cliente já está. Por isso "Scan" e "Atendimento" não destacam nada — tratá-los como destino era a origem do defeito. Ver [D-81](decisoes-tecnicas.md#d-81-o-destaque-da-navegação-é-derivado-da-tela-e-modal-não-é-lugar).
+>
+> **Apareceu junto:** o "Setores da Loja" do cabeçalho não tinha classe de ativo nenhuma e **nunca acendia**, mesmo com a tela aberta.
+
+**O que o cliente via:** um item de navegação aceso apontando para um lugar onde ele não estava.
+
+---
+
 ### ✅ Duas abas abertas na mesma sessão
 
 > **Resolvido na tela.** A lista se reconcilia com o servidor quando a aba volta a ficar visível — `visibilitychange` para troca de aba e volta de outro aplicativo, `focus` para troca de janela.
@@ -377,7 +391,7 @@ O backend devolve erro limpo, sem vazar detalhe interno, e está sob teste. A te
 
 | | 25/08 | 30/08 |
 |---|---|---|
-| Resolvidos | 14 | **27** |
+| Resolvidos | 14 | **28** |
 | Impossível pelo esquema | 1 | 1 |
 | Decidido conscientemente | 1 | 1 |
 | Falta na tela | 14 | **1** |
@@ -385,6 +399,8 @@ O backend devolve erro limpo, sem vazar detalhe interno, e está sob teste. A te
 **Cinco pendências já estavam resolvidas** e ninguém tinha registrado: o filtro sem resultado, a espera do assistente, remover item que a outra aba já removeu, o mapa com a lista vazia e o encerramento com itens pendentes. Duas delas — remover item e marcar item — foram resolvidas **por construção**: o desenho *local-first* fez o caso deixar de existir, em vez de tratá-lo.
 
 ### O que o frontend precisa tratar
+
+> **O total subiu de 30 para 31.** O cenário do item de navegação que abre modal **não existia na auditoria** — veio de você usando o app, depois dela. Vale como lembrete de que auditoria de código não substitui alguém com o aparelho na mão.
 
 **Um cenário**, e ele não é acabamento: **reenviar as marcações feitas offline**. É funcionalidade nova, com fila no aparelho e reconciliação, e fica de fora do lote de acabamentos por decisão — é invisível na demonstração, porque a lista do cliente está sempre certa; quem fica desatualizado é o servidor.
 

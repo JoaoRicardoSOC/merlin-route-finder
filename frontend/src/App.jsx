@@ -59,7 +59,20 @@ const ESPERA_ATE_AVISAR_MS = 4000
 function App() {
   const [currentView, setCurrentView] = useState('home') // 'home' | 'search' | 'sectors' | 'product-detail'
   const [previousView, setPreviousView] = useState('home')
-  const [activeTab, setActiveTab] = useState('home')
+  /*
+   * O destaque da navegação é DERIVADO da tela, e não um estado à parte.
+   *
+   * Havia um `activeTab` paralelo ao `currentView`, e nem todo caminho escrevia os dois: o
+   * "Setores" do cabeçalho trocava a tela sem tocar no destaque, e "Scan" e "Atendimento"
+   * marcavam a aba para abrir um MODAL. O resultado era o destaque preso no Scan mesmo depois
+   * de mudar de tela.
+   *
+   * Modal não é lugar: o destaque diz "você está aqui", e um modal acontece por cima de onde
+   * você já está. Por isso `scan` e `support` não aparecem neste mapa — eles nunca destacam.
+   *
+   * Ver D-81.
+   */
+  const abaAtiva = { home: 'home', map: 'map', sectors: 'sectors' }[currentView] || null
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSecao, setSelectedSecao] = useState('todos')
   const [apenasDisponiveis, setApenasDisponiveis] = useState(false)
@@ -637,7 +650,6 @@ function App() {
     }
     // Navigate to Map focused on Checkouts
     setCurrentView('map')
-    setActiveTab('map')
     setFocusedProductForMap(null)
     showToast('🎉 Rota traçada até a Frente de Caixas! Obrigado por comprar na Leroy Merlin.')
   }
@@ -653,7 +665,6 @@ function App() {
     limparRoteiroLocal()
     setRoteiroItems([])
     setCurrentView('home')
-    setActiveTab('home')
     showToast('🎉 Compra concluída com sucesso! Obrigado por comprar na Leroy Merlin.')
   }
 
@@ -663,7 +674,6 @@ function App() {
     setFocusedProductForMap(product || null)
     setPreviousView(currentView)
     setCurrentView('map')
-    setActiveTab('map')
     window.scrollTo({ top: 0, behavior: 'instant' })
   }
 
@@ -686,7 +696,6 @@ function App() {
 
   // Handle bottom navigation tab clicks
   const handleTabChange = (tabKey) => {
-    setActiveTab(tabKey)
     if (tabKey === 'home') {
       setCurrentView('home')
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -715,8 +724,8 @@ function App() {
 
       {/* Header / TopAppBar with Search Lupa & Cart / Roteiro Counter */}
       <Header
-        activeTab={activeTab}
-        setActiveTab={handleTabChange}
+        abaAtiva={abaAtiva}
+        aoTrocarDeAba={handleTabChange}
         onOpenSectors={handleOpenSectorsPage}
         onOpenRoteiro={() => setIsRoteiroDrawerOpen(true)}
         onSearchClick={() => handleOpenSearchPage(true)}
@@ -840,8 +849,8 @@ function App() {
       {/* Bottom Navigation for Mobile (hidden on dedicated product detail page) */}
       {currentView !== 'product-detail' && (
         <BottomNav
-          activeTab={activeTab}
-          setActiveTab={handleTabChange}
+          abaAtiva={abaAtiva}
+          aoTrocarDeAba={handleTabChange}
         />
       )}
 

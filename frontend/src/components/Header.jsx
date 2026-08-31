@@ -2,8 +2,8 @@ import React from 'react'
 import leroyLogo from '../assets/leroy_logo.png'
 
 export default function Header({
-  activeTab,
-  setActiveTab,
+  abaAtiva,
+  aoTrocarDeAba,
   onOpenSectors,
   onOpenRoteiro,
   onSearchClick,
@@ -23,34 +23,39 @@ export default function Header({
           <span className="material-symbols-outlined">search</span>
         </button>
 
-        <div className="brand-logo" onClick={() => setActiveTab('home')}>
+        <div className="brand-logo" onClick={() => aoTrocarDeAba('home')}>
           <img src={leroyLogo} alt="Leroy Merlin" className="brand-logo-img" />
         </div>
 
         <nav className="desktop-nav">
           <button 
-            className={`nav-link ${activeTab === 'home' ? 'active' : ''}`}
-            onClick={() => setActiveTab('home')}
+            className={`nav-link ${abaAtiva === 'home' ? 'active' : ''}`}
+            onClick={() => aoTrocarDeAba('home')}
           >
             Home
           </button>
           <button 
-            className="nav-link"
+            className={`nav-link ${abaAtiva === 'sectors' ? 'active' : ''}`}
             onClick={onOpenSectors}
             title="Ver catálogo físico e todos os setores da loja"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '18px', marginRight: '4px' }}>storefront</span>
             Setores da Loja
           </button>
+          {/*
+            * Estes dois abrem MODAL, e por isso não recebem destaque de "você está aqui" —
+            * um modal acontece por cima da tela em que o cliente já está, não no lugar dela.
+            * Marcá-los como destino era a origem do destaque que ficava preso. Ver D-81.
+            */}
           <button 
-            className={`nav-link ${activeTab === 'scan' ? 'active' : ''}`}
-            onClick={() => setActiveTab('scan')}
+            className="nav-link"
+            onClick={() => aoTrocarDeAba('scan')}
           >
             Scan & Rota
           </button>
           <button 
-            className={`nav-link ${activeTab === 'support' ? 'active' : ''}`}
-            onClick={() => setActiveTab('support')}
+            className="nav-link"
+            onClick={() => aoTrocarDeAba('support')}
           >
             Atendimento
           </button>

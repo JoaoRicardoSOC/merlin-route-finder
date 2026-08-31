@@ -46,6 +46,7 @@
 - [D-78. Paginação com duas funções separadas, e botão em vez de rolagem infinita](#d-78-paginação-com-duas-funções-separadas-e-botão-em-vez-de-rolagem-infinita)
 - [D-79. O texto sobre o verde da marca é escuro, e o verde que carrega texto é outro](#d-79-o-texto-sobre-o-verde-da-marca-é-escuro-e-o-verde-que-carrega-texto-é-outro)
 - [D-80. Movimento reduzido usa duração de 0,01ms, e não `animation: none`](#d-80-movimento-reduzido-usa-duração-de-001ms-e-não-animation-none)
+- [D-81. O destaque da navegação é derivado da tela, e modal não é lugar](#d-81-o-destaque-da-navegação-é-derivado-da-tela-e-modal-não-é-lugar)
 
 **Persistência**
 - [D-10. Entidades JPA espelho, separadas das de domínio](#d-10-entidades-jpa-espelho-separadas-das-de-domínio)
@@ -2022,6 +2023,41 @@ A animação roda uma vez, em tempo imperceptível, e **pinta o quadro final**. 
 **Como foi verificado, e o que não deu para verificar.** A ferramenta de navegador desta sessão não emula `prefers-reduced-motion`. O que foi possível provar é que o navegador **analisou** a regra corretamente — a consulta ao CSSOM devolve a condição `(prefers-reduced-motion: reduce)` e as quatro declarações com `!important` no lugar. A aplicação em si é semântica de CSS, não depende de nós.
 
 **Onde no código.** `frontend/src/App.css`, no fim do arquivo.
+
+---
+
+### D-81. O destaque da navegação é derivado da tela, e modal não é lugar
+
+**O problema, encontrado usando o app.** Tocar em "Scan & Rota" abria o modal de localização e o item continuava marcado depois de fechá-lo — **e continuava marcado mesmo depois de tocar em "Setores"**.
+
+**A raiz eram duas verdades sobre a mesma coisa.** O `App` guardava `currentView` (a tela desenhada) e `activeTab` (o que a navegação destaca), escritos por caminhos diferentes — e nem todo caminho escrevia os dois:
+
+| Item | O que fazia | Sintoma |
+|---|---|---|
+| Home | atualizava os dois | correto |
+| **Setores** (cabeçalho) | chamava o abridor de tela **direto** | não apagava o destaque anterior, **e nunca acendia o próprio** |
+| **Scan & Rota** | marcava a aba e abria um **modal** | destaque preso |
+| **Atendimento** | idem | destaque preso |
+
+O relato do usuário era a soma de duas linhas dessa tabela: a terceira prendia o destaque, e a segunda explicava por que ir para Setores não o soltava.
+
+**Decisão 1: o destaque passa a ser derivado, e o estado paralelo sai.**
+
+```js
+const abaAtiva = { home: 'home', map: 'map', sectors: 'sectors' }[currentView] || null
+```
+
+Consertar os três caminhos um a um deixaria o estado duplicado de pé, e o próximo caminho que alguém acrescentasse voltaria a esquecer de atualizar um dos dois. Derivar **remove a classe do defeito**, não as três instâncias.
+
+**Decisão 2: `scan` e `support` não destacam nada, e isso é desenho, não omissão.**
+
+Os dois abrem **modal**. Um destaque de navegação afirma *"você está aqui"*; um modal acontece **por cima** de onde o cliente já está, sem tirá-lo de lá. Tratar modal como destino foi a origem do defeito — então as comparações com `'scan'` e `'support'` foram removidas do `Header` e do `BottomNav` em vez de mantidas sempre falsas, com um comentário no lugar dizendo por quê.
+
+**O que apareceu junto.** O "Setores da Loja" do cabeçalho **não tinha classe de ativo nenhuma** — nunca acendia, mesmo com a tela de setores aberta. Passou a acender pela mesma derivação.
+
+**Duas telas ficam sem destaque de propósito:** o catálogo, que é alcançado pela lupa e não é item da barra; e o detalhe do produto, onde a barra inteira é escondida.
+
+**Onde no código.** `frontend/src/App.jsx`, `frontend/src/components/Header.jsx`, `frontend/src/components/BottomNav.jsx`.
 
 ---
 

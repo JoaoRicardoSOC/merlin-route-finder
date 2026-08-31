@@ -139,7 +139,10 @@ export default function LocationCodeModal({
 
               {/* Quick test plates */}
               <div className="quick-plates-section">
-                <span className="quick-plates-title">Placas cadastradas na loja:</span>
+                {/* Numa loja de verdade, oferecer a lista de todas as placas derrotaria o
+                    propósito do QR. Ela existe para demonstrar e para o time testar, e o
+                    rótulo diz isso — mesma honestidade dos botões "simule a leitura". */}
+                <span className="quick-plates-title">Atalho de demonstração — ir direto para uma placa:</span>
                 <div className="quick-plates-grid">
                   {KNOWN_PLATES.map((p) => {
                     const isCurrent = currentLocation && normalizarCodigo(currentLocation.code) === normalizarCodigo(p.codigo)
@@ -153,8 +156,9 @@ export default function LocationCodeModal({
                       >
                         <div className="plate-badge">{p.codigo}</div>
                         <div className="plate-text">
+                          {/* As coordenadas saíram: são os eixos do nosso mapa interno e não
+                              significam nada para quem está na loja. O nome do corredor sim. */}
                           <span className="plate-name">{p.nome}</span>
-                          <span className="plate-coords">Coord: ({p.x}, {p.y})</span>
                         </div>
                         {isCurrent && <span className="plate-check">📍 Aqui</span>}
                       </button>
@@ -174,10 +178,19 @@ export default function LocationCodeModal({
                   <div className="laser-scan-line"></div>
                   <span className="material-symbols-outlined qr-viewfinder-icon">qr_code_2</span>
                 </div>
+                {/*
+                  * O app NÃO tem leitor de QR — não há vídeo nem canvas aqui, e o visor acima
+                  * é enquadramento visual, não câmera ligada.
+                  *
+                  * E não precisa ter: o QR da placa carrega a URL do app com `?ponto=TIN-02`,
+                  * então quem lê é a câmera nativa do celular, e o app abre já posicionado.
+                  * O fluxo sempre funcionou; era a frase que mandava apontar uma câmera que
+                  * não existe. Ver O-34.
+                  */}
                 <p className="camera-guide-text">
                   {isScanning
                     ? 'Lendo código da placa...'
-                    : 'Aponte a câmera para o QR Code da placa do corredor'}
+                    : 'Use a câmera do seu celular na placa do corredor — ela abre o app já na sua posição.'}
                 </p>
               </div>
 

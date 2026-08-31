@@ -26,7 +26,6 @@
 | [O-31](#o-31-o-assistente-não-nomeia-produtos-por-extenso-e-por-isso-nenhum-cartão-aparece) | Cartões do chat estão dormentes — **medido** | Backend, se o time quiser | Baixa |
 | [O-32](#o-32-a-paleta-de-cores-por-setor-reprova-no-contraste-e-é-decisão-de-identidade) | Cores por setor reprovam — **medidas** | Frontend e time | Média |
 | [O-33](#o-33-oito-alvos-de-toque-abaixo-de-44px-e-o-projeto-define-esse-mínimo) | Alvos de toque abaixo de 44px | Frontend | Média |
-| [O-34](#o-34-a-aba-do-qr-code-manda-apontar-uma-câmera-que-não-existe) | A aba do QR manda apontar câmera inexistente | Frontend | Média |
 | [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
 | [O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens) | Coletar as imagens dos produtos | Time | Média |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
@@ -39,7 +38,7 @@
 | [O-12](#o-12-o-raio-de-busca-da-ruptura-é-um-palpite-informado--agora-medido) | Raio de 25 unidades — medido | — | aceita |
 | [O-15](#o-15-o-endpoint-de-simulação-de-estoque-não-tem-proteção-nenhuma) | Simulação de estoque sem proteção | — | aceita |
 
-**Encerradas:** [O-03](#o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado) (deploy no ar) · [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela) (selo da ruptura) · [O-27](#o-27-as-22-imagens-coletadas-não-têm-para-onde-ir--medição-errada-o-mecanismo-já-existia) (imagens já aplicadas) · [O-25](#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai--apagado) (catálogo inventado apagado) · [O-28](#o-28-a-visão-todos-do-catálogo-não-pagina--os-111-passaram-a-ser-alcançáveis) (catálogo pagina) · [O-26](#o-26-o-convite-do-mapa-vazio-promete-uma-rota-que-não-existe--corrigido) (texto do mapa) · [O-05](#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição--resolvida-com-trava-síncrona) (trava da ruptura) · [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar--sem-objeto) · [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado--sem-objeto) · [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo) · [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) · [O-16](#o-16-o-token-continua-na-url-do-pwa--a-preocupação-deixou-de-existir)
+**Encerradas:** [O-03](#o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado) (deploy no ar) · [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela) (selo da ruptura) · [O-27](#o-27-as-22-imagens-coletadas-não-têm-para-onde-ir--medição-errada-o-mecanismo-já-existia) (imagens já aplicadas) · [O-25](#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai--apagado) (catálogo inventado apagado) · [O-28](#o-28-a-visão-todos-do-catálogo-não-pagina--os-111-passaram-a-ser-alcançáveis) (catálogo pagina) · [O-26](#o-26-o-convite-do-mapa-vazio-promete-uma-rota-que-não-existe--corrigido) (texto do mapa) · [O-05](#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição--resolvida-com-trava-síncrona) (trava da ruptura) · [O-34](#o-34-a-aba-do-qr-code-manda-apontar-uma-câmera-que-não-existe--corrigida) (texto do QR) · [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar--sem-objeto) · [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado--sem-objeto) · [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo) · [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) · [O-16](#o-16-o-token-continua-na-url-do-pwa--a-preocupação-deixou-de-existir)
 
 ---
 
@@ -572,7 +571,16 @@ O que existe no lugar de proteção: marcação explícita como `[Demonstracao]`
 
 ---
 
-### O-34. A aba do QR Code manda apontar uma câmera que não existe
+### O-34. ~~A aba do QR Code manda apontar uma câmera que não existe~~ — corrigida
+
+> [!NOTE]
+> **Encerrada em 31/08/2026, e era só texto.**
+>
+> - A frase passou a descrever o que de fato acontece: *"Use a câmera do seu celular na placa do corredor — ela abre o app já na sua posição."*
+> - As coordenadas cruas (`Coord: (50, 92)`) saíram da lista de placas.
+> - A lista passou a se assumir: *"Atalho de demonstração — ir direto para uma placa"*.
+>
+> **O visor animado ficou.** Ele não afirma nada falso — é enquadramento visual do que o cliente vai fazer com a câmera do próprio celular, e a varredura só anima quando uma simulação é disparada.
 
 **O quê.** A aba "Plano A: QR Code" do modal de localização diz *"Aponte a câmera para o QR Code da placa do corredor"*. **Não há `<video>`, não há `<canvas>`, não há leitor** — verificado. A instrução não leva a lugar nenhum.
 

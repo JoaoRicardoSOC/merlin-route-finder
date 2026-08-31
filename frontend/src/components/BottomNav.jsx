@@ -1,14 +1,14 @@
 import React from 'react'
 
-export default function BottomNav({ activeTab, setActiveTab }) {
+export default function BottomNav({ abaAtiva, aoTrocarDeAba }) {
   return (
     <nav className="bottom-nav-mobile" aria-label="Navegação inferior mobile">
       <button
         type="button"
-        className={`bottom-nav-item ${activeTab === 'home' ? 'active' : ''}`}
-        onClick={() => setActiveTab('home')}
+        className={`bottom-nav-item ${abaAtiva === 'home' ? 'active' : ''}`}
+        onClick={() => aoTrocarDeAba('home')}
       >
-        <span className={`material-symbols-outlined ${activeTab === 'home' ? 'filled' : ''}`}>
+        <span className={`material-symbols-outlined ${abaAtiva === 'home' ? 'filled' : ''}`}>
           home
         </span>
         <span className="bottom-nav-label">Home</span>
@@ -16,10 +16,10 @@ export default function BottomNav({ activeTab, setActiveTab }) {
 
       <button
         type="button"
-        className={`bottom-nav-item ${activeTab === 'map' ? 'active' : ''}`}
-        onClick={() => setActiveTab('map')}
+        className={`bottom-nav-item ${abaAtiva === 'map' ? 'active' : ''}`}
+        onClick={() => aoTrocarDeAba('map')}
       >
-        <span className={`material-symbols-outlined ${activeTab === 'map' ? 'filled' : ''}`}>
+        <span className={`material-symbols-outlined ${abaAtiva === 'map' ? 'filled' : ''}`}>
           map
         </span>
         <span className="bottom-nav-label">Mapa</span>
@@ -27,10 +27,10 @@ export default function BottomNav({ activeTab, setActiveTab }) {
 
       <button
         type="button"
-        className={`bottom-nav-item ${activeTab === 'scan' ? 'active' : ''}`}
-        onClick={() => setActiveTab('scan')}
+        className={'bottom-nav-item'}
+        onClick={() => aoTrocarDeAba('scan')}
       >
-        <span className={`material-symbols-outlined ${activeTab === 'scan' ? 'filled' : ''}`}>
+        <span className={'material-symbols-outlined'}>
           qr_code_scanner
         </span>
         <span className="bottom-nav-label">Scan</span>
@@ -38,10 +38,10 @@ export default function BottomNav({ activeTab, setActiveTab }) {
 
       <button
         type="button"
-        className={`bottom-nav-item ${activeTab === 'sectors' ? 'active' : ''}`}
-        onClick={() => setActiveTab('sectors')}
+        className={`bottom-nav-item ${abaAtiva === 'sectors' ? 'active' : ''}`}
+        onClick={() => aoTrocarDeAba('sectors')}
       >
-        <span className={`material-symbols-outlined ${activeTab === 'sectors' ? 'filled' : ''}`}>
+        <span className={`material-symbols-outlined ${abaAtiva === 'sectors' ? 'filled' : ''}`}>
           grid_view
         </span>
         <span className="bottom-nav-label">Setores</span>
@@ -49,10 +49,10 @@ export default function BottomNav({ activeTab, setActiveTab }) {
 
       <button
         type="button"
-        className={`bottom-nav-item ${activeTab === 'support' ? 'active' : ''}`}
-        onClick={() => setActiveTab('support')}
+        className={'bottom-nav-item'}
+        onClick={() => aoTrocarDeAba('support')}
       >
-        <span className={`material-symbols-outlined ${activeTab === 'support' ? 'filled' : ''}`}>
+        <span className={'material-symbols-outlined'}>
           smart_toy
         </span>
         <span className="bottom-nav-label">Assistente</span>
