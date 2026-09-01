@@ -18,16 +18,11 @@
 |---|---|---|---|
 | [O-01](#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada) | Chave do Gemini e cota gratuita (afeta a suíte) | João Ricardo | **Alta — 13/09** |
 | [O-02](#o-02-senha-do-oracle-passou-por-canal-de-conversa) | Senha do Oracle exposta | João Ricardo | Média |
-| [O-06](#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar) | Retomar a sessão pelo `localStorage` | Bielecky e Marcela | Alta |
 | [O-08](#o-08-o-der-não-tem-a-tabela-de-registro-de-ruptura) | DER desatualizado | Vicentini | **Alta** |
 | [O-24](#o-24-os-diagramas-da-sprint-1-desenham-o-produto-que-a-mentoria-derrubou) | Diagramas desenham totem, handoff e rota | Vicentini e time | **Alta — antes da banca** |
-| [O-29](#o-29-duas-pastas-de-documentação-estão-vazias-desde-o-primeiro-dia) | `docs/arquitetura` e `docs/casos_de_uso` vazias | Time | Baixa |
 | [O-30](#o-30-a-sessão-duplicada-na-abertura-é-do-strictmode-e-só-em-desenvolvimento) | Sessão duplicada é do StrictMode, **não é defeito** | — | esclarecida |
 | [O-31](#o-31-o-assistente-não-nomeia-produtos-por-extenso-e-por-isso-nenhum-cartão-aparece) | Cartões do chat estão dormentes — **medido** | Backend, se o time quiser | Baixa |
-| [O-32](#o-32-a-paleta-de-cores-por-setor-reprova-no-contraste-e-é-decisão-de-identidade) | Cores por setor reprovam — **medidas** | Frontend e time | Média |
-| [O-33](#o-33-oito-alvos-de-toque-abaixo-de-44px-e-o-projeto-define-esse-mínimo) | Alvos de toque abaixo de 44px | Frontend | Média |
 | [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
-| [O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens) | Coletar as imagens dos produtos | Time | Média |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
 | [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final) | Limpar documentos de trabalho | Time | fim do ano |
 | [O-20](#o-20-rodar-a-suíte-deixa-um-resto-de-sessões-no-banco-de-demonstração) | Limpar sessões de teste antes da banca | Backend | Baixa |
@@ -38,7 +33,7 @@
 | [O-12](#o-12-o-raio-de-busca-da-ruptura-é-um-palpite-informado--agora-medido) | Raio de 25 unidades — medido | — | aceita |
 | [O-15](#o-15-o-endpoint-de-simulação-de-estoque-não-tem-proteção-nenhuma) | Simulação de estoque sem proteção | — | aceita |
 
-**Encerradas:** [O-03](#o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado) (deploy no ar) · [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela) (selo da ruptura) · [O-27](#o-27-as-22-imagens-coletadas-não-têm-para-onde-ir--medição-errada-o-mecanismo-já-existia) (imagens já aplicadas) · [O-25](#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai--apagado) (catálogo inventado apagado) · [O-28](#o-28-a-visão-todos-do-catálogo-não-pagina--os-111-passaram-a-ser-alcançáveis) (catálogo pagina) · [O-26](#o-26-o-convite-do-mapa-vazio-promete-uma-rota-que-não-existe--corrigido) (texto do mapa) · [O-05](#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição--resolvida-com-trava-síncrona) (trava da ruptura) · [O-34](#o-34-a-aba-do-qr-code-manda-apontar-uma-câmera-que-não-existe--corrigida) (texto do QR) · [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar--sem-objeto) · [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado--sem-objeto) · [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo) · [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) · [O-16](#o-16-o-token-continua-na-url-do-pwa--a-preocupação-deixou-de-existir)
+**Encerradas:** [O-03](#o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado) (deploy no ar) · [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela) (selo da ruptura) · [O-27](#o-27-as-22-imagens-coletadas-não-têm-para-onde-ir--medição-errada-o-mecanismo-já-existia) (imagens já aplicadas) · [O-25](#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai--apagado) (catálogo inventado apagado) · [O-28](#o-28-a-visão-todos-do-catálogo-não-pagina--os-111-passaram-a-ser-alcançáveis) (catálogo pagina) · [O-26](#o-26-o-convite-do-mapa-vazio-promete-uma-rota-que-não-existe--corrigido) (texto do mapa) · [O-05](#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição--resolvida-com-trava-síncrona) (trava da ruptura) · [O-34](#o-34-a-aba-do-qr-code-manda-apontar-uma-câmera-que-não-existe--corrigida) (texto do QR) · [O-06](#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar--já-existia-e-foi-verificada) (retomar sessão) · [O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens) (111 fotos no ar) · [O-29](#o-29-duas-pastas-de-documentação-estão-vazias-desde-o-primeiro-dia--viraram-índices) (pastas vazias) · [O-32](#o-32-a-paleta-de-cores-por-setor-reprova-no-contraste--três-tons-escurecidos) (paleta por setor) · [O-33](#o-33-oito-alvos-de-toque-abaixo-de-44px--corrigidos) (alvos de toque) · [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar--sem-objeto) · [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado--sem-objeto) · [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo) · [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) · [O-16](#o-16-o-token-continua-na-url-do-pwa--a-preocupação-deixou-de-existir)
 
 ---
 
@@ -176,7 +171,20 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 
 ---
 
-### O-06. O celular tem um caminho de recuperação se a aba fechar
+### O-06. ~~O celular tem um caminho de recuperação se a aba fechar~~ — já existia, e foi verificada
+
+> [!NOTE]
+> **Encerrada em 01/09/2026, e a anotação estava velha.** A recuperação já estava implementada
+> — e mais completa do que esta observação descrevia: o `sessaoId` é gravado ao nascer, a
+> sessão é retomada ao abrir, a placa da URL tem prioridade sobre a sessão guardada, e quando
+> o servidor não reconhece mais a sessão o cliente é **avisado** em vez de descobrir sozinho.
+>
+> **Verificada no ambiente publicado**, não no código: item posto no roteiro, página
+> recarregada, mesma sessão (`8e71ce0c…`), item preservado, nenhum aviso falso de expiração.
+>
+> **O que a verificação destapou foi outra coisa**, e essa era grave: quando a API não
+> respondia, o app **inventava** uma sessão, e a lista do cliente evaporava no primeiro
+> recarregamento. Corrigido — ver [D-86](decisoes-tecnicas.md).
 
 > [!NOTE]
 > **Reescrita em 25/08/2026.** A versão anterior descrevia a recuperação via token de handoff, que não existe mais. **O problema continua real** — a aba fecha, o cliente perde o contexto —, só que a saída mudou.
@@ -356,7 +364,11 @@ E o problema não é interno: **diagrama é o que a banca olha primeiro**, antes
 > [!NOTE]
 > **Volume resolvido em 25/08/2026: o catálogo passou de 29 para 111 produtos**, cerca de onze por seção. O que continua aberto é a **coleta das imagens**, e ela ficou maior junto.
 >
-> **Coleta em andamento: 22 de 111 em 25/08/2026** — Cozinhas, Decoração e o início da Elétrica. Junto das fotos vieram os **nomes reais** dos produtos do site, e os dois já estão na massa, com as marcas e medidas reconciliadas ([registro](imagens-dos-produtos.md#o-que-entrou-junto-com-os-nomes-reais--aplicado-em-25082026)). **As duas lixas da ruptura continuam sem foto** — são as que encenam a ruptura, e as mais importantes de todas.
+> **Encerrada em 01/09/2026: os 111 produtos têm foto.** O time coletou as 89 restantes, e
+> elas entraram no carregador junto com os nomes reais e as marcas correspondentes — ver
+> [D-85](decisoes-tecnicas.md) e `docs/dados/produtos-imagens-t2.md`.
+>
+> O registro do andamento, abaixo, fica como está: **Coleta em andamento: 22 de 111 em 25/08/2026** — Cozinhas, Decoração e o início da Elétrica. Junto das fotos vieram os **nomes reais** dos produtos do site, e os dois já estão na massa, com as marcas e medidas reconciliadas ([registro](imagens-dos-produtos.md#o-que-entrou-junto-com-os-nomes-reais--aplicado-em-25082026)). **As duas lixas da ruptura continuam sem foto** — são as que encenam a ruptura, e as mais importantes de todas.
 
 **O quê.** Ampliar a massa de demonstração, e coletar as URLs das imagens.
 
@@ -473,7 +485,16 @@ O que existe no lugar de proteção: marcação explícita como `[Demonstracao]`
 
 ---
 
-### O-29. Duas pastas de documentação estão vazias desde o primeiro dia
+### O-29. ~~Duas pastas de documentação estão vazias desde o primeiro dia~~ — viraram índices
+
+> [!NOTE]
+> **Encerrada em 01/09/2026.** `docs/arquitetura/` e `docs/casos_de_uso/` ganharam um
+> `README.md` cada, e o `.gitkeep` saiu.
+>
+> Não são depósitos: são **índices** que apontam para onde o conteúdo mora de verdade — as
+> decisões técnicas, o planejamento, o contrato OpenAPI, o fluxo do cliente, as quebras de
+> fluxo e a pasta `usecase` do backend. Cada README também diz **por que** o conteúdo está lá
+> e não ali, que era a pergunta que a pasta vazia fazia sem responder.
 
 **O quê.** `docs/arquitetura/` e `docs/casos_de_uso/` só têm `.gitkeep`, criados em 10/08/2026, e nunca receberam arquivo.
 
@@ -527,7 +548,26 @@ O que existe no lugar de proteção: marcação explícita como `[Demonstracao]`
 
 ---
 
-### O-32. A paleta de cores por setor reprova no contraste, e é decisão de identidade
+### O-32. ~~A paleta de cores por setor reprova no contraste~~ — três tons escurecidos
+
+> [!NOTE]
+> **Encerrada em 01/09/2026, e a medição mudou a decisão.**
+>
+> A escolha inicial foi escurecer só o fundo tingido, para não tocar na paleta. **Medindo, ela
+> não funcionava:** para um ícone âmbar claro não existe "escurecer um pouco o fundo" — o
+> `#fef3c7` (creme) teria que virar `#705a02` (marrom escuro), e três cartões ficariam escuros
+> entre sete claros.
+>
+> A alternativa que parecia mais invasiva era a menos: **só três ícones reprovavam**, e dois
+> mudam de forma que ninguém percebe.
+>
+> | Setor | Antes | Depois | Mudança |
+> |---|---|---|---|
+> | Cozinhas | `#d97706` | `#d27306` | **−2% de luz** |
+> | Encanamento | `#0ea5e9` | `#0c91cc` | −6% |
+> | Elétrica | `#f59e0b` | `#c07c08` | −11% |
+>
+> Os dez pares passam agora, de 3,00 a 5,30. **Os `bgLight` não foram tocados.**
 
 **O quê.** Os dez tons de `constants/setores.js` — um por seção — são usados como cor de ícone sobre fundos tingidos da mesma família. **Medidos em 30/08/2026**, no mapa e na tela de setores:
 
@@ -553,7 +593,17 @@ O que existe no lugar de proteção: marcação explícita como `[Demonstracao]`
 
 ---
 
-### O-33. Oito alvos de toque abaixo de 44px, e o projeto define esse mínimo
+### O-33. ~~Oito alvos de toque abaixo de 44px~~ — corrigidos
+
+> [!NOTE]
+> **Encerrada em 01/09/2026.** Os chips ganharam área de toque de 44px por **sobreposição
+> invisível**: continuam com 30px na tela e 44px no dedo, sem engordar a tela inicial. O
+> `row-gap` subiu de 6px para 14px, porque duas dessas áreas em linhas vizinhas se encostavam
+> — e tocar no chip errado é pior que o alvo pequeno. O campo e o botão de busca passaram a
+> usar o token de 44px que já existia.
+>
+> Medido no navegador: nenhum controle do app abaixo de 44px. Ver
+> [D-87](decisoes-tecnicas.md).
 
 **O quê.** Medido em 375 px na tela inicial:
 

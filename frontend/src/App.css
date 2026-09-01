@@ -349,6 +349,8 @@
   color: var(--on-surface);
   outline: none;
   padding: 10px 0;
+  /* O campo tambem e alvo de toque: 40px de altura era o que ele tinha antes. */
+  min-height: var(--min-touch-target);
 }
 
 .search-input::placeholder {
@@ -374,8 +376,8 @@
 .search-submit-btn {
   background-color: var(--primary);
   color: var(--on-primary);
-  width: 40px;
-  height: 40px;
+  width: var(--min-touch-target);
+  height: var(--min-touch-target);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
@@ -409,7 +411,13 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 6px;
+  /*
+   * A folga vertical maior nao e estetica: os chips ganharam area de toque de 44px por
+   * sobreposicao invisivel (ver .suggestion-chip::after), e com 6px entre linhas a area de
+   * um chip invadiria a do chip de baixo. 14px e o minimo que separa as duas.
+   */
+  column-gap: 6px;
+  row-gap: 14px;
 }
 
 .suggestion-chip {
@@ -422,6 +430,31 @@
   font-weight: 500;
   color: var(--on-surface-variant);
   transition: all var(--transition-fast);
+  /* Ancora da area de toque abaixo. */
+  position: relative;
+}
+
+/*
+ * O chip mede 30px de altura, e o projeto define 44px como alvo minimo de toque
+ * (--min-touch-target, usado em doze lugares). Engordar a pilula ate 44px resolveria o toque
+ * e estragaria o desenho - seis pilulas gordas empurrando a tela inicial para baixo.
+ *
+ * Esta sobreposicao invisivel estende a area sensivel para 44px sem mexer no layout: o chip
+ * continua com 30px na tela e 44px no dedo. E o motivo de .suggestion-chips ter row-gap de
+ * 14px, porque duas dessas areas em linhas vizinhas se encostariam.
+ *
+ * Vale lembrar por que isso importa aqui: o app e usado em pe, num corredor, com uma mao -
+ * muitas vezes com a outra segurando um produto. Alvo pequeno erra mais nessa situacao do que
+ * sentado no sofa.
+ */
+.suggestion-chip::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: var(--min-touch-target);
 }
 
 .suggestion-chip:active {
@@ -2355,6 +2388,35 @@
 
 /* Aviso de espera longa na primeira carga — o servidor publicado acordando.
    Fixo no topo, discreto, e sem o vermelho de erro: não é falha, é demora. */
+/*
+ * Fica na base da tela, e não no topo como o aviso de servidor acordando.
+ *
+ * Os dois nunca competem por atenção: o de cima diz "espere, ainda estamos subindo"; este diz
+ * "pode seguir, a gente reenvia". O de baixo também não cobre o cabeçalho, que é onde está o
+ * contador do roteiro que o cliente vai querer conferir depois de ler isto.
+ */
+.aviso-pendencias {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--altura-barra-inferior, 64px) + 8px);
+  z-index: 1150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background-color: var(--surface-container);
+  border: 1px solid var(--outline-variant);
+  color: var(--on-surface);
+  font-family: var(--font-label);
+  font-size: 13px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
 .aviso-acordando {
   position: fixed;
   top: 0;
@@ -6610,6 +6672,15 @@
 /* --------------------------------------------------------------------------
    Tela de recuperação (ErrorBoundary)
    -------------------------------------------------------------------------- */
+/*
+ * Existe para carregar role="alert" sem participar do layout: os filhos continuam sendo itens
+ * diretos do flex de .tela-de-erro. Ver o comentário no JSX sobre por que o papel de alerta
+ * não pode ficar no mesmo elemento que o <main>.
+ */
+.tela-de-erro-anuncio {
+  display: contents;
+}
+
 .tela-de-erro {
   min-height: 100dvh;
   display: flex;

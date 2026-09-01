@@ -11,6 +11,12 @@
 // e as ações seguintes só chamavam o servidor se o id não começasse com 'item-'. Como sempre
 // começava, marcar coletado e remover nunca saíam da tela - não às vezes, nunca.
 
+import {
+  drenarFila,
+  enfileirarColeta,
+  lerFila
+} from './filaDeSincronizacao'
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 const ROTEIRO_STORAGE_KEY = 'merlin_route_finder_roteiro_itens'
 
@@ -102,7 +108,7 @@ export async function consultarRoteiro(sessaoId) {
     }
 
     const data = await response.json()
-    const itens = (data.itens || []).map(daApi)
+    const itens = comPendenciasPorCima((data.itens || []).map(daApi))
     saveLocalRoteiro(itens)
     return itens
   } catch (err) {
@@ -201,6 +207,53 @@ export async function removerDoRoteiro(sessaoId, itemId) {
  *
  * As duas rotas são idempotentes no backend, então repetir o toque não desalinha nada.
  */
+/**
+ * Devolve a lista do servidor com as marcações que ainda não chegaram lá por cima.
+ *
+ * Sem isto, a reconciliação desfaz na tela o que o cliente acabou de marcar sem sinal: o
+ * servidor responde o estado antigo — que é o estado correto do ponto de vista dele — e a
+ * marca some. O cliente veria a própria ação ser revertida sem explicação.
+ */
+function comPendenciasPorCima(itens) {
+  const fila = lerFila()
+  if (fila.length === 0) return itens
+  const porItem = new Map(fila.map(p => [p.idBackend, p.coletado]))
+  return itens.map(i => (porItem.has(i.idBackend)
+    ? { ...i, coletado: porItem.get(i.idBackend) }
+    : i))
+}
+
+/**
+ * Fala com a API de coleta. Lança marcando se a recusa foi do servidor ou da rede, porque a
+ * fila trata os dois de formas opostas: recusa do servidor sai da fila, falta de rede espera.
+ */
+async function enviarColeta(idBackend, coletado) {
+  const acao = coletado ? 'coletar' : 'desmarcar'
+  const response = await fetch(`${API_BASE_URL}/api/v1/roteiro/itens/${idBackend}/${acao}`, {
+    method: 'PATCH',
+    headers: { Accept: 'application/json' }
+  })
+
+  if (!response.ok) {
+    const erro = new Error(`HTTP ${response.status} ao ${acao} item`)
+    // 4xx é o servidor dizendo que este pedido não vale — repeti-lo não vai passar a valer.
+    // 408 e 429 são exceção: os dois pedem justamente para tentar de novo mais tarde.
+    erro.recusadoPeloServidor =
+      response.status >= 400 && response.status < 500 &&
+      response.status !== 408 && response.status !== 429
+    throw erro
+  }
+}
+
+/**
+ * Reenvia o que ficou pendente. Chamada quando a conexão volta e ao reabrir a aba.
+ *
+ * @returns {Promise<{enviadas: number, descartadas: number, restantes: number}>}
+ */
+export async function sincronizarPendencias() {
+  return drenarFila(enviarColeta)
+}
+
 export async function alternarColetaItem(itemId) {
   const alvo = getLocalRoteiro().find(i => i.id === itemId || i.produtoId === itemId)
   if (!alvo) return getLocalRoteiro()
@@ -217,13 +270,19 @@ export async function alternarColetaItem(itemId) {
   }
 
   try {
-    const acao = passaAEstarColetado ? 'coletar' : 'desmarcar'
-    await fetch(`${API_BASE_URL}/api/v1/roteiro/itens/${alvo.idBackend}/${acao}`, {
-      method: 'PATCH',
-      headers: { Accept: 'application/json' }
-    })
+    await enviarColeta(alvo.idBackend, passaAEstarColetado)
   } catch (e) {
-    console.warn('Coleta registrada apenas localmente:', e.message)
+    if (e.recusadoPeloServidor) {
+      // Não entra na fila: reenviar o que o servidor recusa é fila que nunca esvazia.
+      console.warn('O servidor recusou a marcação de coleta:', e.message)
+    } else {
+      /*
+       * Antes daqui saía só um console.warn, e a marca ficava na tela para sempre sem nunca
+       * chegar ao servidor — até a próxima reconciliação desfazê-la sozinha. Agora a intenção
+       * fica guardada e volta a ser tentada quando a conexão voltar.
+       */
+      enfileirarColeta(alvo.idBackend, passaAEstarColetado)
+    }
   }
 
   return itens

@@ -25,21 +25,21 @@ export const SECTOR_METADATA = {
   },
   'Elétrica': {
     icon: 'electrical_services',
-    color: '#f59e0b',
+    color: '#c07c08',
     bgLight: '#fef3c7',
     corredor: 'Corredor A14-A16',
     descricao: 'Disjuntores, fios, quadros elétricos, tomadas e conduítes'
   },
   'Encanamento': {
     icon: 'plumbing',
-    color: '#0ea5e9',
+    color: '#0c91cc',
     bgLight: '#e0f2fe',
     corredor: 'Corredor B04-B06',
     descricao: 'Tubos, conexões PVC, registros, ralos e sifões'
   },
   'Cozinhas': {
     icon: 'countertops',
-    color: '#d97706',
+    color: '#d27306',
     bgLight: '#fef3c7',
     corredor: 'Corredor D01-D04',
     descricao: 'Pias, cubas, torneiras gourmet, gabinetes e módulos'

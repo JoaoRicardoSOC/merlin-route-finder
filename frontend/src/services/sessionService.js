@@ -34,24 +34,6 @@ function findPlateMeta(codigo) {
 /**
  * Generates local fallback session
  */
-function createLocalSession(codigoPonto) {
-  const plate = findPlateMeta(codigoPonto)
-  return {
-    id: 'sess-' + Math.random().toString(36).substring(2, 11),
-    status: 'ACTIVE',
-    criadoEm: new Date().toISOString(),
-    expiracaoTtl: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    posicaoAtual: plate ? {
-      id: 'ponto-' + plate.codigo,
-      tipo: 'QR_CODE',
-      corredor: plate.nome,
-      coordenadaX: plate.x,
-      coordenadaY: plate.y,
-      codigoCurto: normalizarCodigo(plate.codigo)
-    } : null
-  }
-}
-
 /**
  * Initializes a new session on backend (POST /api/v1/sessoes)
  */
@@ -76,11 +58,23 @@ export async function inicializarSessao(codigoPonto = null) {
     localStorage.setItem(SESSION_DATA_KEY, JSON.stringify(data))
     return data
   } catch (err) {
-    console.warn('API /sessoes indisponível, criando sessão local:', err.message)
-    const localData = createLocalSession(codigoPonto)
-    localStorage.setItem(SESSION_STORAGE_KEY, localData.id)
-    localStorage.setItem(SESSION_DATA_KEY, JSON.stringify(localData))
-    return localData
+    /*
+     * Antes daqui saía uma sessão inventada: id `sess-xxxxx` sorteado no cliente, status
+     * 'ACTIVE' afirmado sem ninguém confirmar, e uma posição tirada da lista de placas — na
+     * prática, "você está na entrada da loja" dito para quem podia estar em qualquer lugar.
+     *
+     * O estrago não era a mentira em si, era o que vinha depois. O cliente montava a lista
+     * inteira contra uma sessão que o servidor nunca ouviu falar; no primeiro recarregamento,
+     * o GET devolvia 404, o app limpava o armazenamento e a lista sumia. Ele tinha trabalhado
+     * para nada e não havia como saber por quê.
+     *
+     * Falhar aqui é pior de imediato e melhor em tudo o mais: a tela avisa e oferece tentar de
+     * novo, e nada do que o cliente fizer é jogado num buraco. Ver [D-86].
+     */
+    console.error('Não foi possível abrir a sessão:', err.message)
+    const erro = new Error('Não conseguimos abrir sua sessão de compras agora.')
+    erro.causa = err
+    throw erro
   }
 }
 
@@ -140,7 +134,12 @@ export async function recentrarPosicao(sessaoId, codigoPonto) {
     console.warn('API /sessoes/{id}/posicao indisponível, atualizando localmente:', err.message)
     const plate = findPlateMeta(codigoPonto)
     const saved = localStorage.getItem(SESSION_DATA_KEY)
-    let session = saved ? JSON.parse(saved) : createLocalSession(codigoPonto)
+    if (!saved) {
+      // Sem sessão guardada não há o que recentrar, e inventar uma aqui recriaria o problema
+      // que a inicialização acabou de deixar de ter.
+      throw err
+    }
+    const session = JSON.parse(saved)
 
     session.posicaoAtual = plate ? {
       id: 'ponto-' + plate.codigo,

@@ -51,6 +51,8 @@
 - [D-83. `aria-modal` sem trava de foco é pior que não ter `aria-modal`](#d-83-aria-modal-sem-trava-de-foco-é-pior-que-não-ter-aria-modal)
 - [D-84. Uma ação, um controle: o cartão de produto tinha quatro botões iguais](#d-84-uma-ação-um-controle-o-cartão-de-produto-tinha-quatro-botões-iguais)
 - [D-85. Nome real entra com a marca junto, e o par da ruptura fica de fora](#d-85-nome-real-entra-com-a-marca-junto-e-o-par-da-ruptura-fica-de-fora)
+- [D-86. A sessão inventada sai, e o que o cliente marca sem sinal entra numa fila](#d-86-a-sessão-inventada-sai-e-o-que-o-cliente-marca-sem-sinal-entra-numa-fila)
+- [D-87. O alvo de toque cresce por sobreposição, e a pílula continua fina](#d-87-o-alvo-de-toque-cresce-por-sobreposição-e-a-pílula-continua-fina)
 
 **Persistência**
 - [D-10. Entidades JPA espelho, separadas das de domínio](#d-10-entidades-jpa-espelho-separadas-das-de-domínio)
@@ -2229,6 +2231,126 @@ que o nome real acrescenta. Revisar as 89 é trabalho próprio, e não cabia aqu
 
 **Onde no código.** `CatalogoDaMassa.java` (nomes e marcas), `CarregadorDadosIniciais.java`
 (o mapa `IMAGENS`, de 22 para 111).
+
+---
+
+### D-86. A sessão inventada sai, e o que o cliente marca sem sinal entra numa fila
+
+**Um problema, visto de dois lados.** Os dois apareceram na mesma investigação e não fazia
+sentido resolver um sem o outro.
+
+#### O lado feio: o app inventava a sessão
+
+Quando `POST /sessoes` não respondia, o `sessionService` **fabricava uma**: id `sess-xxxxx`
+sorteado no cliente, `status: 'ACTIVE'` afirmado sem ninguém confirmar, e uma posição tirada
+da lista de placas — na prática, *"você está na entrada da loja"* dito para quem podia estar
+em qualquer lugar.
+
+**O estrago não era a mentira, era o que vinha depois.** O cliente montava a lista inteira
+contra uma sessão que o servidor nunca ouviu falar. No primeiro recarregamento o `GET`
+devolvia 404, o app limpava o armazenamento, e a lista sumia — sem aviso e sem como entender
+por quê. Foi assim que isto foi descoberto: um teste de recuperação de sessão que mostrou o id
+mudando sozinho a cada carregamento.
+
+**A decisão: falhar em voz alta.** `inicializarSessao` lança em vez de inventar, e o `App`
+mostra uma tela que diz o que houve e oferece tentar de novo. Sem sessão não existe lista, não
+existe posição e não existe roteiro — o app inteiro seria uma casca que aceita toques e não
+guarda nada, então a tela **substitui** tudo em vez de aparecer por cima.
+
+É a quarta vez que o mesmo padrão aparece neste projeto: **quando o código não sabe, ele
+substitui por um valor plausível.** O mapa inventava Pintura, o chat inventava respostas, o
+catálogo inventava uma loja, o cartão de posição afirmava a entrada. Aqui era a sessão — e é
+a pior das cinco, porque as outras davam uma informação errada e esta jogava fora o trabalho
+do cliente.
+
+**O que ficou de propósito.** O `recentrarPosicao` continua atualizando a posição localmente
+quando a API falha, e isso **não** é a mesma coisa: o cliente escaneou uma placa real, e as
+coordenadas dela são dados reais da loja. Só o servidor não registrou. A afirmação continua
+verdadeira.
+
+#### O lado silencioso: a marcação que sumia sozinha
+
+`alternarColetaItem` marcava o item na tela e mandava o `PATCH`. Quando o `PATCH` falhava, o
+erro ia para o console e **a marca ficava na tela**. O servidor nunca soube, e na primeira
+reconciliação — trocar de aba e voltar já basta — a marca sumia. O cliente marcou, viu
+marcado, e depois não estava mais.
+
+Num corredor de loja isso não é hipótese: é o lugar onde o sinal cai.
+
+**A decisão: uma fila, e não um "tenta de novo".** O cliente continua andando e marcando
+enquanto está sem sinal. Uma tentativa isolada por ação perderia todas as outras, e reenviar
+tudo em paralelo quando o sinal volta inverteria a ordem — desmarcar e marcar de novo
+chegariam trocados, e o item terminaria no estado errado.
+
+Quatro regras, cada uma respondendo a um caso que aconteceria:
+
+| Regra | O caso que ela resolve |
+|---|---|
+| **Última intenção vence** por item | Marcou, desmarcou e marcou de novo sem sinal: o servidor só precisa do último estado |
+| **Para no primeiro erro de rede** | A conexão ainda não voltou; insistir gasta bateria e embaralha a ordem do que sobrou |
+| **Recusa do servidor (4xx) sai da fila** | Reenviar para sempre algo que o servidor recusa é uma fila que nunca esvazia |
+| **Reenviar antes de reconciliar** | Ao contrário, o servidor responde o estado antigo e apaga da tela a marcação um instante antes de ela ser enviada |
+
+A terceira regra abre exceção para **408 e 429**, que são justamente o servidor pedindo para
+tentar de novo mais tarde.
+
+**A quarta é a mais fácil de errar** e a que mais dói: ela é uma questão de *ordem entre duas
+chamadas*, não de código. Por isso a reconciliação também sobrepõe o que ainda está na fila
+sobre a resposta do servidor — se o reenvio falhar de novo, a marca do cliente continua onde
+ele a deixou.
+
+**A fila é do aparelho, não da sessão.** Se a aba fechar antes de o sinal voltar, ela continua
+lá. E o cliente vê que existe: um aviso discreto diz quantas marcações esperam conexão, em vez
+do silêncio de antes.
+
+**Verificado no navegador**, com a fila real: última intenção vence, ordem preservada,
+drenagem esvazia, queda de rede para no ponto certo mantendo a ordem do que sobrou, e recusa
+do servidor sai sem travar as seguintes.
+
+**Onde no código.** `frontend/src/services/filaDeSincronizacao.js` (nova),
+`roteiroService.js`, `sessionService.js`, `App.jsx`.
+
+---
+
+### D-87. O alvo de toque cresce por sobreposição, e a pílula continua fina
+
+**O problema.** Oito controles abaixo de 44px, sendo seis os chips de sugestão da tela
+inicial, com **30px** de altura. O detalhe que chama atenção: `--min-touch-target: 44px`
+**está definido nos tokens e é usado em doze lugares**. Não era desconhecimento do padrão, era
+aplicação incompleta dele.
+
+**Por que 44px importa aqui mais que no geral.** O app é usado **em pé, num corredor, com uma
+mão** — muitas vezes com a outra segurando um produto. Alvo pequeno erra mais nessa situação
+do que sentado no sofá.
+
+**A decisão está em como crescer.** Engordar a pílula até 44px resolveria o toque e estragaria
+o desenho: seis pílulas gordas empurrando a tela inicial para baixo, logo depois de um card
+ter sido dedicado a reduzir o ruído dela.
+
+```css
+.suggestion-chip::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  transform: translateY(-50%);
+  height: var(--min-touch-target);
+}
+```
+
+A sobreposição invisível estende a área sensível sem mexer no layout: **30px na tela, 44px no
+dedo.**
+
+**A consequência que não é óbvia:** duas dessas áreas em linhas vizinhas se encostam. Com
+`gap: 6px` entre linhas e 30px de pílula, a área de um chip invadiria a do chip de baixo — e o
+cliente tocaria no chip errado, que é pior do que o alvo pequeno. Por isso o `row-gap` subiu
+para **14px**, o mínimo que separa as duas. O `column-gap` continua 6px, porque a largura não
+foi estendida.
+
+**O campo e o botão de busca** ficaram com 44px de verdade, usando o token que já existia.
+
+**Medido depois, no navegador:** o chip continua com 30px na tela, o toque 6px acima e 6px
+abaixo dele o atinge, nenhuma área de chip colide com outra, e nenhum controle do app ficou
+abaixo de 44px.
 
 ---
 

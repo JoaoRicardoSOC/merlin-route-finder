@@ -29,8 +29,11 @@ import {
   normalizarCodigo
 } from './services/sessionService'
 
+import { pendencias } from './services/filaDeSincronizacao'
+
 import {
   consultarRoteiro,
+  sincronizarPendencias,
   adicionarAoRoteiro,
   removerDoRoteiro,
   alternarColetaItem,
@@ -140,6 +143,17 @@ function App() {
 
   // Session & Location state (UC-001)
   const [session, setSession] = useState(null)
+
+  /*
+   * A sessão não abriu, e a tela precisa dizer isso.
+   *
+   * Antes o serviço inventava uma sessão quando a API não respondia, então este estado nunca
+   * era necessário — e o cliente montava a lista dentro de um buraco. Ver [D-86].
+   */
+  const [falhaDeSessao, setFalhaDeSessao] = useState(false)
+
+  /** Marcações de coleta feitas sem sinal, esperando a conexão voltar. */
+  const [marcacoesPendentes, setMarcacoesPendentes] = useState(0)
   /*
    * Nasce nula, e não na entrada da loja.
    *
@@ -234,6 +248,7 @@ function App() {
         }
       } catch (err) {
         console.error('Erro ao inicializar sessão:', err)
+        if (isMounted) setFalhaDeSessao(true)
       }
     }
     initSession()
@@ -296,8 +311,27 @@ function App() {
   useEffect(() => {
     if (!session?.id) return
 
-    async function recarregarAoVoltar() {
+    /*
+     * A ORDEM aqui é a decisão, não um detalhe.
+     *
+     * Reenviar primeiro, reconciliar depois. Ao contrário, o servidor responderia o estado
+     * antigo — que é o correto do ponto de vista dele — e a marcação que o cliente fez sem
+     * sinal seria apagada da tela um instante antes de ser enviada.
+     */
+    async function reenviarEReconciliar() {
       if (document.visibilityState === 'hidden') return
+      try {
+        const resultado = await sincronizarPendencias()
+        if (resultado.enviadas > 0) {
+          showToast(resultado.enviadas === 1
+            ? 'Sua marcação pendente foi enviada.'
+            : `Suas ${resultado.enviadas} marcações pendentes foram enviadas.`)
+        }
+        setMarcacoesPendentes(pendencias())
+      } catch (err) {
+        console.warn('Não deu para reenviar as marcações pendentes:', err)
+      }
+
       try {
         setRoteiroItems(await consultarRoteiro(session.id))
       } catch (err) {
@@ -306,11 +340,14 @@ function App() {
       }
     }
 
-    document.addEventListener('visibilitychange', recarregarAoVoltar)
-    window.addEventListener('focus', recarregarAoVoltar)
+    document.addEventListener('visibilitychange', reenviarEReconciliar)
+    window.addEventListener('focus', reenviarEReconciliar)
+    // O evento que mais importa para a fila: o aparelho anunciando que voltou a ter rede.
+    window.addEventListener('online', reenviarEReconciliar)
     return () => {
-      document.removeEventListener('visibilitychange', recarregarAoVoltar)
-      window.removeEventListener('focus', recarregarAoVoltar)
+      document.removeEventListener('visibilitychange', reenviarEReconciliar)
+      window.removeEventListener('focus', reenviarEReconciliar)
+      window.removeEventListener('online', reenviarEReconciliar)
     }
   }, [session?.id])
 
@@ -598,6 +635,7 @@ function App() {
   const handleToggleCollectItem = async (itemId) => {
     const updated = await alternarColetaItem(itemId)
     setRoteiroItems(updated)
+    setMarcacoesPendentes(pendencias())
     const item = updated.find(i => i.id === itemId || i.produtoId === itemId)
     
     if (item?.coletado) {
@@ -716,6 +754,44 @@ function App() {
     (acc, vals) => acc + (Array.isArray(vals) ? vals.length : vals ? 1 : 0),
     0
   ) + (apenasDisponiveis ? 1 : 0)
+
+  /*
+   * Sem sessão não existe lista, não existe posição e não existe roteiro — e o app inteiro
+   * seria uma casca que aceita toques e não guarda nada. Por isso esta tela substitui tudo em
+   * vez de aparecer por cima: não há nada útil por baixo dela.
+   *
+   * O botão recarrega em vez de tentar reabrir a sessão no lugar, pela mesma razão do
+   * ErrorBoundary: depois de a inicialização falhar, metade do estado da tela nunca chegou a
+   * existir, e fingir recuperação entregaria um app meio montado que parece inteiro.
+   */
+  if (falhaDeSessao) {
+    return (
+      <main className="tela-de-erro">
+      {/*
+          * <main> por fora e role="alert" por dentro, e os dois precisam ser elementos
+          * diferentes: `role="alert"` SUBSTITUI o papel de marco do <main>, então pô-los no
+          * mesmo elemento deixaria a página sem conteúdo principal. O invólucro usa
+          * `display: contents` para não entrar no layout — ele existe só para a leitura.
+          */}
+        <div className="tela-de-erro-anuncio" role="alert">
+        <span className="material-symbols-outlined tela-de-erro-icone" aria-hidden="true">cloud_off</span>
+        <h1 className="tela-de-erro-titulo">Não conseguimos abrir sua sessão</h1>
+        <p className="tela-de-erro-texto">
+          A loja não respondeu, então não dá para começar seu roteiro agora — e preferimos
+          dizer isso a deixar você montar uma lista que se perderia. Se acabou de abrir o app,
+          o sistema pode estar acordando: a primeira abertura do dia leva até dois minutos.
+        </p>
+        <button
+          type="button"
+          className="tela-de-erro-botao"
+          onClick={() => window.location.reload()}
+        >
+          Tentar de novo
+        </button>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <div className="app-root">
@@ -960,6 +1036,24 @@ function App() {
         <div className="aviso-acordando" role="status">
           <span className="material-symbols-outlined" aria-hidden="true">hourglass_top</span>
           <span>Preparando o sistema… a primeira abertura do dia leva até dois minutos.</span>
+        </div>
+      )}
+
+      {/*
+        * O que o cliente marcou e o servidor ainda não soube.
+        *
+        * Ficar calado aqui foi o defeito original: a marca aparecia na tela, não chegava ao
+        * servidor, e sumia sozinha na reconciliação seguinte. Agora ela é guardada, reenviada
+        * quando a conexão volta — e enquanto isso o cliente sabe que está pendente.
+        */}
+      {marcacoesPendentes > 0 && (
+        <div className="aviso-pendencias" role="status">
+          <span className="material-symbols-outlined" aria-hidden="true">cloud_upload</span>
+          <span>
+            {marcacoesPendentes === 1
+              ? '1 marcação aguardando conexão. Ela vai sozinha quando o sinal voltar.'
+              : `${marcacoesPendentes} marcações aguardando conexão. Vão sozinhas quando o sinal voltar.`}
+          </span>
         </div>
       )}
 

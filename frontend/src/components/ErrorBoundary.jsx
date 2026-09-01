@@ -39,7 +39,14 @@ export default class ErrorBoundary extends React.Component {
     }
 
     return (
-      <div className="tela-de-erro" role="alert">
+      <main className="tela-de-erro">
+      {/*
+          * <main> por fora e role="alert" por dentro, e os dois precisam ser elementos
+          * diferentes: `role="alert"` SUBSTITUI o papel de marco do <main>, então pô-los no
+          * mesmo elemento deixaria a página sem conteúdo principal. O invólucro usa
+          * `display: contents` para não entrar no layout — ele existe só para a leitura.
+          */}
+        <div className="tela-de-erro-anuncio" role="alert">
         <span className="material-symbols-outlined tela-de-erro-icone" aria-hidden="true">warning</span>
         <h1 className="tela-de-erro-titulo">Alguma coisa quebrou aqui</h1>
         <p className="tela-de-erro-texto">
@@ -53,7 +60,8 @@ export default class ErrorBoundary extends React.Component {
         >
           Recarregar o app
         </button>
-      </div>
+        </div>
+      </main>
     )
   }
 }

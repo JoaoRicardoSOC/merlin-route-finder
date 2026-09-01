@@ -266,7 +266,17 @@ Onze cards. **Nenhum é trabalho grande**, e o que eles têm em comum é que o b
 
 ---
 
-### F-8. Reenviar as marcações feitas offline
+### F-8. ~~Reenviar as marcações feitas offline~~ — feito
+
+> [!NOTE]
+> **Concluído em 01/09/2026.** As marcações que não chegam ao servidor entram numa fila no
+> aparelho e são reenviadas quando a conexão volta — com última-intenção-vence por item, parada
+> no primeiro erro de rede para preservar a ordem, e descarte do que o servidor recusa.
+>
+> O defeito original era pior do que "não reenviava": a marca **ficava na tela** sem chegar ao
+> servidor, e sumia sozinha na reconciliação seguinte. Ver [D-86](decisoes-tecnicas.md).
+
+**O que era.**
 
 **O que fazer.** Enfileirar as coletas marcadas sem rede e reenviá-las quando a conexão voltar.
 
@@ -448,7 +458,13 @@ Três cards, e o primeiro é o mais urgente da lista inteira depois do E-1: **di
 
 ---
 
-### L-2. Resolver as duas pastas vazias
+### L-2. ~~Resolver as duas pastas vazias~~ — feito
+
+> [!NOTE]
+> **Concluído em 01/09/2026.** As duas viraram índices que apontam para onde o conteúdo mora.
+> Ver `O-29` em [`observacoes.md`](observacoes.md).
+
+**O que era.**
 
 **O que fazer.** `docs/arquitetura/` e `docs/casos_de_uso/` só têm `.gitkeep` desde 10/08. Apagar as duas, **ou** pôr em cada uma um arquivo curto apontando para onde o assunto está documentado.
 
