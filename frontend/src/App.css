@@ -69,6 +69,8 @@
   justify-content: center;
   user-select: none;
   cursor: pointer;
+  /* Virou <button>: o reset global tira borda e fundo, o preenchimento sobra. */
+  padding: 0;
 }
 
 .brand-logo-img {

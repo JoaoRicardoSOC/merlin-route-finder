@@ -23,9 +23,22 @@ export default function Header({
           <span className="material-symbols-outlined" aria-hidden="true">search</span>
         </button>
 
-        <div className="brand-logo" onClick={() => aoTrocarDeAba('home')}>
-          <img src={leroyLogo} alt="Leroy Merlin" className="brand-logo-img" />
-        </div>
+        {/*
+          * O logo leva para o inicio, e isso e convencao que todo mundo espera de um site.
+          * Ele era um <div> com onClick: funcionava no dedo e nao existia para o teclado, que
+          * e a mesma promessa quebrada dos cartoes de produto (D-84). Como <button> ele ganha
+          * Enter e Espaco do navegador, sem uma linha de tratador.
+          *
+          * O `alt` da imagem sai: com o botao nomeado, ele seria lido duas vezes.
+          */}
+        <button
+          type="button"
+          className="brand-logo"
+          onClick={() => aoTrocarDeAba('home')}
+          aria-label="Ir para o início"
+        >
+          <img src={leroyLogo} alt="" className="brand-logo-img" />
+        </button>
 
         <nav className="desktop-nav">
           <button 

@@ -24,6 +24,7 @@
 | [O-31](#o-31-o-assistente-não-nomeia-produtos-por-extenso-e-por-isso-nenhum-cartão-aparece) | Cartões do chat estão dormentes — **medido** | Backend, se o time quiser | Baixa |
 | [O-35](#o-35-a-afinidade-empata-quando-muitos-produtos-dividem-o-tipo-e-o-desempate-é-alfabético) | Afinidade empata e desempata por ordem alfabética | Backend, depois do prazo | Média |
 | [O-36](#o-36-a-suíte-padrão-não-roda-os-testes-de-integração-e-isso-já-deixou-passar-oito-falhas) | A suíte padrão não roda os testes de integração | Time | **Alta** |
+| [O-37](#o-37-quatro-famílias-tipográficas-seguram-a-primeira-pintura-por-quase-nove-segundos) | Quatro fontes seguram a primeira pintura | Frontend e time | Média |
 | [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
 | [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final) | Limpar documentos de trabalho | Time | fim do ano |
@@ -643,6 +644,43 @@ O que existe no lugar de proteção: marcação explícita como `[Demonstracao]`
 **Dois detalhes na mesma tela.** Ela lista **todas as placas da loja** com `Coord: (50, 92)` — coordenadas cruas do nosso sistema de eixos, que não significam nada para o cliente. Numa loja real, uma lista de todas as placas derrotaria o propósito do QR.
 
 **De quem.** Frontend.
+
+---
+
+### O-37. Quatro famílias tipográficas seguram a primeira pintura por quase nove segundos
+
+**Medido em 01/09/2026** com o Lighthouse 12.8 contra o ambiente publicado, perfil de celular:
+
+| | |
+|---|---|
+| First Contentful Paint | **8,6 s** |
+| Largest Contentful Paint | 8,8 s |
+| **Total Blocking Time** | **0 ms** |
+| Nota de performance | **56** |
+
+**O bloqueio de zero milissegundo é o que aponta o culpado.** Não é JavaScript: nada trava a
+linha principal. É a folha de estilo das fontes, que bloqueia a pintura enquanto baixa.
+
+O `index.html` carrega **quatro famílias tipográficas** — Hanken Grotesk, IBM Plex Sans,
+Source Sans 3 e Work Sans — mais os Material Symbols. O Lighthouse estima cerca de **7 s** de
+bloqueio somado no perfil de celular.
+
+**O que já foi feito, e não resolve a raiz.** As duas requisições ao Google Fonts viraram uma
+só, tirando uma ida e volta do caminho crítico sem mudar nada na tela.
+
+**O que resolveria.** Usar menos famílias. Quatro tipografias num app de uma tela e meia é
+muito, e cada uma custa uma fonte para baixar antes de o cliente ver qualquer coisa — dentro
+de uma loja, em dado móvel.
+
+**Por que não fiz.** Escolha de tipografia é identidade visual, e é da dupla de frontend. O
+caminho barato é ver quais famílias aparecem em poucos lugares e realocá-las para as que já
+carregam.
+
+**Atenuante:** a medição usa a rede móvel lenta simulada do Lighthouse. Numa conexão boa o
+número é bem melhor. Mas o app é **feito para ser usado dentro de uma loja**, que é
+exatamente onde a rede é ruim.
+
+**De quem.** Frontend, com o time.
 
 ---
 

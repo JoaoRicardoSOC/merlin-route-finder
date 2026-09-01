@@ -6,11 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Leroy Merlin - Assistente Digital & Localizador</title>
     
-    <!-- Google Fonts & Material Symbols -->
+    <meta name="description" content="Encontre produtos na loja Leroy Merlin, monte seu roteiro de compras e siga a rota pelos corredores. Escaneie a placa do corredor para o app saber onde voce esta." />
+
+    <!--
+      Google Fonts e Material Symbols numa REQUISICAO SO.
+      Eram duas folhas, as duas bloqueando a primeira pintura. O Lighthouse mediu 871 ms na
+      primeira e 172 ms na segunda, num total de cerca de 7 s de bloqueio estimado no perfil
+      de celular. Juntar nao resolve o problema de raiz - sao quatro familias tipograficas,
+      e isso e decisao de desenho (O-37) -, mas tira uma ida e volta do caminho critico sem
+      mudar nada na tela.
+    -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=Work+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=Work+Sans:wght@500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>
