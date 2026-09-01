@@ -128,7 +128,7 @@ class BuscaComFiltrosIntegracaoTest {
          * ele esta esgotado. Esconder do catalogo transformaria "acabou" em "nao vendemos".
          */
         assertThat(nomes(buscar(FiltroDeProdutos.nenhum())))
-                .contains("Pincel Chato 2 Polegadas");
+                .contains("Pincel Chato Tigre 815 - 2 Embalagem Com 12 Unidades");
     }
 
     @Test
@@ -167,9 +167,15 @@ class BuscaComFiltrosIntegracaoTest {
 
         System.out.println(">>> 'lampada' achou: " + achados);
 
+        /*
+         * Era startsWith("lâmpada"). Com os nomes reais da loja (D-85) quatro das cinco
+         * lampadas comecam com "Kit" - "Kit 10 Lâmpadas de LED E27...". O que o teste precisa
+         * garantir nunca foi a posicao da palavra, e sim que a busca sem acento devolva
+         * lampadas e so lampadas.
+         */
         assertThat(achados)
                 .isNotEmpty()
-                .allMatch(nome -> nome.toLowerCase().startsWith("lâmpada"));
+                .allMatch(nome -> nome.toLowerCase().contains("lâmpada"));
     }
 
     @Test
@@ -196,9 +202,14 @@ class BuscaComFiltrosIntegracaoTest {
                 .isNotEmpty()
                 .allMatch(nome -> nome.startsWith("Sifão"));
 
-        assertThat(nomes(buscar(FiltroDeProdutos.porTermo("distribuicao"))))
-                .as("til no meio: 'distribuicao' precisa achar 'Distribuição'")
-                .anyMatch(nome -> nome.contains("Distribuição"));
+        /*
+         * Era "distribuicao", que casava com "Quadro de Distribuição". O nome real do produto
+         * e "Quadro Pvc Embutir 12 Disjuntores Branco" (D-85), entao a palavra saiu da massa.
+         * "Mão Francesa" carrega o mesmo til e existe no catalogo de verdade.
+         */
+        assertThat(nomes(buscar(FiltroDeProdutos.porTermo("mao"))))
+                .as("til: 'mao' precisa achar 'Mão'")
+                .anyMatch(nome -> nome.contains("Mão"));
 
         assertThat(nomes(buscar(FiltroDeProdutos.porTermo("pecas"))))
                 .as("cedilha: 'pecas' precisa achar 'Peças'")

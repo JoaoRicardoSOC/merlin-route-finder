@@ -88,10 +88,10 @@ final class CatalogoDaMassa {
                         de(LARGURA, "23 cm")));
         produto("SKU-TIN-003", "Lixa para Parede Grão 120", "Tintas", "3.50", 4,
                 "Lixa de papel grão 120 para preparar parede antes da pintura. Grão médio: remove respingos e nivela massa corrida sem abrir sulcos no reboco.",
-                List.of(de(MARCA, "WBR"),de(TIPO, "Lixa para parede"),de(GRAO, "120")));
+                List.of(de(MARCA, "WBR"),de(TIPO, "Lixa"),de(GRAO, "120")));
         produto("SKU-TIN-004", "Lixa d'Água Grão 150", "Tintas", "4.20", 40,
                 "Lixa d'água grão 150 para acabamento fino em parede, madeira e metal. Usada úmida, produz menos pó e entope menos que a lixa comum.",
-                List.of(de(MARCA, "Dexter"),de(TIPO, "Lixa d água"),de(GRAO, "150")));
+                List.of(de(MARCA, "Dexter"),de(TIPO, "Lixa"),de(GRAO, "150")));
         produto("SKU-TIN-005", "Fita Crepe 48mm X 50m - Tigre", "Tintas", "12.90", 30,
                 "Fita crepe 48 mm x 50 m para proteger rodapé, batente e tomada durante a pintura. Sai sem deixar resíduo se removida em até 24 horas.",
                 List.of(de(MARCA, "Tigre"),de(TIPO, "Fita crepe"),de(LARGURA, "48 mm"),
@@ -141,7 +141,7 @@ final class CatalogoDaMassa {
                         de(COMPRIMENTO, "60 mm"),de(QUANTIDADE, "50 un")));
         produto("SKU-FRG-005", "Kit Cabo De Aço Varal 1,6mm Plastificado 15 Metros Com 4 Ganchos Bucha 10 Reforçado", "Ferragens", "12.90", 70,
                 "Pacote com 50 buchas 6 mm para fixações leves em alvenaria, como quadros e suportes pequenos.",
-                List.of(de(TIPO, "Bucha"),de(MATERIAL, "Nylon"),
+                List.of(de(MARCA, "Fischer"),de(TIPO, "Bucha"),de(MATERIAL, "Nylon"),
                         de(BITOLA, "6 mm"),de(QUANTIDADE, "50 un")));
         produto("SKU-FRG-006", "Bucha Nylon 10mm para Bases Maciças SF com Parafuso 10 peças Standers", "Ferragens", "18.90", 45,
                 "Pacote com 25 buchas 10 mm para cargas maiores, como armário aéreo e mão francesa.",
@@ -149,7 +149,7 @@ final class CatalogoDaMassa {
                         de(BITOLA, "10 mm"),de(QUANTIDADE, "25 un")));
         produto("SKU-FRG-007", "Dobradica Aco Vai E Vem Bang Bang Retorno Mola Automatico 3 Polegadas Porta Madeira Ferro Aluminio Cromado", "Ferragens", "22.90", 38,
                 "Par de dobradiças com pino solto, que permite retirar a porta sem desparafusar a folha.",
-                List.of(de(TIPO, "Dobradiça"),de(MATERIAL, "Aço"),
+                List.of(de(MARCA, "Ciser"),de(TIPO, "Dobradiça"),de(MATERIAL, "Aço"),
                         de(DIMENSAO, "3 pol"),de(QUANTIDADE, "2 un")));
         produto("SKU-FRG-008", "Fechadura para Porta Interna Pado Concept 413 Cromado 40mm Aço Inox Chave Simples", "Ferragens", "89.90", 20,
                 "Fechadura com maçaneta e trinco para porta de cômodo, com espelho cromado.",
@@ -208,7 +208,7 @@ final class CatalogoDaMassa {
                         de(POLOS, "Tripolar")));
         produto("SKU-ELE-011", "Quadro Pvc Embutir 12 Disjuntores Branco", "Elétrica", "159.90", 7,
                 "Quadro de embutir para até 12 disjuntores DIN, com barramento de neutro e terra.",
-                List.of(de(TIPO, "Quadro de distribuição"),
+                List.of(de(MARCA, "Steck"),de(TIPO, "Quadro de distribuição"),
                         de(QUANTIDADE, "12 un")));
 
         // ---------------------------------------------------------------- Encanamento
@@ -225,10 +225,10 @@ final class CatalogoDaMassa {
                         de(ACABAMENTO, "Cromado"),de(BITOLA, "1/2 pol")));
         produto("SKU-ENC-004", "Sifão Universal Plástico Branco Tigre", "Encanamento", "22.50", 18,
                 "Sifão sanfonado universal para pia e lavatório. O corpo flexível se ajusta a distâncias diferentes entre o ralo e a parede, o que resolve instalações fora do esquadro.",
-                List.of(de(MARCA, "Tigre"),de(TIPO, "Sifão sanfonado"),de(MATERIAL, "Plástico")));
+                List.of(de(MARCA, "Tigre"),de(TIPO, "Sifão"),de(MATERIAL, "Plástico")));
         produto("SKU-ENC-005", "Sifão Extensível Universal Com Copo (blukit Cromado)", "Encanamento", "39.90", 12,
                 "Sifão copo cromado universal para pia e lavatório. O copo retém resíduos e pode ser aberto para limpeza sem desmontar a instalação.",
-                List.of(de(MARCA, "Blukit"),de(TIPO, "Sifão copo"),de(MATERIAL, "Metal"),
+                List.of(de(MARCA, "Blukit"),de(TIPO, "Sifão"),de(MATERIAL, "Metal"),
                         de(ACABAMENTO, "Cromado")));
         produto("SKU-ENC-006", "Cano PVC Marrom Soldável 1m 1\" 32mm Equation", "Encanamento", "39.90", 28,
                 "Barra de 6 m em 32 mm, bitola usada em ramais que alimentam mais de um ponto de água.",
@@ -248,7 +248,7 @@ final class CatalogoDaMassa {
                         de(BITOLA, "25 mm")));
         produto("SKU-ENC-010", "Valvula Pia Cozinha 4 1/2 Aço Inox Com Cesto Higiênico Removível Ralo Basket Escoamento Cuba", "Encanamento", "34.90", 30,
                 "Válvula de escoamento em inox para pia de cozinha, compatível com cuba de 3,5 polegadas.",
-                List.of(de(TIPO, "Válvula de escoamento"),de(MATERIAL, "Inox"),
+                List.of(de(MARCA, "Blukit"),de(TIPO, "Válvula de escoamento"),de(MATERIAL, "Inox"),
                         de(BITOLA, "3,5 pol")));
         produto("SKU-ENC-011", "Fita Veda Rosca 18mm x 50m Equation", "Encanamento", "8.90", 75,
                 "Fita de vedação para roscas metálicas de água fria e quente. Enrolar no sentido da rosca antes de apertar.",
@@ -307,10 +307,13 @@ final class CatalogoDaMassa {
                 "Luminária quadrada de embutir para forro de gesso, com recorte de 17 cm. Acompanha soquete e mola de fixação.",
                 List.of(de(MARCA, "Startec"),de(TIPO, "Luminária de embutir"),
                         de(FORMATO, "Quadrado"),de(DIMENSAO, "17x17 cm")));
+        // Luz QUENTE, e nao branca: o produto real e 3000 K, e o nome dele diz isso. A ficha
+        // afirmava "Branca" desde quando o nome era nosso e generico (D-85), o que fazia esta
+        // lampada parecer intercambiavel com as brancas sendo que ela muda a cor do comodo.
         produto("SKU-ILU-003", "Kit 3 Lâmpada Led Bulbo 12w Branco Quente (3000k) - Ourolux", "Iluminação", "49.90", 35,
-                "Kit com 3 lâmpadas LED 12 W, luz branca, soquete E27. Cerca de 1.250 lumens cada, indicadas para sala e cozinha.",
+                "Kit com 3 lâmpadas LED 12 W, luz branca quente (3000 K), soquete E27. Cerca de 1.250 lumens cada, indicadas para sala e quarto.",
                 List.of(de(MARCA, "Ourolux"),de(TIPO, "Lâmpada LED"),de(POTENCIA, "12 W"),
-                        de(TEMPERATURA_DE_COR, "Branca"),de(QUANTIDADE, "3 un")));
+                        de(TEMPERATURA_DE_COR, "Quente"),de(QUANTIDADE, "3 un")));
         produto("SKU-ILU-004", "Kit 10 Lâmpadas Led Kian Classic 9w Bivolt 3000k Amarela", "Iluminação", "39.90", 0,
                 "Mesma potência da versão branca, com luz amarela de 3000 K - mais aconchegante para quarto e sala.",
                 List.of(de(MARCA, "Kian"),de(TIPO, "Lâmpada LED"),de(POTENCIA, "9 W"),
@@ -325,7 +328,7 @@ final class CatalogoDaMassa {
                         de(TEMPERATURA_DE_COR, "Âmbar")));
         produto("SKU-ILU-007", "Luminária Led Embutir Redonda 18w", "Iluminação", "64.90", 16,
                 "Versão redonda da luminária de embutir, com recorte de 17 cm no forro de gesso.",
-                List.of(de(TIPO, "Luminária de embutir"),
+                List.of(de(MARCA, "Taschibra"),de(TIPO, "Luminária de embutir"),
                         de(FORMATO, "Redondo"),de(DIMENSAO, "17 cm")));
         produto("SKU-ILU-008", "Painel de Led Sobrepor Quadrado Luz Branca 24W Elgin 26,5x26,5cm Branco Bivolt", "Iluminação", "99.90", 13,
                 "Painel de sobrepor para teto sem forro, com 24 W e luz branca uniforme.",
@@ -333,11 +336,11 @@ final class CatalogoDaMassa {
                         de(FORMATO, "Quadrado"),de(TEMPERATURA_DE_COR, "Branca")));
         produto("SKU-ILU-009", "Trilho Eletrificado 2m + 6 Spot Led 7w 6000k Bivolt Preto", "Iluminação", "79.90", 19,
                 "Spot direcionável para trilho eletrificado, com corpo preto e foco ajustável.",
-                List.of(de(TIPO, "Spot de trilho"),de(POTENCIA, "7 W"),
+                List.of(de(MARCA, "Taschibra"),de(TIPO, "Spot de trilho"),de(POTENCIA, "7 W"),
                         de(COR, "Preto")));
         produto("SKU-ILU-010", "Fita Led Rolo 5m Branco Frio 3528 Dupla Face Ip65 Com Fonte", "Iluminação", "89.90", 21,
                 "Rolo de 5 m de fita LED com fonte inclusa, para sanca de gesso ou iluminação de nicho.",
-                List.of(de(TIPO, "Fita LED"),de(COMPRIMENTO, "5 m"),
+                List.of(de(MARCA, "Taschibra"),de(TIPO, "Fita LED"),de(COMPRIMENTO, "5 m"),
                         de(TEMPERATURA_DE_COR, "Branca")));
         produto("SKU-ILU-011", "Arandela Solar Externa IP65 LED Branco Inspire Preta", "Iluminação", "119.90", 10,
                 "Arandela com vedação para área externa, resistente à chuva. Ilumina fachada e corredor lateral.",
@@ -347,7 +350,7 @@ final class CatalogoDaMassa {
         // ---------------------------------------------------------------- Jardim
         produto("SKU-JAR-001", "Vaso De Cerâmica Decorativo Para Flores Laranja Terra G 30 Cm", "Jardim", "79.90", 12,
                 "Vaso de cerâmica esmaltada 30 cm de diâmetro, com furo de drenagem. Indicado para plantas de porte médio em área interna ou varanda.",
-                List.of(de(TIPO, "Vaso"),de(MATERIAL, "Cerâmica"),
+                List.of(de(MARCA, "Vasart"),de(TIPO, "Vaso"),de(MATERIAL, "Cerâmica"),
                         de(DIMENSAO, "30 cm")));
         produto("SKU-JAR-002", "Terra Vegetal para Flores, Vasos e Jardim Natural Geolia 20kg", "Jardim", "24.90", 30,
                 "Saco de 20 kg de terra vegetal adubada, pronta para uso em vasos, canteiros e replantio. Não precisa de correção antes do plantio.",
@@ -358,7 +361,7 @@ final class CatalogoDaMassa {
                         de(DIMENSAO, "20 cm")));
         produto("SKU-JAR-004", "Vaso Planta 65x40 Oval Moderno Polietileno - Cinza Cimento 004", "Jardim", "109.90", 11,
                 "Vaso grande em polietileno, bem mais leve que a cerâmica no mesmo tamanho - facilita mover a planta.",
-                List.of(de(TIPO, "Vaso"),de(MATERIAL, "Polietileno"),
+                List.of(de(MARCA, "Vasart"),de(TIPO, "Vaso"),de(MATERIAL, "Polietileno"),
                         de(DIMENSAO, "45 cm")));
         produto("SKU-JAR-005", "Substrato para Folhagens Orgânico Geolia Granulado 5kg", "Jardim", "16.90", 45,
                 "Substrato leve para vasos, com boa drenagem. Indicado para plantas de interior.",
@@ -473,13 +476,13 @@ final class CatalogoDaMassa {
         // ---------------------------------------------------------------- Materiais de construcao
         produto("SKU-MAT-001", "Argamassa ACII Interno e Externo 20kg Cinza Varandas e Quintais CimentCola Quartzolit", "Materiais de construção", "28.90", 50,
                 "Argamassa colante AC-II, saco de 20 kg, para assentamento de cerâmica em área interna e externa. Suporta variação de temperatura e umidade.",
-                List.of(de(MARCA, "Quartzolit"),de(TIPO, "Argamassa AC-II"),de(PESO, "20 kg")));
+                List.of(de(MARCA, "Quartzolit"),de(TIPO, "Argamassa"),de(PESO, "20 kg")));
         produto("SKU-MAT-002", "Cimento Todas as Obras 50kg Votoran", "Materiais de construção", "42.90", 40,
                 "Saco de 50 kg de cimento Portland CP-II, de uso geral em concreto, argamassa e assentamento de blocos.",
                 List.of(de(MARCA, "Votoran"),de(TIPO, "Cimento CP-II"),de(PESO, "50 kg")));
         produto("SKU-MAT-003", "Argamassa ACIII Interno e Externo 20kg Branco Axton", "Materiais de construção", "36.90", 28,
                 "Argamassa colante AC-III, saco de 20 kg, de aderência reforçada. Indicada para porcelanato, peças grandes e assentamento sobre piso antigo.",
-                List.of(de(MARCA, "Axton"),de(TIPO, "Argamassa AC-III"),de(PESO, "20 kg")));
+                List.of(de(MARCA, "Axton"),de(TIPO, "Argamassa"),de(PESO, "20 kg")));
         produto("SKU-MAT-004", "Cimento CP II Branco 1kg Fortaleza", "Materiais de construção", "44.90", 35,
                 "Cimento pozolânico, que gera menos calor na cura - indicado para peças de concreto maiores.",
                 List.of(de(MARCA, "Fortaleza"),de(TIPO, "Cimento CP-IV"),de(PESO, "50 kg")));

@@ -22,6 +22,8 @@
 | [O-24](#o-24-os-diagramas-da-sprint-1-desenham-o-produto-que-a-mentoria-derrubou) | Diagramas desenham totem, handoff e rota | Vicentini e time | **Alta — antes da banca** |
 | [O-30](#o-30-a-sessão-duplicada-na-abertura-é-do-strictmode-e-só-em-desenvolvimento) | Sessão duplicada é do StrictMode, **não é defeito** | — | esclarecida |
 | [O-31](#o-31-o-assistente-não-nomeia-produtos-por-extenso-e-por-isso-nenhum-cartão-aparece) | Cartões do chat estão dormentes — **medido** | Backend, se o time quiser | Baixa |
+| [O-35](#o-35-a-afinidade-empata-quando-muitos-produtos-dividem-o-tipo-e-o-desempate-é-alfabético) | Afinidade empata e desempata por ordem alfabética | Backend, depois do prazo | Média |
+| [O-36](#o-36-a-suíte-padrão-não-roda-os-testes-de-integração-e-isso-já-deixou-passar-oito-falhas) | A suíte padrão não roda os testes de integração | Time | **Alta** |
 | [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
 | [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final) | Limpar documentos de trabalho | Time | fim do ano |
@@ -641,6 +643,63 @@ O que existe no lugar de proteção: marcação explícita como `[Demonstracao]`
 **Dois detalhes na mesma tela.** Ela lista **todas as placas da loja** com `Coord: (50, 92)` — coordenadas cruas do nosso sistema de eixos, que não significam nada para o cliente. Numa loja real, uma lista de todas as placas derrotaria o propósito do QR.
 
 **De quem.** Frontend.
+
+---
+
+### O-35. A afinidade empata quando muitos produtos dividem o TIPO, e o desempate é alfabético
+
+**O quê.** `AfinidadeDeProduto` é um par `(tipo, marca)`. Depois do [D-88](decisoes-tecnicas.md)
+o `TIPO` virou o elo dos pares de substituição — mas quando **muitos** produtos compartilham o
+mesmo tipo, todos empatam, e o desempate cai no nome em ordem alfabética.
+
+**O caso concreto, medido.** São **cinco** lâmpadas LED. Para a ILU-001 em falta, a afinidade
+não distingue a ILU-003 da ILU-005: mesmo tipo, marcas diferentes das duas. Quem vence é quem
+vem antes no alfabeto — *"Kit 10…"* antes de *"Kit 3…"*.
+
+**A resposta está certa e a razão está errada.** A ILU-005 é de fato o melhor substituto,
+porque tem a mesma cor de luz. Mas a afinidade **não olha cor de luz** — ela acertou por sorte.
+Renomear um produto quebra isso de novo.
+
+**Por que importa:** o primeiro candidato é o que o cliente recebe quando o assistente está
+fora do ar ou a cota gratuita estourou — cinco chamadas por minuto, o cenário mais provável
+durante a banca.
+
+**A saída, quando houver tempo.** Ordenar os empates por **quantidade de atributos em comum**,
+em vez de por nome. A ILU-003 divide `QUANTIDADE` com a ILU-001 e a ILU-005 não; a cor de luz
+entraria na conta sozinha. Como o teto de candidatos já limita a lista a 20, a reordenação pode
+acontecer em memória, sem tocar na consulta.
+
+**Não foi feito agora** porque mexe na ordenação a doze dias da entrega e pode reordenar os
+outros quatro pares, que hoje acertam.
+
+**De quem.** Backend, depois de 13/09.
+
+---
+
+### O-36. A suíte padrão não roda os testes de integração, e isso já deixou passar oito falhas
+
+**O quê.** `mvnw test` roda **150 testes**. A suíte inteira tem **285**. Os 19 testes de
+integração ficam de fora por padrão — exigem `-Pintegracao` e credenciais do Oracle, e a
+exclusão está declarada no `pom` de propósito, porque nem todo ambiente tem banco.
+
+**A decisão é boa. O risco é o que ela não diz.** Quem roda `mvnw test`, vê "150 testes,
+0 falhas" e conclui que está tudo certo, está errado — e não tem como saber disso pela saída.
+
+**Já aconteceu.** O commit do [D-85](decisoes-tecnicas.md) foi dado como verificado com "150
+testes passam". Rodando a suíte completa, **8 falhavam** — inclusive a que garante que o
+substituto oferecido durante a banca faz sentido. Nenhuma delas era visível pela suíte padrão.
+
+**O que reduz o risco, em ordem de esforço:**
+
+1. **Combinar no time**: nenhum commit que toque a massa de dados vai sem `-Pintegracao`. Custo
+   zero, depende de disciplina.
+2. **Fazer a suíte padrão dizer o que não rodou** — uma linha no fim do `mvnw test` avisando
+   que 19 testes ficaram de fora e como rodá-los. É o mesmo princípio que o app inteiro segue:
+   silêncio sobre o que não se sabe é pior que o aviso.
+3. **Integração contínua** rodando o perfil completo a cada envio. É o certo, e é o único que
+   não depende de ninguém lembrar.
+
+**De quem.** Time — e vale decidir antes de 13/09, porque a massa de dados ainda vai mudar.
 
 ---
 

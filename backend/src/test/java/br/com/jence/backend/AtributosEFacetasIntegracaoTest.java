@@ -106,17 +106,22 @@ class AtributosEFacetasIntegracaoTest {
     @Test
     @DisplayName("dois valores da mesma chave sao OU: o resultado e a uniao dos dois")
     void doisValoresDaMesmaChave() {
+        /*
+         * Duas marcas que existem de fato no catalogo. Antes eram Tigre e Docol; com os nomes
+         * reais da loja (D-85) a Docol saiu da massa, e um teste de UNIAO sobre uma marca sem
+         * produto nenhum deixaria de testar a uniao.
+         */
         List<String> tigre = skus(comAtributos(Map.of(AtributoProduto.MARCA, List.of("Tigre"))));
-        List<String> docol = skus(comAtributos(Map.of(AtributoProduto.MARCA, List.of("Docol"))));
+        List<String> dexter = skus(comAtributos(Map.of(AtributoProduto.MARCA, List.of("Dexter"))));
 
-        List<String> tigreOuDocol = skus(comAtributos(
-                Map.of(AtributoProduto.MARCA, List.of("Tigre", "Docol"))));
+        List<String> tigreOuDexter = skus(comAtributos(
+                Map.of(AtributoProduto.MARCA, List.of("Tigre", "Dexter"))));
 
-        assertThat(tigreOuDocol)
+        assertThat(tigreOuDexter)
                 .as("marcar duas marcas mostra as duas, e nao a intersecao vazia entre elas")
                 .containsExactlyInAnyOrderElementsOf(
-                        Stream.concat(tigre.stream(), docol.stream()).distinct().toList());
-        assertThat(tigreOuDocol).hasSizeGreaterThan(tigre.size());
+                        Stream.concat(tigre.stream(), dexter.stream()).distinct().toList());
+        assertThat(tigreOuDexter).hasSizeGreaterThan(tigre.size());
     }
 
     @Test
@@ -154,11 +159,17 @@ class AtributosEFacetasIntegracaoTest {
     @Test
     @DisplayName("caracteristica combina com secao, termo e disponibilidade")
     void combinaComOsOutrosFiltros() {
-        List<String> lampadaPhilips = skus(new FiltroDeProdutos("lâmpada", "Iluminação", true,
-                Map.of(AtributoProduto.MARCA, List.of("Philips"))));
+        /*
+         * Era Philips, e a Kian herdou o cenario inteiro quando os nomes reais entraram: a
+         * ILU-001 tem estoque e a ILU-004 - a lampada amarela - esta zerada, as duas Kian.
+         * O que o teste guarda continua o mesmo: o filtro de disponibilidade tem que cortar a
+         * zerada mesmo quando a marca casa.
+         */
+        List<String> lampadaKian = skus(new FiltroDeProdutos("lâmpada", "Iluminação", true,
+                Map.of(AtributoProduto.MARCA, List.of("Kian"))));
 
-        assertThat(lampadaPhilips)
-                .as("a lampada amarela tambem e Philips, mas esta zerada")
+        assertThat(lampadaKian)
+                .as("a lampada amarela tambem e Kian, mas esta zerada")
                 .contains("SKU-ILU-001")
                 .doesNotContain("SKU-ILU-004");
     }
@@ -258,6 +269,6 @@ class AtributosEFacetasIntegracaoTest {
                 .map(FacetaDeProdutos.Valor::valor)
                 .toList();
 
-        assertThat(marcasVisiveis).contains("Tigre", "Docol", "Norton");
+        assertThat(marcasVisiveis).contains("Tigre", "Dexter", "Standers");
     }
 }

@@ -32,7 +32,7 @@ class PreFiltragemEspacialIntegracaoTest {
     /** Os pares plantados na massa: produto em falta e o substituto que faz sentido. */
     private static final Map<String, String> PARES = Map.of(
             "SKU-TIN-003", "SKU-TIN-004",   // lixa grao 120   -> lixa d'agua grao 150
-            "SKU-ILU-001", "SKU-ILU-003",   // lampada 9W      -> lampada 12W
+            "SKU-ILU-001", "SKU-ILU-005",   // lampada branca  -> outra lampada branca
             "SKU-ENC-004", "SKU-ENC-005",   // sifao sanfonado -> sifao copo
             "SKU-FER-002", "SKU-FER-003",   // trena 5m        -> trena 7,5m
             "SKU-MAT-001", "SKU-MAT-003");  // argamassa AC-II -> argamassa AC-III

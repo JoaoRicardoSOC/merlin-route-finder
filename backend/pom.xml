@@ -99,6 +99,35 @@
 
 	<build>
 		<plugins>
+			<!--
+			  Cobertura de testes. A suite tem 150 testes e ninguem sabia que fracao do codigo
+			  eles tocam - 19 casos de uso em producao contra 5 testes unitarios de caso de uso,
+			  com o resto vindo dos testes de integracao. Sem medida, "temos testes" e uma
+			  afirmacao sem tamanho.
+
+			  Nao ha limite minimo configurado de proposito: por ora o numero serve para
+			  encontrar o que ninguem exercita, nao para reprovar a construcao.
+			-->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.13</version>
+				<executions>
+					<execution>
+						<id>preparar-agente</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>relatorio</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>

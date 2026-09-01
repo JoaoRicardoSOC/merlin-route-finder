@@ -53,6 +53,7 @@
 - [D-85. Nome real entra com a marca junto, e o par da ruptura fica de fora](#d-85-nome-real-entra-com-a-marca-junto-e-o-par-da-ruptura-fica-de-fora)
 - [D-86. A sessão inventada sai, e o que o cliente marca sem sinal entra numa fila](#d-86-a-sessão-inventada-sai-e-o-que-o-cliente-marca-sem-sinal-entra-numa-fila)
 - [D-87. O alvo de toque cresce por sobreposição, e a pílula continua fina](#d-87-o-alvo-de-toque-cresce-por-sobreposição-e-a-pílula-continua-fina)
+- [D-88. O TIPO carrega a afinidade, porque a marca igual era dado inventado](#d-88-o-tipo-carrega-a-afinidade-porque-a-marca-igual-era-dado-inventado)
 
 **Persistência**
 - [D-10. Entidades JPA espelho, separadas das de domínio](#d-10-entidades-jpa-espelho-separadas-das-de-domínio)
@@ -2351,6 +2352,78 @@ foi estendida.
 **Medido depois, no navegador:** o chip continua com 30px na tela, o toque 6px acima e 6px
 abaixo dele o atinge, nenhuma área de chip colide com outra, e nenhum controle do app ficou
 abaixo de 44px.
+
+---
+
+### D-88. O TIPO carrega a afinidade, porque a marca igual era dado inventado
+
+**Como isto apareceu.** O JaCoCo entrou no projeto para medir cobertura. A primeira coisa que
+ele mostrou não foi um número: foi que a suíte padrão **não roda os testes de integração** —
+eles exigem `-Pintegracao` e Oracle. Rodando a suíte completa, **8 testes falhavam**, todos
+por causa do [D-85](#d-85-nome-real-entra-com-a-marca-junto-e-o-par-da-ruptura-fica-de-fora),
+que tinha sido dado como verificado com "150 testes passam".
+
+**O pior deles.** O substituto oferecido para a lixa grão 120 virou **bandeja de pintura** — o
+defeito exato que a afinidade tinha sido criada para matar. E o comentário do próprio teste diz
+o tamanho disso:
+
+> *O primeiro candidato é o que o cliente recebe quando o assistente está fora do ar ou a cota
+> estourou — o cenário mais provável de acontecer durante a banca, porque o tier gratuito
+> permite cinco chamadas por minuto.*
+
+**A causa, e ela ensina mais do que o conserto.** `AfinidadeDeProduto` é um par
+`(tipo, marca)`. As duas lixas tinham `TIPO` diferente — *"Lixa para parede"* e *"Lixa d
+água"* — então **a marca era o único elo entre elas**, e as duas eram `Norton`.
+
+Só que `Norton` nas duas era **invenção nossa**. Quando os nomes reais entraram, uma virou
+`WBR` e a outra `Dexter`, e o elo sumiu.
+
+**O que isso revela:** os pares de substituição só funcionavam porque tínhamos escolhido marcas
+iguais para eles. Com dado real eles se separam — e **é o esperado**, porque numa loja de
+verdade o substituto quase nunca é da mesma marca. Quando falta a lixa Norton, o cliente leva a
+Dexter. **Casar por marca é o critério ao contrário.**
+
+**A decisão: o `TIPO` passa a ser o que une o par.**
+
+| Par | TIPO antes | TIPO agora |
+|---|---|---|
+| Lixa | `Lixa para parede` / `Lixa d água` | **`Lixa`** |
+| Sifão | `Sifão sanfonado` / `Sifão copo` | **`Sifão`** |
+| Argamassa | `Argamassa AC-II` / `Argamassa AC-III` | **`Argamassa`** |
+
+A distinção que saiu do `TIPO` não se perdeu: ela continua no **nome** do produto e nos outros
+atributos (`GRAO`, `POTENCIA`). O que mudou é que ela deixou de impedir o sistema de ver que
+duas lixas são duas lixas.
+
+**O preço, e ele é visível:** a faceta de tipo passa a mostrar *"Lixa"* no lugar de *"Lixa para
+parede"*. Menos específico, mais agrupado — que é o que um filtro de catálogo deve ser.
+
+**Dois consertos vieram junto, e os dois eram meus:**
+
+1. **Todo produto voltou a declarar `MARCA`.** O D-85 removeu o atributo de 9 produtos cujo
+   anúncio real não nomeia fabricante. Existe um teste guardando o invariante *todo produto
+   declara marca*, e ele não roda por padrão — ninguém viu. O invariante venceu: os 9 voltaram
+   a ter a marca que tinham, porque o filtro por marca incompleto é pior que uma marca que o
+   título não confirma.
+
+2. **A lâmpada ILU-003 declarava a cor errada.** O nome real diz *"Branco Quente (3000k)"* e a
+   ficha dizia `TEMPERATURA_DE_COR: "Branca"` — herança de quando o nome era nosso e genérico.
+   Corrigido, e o par esperado passou a ser o ILU-005: **luz branca por luz branca**. Trocar a
+   cor da luz muda o cômodo; 15 W no lugar de 12 W, não.
+
+**Seis expectativas de teste foram atualizadas**, e cada uma manteve o que guardava. A mais
+feliz: a `Philips` saiu do catálogo, mas a **`Kian` herdou o cenário inteiro** — a ILU-001 com
+estoque e a ILU-004, a lâmpada amarela, zerada, as duas Kian. O teste continua provando que o
+filtro de disponibilidade corta a zerada mesmo quando a marca casa.
+
+**O que ficou por fazer.** A afinidade continua olhando só `TIPO` e `MARCA`. Quando muitos
+produtos compartilham o tipo — são cinco lâmpadas LED — ela empata e o desempate cai no nome em
+ordem alfabética. **Ela acerta a lâmpada por sorte, não por mérito.** Registrado como `O-35`.
+
+**Cobertura, agora que dá para medir:** 285 testes, **93,2% das linhas** e 75,4% dos ramos. Sem
+o perfil de integração, 150 testes e 35%.
+
+**Onde no código.** `CatalogoDaMassa.java`, três testes de integração, `pom.xml` (JaCoCo).
 
 ---
 
