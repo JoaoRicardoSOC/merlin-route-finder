@@ -1276,7 +1276,7 @@ No escopo novo essa regra vale igual, com uma origem a mais: **a posição atual
 
 **O que sobrevive inteiro.** Busca tolerante a erro de digitação, detalhe de produto, lista de compras sem limite, assistente de IA, tratamento de ruptura com substituto, marcação de coletado, ciclo de vida da sessão e toda a infraestrutura publicada.
 
-**Onde no código.** As remoções acontecem nos três primeiros cards de [`backlog-escopo-revisado.md`](backlog-escopo-revisado.md). O escopo novo está descrito em [`fluxo-do-cliente.md`](fluxo-do-cliente.md).
+**Onde no código.** As remoções aconteceram nos três primeiros cards do backlog de escopo revisado, concluído e removido em 01/09/2026. O escopo novo está descrito em [`fluxo-do-cliente.md`](fluxo-do-cliente.md).
 
 ---
 
@@ -1484,7 +1484,7 @@ Aqui a mesma regra vira armadilha: os 29 produtos criados antes destes campos **
 
 **A quarta vez que o mesmo padrão aparece.** [D-51](#d-51-um-valor-de-enum-removido-precisa-sumir-também-do-banco), [D-53](#d-53-a-aplicação-repara-a-restrição-de-enum-que-o-ddl-auto-update-deixa-envelhecer), [D-56](#d-56-a-coluna-coletado-continua-sendo-gravada-mesmo-redundante) e agora esta. Sem Flyway e com `ddl-auto: update`, **a carga inicial é o único lugar do sistema que pode reconciliar banco e código** — e toda mudança em dado existente precisa passar por ela explicitamente.
 
-**Imagem nula é estado normal, não defeito.** As URLs vêm do site público da Leroy e são coletadas à mão pelo time ([O-18](observacoes.md#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens)), de forma incremental. O contrato marca o campo como anulável e o teste verifica que um produto sem foto continua respondendo nome, descrição e localização. A coleta está organizada em [`imagens-dos-produtos.md`](imagens-dos-produtos.md).
+**Imagem nula é estado normal, não defeito.** As URLs vêm do site público da Leroy e são coletadas à mão pelo time ([O-18](observacoes.md#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens)), de forma incremental. O contrato marca o campo como anulável e o teste verifica que um produto sem foto continua respondendo nome, descrição e localização. A coleta está organizada em [`dados/produtos-imagens-t2.md`](dados/produtos-imagens-t2.md).
 
 **Onde no código.** `infrastructure/database/seed/CarregadorDadosIniciais.java` — `completarApresentacoes`; `domain/entity/Produto.java` — `comApresentacao`.
 
@@ -1720,7 +1720,7 @@ O resultado seria um banco meio corrigido: **marca nova embaixo de nome velho**,
 
 **Medido.** Rodando contra o Oracle da FIAP, a carga relatou 22 apresentações e 19 conjuntos de atributos atualizados num banco que já tinha os 111 produtos. Dois testes seguram a regra: um compara nome e descrição de todos os produtos com o que a massa declara, outro altera um produto à mão, recarrega e verifica que voltou.
 
-**Uma tentativa que a suíte recusou, e fez bem.** Cinco dos nomes reais não declaram marca nenhuma, e a primeira versão tirou o atributo `MARCA` deles por coerência. O teste que exige marca em todo produto falhou — e a razão dele está escrita na própria justificativa: **produto sem marca desaparece assim que o cliente escolhe qualquer marca no filtro**. Os cinco voltaram a ter a marca inventada, que não contradiz nada porque o nome real não menciona marca alguma. Está anotado em [`imagens-dos-produtos.md`](imagens-dos-produtos.md#o-que-entrou-junto-com-os-nomes-reais--aplicado-em-25082026) que a marca verdadeira desses cinco está no campo *Marca* da página do site.
+**Uma tentativa que a suíte recusou, e fez bem.** Cinco dos nomes reais não declaram marca nenhuma, e a primeira versão tirou o atributo `MARCA` deles por coerência. O teste que exige marca em todo produto falhou — e a razão dele está escrita na própria justificativa: **produto sem marca desaparece assim que o cliente escolhe qualquer marca no filtro**. Os cinco voltaram a ter a marca inventada, que não contradiz nada porque o nome real não menciona marca alguma. Está anotado em [`dados/produtos-imagens-t2.md`](dados/produtos-imagens-t2.md) que a marca verdadeira desses cinco está no campo *Marca* da página do site.
 
 **Sobre os acentos, que entraram junto.** Os nomes reais têm acento e a massa não tinha nenhum. Medido no Oracle: o banco é `AL32UTF8`, o texto volta idêntico e o Maven já compila em UTF-8. O `LIKE` deixa de achar quem digita sem acento — `flexivel` não encontra *Flexível* —, mas o `JARO_WINKLER` entre as duas formas ficou entre **85 e 94**, bem acima do corte de 70 da busca ([D-15](#d-15-query-nativa-com-utl_match-para-busca-tolerante-a-erro-de-digitação)). A busca continua achando, por semelhança em vez de correspondência exata. Existe saída se um dia incomodar — `convert(nome, 'US7ASCII')` dos dois lados do `LIKE` —, e não foi aplicada porque não há caso falhando.
 
@@ -2218,7 +2218,7 @@ fotografados, só que em termos genéricos. Uma lixa para lixadeira roto orbital
 120 **é** uma lixa para parede grão 120. A `MARCA` dos dois passou a ser a do produto
 fotografado (WBR e Dexter), então a ficha continua batendo com a foto.
 
-**O que fez isso ser barato.** O [D-69](#d-69) já tinha resolvido o mesmo problema na primeira
+**O que fez isso ser barato.** O [D-69](#d-69-a-massa-passou-a-ser-a-fonte-do-nome-e-da-descrição-e-sobrescreve-o-banco) já tinha resolvido o mesmo problema na primeira
 leva: `sincronizarApresentacoes` sobrescreve nome, descrição e imagem, e `sincronizarAtributos`
 sobrescreve as características. Sem esses dois passos a correção ficaria só no código e o banco
 publicado — que é o que a banca vê — continuaria com o nome velho.

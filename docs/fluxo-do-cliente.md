@@ -54,7 +54,7 @@ Isso importa porque o cliente real vai e volta: escolhe três itens, caminha, le
 
 Cada passo traz o que o cliente faz, o que a tela mostra e o que o backend precisa ter.
 
-> **Sobre o 🆕.** Ele marca o que não existia **quando este documento foi escrito**, em 24/08/2026 — serve para mostrar o tamanho da virada, não o estado de hoje. Boa parte já foi construída desde então. **Para saber o que está pronto, o histórico do repositório é a fonte**; o [`backlog-escopo-revisado.md`](backlog-escopo-revisado.md) diz o que falta.
+> **Sobre o 🆕.** Ele marca o que não existia **quando este documento foi escrito**, em 24/08/2026 — serve para mostrar o tamanho da virada, não o estado de hoje. Boa parte já foi construída desde então. **Para saber o que está pronto, o histórico do repositório é a fonte**; o [`backlog-fechamento.md`](backlog-fechamento.md) diz o que falta.
 
 ---
 

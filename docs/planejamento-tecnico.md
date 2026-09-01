@@ -13,7 +13,7 @@
 >
 > **O que caiu:**
 >
-> - **Seção 3 inteira** — as quatro fases foram desenhadas em torno do handoff e da rota calculada. O escopo vigente está em [`backlog-escopo-revisado.md`](backlog-escopo-revisado.md).
+> - **Seção 3 inteira** — as quatro fases foram desenhadas em torno do handoff e da rota calculada. O escopo vigente está em [`backlog-fechamento.md`](backlog-fechamento.md).
 > - **Seção 5**, no ponto do **JWT de handoff**: a biblioteca `jjwt` chegou a entrar e foi removida com o recurso.
 > - **Seção 6** — o roteiro de verificação passa por `handoff`/`validate`, endpoints que não existem mais.
 > - **Seção 7** — os "próximos passos" foram concluídos entre 18 e 25/08.

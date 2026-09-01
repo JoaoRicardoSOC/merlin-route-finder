@@ -93,7 +93,7 @@ A loja remanejou uma seção, o ponto saiu do banco, mas o adesivo continua na p
 
 > **Resolvido.** A mecânica já existia: `obterOuCriarSessao` consulta a sessão guardada antes de usá-la e cria outra se o status não for `ACTIVE`.
 >
-> **Entrou a frase que faltava** — *"Sua sessão anterior expirou. Começamos uma nova."* A detecção não exigiu mexer no serviço: o `App` guarda o id **antes** da chamada e compara com o que volta. Id diferente ⇒ houve troca. Ver [O-06](observacoes.md#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar).
+> **Entrou a frase que faltava** — *"Sua sessão anterior expirou. Começamos uma nova."* A detecção não exigiu mexer no serviço: o `App` guarda o id **antes** da chamada e compara com o que volta. Id diferente ⇒ houve troca. Ver [O-06](observacoes.md#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar--já-existia-e-foi-verificada).
 
 **O que o cliente vê:** hoje, erro na primeira ação.
 
@@ -431,7 +431,7 @@ Os oito viraram cards em [`backlog-fechamento.md`](backlog-fechamento.md), no bl
 
 **Telas que ainda não existem.** A de **digitar o código de localização** ([O-19](observacoes.md#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe)) e a de **"preparando o sistema"** para a partida a frio de 176 segundos, que vai acontecer em alguma demonstração.
 
-**Estado no aparelho.** Guardar o `sessaoId` no `localStorage` e conferir a sessão ao abrir, antes de tentar escrever ([O-06](observacoes.md#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar)). E recarregar a lista ao voltar para a aba, que resolve o caso das duas abas.
+**Estado no aparelho.** Guardar o `sessaoId` no `localStorage` e conferir a sessão ao abrir, antes de tentar escrever ([O-06](observacoes.md#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar--já-existia-e-foi-verificada)). E recarregar a lista ao voltar para a aba, que resolve o caso das duas abas.
 
 **Uma ajuda que talvez passe despercebida.** Quando o filtro devolve lista vazia, a resposta traz junto as **facetas do recorte** — a tela consegue dizer quais filtros ainda têm resultado, em vez de só oferecer "limpar tudo".
 

@@ -18,10 +18,36 @@ poupar o próximo que pensar em instalar alguma delas.
 
 ## axe-core — a que mais rendeu
 
-Está detalhada em [`auditoria-axe.md`](auditoria-axe.md). O resumo do que importa: ela achou
-**uma** violação, e as duas piores da lista ela deixou passar — o `aria-modal` sem trava de
-foco e o nome do ícone lido junto com o rótulo. Ferramenta automática mede conformidade, não
-intenção.
+Na primeira varredura ela achou **uma** violação — um salto de nível de cabeçalho. As duas
+piores da lista ela deixou passar:
+
+- **`aria-modal="true"` sem trava de foco** nos oito modais. A marcação estava formalmente
+  correta, então nenhuma regra dispara; o defeito era o teclado sair de um modal que o leitor
+  de tela tinha sido mandado tratar como a única coisa na página ([D-86](decisoes-tecnicas.md)).
+- **O nome do ícone lido junto com o rótulo** — "home Home", "qr_code_scanner Scan". Para o
+  `axe` o botão *tem* nome acessível, e tem; ele não julga se o nome faz sentido
+  ([D-82](decisoes-tecnicas.md)).
+
+Estender a varredura para as outras telas achou mais duas, e uma foi **causada pela própria
+correção**: 39 controles ficaram mudos no catálogo porque o script estático que conferiu antes
+varria `<button>` e `<a>` e não `[role="button"]` ([D-84](decisoes-tecnicas.md)).
+
+**Ferramenta automática mede conformidade, não intenção** — e varredura parcial mede menos
+ainda.
+
+Estado final, medido: **zero violações** na tela inicial, em setores, no catálogo, no mapa, com
+modal aberto e na tela de falha de sessão.
+
+Como rodar, com o servidor de desenvolvimento no ar:
+
+```js
+const s = document.createElement('script')
+s.src = '/node_modules/axe-core/axe.min.js'
+document.head.appendChild(s)
+// depois de carregar:
+const r = await axe.run(document, { resultTypes: ['violations'] })
+console.table(r.violations.map(v => ({ id: v.id, impacto: v.impact, nos: v.nodes.length })))
+```
 
 ## JaCoCo — o achado não foi o número
 

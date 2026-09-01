@@ -19,7 +19,7 @@
 > | 2 | jornada em dois aparelhos, com totem e handoff por QR | [`fluxo-do-cliente.md`](fluxo-do-cliente.md) |
 > | 3 | os diagramas da Sprint 1 como fonte de verdade | desenham o totem, o handoff e a rota — ver O-24 em [`observacoes.md`](observacoes.md) |
 > | 4 | refinamento 2-opt e *hardening* do token de handoff | o handoff não existe mais |
-> | 6 | backlog de 25 cards | substituído duas vezes: [`backlog-trello-revisado.md`](backlog-trello-revisado.md), depois [`backlog-escopo-revisado.md`](backlog-escopo-revisado.md) |
+> | 6 | backlog de 25 cards | substituído duas vezes, e os dois substitutos já foram concluídos e removidos; o que falta está em [`backlog-fechamento.md`](backlog-fechamento.md) |
 > | 8 | demonstração da banca "em aberto" | **resolvida**: simulação animada dentro do próprio app |
 > | 9 | cinco perguntas em aberto | **todas respondidas** — Gemini como LLM, Jaro-Winkler na busca, uma credencial Oracle para o time, e a demo acima |
 >

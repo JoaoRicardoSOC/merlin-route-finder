@@ -95,7 +95,7 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
      * passo de sincronizarApresentacoes.
      *
      * O site publica varias fotos por produto; aqui fica a primeira, porque o produto guarda
-     * uma imagem so. A lista completa do que foi visitado esta em docs/imagens-dos-produtos.md.
+     * uma imagem so. A lista completa do que foi visitado esta em docs/dados/produtos-imagens-t2.md.
      */
     private static final Map<String, String> IMAGENS = Map.ofEntries(
             entry("SKU-COZ-001",

@@ -27,7 +27,7 @@
 | [O-37](#o-37-quatro-famílias-tipográficas-seguram-a-primeira-pintura-por-quase-nove-segundos) | Quatro fontes seguram a primeira pintura | Frontend e time | Média |
 | [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
-| [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final) | Limpar documentos de trabalho | Time | fim do ano |
+| [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final--feito) | Limpar documentos de trabalho | Time | fim do ano |
 | [O-20](#o-20-rodar-a-suíte-deixa-um-resto-de-sessões-no-banco-de-demonstração) | Limpar sessões de teste antes da banca | Backend | Baixa |
 | [O-21](#o-21-desenvolvimento-testes-e-demonstração-usam-o-mesmo-schema) | Um schema só para tudo | Time | Média |
 | [O-22](#o-22-a-tela-inicial-do-catálogo-leva-24-segundos-no-ambiente-publicado) | Catálogo leva 2,4 s — a **espera longa** já avisa | Time | Baixa |
@@ -274,7 +274,7 @@ Cinco textos assim já saíram da tela no card de honestidade de 28/08. Este pas
 >
 > **Fica registrada em vez de apagada**, porque o erro tem valor: é a segunda vez em uma semana que confundi *"o arquivo não tem"* com *"o sistema não faz"* — a primeira foi o mapa, quando medi a função em vez do caminho. É exatamente o que o fluxo de trabalho do time já manda não fazer.
 >
-> **O que continua aberto** é só a coleta manual das outras 89, que é do time e está em [`imagens-dos-produtos.md`](imagens-dos-produtos.md).
+> **Nada continua aberto:** as 89 restantes foram coletadas em 31/08 e aplicadas em 01/09. Os dados estão em [`dados/produtos-imagens-t2.md`](dados/produtos-imagens-t2.md).
 
 ---
 
@@ -328,15 +328,36 @@ O backend já pagina: a resposta traz total, página atual e tamanho. É trabalh
 > Ficar no histórico do navegador não expõe nada, porque ele não autoriza nada: informar uma placa não dá acesso a sessão alguma, apenas diz onde a pessoa está. **Limpar a URL deixou de ser hardening e virou preferência estética.**
 
 
-### O-17. Documentos de trabalho precisam sair antes da entrega final
+### O-17. ~~Documentos de trabalho precisam sair antes da entrega final~~ — feito
 
-**O quê.** Apagar [`perguntas-mentoria.md`](perguntas-mentoria.md) e [`imagens-dos-produtos.md`](imagens-dos-produtos.md) — e qualquer arquivo da mesma natureza que venha a existir — antes de enviar o repositório ao portal da faculdade.
+> [!NOTE]
+> **Encerrada em 01/09/2026, antes do prazo que ela própria pedia.** Saíram cinco documentos,
+> não dois:
+>
+> | Removido | Por quê |
+> |---|---|
+> | `perguntas-mentoria.md` | preparava **uma** reunião, de 24/08, que aconteceu |
+> | `imagens-dos-produtos.md` | a coleta terminou; os dados vivem em [`dados/produtos-imagens-t2.md`](dados/produtos-imagens-t2.md) e no código |
+> | `auditoria-axe.md` | os três achados foram corrigidos; o essencial está em [`ferramentas-de-analise.md`](ferramentas-de-analise.md) |
+> | `backlog-trello-revisado.md` | ele mesmo avisava que **metade descrevia um produto que não existe** |
+> | `backlog-escopo-revisado.md` | os treze cards foram concluídos |
+>
+> **O que ficou, e não por inércia:** `contexto-e-planejamento.md` e `planejamento-tecnico.md`
+> são registros históricos que **argumentam pela própria permanência** — o raciocínio que levou
+> às viradas de escopo é parte da defesa do projeto, e apagá-lo faria parecer que nunca mudamos
+> de ideia. A seção do desafio, das três dores e dos eixos de avaliação não existe em nenhum
+> outro lugar.
+>
+> Todas as referências a esses cinco foram redirecionadas ou reescritas, inclusive **uma no
+> código**, num comentário do `CarregadorDadosIniciais`.
+
+**O quê era.** Apagar `perguntas-mentoria.md` e `imagens-dos-produtos.md` — e qualquer arquivo da mesma natureza que venha a existir — antes de enviar o repositório ao portal da faculdade.
 
 **Por que importa.** Nem tudo que ajuda o time a trabalhar pertence à documentação do produto. O arquivo de perguntas foi escrito para preparar **uma reunião específica**, em uma data específica; passada ela, só acrescenta ruído a quem for avaliar o projeto.
 
 A distinção vale a pena manter em mente conforme o repositório cresce:
 
-- **Permanece:** `contexto-e-planejamento.md`, `planejamento-tecnico.md`, `decisoes-tecnicas.md`, `deploy.md`, `backlog-trello-revisado.md`, os diagramas, os READMEs. Explicam o que o projeto é e por que ficou assim.
+- **Permanece:** `contexto-e-planejamento.md`, `planejamento-tecnico.md`, `decisoes-tecnicas.md`, `observacoes.md`, `quebras-de-fluxo.md`, `fluxo-do-cliente.md`, `deploy.md`, `ferramentas-de-analise.md`, `backlog-fechamento.md`, `dados/`, os diagramas e os READMEs. Explicam o que o projeto é, por que ficou assim, e como se sabe que funciona.
 - **Sai:** artefatos amarrados a um evento pontual — roteiro de reunião, lista de perguntas, anotações de preparação.
 - **Caso à parte:** este próprio `observacoes.md`. As pendências resolvidas até lá devem ter saído da lista; o que sobrar são limitações assumidas conscientemente, e **isso conta a favor** — mostra que o time sabia onde estavam os limites.
 
@@ -371,7 +392,7 @@ E o problema não é interno: **diagrama é o que a banca olha primeiro**, antes
 > elas entraram no carregador junto com os nomes reais e as marcas correspondentes — ver
 > [D-85](decisoes-tecnicas.md) e `docs/dados/produtos-imagens-t2.md`.
 >
-> O registro do andamento, abaixo, fica como está: **Coleta em andamento: 22 de 111 em 25/08/2026** — Cozinhas, Decoração e o início da Elétrica. Junto das fotos vieram os **nomes reais** dos produtos do site, e os dois já estão na massa, com as marcas e medidas reconciliadas ([registro](imagens-dos-produtos.md#o-que-entrou-junto-com-os-nomes-reais--aplicado-em-25082026)). **As duas lixas da ruptura continuam sem foto** — são as que encenam a ruptura, e as mais importantes de todas.
+> O registro do andamento, abaixo, fica como está: **Coleta em andamento: 22 de 111 em 25/08/2026** — Cozinhas, Decoração e o início da Elétrica. Junto das fotos vieram os **nomes reais** dos produtos do site, e os dois já estão na massa, com as marcas e medidas reconciliadas ([registro](dados/produtos-imagens-t2.md)). **As duas lixas da ruptura continuam sem foto** — são as que encenam a ruptura, e as mais importantes de todas.
 
 **O quê.** Ampliar a massa de demonstração, e coletar as URLs das imagens.
 
@@ -385,7 +406,7 @@ Um catálogo maior também melhora o produto de graça:
 
 **A descrição já está resolvida.** Os 29 produtos atuais têm descrição escrita, e a carga completa quem já estava gravado ([D-59](decisoes-tecnicas.md#d-59-a-carga-completa-a-apresentação-de-produtos-que-já-estavam-gravados)). Produtos novos entram com a sua junto.
 
-**A tensão que continua de pé é a imagem.** As URLs vêm do site público da Leroy, coletadas à mão — a lista está pronta para preencher em [`imagens-dos-produtos.md`](imagens-dos-produtos.md), agora com as 111 linhas.
+**A tensão que continua de pé é a imagem.** As URLs vêm do site público da Leroy, coletadas à mão — as 111 estão aplicadas, e a coleta está registrada em [`dados/produtos-imagens-t2.md`](dados/produtos-imagens-t2.md).
 
 **Coletar 111 à mão não é razoável, e não precisa ser.** Imagem nula é estado normal e testado. A recomendação está no próprio documento: as duas lixas primeiro, porque encenam a ruptura; depois o resto de Tintas, que é a seção do roteiro ensaiado; depois um punhado em cada outra seção, para a navegação não parecer vazia. O restante pode ficar sem foto indefinidamente.
 
@@ -831,7 +852,7 @@ Foi exatamente isso: uma sessão ociosa bloqueando outra, que bloqueava mais dua
 > [!NOTE]
 > **Encerrada em 25/08/2026.** A Fase 3 foi concluída em 22/08 e, dois dias depois, **dois dos seus três itens deixaram de existir**: o refinamento 2-opt saiu com a rota calculada, e o hardening do handoff saiu com o totem. Só a varredura de TTL sobreviveu — e foi reajustada desde então ([D-24](decisoes-tecnicas.md#d-24-ttl-da-sessão-é-renovado-a-cada-interação)).
 >
-> O planejamento por fases foi substituído pelo [`backlog-escopo-revisado.md`](backlog-escopo-revisado.md), cujos treze cards estão concluídos. **Manter esta observação viva sugeriria um trabalho pendente que não existe.**
+> O planejamento por fases foi substituído pelo backlog de escopo revisado, cujos treze cards foram concluídos — documento removido depois de cumprido. **Manter esta observação viva sugeriria um trabalho pendente que não existe.**
 
 ---
 
