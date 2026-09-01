@@ -50,6 +50,7 @@
 - [D-82. O ícone é decoração: quem tem nome é o controle](#d-82-o-ícone-é-decoração-quem-tem-nome-é-o-controle)
 - [D-83. `aria-modal` sem trava de foco é pior que não ter `aria-modal`](#d-83-aria-modal-sem-trava-de-foco-é-pior-que-não-ter-aria-modal)
 - [D-84. Uma ação, um controle: o cartão de produto tinha quatro botões iguais](#d-84-uma-ação-um-controle-o-cartão-de-produto-tinha-quatro-botões-iguais)
+- [D-85. Nome real entra com a marca junto, e o par da ruptura fica de fora](#d-85-nome-real-entra-com-a-marca-junto-e-o-par-da-ruptura-fica-de-fora)
 
 **Persistência**
 - [D-10. Entidades JPA espelho, separadas das de domínio](#d-10-entidades-jpa-espelho-separadas-das-de-domínio)
@@ -2167,6 +2168,67 @@ Os dois são controle único, então não havia redundância a remover; ganharam
 por teclado que o `role="button"` já prometia.
 
 **Onde no código.** `ProductCard.jsx`, `LocationStatus.jsx`, `StoreMapPage.jsx`.
+
+---
+
+### D-85. Nome real entra com a marca junto, e o par da ruptura fica de fora
+
+**O que chegou.** A segunda leva da coleta do time: **89 produtos** com foto real e com o
+**nome real da loja** no lugar das nossas aproximações. Com os 22 anteriores, os 111 produtos
+do catálogo passam a ter foto.
+
+**A imagem não tinha decisão nenhuma.** Entrou inteira, e é ganho puro.
+
+**O nome tinha.** Trocar o nome sozinho quebraria três coisas:
+
+**1. A `MARCA` contradiria o nome — em 77 dos 89.** O nome real traz o fabricante de verdade e
+o nosso atributo trazia um plausível. O filtro por marca do catálogo lê o atributo, então a
+tela mostraria *"Furadeira de Impacto **Dexter**"* arquivada sob **Bosch**, e *"Trena
+Profissional **Irwin**"* sob **Stanley**. A decisão foi mover os dois juntos: **a marca sai do
+próprio nome**, extraída contra uma lista curada à mão a partir das 89 linhas — nada inferido
+do texto solto.
+
+**2. Onze nomes não trazem marca nenhuma**, porque o anúncio real da Leroy não põe fabricante
+no título. Dois se resolveram com evidência: `SKU-JAR-008` pela URL da foto
+(`..._famastil_...`) e `SKU-JAR-003` pelo próprio nome, que termina em *Cerâmica Artística*.
+
+**Nos outros nove o atributo `MARCA` foi removido.** Manter o nosso valor antigo seria afirmar
+um fabricante para o qual não temos evidência — a mesma doença que o app já teve no mapa, no
+chat e no catálogo, agora em forma de dado. Eles somem do filtro por marca, o que é a
+consequência correta de não saber.
+
+**3. O par que encena a ruptura ficaria mais fraco, e ele é o que a banca assiste.**
+
+| | Nosso nome | Nome real coletado |
+|---|---|---|
+| Em falta | Lixa para Parede Grão 120 | Jogo de Lixa para Lixadeira **Roto Orbital** Parede/Massa Grão 120 |
+| Sugerido | Lixa d'Água Grão 150 | Lixa para **Metal** D'Água Grão 150 |
+
+O assistente julga a substituição lendo os nomes. Com os reais, ele veria um disco para
+lixadeira orbital em falta e ofereceria uma folha de lixa para metal: formato diferente,
+material diferente. É pior do que a sugestão de hoje, no único momento da demonstração em que
+a IA mostra que sabe raciocinar.
+
+**Esses dois ficaram com os nossos nomes** — `SKU-TIN-003` e `SKU-TIN-004`. E isso **não é**
+abrir exceção para a honestidade: os nossos nomes descrevem corretamente os produtos
+fotografados, só que em termos genéricos. Uma lixa para lixadeira roto orbital de parede grão
+120 **é** uma lixa para parede grão 120. A `MARCA` dos dois passou a ser a do produto
+fotografado (WBR e Dexter), então a ficha continua batendo com a foto.
+
+**O que fez isso ser barato.** O [D-69](#d-69) já tinha resolvido o mesmo problema na primeira
+leva: `sincronizarApresentacoes` sobrescreve nome, descrição e imagem, e `sincronizarAtributos`
+sobrescreve as características. Sem esses dois passos a correção ficaria só no código e o banco
+publicado — que é o que a banca vê — continuaria com o nome velho.
+
+**O que este card não fez.** As **descrições** continuam as que escrevemos para os nomes
+antigos. Elas não contradizem os nomes novos, mas também não citam o fabricante nem os detalhes
+que o nome real acrescenta. Revisar as 89 é trabalho próprio, e não cabia aqui.
+
+**Quatro produtos onde o nome deslizou de verdade** estão registrados no fim de
+`docs/dados/produtos-imagens-t2.md`: o SKU dizia uma coisa e a loja só tinha outra próxima.
+
+**Onde no código.** `CatalogoDaMassa.java` (nomes e marcas), `CarregadorDadosIniciais.java`
+(o mapa `IMAGENS`, de 22 para 111).
 
 ---
 

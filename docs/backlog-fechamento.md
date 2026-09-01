@@ -380,9 +380,17 @@ Três cards, e o primeiro é o mais urgente da lista inteira depois do E-1: **di
 
 ---
 
-### T-3. Coletar as 89 fotos de produto restantes
+### T-3. ~~Coletar as 89 fotos de produto restantes~~ — feito
 
-**O que fazer.** Continuar a coleta em `docs/imagens-dos-produtos.md`. **22 de 111 já estão coletadas e no ar.**
+> [!NOTE]
+> **Concluído em 01/09/2026.** O time coletou as 89 restantes, e com as 22 anteriores os
+> **111 produtos do catálogo têm foto**. A coleta veio com o **nome real** de cada produto,
+> que entrou junto com a marca correspondente — ver [D-85](decisoes-tecnicas.md).
+>
+> Dados em `docs/dados/produtos-imagens-t2.md`, incluindo os quatro SKUs em que o produto
+> não existia na loja e foi substituído pelo mais próximo.
+
+**O que fazia.** Continuar a coleta. **22 de 111 estavam coletadas e no ar.**
 
 **Boa notícia que vale saber antes de começar:** acrescentar uma foto é **uma linha** no mapa `IMAGENS` do `CarregadorDadosIniciais.java`, e ela chega sozinha aos bancos que já existem. Preencher a tabela e avisar é suficiente.
 

@@ -2,6 +2,12 @@
 
 **Coletado por João Ricardo, entregue em 31/08/2026.** Continuação da primeira leva de 22.
 
+> [!NOTE]
+> **Aplicado no carregador em 01/09/2026.** As 89 imagens entraram no mapa `IMAGENS` (que foi
+> de 22 para **111** — o catálogo inteiro), e 87 dos 89 nomes entraram no `CatalogoDaMassa`
+> junto com a marca correspondente. As duas exceções e o porquê estão em
+> [D-85](../decisoes-tecnicas.md).
+
 ## Como ler, e a ressalva que veio junto
 
 - **O SKU foi mantido.** É a chave: nada no sistema precisa mudar por causa desta lista.
