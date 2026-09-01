@@ -50,7 +50,7 @@ export default function ActiveFilterChips({
               onClick={chip.onRemove}
               aria-label={`Remover filtro ${chip.label}`}
             >
-              <span className="material-symbols-outlined">close</span>
+              <span className="material-symbols-outlined" aria-hidden="true">close</span>
             </button>
           </div>
         ))}

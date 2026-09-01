@@ -1,4 +1,5 @@
 import { formatPrice } from '../utils/format'
+import useModalAcessivel from '../hooks/useModalAcessivel'
 
 /**
  * Prateleira vazia: o cliente relata que não achou o produto e recebe um substituto.
@@ -19,6 +20,9 @@ export default function RupturaModal({
   isTrocando,
   onAceitar
 }) {
+  // Antes do retorno antecipado: hook nao pode ficar atras de um `return`.
+  const refModal = useModalAcessivel(isOpen, onClose)
+
   if (!isOpen) return null
 
   const sugestao = resultado?.estado === 'sugerido' ? resultado.sugestao : null
@@ -34,12 +38,13 @@ export default function RupturaModal({
       <div
         className="ruptura-modal"
         onClick={(e) => e.stopPropagation()}
+        ref={refModal}
         role="dialog"
         aria-modal="true"
         aria-label="Produto não encontrado na prateleira"
       >
         <header className="ruptura-header">
-          <span className="material-symbols-outlined ruptura-header-icon">production_quantity_limits</span>
+          <span className="material-symbols-outlined ruptura-header-icon" aria-hidden="true">production_quantity_limits</span>
           <div>
             <h3>Prateleira vazia</h3>
             <p>{itemEmFalta?.nome}</p>
@@ -50,7 +55,7 @@ export default function RupturaModal({
             onClick={onClose}
             aria-label="Fechar"
           >
-            <span className="material-symbols-outlined">close</span>
+            <span className="material-symbols-outlined" aria-hidden="true">close</span>
           </button>
         </header>
 
@@ -69,7 +74,7 @@ export default function RupturaModal({
           {!isCarregando && sugestao && (
             <>
               <span className={`ruptura-selo ${veioDaIA ? 'selo-ia' : 'selo-proximidade'}`}>
-                <span className="material-symbols-outlined">
+                <span className="material-symbols-outlined" aria-hidden="true">
                   {veioDaIA ? 'auto_awesome' : 'near_me'}
                 </span>
                 {veioDaIA ? 'Sugestão do assistente' : 'Disponível mais próximo'}
@@ -80,14 +85,14 @@ export default function RupturaModal({
                   {produto?.imagemUrl ? (
                     <img src={produto.imagemUrl} alt={produto.nome} />
                   ) : (
-                    <span className="material-symbols-outlined">category</span>
+                    <span className="material-symbols-outlined" aria-hidden="true">category</span>
                   )}
                 </div>
                 <div className="ruptura-produto-info">
                   <h4>{produto?.nome}</h4>
                   {corredorDe(produto) && (
                     <div className="ruptura-produto-corredor">
-                      <span className="material-symbols-outlined">location_on</span>
+                      <span className="material-symbols-outlined" aria-hidden="true">location_on</span>
                       <span>{corredorDe(produto)}</span>
                     </div>
                   )}
@@ -101,7 +106,7 @@ export default function RupturaModal({
 
           {!isCarregando && resultado?.estado === 'sem-substituto' && (
             <div className="ruptura-vazio">
-              <span className="material-symbols-outlined">search_off</span>
+              <span className="material-symbols-outlined" aria-hidden="true">search_off</span>
               <h4>Não achamos um substituto por perto</h4>
               <p>
                 Nada equivalente está disponível a uma distância curta daqui. O aviso de
@@ -113,7 +118,7 @@ export default function RupturaModal({
 
           {!isCarregando && resultado?.estado === 'erro' && (
             <div className="ruptura-vazio">
-              <span className="material-symbols-outlined">cloud_off</span>
+              <span className="material-symbols-outlined" aria-hidden="true">cloud_off</span>
               <h4>Não deu para consultar agora</h4>
               <p>{resultado.mensagem}</p>
             </div>
@@ -129,7 +134,7 @@ export default function RupturaModal({
                 onClick={() => onAceitar(sugestao.produtoSugeridoId)}
                 disabled={isTrocando}
               >
-                <span className="material-symbols-outlined">swap_horiz</span>
+                <span className="material-symbols-outlined" aria-hidden="true">swap_horiz</span>
                 {isTrocando ? 'Trocando…' : 'Levar este'}
               </button>
               <button

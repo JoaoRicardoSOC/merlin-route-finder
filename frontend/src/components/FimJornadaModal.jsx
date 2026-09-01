@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { formatPrice } from '../utils/format'
+import useModalAcessivel from '../hooks/useModalAcessivel'
 
 export default function FimJornadaModal({
   isOpen,
@@ -8,6 +9,9 @@ export default function FimJornadaModal({
   onConfirmAjudaCaixa,
   onConcluirSemCaixa
 }) {
+  // Antes do retorno antecipado: hook nao pode ficar atras de um `return`.
+  const refModal = useModalAcessivel(isOpen, onClose)
+
   if (!isOpen) return null
 
   const collectedItems = items.filter(i => i.coletado)
@@ -23,6 +27,7 @@ export default function FimJornadaModal({
       <div
         className="fim-jornada-modal-container"
         onClick={(e) => e.stopPropagation()}
+        ref={refModal}
         role="dialog"
         aria-modal="true"
         aria-label="Fim da Jornada de Compra"
@@ -30,7 +35,7 @@ export default function FimJornadaModal({
         {/* Decorative Header */}
         <div className="fim-jornada-header">
           <div className="celebration-icon-wrap">
-            <span className="material-symbols-outlined celebration-icon filled">
+            <span className="material-symbols-outlined celebration-icon filled" aria-hidden="true">
               {isFullCollection ? 'task_alt' : 'shopping_bag'}
             </span>
           </div>
@@ -40,7 +45,7 @@ export default function FimJornadaModal({
             onClick={onClose}
             aria-label="Fechar modal"
           >
-            <span className="material-symbols-outlined">close</span>
+            <span className="material-symbols-outlined" aria-hidden="true">close</span>
           </button>
         </div>
 
@@ -73,7 +78,7 @@ export default function FimJornadaModal({
           {/* Question Box */}
           <div className="fim-jornada-question-card">
             <div className="question-icon">
-              <span className="material-symbols-outlined filled">point_of_sale</span>
+              <span className="material-symbols-outlined filled" aria-hidden="true">point_of_sale</span>
             </div>
             <div className="question-text">
               <h4>Deseja ajuda para encontrar os caixas?</h4>
@@ -92,7 +97,7 @@ export default function FimJornadaModal({
               onClose()
             }}
           >
-            <span className="material-symbols-outlined">directions_walk</span>
+            <span className="material-symbols-outlined" aria-hidden="true">directions_walk</span>
             <span>Sim, traçar rota até o Caixa</span>
           </button>
 
@@ -104,7 +109,7 @@ export default function FimJornadaModal({
               onClose()
             }}
           >
-            <span className="material-symbols-outlined">check</span>
+            <span className="material-symbols-outlined" aria-hidden="true">check</span>
             <span>Não preciso, finalizar compra</span>
           </button>
         </div>

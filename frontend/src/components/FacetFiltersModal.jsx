@@ -1,4 +1,5 @@
 import React from 'react'
+import useModalAcessivel from '../hooks/useModalAcessivel'
 
 export default function FacetFiltersModal({
   isOpen,
@@ -11,6 +12,9 @@ export default function FacetFiltersModal({
   onToggleDisponiveis,
   totalResultsCount = 0
 }) {
+  // Antes do retorno antecipado: hook nao pode ficar atras de um `return`.
+  const refModal = useModalAcessivel(isOpen, onClose)
+
   if (!isOpen) return null
 
   // Calculate count of selected attribute filters
@@ -24,6 +28,7 @@ export default function FacetFiltersModal({
       <div
         className="facet-modal-container"
         onClick={(e) => e.stopPropagation()}
+        ref={refModal}
         role="dialog"
         aria-modal="true"
         aria-label="Filtros e Características dos Produtos"
@@ -31,7 +36,7 @@ export default function FacetFiltersModal({
         {/* Header */}
         <div className="facet-modal-header">
           <div className="facet-header-title-wrap">
-            <span className="material-symbols-outlined filled">tune</span>
+            <span className="material-symbols-outlined filled" aria-hidden="true">tune</span>
             <div>
               <h3>Filtros & Características</h3>
               <p>Refine os produtos por especificações técnicas</p>
@@ -43,7 +48,7 @@ export default function FacetFiltersModal({
             onClick={onClose}
             aria-label="Fechar filtros"
           >
-            <span className="material-symbols-outlined">close</span>
+            <span className="material-symbols-outlined" aria-hidden="true">close</span>
           </button>
         </div>
 
@@ -60,7 +65,7 @@ export default function FacetFiltersModal({
                 className="facet-native-checkbox"
               />
               <span className="facet-custom-checkbox">
-                <span className="material-symbols-outlined">check</span>
+                <span className="material-symbols-outlined" aria-hidden="true">check</span>
               </span>
               <span className="facet-value-label">Apenas produtos com estoque disponível</span>
             </label>
@@ -105,7 +110,7 @@ export default function FacetFiltersModal({
                             className="facet-native-checkbox"
                           />
                           <span className="facet-custom-checkbox">
-                            <span className="material-symbols-outlined">check</span>
+                            <span className="material-symbols-outlined" aria-hidden="true">check</span>
                           </span>
                           <span className="facet-value-label">{valorStr}</span>
                           <span className="facet-value-count">({count})</span>
@@ -118,7 +123,7 @@ export default function FacetFiltersModal({
             })
           ) : (
             <div className="facet-empty-notice">
-              <span className="material-symbols-outlined">filter_list_off</span>
+              <span className="material-symbols-outlined" aria-hidden="true">filter_list_off</span>
               <p>Nenhuma característica adicional disponível para este recorte de produtos.</p>
             </div>
           )}

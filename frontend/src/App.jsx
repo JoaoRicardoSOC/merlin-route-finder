@@ -958,7 +958,7 @@ function App() {
         */}
       {servidorAcordando && (
         <div className="aviso-acordando" role="status">
-          <span className="material-symbols-outlined">hourglass_top</span>
+          <span className="material-symbols-outlined" aria-hidden="true">hourglass_top</span>
           <span>Preparando o sistema… a primeira abertura do dia leva até dois minutos.</span>
         </div>
       )}
@@ -966,7 +966,7 @@ function App() {
       {/* Toast Notification */}
       {toastMessage && (
         <div className="toast-notice">
-          <span className="material-symbols-outlined filled">check_circle</span>
+          <span className="material-symbols-outlined filled" aria-hidden="true">check_circle</span>
           <span>{toastMessage}</span>
         </div>
       )}

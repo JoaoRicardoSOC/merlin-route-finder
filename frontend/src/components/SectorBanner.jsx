@@ -16,14 +16,14 @@ export default function SectorBanner({
   return (
     <div className="sector-banner-active">
       <div className="sector-banner-visual" style={{ backgroundColor: meta.bgLight, color: meta.color }}>
-        <span className="material-symbols-outlined sector-banner-icon">{meta.icon}</span>
+        <span className="material-symbols-outlined sector-banner-icon" aria-hidden="true">{meta.icon}</span>
       </div>
 
       <div className="sector-banner-info">
         <div className="sector-banner-meta-row">
           <span className="sector-banner-tag">Setor Selecionado</span>
           <span className="sector-banner-aisle">
-            <span className="material-symbols-outlined">signpost</span>
+            <span className="material-symbols-outlined" aria-hidden="true">signpost</span>
             {meta.corredor}
           </span>
         </div>
@@ -31,7 +31,7 @@ export default function SectorBanner({
         <p className="sector-banner-desc">{meta.descricao}</p>
         <div className="sector-banner-count-row">
           <span className="sector-banner-count-badge">
-            <span className="material-symbols-outlined">inventory_2</span>
+            <span className="material-symbols-outlined" aria-hidden="true">inventory_2</span>
             {productCount} {productCount === 1 ? 'produto encontrado' : 'produtos encontrados'}
           </span>
         </div>
@@ -44,7 +44,7 @@ export default function SectorBanner({
           onClick={onOpenMap}
           title="Ver localização deste setor no mapa da loja"
         >
-          <span className="material-symbols-outlined">map</span>
+          <span className="material-symbols-outlined" aria-hidden="true">map</span>
           <span>Ver no Mapa</span>
         </button>
         <button
@@ -53,7 +53,7 @@ export default function SectorBanner({
           onClick={onClearFilter}
           title="Remover filtro e ver todas as seções"
         >
-          <span className="material-symbols-outlined">close</span>
+          <span className="material-symbols-outlined" aria-hidden="true">close</span>
           <span>Limpar Filtro</span>
         </button>
       </div>

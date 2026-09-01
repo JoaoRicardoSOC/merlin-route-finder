@@ -25,7 +25,7 @@ export default function SectorExplorer({
       <div className="sector-explorer-header">
         <div className="sector-explorer-title-wrap">
           <div className="sector-title-badge">
-            <span className="material-symbols-outlined sector-title-icon filled">storefront</span>
+            <span className="material-symbols-outlined sector-title-icon filled" aria-hidden="true">storefront</span>
             <span className="sector-title-tag">Catálogo Físico da Loja</span>
           </div>
           <h2 className="sector-explorer-heading">Explorar por Setores</h2>
@@ -42,7 +42,7 @@ export default function SectorExplorer({
             onClick={() => handleScroll('left')}
             aria-label="Rolar seções para a esquerda"
           >
-            <span className="material-symbols-outlined">chevron_left</span>
+            <span className="material-symbols-outlined" aria-hidden="true">chevron_left</span>
           </button>
           <button
             type="button"
@@ -50,7 +50,7 @@ export default function SectorExplorer({
             onClick={() => handleScroll('right')}
             aria-label="Rolar seções para a direita"
           >
-            <span className="material-symbols-outlined">chevron_right</span>
+            <span className="material-symbols-outlined" aria-hidden="true">chevron_right</span>
           </button>
         </div>
       </div>
@@ -72,7 +72,7 @@ export default function SectorExplorer({
               aria-pressed={selectedSecao === 'todos'}
             >
               <div className="sector-chip-icon-box all-sectors-icon">
-                <span className="material-symbols-outlined">dashboard</span>
+                <span className="material-symbols-outlined" aria-hidden="true">dashboard</span>
               </div>
               <div className="sector-chip-content">
                 <span className="sector-chip-name">Todas as Seções</span>
@@ -103,7 +103,7 @@ export default function SectorExplorer({
                       color: isSelected ? '#ffffff' : meta.color
                     }}
                   >
-                    <span className="material-symbols-outlined">{meta.icon}</span>
+                    <span className="material-symbols-outlined" aria-hidden="true">{meta.icon}</span>
                   </div>
                   <div className="sector-chip-content">
                     <span className="sector-chip-name">{secao.nome}</span>

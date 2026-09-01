@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { consultarHistoricoChat, enviarMensagemChat } from '../services/chatService'
 import { formatPrice } from '../utils/format'
+import useModalAcessivel from '../hooks/useModalAcessivel'
 
 export default function AIChatModal({
   isOpen,
@@ -102,6 +103,9 @@ export default function AIChatModal({
     }
   }, [messages, isLoading, isOpen])
 
+  // Antes do retorno antecipado: hook nao pode ficar atras de um `return`.
+  const refModal = useModalAcessivel(isOpen, onClose)
+
   if (!isOpen) return null
 
   /*
@@ -185,6 +189,7 @@ export default function AIChatModal({
       <div 
         className="chat-modal-container animate-fade-in"
         onClick={(e) => e.stopPropagation()}
+        ref={refModal}
         role="dialog"
         aria-modal="true"
         aria-label="Assistente Virtual de Compras"
@@ -193,7 +198,7 @@ export default function AIChatModal({
         <div className="chat-modal-header">
           <div className="chat-header-info">
             <div className="chat-avatar-box">
-              <span className="material-symbols-outlined filled chat-avatar-icon">smart_toy</span>
+              <span className="material-symbols-outlined filled chat-avatar-icon" aria-hidden="true">smart_toy</span>
               <span className="chat-status-dot"></span>
             </div>
             <div className="chat-title-wrap">
@@ -209,7 +214,7 @@ export default function AIChatModal({
             onClick={onClose}
             aria-label="Fechar conversa"
           >
-            <span className="material-symbols-outlined">close</span>
+            <span className="material-symbols-outlined" aria-hidden="true">close</span>
           </button>
         </div>
 
@@ -217,7 +222,7 @@ export default function AIChatModal({
         {isProductContext && (
           <div className="chat-context-badge-bar">
             <div className="chat-context-icon">
-              <span className="material-symbols-outlined filled">visibility</span>
+              <span className="material-symbols-outlined filled" aria-hidden="true">visibility</span>
             </div>
             <div className="chat-context-info">
               <span className="chat-context-label">Visualizando agora:</span>
@@ -246,7 +251,7 @@ export default function AIChatModal({
                 className="chat-suggestion-chip"
                 onClick={() => handleSendMessage(q)}
               >
-                <span className="material-symbols-outlined filled">auto_awesome</span>
+                <span className="material-symbols-outlined filled" aria-hidden="true">auto_awesome</span>
                 <span>{q}</span>
               </button>
             ))}
@@ -266,7 +271,7 @@ export default function AIChatModal({
               >
                 {isAssistant && (
                   <div className="chat-msg-avatar">
-                    <span className="material-symbols-outlined filled">smart_toy</span>
+                    <span className="material-symbols-outlined filled" aria-hidden="true">smart_toy</span>
                   </div>
                 )}
 
@@ -281,7 +286,7 @@ export default function AIChatModal({
                       onClick={() => handleSendMessage(ultimaPergunta)}
                       disabled={isLoading}
                     >
-                      <span className="material-symbols-outlined">refresh</span>
+                      <span className="material-symbols-outlined" aria-hidden="true">refresh</span>
                       Tentar de novo
                     </button>
                   )}
@@ -296,7 +301,7 @@ export default function AIChatModal({
                             {prod.imagemUrl || prod.image ? (
                               <img src={prod.imagemUrl || prod.image} alt={prod.nome || prod.name} />
                             ) : (
-                              <span className="material-symbols-outlined">inventory_2</span>
+                              <span className="material-symbols-outlined" aria-hidden="true">inventory_2</span>
                             )}
                           </div>
 
@@ -304,7 +309,7 @@ export default function AIChatModal({
                             <h4 className="chat-product-name">{prod.nome || prod.name}</h4>
                             <div className="chat-product-meta-row">
                               <span className="chat-product-corredor">
-                                <span className="material-symbols-outlined">location_on</span>
+                                <span className="material-symbols-outlined" aria-hidden="true">location_on</span>
                                 {prod.pontoMapa?.corredor || prod.corredor}
                               </span>
                               <span className="chat-product-price">
@@ -331,7 +336,7 @@ export default function AIChatModal({
                               onClick={() => onAddToCart(prod)}
                               title="Adicionar ao Roteiro"
                             >
-                              <span className="material-symbols-outlined">add_shopping_cart</span>
+                              <span className="material-symbols-outlined" aria-hidden="true">add_shopping_cart</span>
                             </button>
                           </div>
                         </div>
@@ -347,7 +352,7 @@ export default function AIChatModal({
           {isLoading && (
             <div className="chat-message-row assistant-row">
               <div className="chat-msg-avatar">
-                <span className="material-symbols-outlined filled">smart_toy</span>
+                <span className="material-symbols-outlined filled" aria-hidden="true">smart_toy</span>
               </div>
               <div className="chat-bubble assistant-bubble typing-bubble">
                 <div className="typing-dots">
@@ -390,7 +395,7 @@ export default function AIChatModal({
               aria-label="Enviar mensagem"
               title="Enviar"
             >
-              <span className="material-symbols-outlined">send</span>
+              <span className="material-symbols-outlined" aria-hidden="true">send</span>
             </button>
           </form>
         </div>

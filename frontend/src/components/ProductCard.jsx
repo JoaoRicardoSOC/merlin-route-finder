@@ -31,15 +31,27 @@ export default function ProductCard({
     }
   }
 
+  /*
+   * `role="button"` promete que Enter e Espaço acionam. Num <div> isso não vem de graça —
+   * só o <button> de verdade ganha esse comportamento do navegador. Sem este tratador, o
+   * cartão era alcançável pelo teclado e não fazia nada ao ser acionado.
+   */
+  const ativarComTeclado = (evento) => {
+    if (evento.key === 'Enter' || evento.key === ' ') {
+      evento.preventDefault()
+      handleCardClick()
+    }
+  }
+
   return (
     <div className={`product-card ${isOutOfStock ? 'out-of-stock' : ''}`}>
       {/* Clickable Visual Area */}
-      <div className="product-visual" onClick={handleCardClick} role="button" tabIndex={0}>
+      <div className="product-visual" onClick={handleCardClick}>
         {image ? (
           <img src={image} alt={name} className="product-img" loading="lazy" />
         ) : (
           <div className="product-icon-fallback" style={{ color: meta.color }}>
-            <span className="material-symbols-outlined">{icon}</span>
+            <span className="material-symbols-outlined" aria-hidden="true">{icon}</span>
           </div>
         )}
         {tag && (
@@ -55,14 +67,29 @@ export default function ProductCard({
       </div>
 
       <div className="product-content">
-        <div className="product-header" onClick={handleCardClick} role="button" tabIndex={0}>
-          <h3 className="product-name">{name}</h3>
+        {/*
+          * O único ponto de teclado do cartão, e de propósito.
+          *
+          * Os quatro blocos abaixo chamavam a mesma ação e todos os quatro eram
+          * `role="button" tabIndex={0}` — quatro paradas de foco idênticas por cartão, vezes
+          * os produtos da página. Quem navega por teclado atravessava a lista quatro vezes
+          * para percorrê-la uma. O cabeçalho ficou porque é onde está o nome do produto.
+          */}
+        <div
+          className="product-header"
+          onClick={handleCardClick}
+          onKeyDown={ativarComTeclado}
+          role="button"
+          tabIndex={0}
+          aria-label={`Ver detalhes de ${name}`}
+        >
+          <h2 className="product-name">{name}</h2>
           {specs && <p className="product-specs">{specs}</p>}
         </div>
 
-        <div className="product-stock-location" onClick={handleCardClick} role="button" tabIndex={0}>
+        <div className="product-stock-location" onClick={handleCardClick}>
           <div className={`stock-info ${isOutOfStock ? 'stock-zero' : ''}`}>
-            <span className="material-symbols-outlined stock-icon">
+            <span className="material-symbols-outlined stock-icon" aria-hidden="true">
               {isOutOfStock ? 'warning' : 'inventory_2'}
             </span>
             <span className="stock-text">
@@ -71,14 +98,14 @@ export default function ProductCard({
           </div>
           {corredor && (
             <div className="location-info-tag">
-              <span className="material-symbols-outlined loc-pin-icon filled">location_on</span>
+              <span className="material-symbols-outlined loc-pin-icon filled" aria-hidden="true">location_on</span>
               <span className="aisle-name">{corredor}</span>
             </div>
           )}
         </div>
 
         <div className="product-footer">
-          <div className="price-block" onClick={handleCardClick} role="button" tabIndex={0}>
+          <div className="price-block" onClick={handleCardClick}>
             <span className="price-label">À vista</span>
             <span className="price-value">{formatPrice(price)}</span>
           </div>
@@ -94,7 +121,7 @@ export default function ProductCard({
               title="Traçar rota até este produto na loja"
               aria-label={`Traçar rota até ${name}`}
             >
-              <span className="material-symbols-outlined">near_me</span>
+              <span className="material-symbols-outlined" aria-hidden="true">near_me</span>
             </button>
             <button
               type="button"
@@ -109,7 +136,7 @@ export default function ProductCard({
               disabled={isOutOfStock}
               aria-label={`Adicionar ${name} ao roteiro`}
             >
-              <span className="material-symbols-outlined">
+              <span className="material-symbols-outlined" aria-hidden="true">
                 {isOutOfStock ? 'block' : 'add_shopping_cart'}
               </span>
             </button>

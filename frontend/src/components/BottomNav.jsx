@@ -8,7 +8,7 @@ export default function BottomNav({ abaAtiva, aoTrocarDeAba }) {
         className={`bottom-nav-item ${abaAtiva === 'home' ? 'active' : ''}`}
         onClick={() => aoTrocarDeAba('home')}
       >
-        <span className={`material-symbols-outlined ${abaAtiva === 'home' ? 'filled' : ''}`}>
+        <span className={`material-symbols-outlined ${abaAtiva === 'home' ? 'filled' : ''}`} aria-hidden="true">
           home
         </span>
         <span className="bottom-nav-label">Home</span>
@@ -19,7 +19,7 @@ export default function BottomNav({ abaAtiva, aoTrocarDeAba }) {
         className={`bottom-nav-item ${abaAtiva === 'map' ? 'active' : ''}`}
         onClick={() => aoTrocarDeAba('map')}
       >
-        <span className={`material-symbols-outlined ${abaAtiva === 'map' ? 'filled' : ''}`}>
+        <span className={`material-symbols-outlined ${abaAtiva === 'map' ? 'filled' : ''}`} aria-hidden="true">
           map
         </span>
         <span className="bottom-nav-label">Mapa</span>
@@ -30,7 +30,7 @@ export default function BottomNav({ abaAtiva, aoTrocarDeAba }) {
         className={'bottom-nav-item'}
         onClick={() => aoTrocarDeAba('scan')}
       >
-        <span className={'material-symbols-outlined'}>
+        <span className={'material-symbols-outlined'} aria-hidden="true">
           qr_code_scanner
         </span>
         <span className="bottom-nav-label">Scan</span>
@@ -41,7 +41,7 @@ export default function BottomNav({ abaAtiva, aoTrocarDeAba }) {
         className={`bottom-nav-item ${abaAtiva === 'sectors' ? 'active' : ''}`}
         onClick={() => aoTrocarDeAba('sectors')}
       >
-        <span className={`material-symbols-outlined ${abaAtiva === 'sectors' ? 'filled' : ''}`}>
+        <span className={`material-symbols-outlined ${abaAtiva === 'sectors' ? 'filled' : ''}`} aria-hidden="true">
           grid_view
         </span>
         <span className="bottom-nav-label">Setores</span>
@@ -52,7 +52,7 @@ export default function BottomNav({ abaAtiva, aoTrocarDeAba }) {
         className={'bottom-nav-item'}
         onClick={() => aoTrocarDeAba('support')}
       >
-        <span className={'material-symbols-outlined'}>
+        <span className={'material-symbols-outlined'} aria-hidden="true">
           smart_toy
         </span>
         <span className="bottom-nav-label">Assistente</span>

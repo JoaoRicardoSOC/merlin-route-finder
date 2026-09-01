@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { KNOWN_PLATES, normalizarCodigo } from '../services/sessionService'
+import useModalAcessivel from '../hooks/useModalAcessivel'
 
 export default function LocationCodeModal({
   isOpen,
@@ -11,6 +12,9 @@ export default function LocationCodeModal({
   const [activeMode, setActiveMode] = useState('type') // 'type' | 'scan'
   const [isScanning, setIsScanning] = useState(false)
   const [feedbackError, setFeedbackError] = useState('')
+
+  // Antes do retorno antecipado: hook nao pode ficar atras de um `return`.
+  const refModal = useModalAcessivel(isOpen, onClose)
 
   if (!isOpen) return null
 
@@ -47,6 +51,7 @@ export default function LocationCodeModal({
       <div
         className="location-modal-container"
         onClick={(e) => e.stopPropagation()}
+        ref={refModal}
         role="dialog"
         aria-modal="true"
         aria-label="Definir ou Atualizar Localização na Loja"
@@ -54,7 +59,7 @@ export default function LocationCodeModal({
         <div className="modal-header">
           <div className="modal-title-wrap">
             <div className="location-modal-icon-badge">
-              <span className="material-symbols-outlined filled">qr_code_scanner</span>
+              <span className="material-symbols-outlined filled" aria-hidden="true">qr_code_scanner</span>
             </div>
             <div>
               <h3>Localização na Loja</h3>
@@ -67,7 +72,7 @@ export default function LocationCodeModal({
             onClick={onClose}
             aria-label="Fechar modal"
           >
-            <span className="material-symbols-outlined">close</span>
+            <span className="material-symbols-outlined" aria-hidden="true">close</span>
           </button>
         </div>
 
@@ -78,7 +83,7 @@ export default function LocationCodeModal({
             className={`location-mode-tab ${activeMode === 'type' ? 'active' : ''}`}
             onClick={() => setActiveMode('type')}
           >
-            <span className="material-symbols-outlined">pin</span>
+            <span className="material-symbols-outlined" aria-hidden="true">pin</span>
             <span>Plano B: Digitar Código</span>
           </button>
           <button
@@ -86,7 +91,7 @@ export default function LocationCodeModal({
             className={`location-mode-tab ${activeMode === 'scan' ? 'active' : ''}`}
             onClick={() => setActiveMode('scan')}
           >
-            <span className="material-symbols-outlined">qr_code_2</span>
+            <span className="material-symbols-outlined" aria-hidden="true">qr_code_2</span>
             <span>Plano A: QR Code</span>
           </button>
         </div>
@@ -100,7 +105,7 @@ export default function LocationCodeModal({
 
               <form onSubmit={handleSubmit} className="location-code-form">
                 <div className="location-input-wrap">
-                  <span className="material-symbols-outlined location-input-icon">location_on</span>
+                  <span className="material-symbols-outlined location-input-icon" aria-hidden="true">location_on</span>
                   <input
                     type="text"
                     placeholder="Ex: TIN-02, ENT-01, ILU-04..."
@@ -119,20 +124,20 @@ export default function LocationCodeModal({
                       className="clear-location-btn"
                       onClick={() => setCodigoInput('')}
                     >
-                      <span className="material-symbols-outlined">close</span>
+                      <span className="material-symbols-outlined" aria-hidden="true">close</span>
                     </button>
                   )}
                 </div>
 
                 {feedbackError && (
                   <p className="location-error-msg">
-                    <span className="material-symbols-outlined">error</span>
+                    <span className="material-symbols-outlined" aria-hidden="true">error</span>
                     {feedbackError}
                   </p>
                 )}
 
                 <button type="submit" className="location-submit-btn">
-                  <span className="material-symbols-outlined">check_circle</span>
+                  <span className="material-symbols-outlined" aria-hidden="true">check_circle</span>
                   <span>Atualizar Minha Posição</span>
                 </button>
               </form>
@@ -176,7 +181,7 @@ export default function LocationCodeModal({
                   <div className="viewfinder-corner bottom-left"></div>
                   <div className="viewfinder-corner bottom-right"></div>
                   <div className="laser-scan-line"></div>
-                  <span className="material-symbols-outlined qr-viewfinder-icon">qr_code_2</span>
+                  <span className="material-symbols-outlined qr-viewfinder-icon" aria-hidden="true">qr_code_2</span>
                 </div>
                 {/*
                   * O app NÃO tem leitor de QR — não há vídeo nem canvas aqui, e o visor acima
@@ -205,7 +210,7 @@ export default function LocationCodeModal({
                       onClick={() => handleSimulateScan(p)}
                       disabled={isScanning}
                     >
-                      <span className="material-symbols-outlined">qr_code</span>
+                      <span className="material-symbols-outlined" aria-hidden="true">qr_code</span>
                       <span>Ler Placa <strong>{p.codigo}</strong></span>
                     </button>
                   ))}

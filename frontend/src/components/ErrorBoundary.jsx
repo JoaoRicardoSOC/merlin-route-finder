@@ -40,7 +40,7 @@ export default class ErrorBoundary extends React.Component {
 
     return (
       <div className="tela-de-erro" role="alert">
-        <span className="material-symbols-outlined tela-de-erro-icone">warning</span>
+        <span className="material-symbols-outlined tela-de-erro-icone" aria-hidden="true">warning</span>
         <h1 className="tela-de-erro-titulo">Alguma coisa quebrou aqui</h1>
         <p className="tela-de-erro-texto">
           O problema é nosso, não seu — e nada do que você montou até agora foi perdido:

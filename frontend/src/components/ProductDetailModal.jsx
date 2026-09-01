@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { fetchProdutoDetalhe } from '../services/catalogService'
 import { SECTOR_METADATA, DEFAULT_SECTOR_META } from '../constants/setores'
 import { formatPrice } from '../utils/format'
+import useModalAcessivel from '../hooks/useModalAcessivel'
 
 export default function ProductDetailModal({
   isOpen,
@@ -31,6 +32,9 @@ export default function ProductDetailModal({
     }
   }, [isOpen, product])
 
+  // Antes do retorno antecipado: hook nao pode ficar atras de um `return`.
+  const refModal = useModalAcessivel(isOpen, onClose)
+
   if (!isOpen || !detailedProduct) return null
 
   const name = detailedProduct.nome || detailedProduct.name || 'Produto'
@@ -55,6 +59,7 @@ export default function ProductDetailModal({
       <div
         className="product-detail-modal-container animate-fade-in"
         onClick={(e) => e.stopPropagation()}
+        ref={refModal}
         role="dialog"
         aria-modal="true"
         aria-label={`Detalhes de ${name}`}
@@ -68,7 +73,7 @@ export default function ProductDetailModal({
             onClick={onClose}
             aria-label="Fechar detalhes"
           >
-            <span className="material-symbols-outlined">close</span>
+            <span className="material-symbols-outlined" aria-hidden="true">close</span>
           </button>
         </div>
 
@@ -80,7 +85,7 @@ export default function ProductDetailModal({
               <img src={image} alt={name} className="product-detail-img" />
             ) : (
               <div className="detail-icon-fallback" style={{ color: meta.color }}>
-                <span className="material-symbols-outlined">{meta.icon || 'inventory_2'}</span>
+                <span className="material-symbols-outlined" aria-hidden="true">{meta.icon || 'inventory_2'}</span>
               </div>
             )}
             {secao && <span className="product-detail-sector-pill">{secao}</span>}
@@ -95,7 +100,7 @@ export default function ProductDetailModal({
           {/* Physical Location in Store & Map Button */}
           <div className="product-detail-location-card">
             <div className="detail-loc-icon">
-              <span className="material-symbols-outlined filled">location_on</span>
+              <span className="material-symbols-outlined filled" aria-hidden="true">location_on</span>
             </div>
             <div className="detail-loc-text">
               <span className="detail-loc-label">Localização Física na Loja</span>
@@ -114,14 +119,14 @@ export default function ProductDetailModal({
               }}
               title="Ver no mapa inteligente da loja"
             >
-              <span className="material-symbols-outlined">map</span>
+              <span className="material-symbols-outlined" aria-hidden="true">map</span>
               <span>Ver no Mapa</span>
             </button>
           </div>
 
           {/* Stock & Availability status */}
           <div className={`product-detail-stock-badge ${isOutOfStock ? 'out-of-stock' : ''}`}>
-            <span className="material-symbols-outlined">
+            <span className="material-symbols-outlined" aria-hidden="true">
               {isOutOfStock ? 'warning' : 'check_circle'}
             </span>
             <span>
@@ -133,7 +138,7 @@ export default function ProductDetailModal({
 
           {/* Specifications Table (Atributos do Backend - GET /produtos/{id}) */}
           <div className="product-detail-attributes-section">
-            <h4 className="detail-attributes-heading">Especificações Técnicas</h4>
+            <h3 className="detail-attributes-heading">Especificações Técnicas</h3>
             {isLoading ? (
               <div className="attributes-loading-skeleton">
                 <div className="skeleton-line"></div>
@@ -181,7 +186,7 @@ export default function ProductDetailModal({
                 onClose()
               }}
             >
-              <span className="material-symbols-outlined">add_shopping_cart</span>
+              <span className="material-symbols-outlined" aria-hidden="true">add_shopping_cart</span>
               <span>{isOutOfStock ? 'Indisponível' : 'Adicionar ao Roteiro'}</span>
             </button>
           </div>

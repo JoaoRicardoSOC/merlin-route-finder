@@ -47,6 +47,9 @@
 - [D-79. O texto sobre o verde da marca é escuro, e o verde que carrega texto é outro](#d-79-o-texto-sobre-o-verde-da-marca-é-escuro-e-o-verde-que-carrega-texto-é-outro)
 - [D-80. Movimento reduzido usa duração de 0,01ms, e não `animation: none`](#d-80-movimento-reduzido-usa-duração-de-001ms-e-não-animation-none)
 - [D-81. O destaque da navegação é derivado da tela, e modal não é lugar](#d-81-o-destaque-da-navegação-é-derivado-da-tela-e-modal-não-é-lugar)
+- [D-82. O ícone é decoração: quem tem nome é o controle](#d-82-o-ícone-é-decoração-quem-tem-nome-é-o-controle)
+- [D-83. `aria-modal` sem trava de foco é pior que não ter `aria-modal`](#d-83-aria-modal-sem-trava-de-foco-é-pior-que-não-ter-aria-modal)
+- [D-84. Uma ação, um controle: o cartão de produto tinha quatro botões iguais](#d-84-uma-ação-um-controle-o-cartão-de-produto-tinha-quatro-botões-iguais)
 
 **Persistência**
 - [D-10. Entidades JPA espelho, separadas das de domínio](#d-10-entidades-jpa-espelho-separadas-das-de-domínio)
@@ -2058,6 +2061,112 @@ Os dois abrem **modal**. Um destaque de navegação afirma *"você está aqui"*;
 **Duas telas ficam sem destaque de propósito:** o catálogo, que é alcançado pela lupa e não é item da barra; e o detalhe do produto, onde a barra inteira é escondida.
 
 **Onde no código.** `frontend/src/App.jsx`, `frontend/src/components/Header.jsx`, `frontend/src/components/BottomNav.jsx`.
+
+---
+
+### D-82. O ícone é decoração: quem tem nome é o controle
+
+**O problema.** Os Material Symbols são renderizados por **ligadura de texto**: o `<span>`
+contém literalmente a palavra `home`, `map`, `qr_code_scanner`. Esse texto entra no nome
+acessível do botão que o envolve. O que o leitor de tela anunciava na barra inferior:
+
+| O que se via | O que se ouvia |
+|---|---|
+| Home | **"home Home"** |
+| Mapa | **"map Mapa"** |
+| Scan | **"qr_code_scanner Scan"** |
+| Assistente | **"smart_toy Assistente"** |
+
+O botão do banner era **"Explorar Novidades arrow_forward"**.
+
+**A decisão:** `aria-hidden="true"` em **todo** span de ícone — 140 deles, em 24 componentes,
+nenhum tinha. É a recomendação da própria documentação do Material Symbols, e a regra é
+simples de lembrar: *o ícone nunca fala; o controle fala.*
+
+**Por que nenhuma ferramenta pegou isso.** O `axe-core` verifica se o botão **tem** nome
+acessível — e tinha. Ele não julga se o nome faz sentido. Foi preciso ler a árvore de
+acessibilidade em voz alta para notar. Vale como limite conhecido da auditoria automática.
+
+**O efeito colateral, e como ele foi caçado.** Marcar o ícone como escondido apaga o nome de
+quem só tinha ícone. Um script estático varreu `<button>` e `<a>` e devolveu zero — mas
+**deixou de fora os `<div role="button">`**, e o `axe` achou **39 controles mudos** no
+catálogo. O script tinha uma lacuna; a medição no navegador é que fechou. Ver [D-84](#d-84-uma-ação-um-controle-o-cartão-de-produto-tinha-quatro-botões-iguais).
+
+**Onde no código.** Os 24 componentes com ícone.
+
+---
+
+### D-83. `aria-modal` sem trava de foco é pior que não ter `aria-modal`
+
+**O ponto de partida era bom.** Os **oito** modais já declaravam `role="dialog"` e
+`aria-modal="true"` — a metade declarativa estava feita.
+
+**E era exatamente isso que tornava o defeito grave.** `aria-modal="true"` diz à tecnologia
+assistiva: *ignore o resto da página, ela não existe agora*. O leitor de tela obedece. O
+teclado não obedecia: **`Escape` não aparecia uma única vez em todo o `src`**, e nada prendia
+o foco. O Tab saía do modal e entrava em botões que o leitor de tela tinha sido instruído a
+fingir que não estavam lá.
+
+**Faltar o atributo seria um app sem suporte. Ter o atributo sem a trava é um app que mente
+sobre o próprio estado** — e mente de um jeito que nenhuma ferramenta automática acusa, porque
+a marcação está formalmente correta.
+
+**A decisão: um hook, não oito remendos.** `hooks/useModalAcessivel.js` faz três coisas — foca
+o container ao abrir, prende o Tab e escuta `Escape` enquanto aberto, devolve o foco a quem
+abriu ao fechar. Escrito uma vez, aplicado nos oito.
+
+**Quatro detalhes que só apareceram implementando:**
+
+1. **A chamada tem que vir antes do `if (!isOpen) return null`.** Todo modal tem esse retorno
+   antecipado, e hook atrás de `return` é hook condicional. É o mesmo erro que já apareceu
+   nesta base uma vez.
+2. **`onClose` fica numa `ref`, fora das dependências.** O pai passa `onClose={() => ...}` —
+   função nova a cada render. Nas dependências, o efeito remontaria a cada digitação do
+   cliente e o foco voltaria para o container no meio da frase.
+3. **Existe uma pilha de modais.** O detalhe do produto abre por cima da gaveta do roteiro; sem
+   a pilha os dois ouviriam o mesmo `Escape` no `document` e fechariam juntos.
+   `stopPropagation` não resolveria — ambos escutam no mesmo alvo. Só o do topo responde.
+4. **A devolução do foco tinha uma condição errada, achada testando.** A primeira versão só
+   devolvia o foco se ele ainda estivesse dentro do container. Só que na hora da limpeza o
+   React já tirou o modal do documento: o elemento focado sumiu junto e o navegador jogou o
+   foco no `<body>`. A condição dava falso e o foco nunca voltava. Passou a tratar
+   `<body>` como "foco órfão" — e a devolver só nesse caso, para não roubar o foco de quem
+   já clicou em outro lugar.
+
+**Focar o container, e não o primeiro botão.** O container recebe `tabindex="-1"` e o foco. O
+leitor de tela anuncia o `aria-label` do diálogo antes de qualquer controle: o cliente ouve
+*onde* chegou antes de ouvir *o que* pode fazer. O modal do chat foca o campo de texto logo em
+seguida, por conta própria, e isso está certo para um chat.
+
+**Onde no código.** `frontend/src/hooks/useModalAcessivel.js` e os oito modais.
+
+---
+
+### D-84. Uma ação, um controle: o cartão de produto tinha quatro botões iguais
+
+**O que o `axe` acusou:** 39 controles sem nome acessível no catálogo, impacto **sério**.
+
+**O que estava por trás era maior.** O `ProductCard` tinha **quatro** `<div role="button"
+tabIndex={0}>` — área da imagem, cabeçalho, bloco de estoque e bloco de preço — e **todos os
+quatro chamavam a mesma função**. Numa página de 50 produtos, quem navega por teclado
+atravessava a lista **quatro vezes** para percorrê-la uma. Nenhum deles tinha nome, e nenhum
+funcionava: `role="button"` num `<div>` **não ganha Enter e Espaço do navegador** — só o
+`<button>` de verdade ganha. Eram paradas de foco que anunciavam ser botões e não faziam nada.
+
+**A decisão: o cabeçalho é o único ponto de teclado do cartão**, porque é onde está o nome do
+produto. Ele ganhou `aria-label` (`Ver detalhes de …`) e acionamento por teclado. Os outros
+três perderam `role` e `tabIndex` e **mantiveram o `onClick`** — continuam clicáveis com o
+mouse, como sempre foram; deixaram apenas de mentir que são botões.
+
+Resultado por cartão: de **seis** paradas de foco (quatro anônimas idênticas mais duas reais)
+para **três**, cada uma com nome e ação própria — ver detalhes, traçar rota, adicionar ao
+roteiro.
+
+**A mesma doença apareceu em mais dois lugares** — o cartão de localização e a pílula do mapa.
+Os dois são controle único, então não havia redundância a remover; ganharam só o acionamento
+por teclado que o `role="button"` já prometia.
+
+**Onde no código.** `ProductCard.jsx`, `LocationStatus.jsx`, `StoreMapPage.jsx`.
 
 ---
 

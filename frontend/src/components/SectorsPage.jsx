@@ -28,11 +28,11 @@ export default function SectorsPage({
           aria-label="Voltar para o início"
           title="Voltar para a tela inicial"
         >
-          <span className="material-symbols-outlined">arrow_back</span>
+          <span className="material-symbols-outlined" aria-hidden="true">arrow_back</span>
         </button>
 
         <div className="sectors-page-title-wrap">
-          <h2 className="sectors-page-title">Setores da Loja</h2>
+          <h1 className="sectors-page-title">Setores da Loja</h1>
           <span className="sectors-page-subtitle">
             {secoes.length} seções físicas • {totalProductsCount} produtos
           </span>
@@ -41,7 +41,7 @@ export default function SectorsPage({
 
       {/* Filter / Search within Sectors */}
       <div className="sectors-search-bar-wrap">
-        <span className="material-symbols-outlined search-input-icon">search</span>
+        <span className="material-symbols-outlined search-input-icon" aria-hidden="true">search</span>
         <input
           type="text"
           value={sectorSearch}
@@ -57,7 +57,7 @@ export default function SectorsPage({
             onClick={() => setSectorSearch('')}
             aria-label="Limpar busca de setores"
           >
-            <span className="material-symbols-outlined">close</span>
+            <span className="material-symbols-outlined" aria-hidden="true">close</span>
           </button>
         )}
       </div>
@@ -73,16 +73,16 @@ export default function SectorsPage({
         /* Mesma distinção da tela de catálogo: não achar seção é diferente de não conseguir
            perguntar quais existem. */
         <div className="empty-catalog-state">
-          <span className="material-symbols-outlined empty-icon">cloud_off</span>
-          <h3 className="empty-title">Não conseguimos falar com a loja</h3>
+          <span className="material-symbols-outlined empty-icon" aria-hidden="true">cloud_off</span>
+          <h2 className="empty-title">Não conseguimos falar com a loja</h2>
           <p className="empty-desc">
             Os setores não carregaram agora. Assim que a conexão voltar, eles aparecem aqui.
           </p>
         </div>
       ) : filteredSecoes.length === 0 ? (
         <div className="empty-catalog-state">
-          <span className="material-symbols-outlined empty-icon">store_mall_directory</span>
-          <h3 className="empty-title">Nenhum setor encontrado</h3>
+          <span className="material-symbols-outlined empty-icon" aria-hidden="true">store_mall_directory</span>
+          <h2 className="empty-title">Nenhum setor encontrado</h2>
           <p className="empty-desc">Não encontramos seções com o termo "{sectorSearch}".</p>
           <button
             type="button"
@@ -108,16 +108,16 @@ export default function SectorsPage({
                     className="sector-hub-icon-box"
                     style={{ backgroundColor: meta.bgLight, color: meta.color }}
                   >
-                    <span className="material-symbols-outlined">{meta.icon}</span>
+                    <span className="material-symbols-outlined" aria-hidden="true">{meta.icon}</span>
                   </div>
                   <span className="sector-hub-corredor">
-                    <span className="material-symbols-outlined">location_on</span>
+                    <span className="material-symbols-outlined" aria-hidden="true">location_on</span>
                     {meta.corredor}
                   </span>
                 </div>
 
                 <div className="sector-hub-card-body">
-                  <h3 className="sector-hub-name">{secao.nome}</h3>
+                  <h2 className="sector-hub-name">{secao.nome}</h2>
                   <p className="sector-hub-desc">{meta.descricao}</p>
                 </div>
 
@@ -127,7 +127,7 @@ export default function SectorsPage({
                   </span>
                   <span className="sector-hub-action-arrow">
                     <span>Ver Produtos</span>
-                    <span className="material-symbols-outlined">arrow_forward</span>
+                    <span className="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
                   </span>
                 </div>
               </button>

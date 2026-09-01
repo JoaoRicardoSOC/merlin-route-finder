@@ -196,20 +196,32 @@ export default function StoreMapPage({
       <div className="store-map-header">
         <div className="map-title-row">
           <div className="map-title-info">
-            <span className="material-symbols-outlined map-main-icon filled">map</span>
+            <span className="material-symbols-outlined map-main-icon filled" aria-hidden="true">map</span>
             <div>
-              <h2>Planta Inteligente da Loja</h2>
+              <h1>Planta Inteligente da Loja</h1>
               <p className="store-name-sub">Leroy Merlin Interlagos • Grid Interativo</p>
             </div>
           </div>
 
-          <div className="map-user-beacon-pill" onClick={onOpenLocationModal} role="button" tabIndex={0} title="Alterar ponto de localização">
+          <div
+            className="map-user-beacon-pill"
+            onClick={onOpenLocationModal}
+            onKeyDown={(evento) => {
+              if (evento.key === 'Enter' || evento.key === ' ') {
+                evento.preventDefault()
+                onOpenLocationModal()
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            title="Alterar ponto de localização"
+          >
             <span className="beacon-dot"></span>
             <div className="beacon-text">
               <span className="beacon-label">Você está em:</span>
               <strong className="beacon-value">{currentLocation?.aisle || 'Entrada da Loja'}</strong>
             </div>
-            <span className="material-symbols-outlined beacon-edit-icon">qr_code_scanner</span>
+            <span className="material-symbols-outlined beacon-edit-icon" aria-hidden="true">qr_code_scanner</span>
           </div>
         </div>
 
@@ -221,7 +233,7 @@ export default function StoreMapPage({
               className={`map-toggle-btn ${showRoute ? 'active' : ''}`}
               onClick={() => setShowRoute(!showRoute)}
             >
-              <span className="material-symbols-outlined">directions_walk</span>
+              <span className="material-symbols-outlined" aria-hidden="true">directions_walk</span>
               <span>{showRoute ? 'Rota Ativa' : 'Ocultar Rota'}</span>
             </button>
 
@@ -230,13 +242,13 @@ export default function StoreMapPage({
               className={`map-toggle-btn ${showAmenities ? 'active' : ''}`}
               onClick={() => setShowAmenities(!showAmenities)}
             >
-              <span className="material-symbols-outlined">storefront</span>
+              <span className="material-symbols-outlined" aria-hidden="true">storefront</span>
               <span>Serviços & Caixas</span>
             </button>
           </div>
 
           <div className="map-search-sector-input-wrap">
-            <span className="material-symbols-outlined">search</span>
+            <span className="material-symbols-outlined" aria-hidden="true">search</span>
             <input
               type="text"
               placeholder="Buscar setor no mapa..."
@@ -250,7 +262,7 @@ export default function StoreMapPage({
                 className="clear-search-btn"
                 onClick={() => setSearchSectorTerm('')}
               >
-                <span className="material-symbols-outlined">close</span>
+                <span className="material-symbols-outlined" aria-hidden="true">close</span>
               </button>
             )}
           </div>
@@ -279,7 +291,7 @@ export default function StoreMapPage({
                 })
               }}
             >
-              <span className="material-symbols-outlined chip-icon" style={{ color: sec.color }}>
+              <span className="material-symbols-outlined chip-icon" style={{ color: sec.color }} aria-hidden="true">
                 {sec.icon}
               </span>
               <span>{sec.nome}</span>
@@ -307,7 +319,7 @@ export default function StoreMapPage({
             title="Aumentar zoom"
             aria-label="Aumentar zoom"
           >
-            <span className="material-symbols-outlined">add</span>
+            <span className="material-symbols-outlined" aria-hidden="true">add</span>
           </button>
           <button
             type="button"
@@ -316,7 +328,7 @@ export default function StoreMapPage({
             title="Diminuir zoom"
             aria-label="Diminuir zoom"
           >
-            <span className="material-symbols-outlined">remove</span>
+            <span className="material-symbols-outlined" aria-hidden="true">remove</span>
           </button>
           <button
             type="button"
@@ -325,7 +337,7 @@ export default function StoreMapPage({
             title="Centralizar planta"
             aria-label="Centralizar planta"
           >
-            <span className="material-symbols-outlined">restart_alt</span>
+            <span className="material-symbols-outlined" aria-hidden="true">restart_alt</span>
           </button>
           <button
             type="button"
@@ -339,7 +351,7 @@ export default function StoreMapPage({
             title="Focar na minha localização"
             aria-label="Focar na minha localização"
           >
-            <span className="material-symbols-outlined filled">my_location</span>
+            <span className="material-symbols-outlined filled" aria-hidden="true">my_location</span>
           </button>
         </div>
 
@@ -641,16 +653,16 @@ export default function StoreMapPage({
               {selectedPinItem.imagemUrl ? (
                 <img src={selectedPinItem.imagemUrl} alt={selectedPinItem.nome} />
               ) : (
-                <span className="material-symbols-outlined default-prod-icon">inventory_2</span>
+                <span className="material-symbols-outlined default-prod-icon" aria-hidden="true">inventory_2</span>
               )}
             </div>
 
             <div className="selected-product-details">
               <div className="product-loc-tag">
-                <span className="material-symbols-outlined">location_on</span>
+                <span className="material-symbols-outlined" aria-hidden="true">location_on</span>
                 <span>{selectedPinItem.corredor}</span>
               </div>
-              <h4 className="product-name">{selectedPinItem.nome}</h4>
+              <h2 className="product-name">{selectedPinItem.nome}</h2>
               <span className="product-price">
                 {formatPrice(selectedPinItem.preco)}
               </span>
@@ -664,7 +676,7 @@ export default function StoreMapPage({
                   if (onToggleCollectItem) onToggleCollectItem(selectedPinItem.id)
                 }}
               >
-                <span className="material-symbols-outlined">
+                <span className="material-symbols-outlined" aria-hidden="true">
                   {selectedPinItem.coletado ? 'check_circle' : 'radio_button_unchecked'}
                 </span>
                 <span>{selectedPinItem.coletado ? 'Coletado' : 'Marcar Coleta'}</span>
@@ -677,7 +689,7 @@ export default function StoreMapPage({
                   if (onViewProductDetails) onViewProductDetails(selectedPinItem)
                 }}
               >
-                <span className="material-symbols-outlined">info</span>
+                <span className="material-symbols-outlined" aria-hidden="true">info</span>
                 <span>Detalhes</span>
               </button>
 
@@ -686,7 +698,7 @@ export default function StoreMapPage({
                 className="close-selection-btn"
                 onClick={() => setSelectedPinItem(null)}
               >
-                <span className="material-symbols-outlined">close</span>
+                <span className="material-symbols-outlined" aria-hidden="true">close</span>
               </button>
             </div>
           </div>
@@ -695,7 +707,7 @@ export default function StoreMapPage({
           <div className="map-route-summary-bar">
             <div className="route-summary-info">
               <div className="route-status-badge">
-                <span className="material-symbols-outlined">shopping_basket</span>
+                <span className="material-symbols-outlined" aria-hidden="true">shopping_basket</span>
                 <span>{collectedCount} de {totalItems} itens coletados</span>
               </div>
               {nextPendingPin ? (
@@ -719,7 +731,7 @@ export default function StoreMapPage({
                 className="open-roteiro-action-btn secondary"
                 onClick={onOpenRoteiro}
               >
-                <span className="material-symbols-outlined">format_list_bulleted</span>
+                <span className="material-symbols-outlined" aria-hidden="true">format_list_bulleted</span>
                 <span>Roteiro</span>
               </button>
 
@@ -731,7 +743,7 @@ export default function StoreMapPage({
                     if (onEncerrarJornada) onEncerrarJornada()
                   }}
                 >
-                  <span className="material-symbols-outlined">
+                  <span className="material-symbols-outlined" aria-hidden="true">
                     {collectedCount === totalItems ? 'task_alt' : 'point_of_sale'}
                   </span>
                   <span>{collectedCount === totalItems ? 'Ir para o Caixa' : 'Encerrar'}</span>

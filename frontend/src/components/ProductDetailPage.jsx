@@ -63,7 +63,7 @@ export default function ProductDetailPage({
           aria-label="Voltar para a página anterior"
           title="Voltar"
         >
-          <span className="material-symbols-outlined">arrow_back</span>
+          <span className="material-symbols-outlined" aria-hidden="true">arrow_back</span>
         </button>
 
         <div className="product-page-title-wrap">
@@ -79,7 +79,7 @@ export default function ProductDetailPage({
           title="Adicionar ao Roteiro"
           disabled={isOutOfStock}
         >
-          <span className="material-symbols-outlined filled">
+          <span className="material-symbols-outlined filled" aria-hidden="true">
             {addedAnimation ? 'check' : 'add_shopping_cart'}
           </span>
         </button>
@@ -92,7 +92,7 @@ export default function ProductDetailPage({
             <img src={image} alt={name} className="product-page-img" />
           ) : (
             <div className="product-page-icon-fallback" style={{ color: meta.color, backgroundColor: meta.bgLight }}>
-              <span className="material-symbols-outlined">{meta.icon || 'inventory_2'}</span>
+              <span className="material-symbols-outlined" aria-hidden="true">{meta.icon || 'inventory_2'}</span>
             </div>
           )}
           {secao && <span className="product-page-sector-badge">{secao}</span>}
@@ -110,7 +110,7 @@ export default function ProductDetailPage({
           </div>
 
           <div className={`product-page-stock-pill ${isOutOfStock ? 'out-of-stock' : 'in-stock'}`}>
-            <span className="material-symbols-outlined filled">
+            <span className="material-symbols-outlined filled" aria-hidden="true">
               {isOutOfStock ? 'cancel' : 'check_circle'}
             </span>
             <span>
@@ -138,7 +138,7 @@ export default function ProductDetailPage({
               onClick={() => onViewOnMap(detailedProduct)}
               title="Ver localização na planta da loja"
             >
-              <span className="material-symbols-outlined">map</span>
+              <span className="material-symbols-outlined" aria-hidden="true">map</span>
               <span>Ver no Mapa</span>
             </button>
           </div>
@@ -147,14 +147,14 @@ export default function ProductDetailPage({
         {/* Product Description */}
         {specs && (
           <div className="product-page-section-block">
-            <h3 className="product-page-section-title">Descrição do Produto</h3>
+            <h2 className="product-page-section-title">Descrição do Produto</h2>
             <p className="product-page-description-text">{specs}</p>
           </div>
         )}
 
         {/* Dynamic Specifications Table (GET /produtos/{id}) */}
         <div className="product-page-section-block">
-          <h3 className="product-page-section-title">Especificações Técnicas</h3>
+          <h2 className="product-page-section-title">Especificações Técnicas</h2>
           {isLoading ? (
             <div className="product-page-specs-skeleton">
               <div className="skeleton-spec-line"></div>
@@ -198,7 +198,7 @@ export default function ProductDetailPage({
           disabled={isOutOfStock}
           onClick={handleAddWithFeedback}
         >
-          <span className="material-symbols-outlined filled">
+          <span className="material-symbols-outlined filled" aria-hidden="true">
             {addedAnimation ? 'done' : 'add_shopping_cart'}
           </span>
           <span>

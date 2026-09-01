@@ -28,7 +28,7 @@ export default function SearchBar({
     <div className={`search-section ${isGliding ? 'search-bar-gliding' : ''}`} id="store-search-section">
       <div className="search-header">
         <label className="search-label" htmlFor="store-search">
-          <span className="material-symbols-outlined search-ai-sparkle filled">search</span>
+          <span className="material-symbols-outlined search-ai-sparkle filled" aria-hidden="true">search</span>
           Buscar no Catálogo
         </label>
       </div>
@@ -38,7 +38,7 @@ export default function SearchBar({
         onClick={handleInputClick}
         className={`search-bar-form ${isFocused ? 'focused' : ''}`}
       >
-        <span className="material-symbols-outlined search-icon">search</span>
+        <span className="material-symbols-outlined search-icon" aria-hidden="true">search</span>
         <input
           ref={inputRef}
           id="store-search"
@@ -65,7 +65,7 @@ export default function SearchBar({
             }}
             aria-label="Limpar busca"
           >
-            <span className="material-symbols-outlined">close</span>
+            <span className="material-symbols-outlined" aria-hidden="true">close</span>
           </button>
         )}
         <button 
@@ -74,7 +74,7 @@ export default function SearchBar({
           aria-label="Pesquisar e abrir catálogo"
           title="Pesquisar produtos"
         >
-          <span className="material-symbols-outlined">arrow_forward</span>
+          <span className="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
         </button>
       </form>
 

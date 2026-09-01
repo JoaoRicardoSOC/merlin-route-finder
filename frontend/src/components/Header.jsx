@@ -20,7 +20,7 @@ export default function Header({
           onClick={onSearchClick}
           type="button"
         >
-          <span className="material-symbols-outlined">search</span>
+          <span className="material-symbols-outlined" aria-hidden="true">search</span>
         </button>
 
         <div className="brand-logo" onClick={() => aoTrocarDeAba('home')}>
@@ -39,7 +39,7 @@ export default function Header({
             onClick={onOpenSectors}
             title="Ver catálogo físico e todos os setores da loja"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: '18px', marginRight: '4px' }}>storefront</span>
+            <span className="material-symbols-outlined" style={{ fontSize: '18px', marginRight: '4px' }} aria-hidden="true">storefront</span>
             Setores da Loja
           </button>
           {/*
@@ -70,7 +70,7 @@ export default function Header({
             onClick={onOpenRoteiro}
             type="button"
           >
-            <span className="material-symbols-outlined">shopping_cart</span>
+            <span className="material-symbols-outlined" aria-hidden="true">shopping_cart</span>
             {cartCount > 0 && (
               <span className="cart-badge-counter animate-pop" aria-hidden="true">
                 {cartCount > 99 ? '99+' : cartCount}

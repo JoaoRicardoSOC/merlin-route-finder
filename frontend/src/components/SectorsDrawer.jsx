@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { SECTOR_METADATA, DEFAULT_SECTOR_META } from '../constants/setores'
+import useModalAcessivel from '../hooks/useModalAcessivel'
 
 export default function SectorsDrawer({
   isOpen,
@@ -10,6 +11,9 @@ export default function SectorsDrawer({
   onOpenMap
 }) {
   const [filterText, setFilterText] = useState('')
+
+  // Antes do retorno antecipado: hook nao pode ficar atras de um `return`.
+  const refModal = useModalAcessivel(isOpen, onClose)
 
   if (!isOpen) return null
 
@@ -30,6 +34,7 @@ export default function SectorsDrawer({
       <div
         className="sectors-drawer-container"
         onClick={(e) => e.stopPropagation()}
+        ref={refModal}
         role="dialog"
         aria-modal="true"
         aria-label="Menu de Setores e Corredores"
@@ -37,7 +42,7 @@ export default function SectorsDrawer({
         <div className="sectors-drawer-header">
           <div className="sectors-drawer-title-wrap">
             <div className="sectors-drawer-icon-wrap">
-              <span className="material-symbols-outlined filled">storefront</span>
+              <span className="material-symbols-outlined filled" aria-hidden="true">storefront</span>
             </div>
             <div>
               <h3>Setores da Loja</h3>
@@ -50,13 +55,13 @@ export default function SectorsDrawer({
             onClick={onClose}
             aria-label="Fechar menu de setores"
           >
-            <span className="material-symbols-outlined">close</span>
+            <span className="material-symbols-outlined" aria-hidden="true">close</span>
           </button>
         </div>
 
         {/* Search inside sectors drawer */}
         <div className="sectors-drawer-search">
-          <span className="material-symbols-outlined">search</span>
+          <span className="material-symbols-outlined" aria-hidden="true">search</span>
           <input
             type="text"
             placeholder="Filtrar setor ou corredor (ex: Tintas, A12)..."
@@ -71,7 +76,7 @@ export default function SectorsDrawer({
               onClick={() => setFilterText('')}
               aria-label="Limpar filtro"
             >
-              <span className="material-symbols-outlined">close</span>
+              <span className="material-symbols-outlined" aria-hidden="true">close</span>
             </button>
           )}
         </div>
@@ -84,7 +89,7 @@ export default function SectorsDrawer({
             onClick={() => handleSelect('todos')}
           >
             <div className="drawer-item-icon all-sectors-icon">
-              <span className="material-symbols-outlined">dashboard</span>
+              <span className="material-symbols-outlined" aria-hidden="true">dashboard</span>
             </div>
             <div className="drawer-item-info">
               <span className="drawer-item-name">Todas as Seções</span>
@@ -112,12 +117,12 @@ export default function SectorsDrawer({
                     color: isSelected ? '#ffffff' : meta.color
                   }}
                 >
-                  <span className="material-symbols-outlined">{meta.icon}</span>
+                  <span className="material-symbols-outlined" aria-hidden="true">{meta.icon}</span>
                 </div>
                 <div className="drawer-item-info">
                   <span className="drawer-item-name">{secao.nome}</span>
                   <span className="drawer-item-corredor">
-                    <span className="material-symbols-outlined">signpost</span>
+                    <span className="material-symbols-outlined" aria-hidden="true">signpost</span>
                     {meta.corredor}
                   </span>
                 </div>
@@ -130,7 +135,7 @@ export default function SectorsDrawer({
 
           {filteredSecoes.length === 0 && (
             <div className="drawer-empty-state">
-              <span className="material-symbols-outlined">search_off</span>
+              <span className="material-symbols-outlined" aria-hidden="true">search_off</span>
               <p>Nenhuma seção encontrada com "{filterText}"</p>
             </div>
           )}
@@ -145,7 +150,7 @@ export default function SectorsDrawer({
               if (onOpenMap) onOpenMap()
             }}
           >
-            <span className="material-symbols-outlined">map</span>
+            <span className="material-symbols-outlined" aria-hidden="true">map</span>
             <span>Ver Planta Geral da Loja</span>
           </button>
         </div>

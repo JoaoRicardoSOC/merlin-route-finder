@@ -10,7 +10,7 @@ export default function FloatingAIChatButton({ onClick, hasUnread = false, isPro
       title="Pergunte ao Assistente da Loja (IA)"
     >
       <div className="floating-ai-icon-box">
-        <span className="material-symbols-outlined filled floating-ai-sparkle">auto_awesome</span>
+        <span className="material-symbols-outlined filled floating-ai-sparkle" aria-hidden="true">auto_awesome</span>
         <span className="floating-ai-beacon">
           <span className="ai-beacon-ping"></span>
           <span className="ai-beacon-dot"></span>

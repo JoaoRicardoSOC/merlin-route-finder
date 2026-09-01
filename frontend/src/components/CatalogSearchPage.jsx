@@ -76,11 +76,11 @@ export default function CatalogSearchPage({
           aria-label="Voltar para o início"
           title="Voltar para a tela inicial"
         >
-          <span className="material-symbols-outlined">arrow_back</span>
+          <span className="material-symbols-outlined" aria-hidden="true">arrow_back</span>
         </button>
 
         <div className="search-page-input-wrap">
-          <span className="material-symbols-outlined search-input-icon">search</span>
+          <span className="material-symbols-outlined search-input-icon" aria-hidden="true">search</span>
           <input
             ref={searchInputRef}
             type="text"
@@ -101,7 +101,7 @@ export default function CatalogSearchPage({
               }}
               aria-label="Limpar pesquisa"
             >
-              <span className="material-symbols-outlined">close</span>
+              <span className="material-symbols-outlined" aria-hidden="true">close</span>
             </button>
           )}
         </div>
@@ -143,7 +143,7 @@ export default function CatalogSearchPage({
               onClick={onOpenFacetModal}
               title="Filtrar por marca, grão, bitola, amperagem, etc."
             >
-              <span className="material-symbols-outlined">tune</span>
+              <span className="material-symbols-outlined" aria-hidden="true">tune</span>
               <span>Filtros</span>
               {activeFiltersCount > 0 && (
                 <span className="filter-count-badge">{activeFiltersCount}</span>
@@ -167,7 +167,7 @@ export default function CatalogSearchPage({
             className="view-all-sectors-btn"
             onClick={onOpenSectorsDrawer}
           >
-            <span className="material-symbols-outlined">menu_open</span>
+            <span className="material-symbols-outlined" aria-hidden="true">menu_open</span>
             <span>Todos os Setores</span>
           </button>
         </div>
@@ -184,13 +184,13 @@ export default function CatalogSearchPage({
 
         {/* Products Results Header */}
         <div className="search-results-info-bar">
-          <h2 className="search-results-heading">
+          <h1 className="search-results-heading">
             {searchQuery
               ? `Resultados para "${searchQuery}"`
               : selectedSecao === 'todos'
               ? 'Todos os Produtos'
               : `Produtos de ${selectedSecao}`}
-          </h2>
+          </h1>
           {/* O "de" só aparece quando há mais do que está na tela: com tudo carregado,
               "111 de 111" seria ruído. */}
           <span className="products-count-badge">
@@ -218,8 +218,8 @@ export default function CatalogSearchPage({
           /* Antes do estado vazio, e nunca junto dele: "nenhum produto encontrado" afirma que
              procuramos e não há. Quando a loja não responde, não chegamos a procurar. */
           <div className="empty-catalog-state">
-            <span className="material-symbols-outlined empty-icon">cloud_off</span>
-            <h3 className="empty-title">Não conseguimos falar com a loja</h3>
+            <span className="material-symbols-outlined empty-icon" aria-hidden="true">cloud_off</span>
+            <h2 className="empty-title">Não conseguimos falar com a loja</h2>
             <p className="empty-desc">
               O catálogo não respondeu agora, então não dá para mostrar os produtos. Não é que
               a loja não tenha o que você procura — é que não conseguimos consultar.
@@ -236,8 +236,8 @@ export default function CatalogSearchPage({
           </div>
         ) : produtos.length === 0 ? (
           <div className="empty-catalog-state">
-            <span className="material-symbols-outlined empty-icon">search_off</span>
-            <h3 className="empty-title">Nenhum produto encontrado</h3>
+            <span className="material-symbols-outlined empty-icon" aria-hidden="true">search_off</span>
+            <h2 className="empty-title">Nenhum produto encontrado</h2>
             <p className="empty-desc">
               Não encontramos itens para a combinação de filtros selecionada{' '}
               {selectedSecao !== 'todos' && <strong>em {selectedSecao}</strong>}
@@ -255,7 +255,7 @@ export default function CatalogSearchPage({
                   className="empty-action-btn primary"
                   onClick={onPerguntarAoAssistente}
                 >
-                  <span className="material-symbols-outlined">smart_toy</span>
+                  <span className="material-symbols-outlined" aria-hidden="true">smart_toy</span>
                   Perguntar ao assistente
                 </button>
               </div>

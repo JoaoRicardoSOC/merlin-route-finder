@@ -1,5 +1,6 @@
 import React from 'react'
 import { formatPrice } from '../utils/format'
+import useModalAcessivel from '../hooks/useModalAcessivel'
 
 export default function RoteiroDrawer({
   isOpen,
@@ -13,6 +14,9 @@ export default function RoteiroDrawer({
   onStartRoute,
   onEncerrarJornada
 }) {
+
+  // Antes do retorno antecipado: hook nao pode ficar atras de um `return`.
+  const refModal = useModalAcessivel(isOpen, onClose)
 
   if (!isOpen) return null
 
@@ -28,6 +32,7 @@ export default function RoteiroDrawer({
       <div
         className="roteiro-drawer-container"
         onClick={(e) => e.stopPropagation()}
+        ref={refModal}
         role="dialog"
         aria-modal="true"
         aria-label="Meu Roteiro de Compras na Loja"
@@ -36,7 +41,7 @@ export default function RoteiroDrawer({
         <div className="roteiro-drawer-header">
           <div className="roteiro-drawer-title-wrap">
             <div className="roteiro-drawer-icon-wrap">
-              <span className="material-symbols-outlined filled">shopping_cart</span>
+              <span className="material-symbols-outlined filled" aria-hidden="true">shopping_cart</span>
             </div>
             <div>
               <h3>Meu Roteiro</h3>
@@ -51,7 +56,7 @@ export default function RoteiroDrawer({
             onClick={onClose}
             aria-label="Fechar roteiro"
           >
-            <span className="material-symbols-outlined">close</span>
+            <span className="material-symbols-outlined" aria-hidden="true">close</span>
           </button>
         </div>
 
@@ -59,7 +64,7 @@ export default function RoteiroDrawer({
         <div className="roteiro-drawer-body">
           {items.length === 0 ? (
             <div className="roteiro-empty-state">
-              <span className="material-symbols-outlined empty-cart-icon">remove_shopping_cart</span>
+              <span className="material-symbols-outlined empty-cart-icon" aria-hidden="true">remove_shopping_cart</span>
               <h4>Seu roteiro está vazio</h4>
               <p>Explore os setores ou busque produtos na vitrine e adicione os itens que deseja buscar na loja.</p>
               <button
@@ -82,7 +87,7 @@ export default function RoteiroDrawer({
                     title={item.coletado ? 'Desmarcar coleta' : 'Marcar como coletado na prateleira'}
                     aria-label={`Marcar ${item.nome} como coletado`}
                   >
-                    <span className="material-symbols-outlined">
+                    <span className="material-symbols-outlined" aria-hidden="true">
                       {item.coletado ? 'check_circle' : 'radio_button_unchecked'}
                     </span>
                   </button>
@@ -91,7 +96,7 @@ export default function RoteiroDrawer({
                     {item.imagemUrl ? (
                       <img src={item.imagemUrl} alt={item.nome} className="roteiro-item-img" />
                     ) : (
-                      <span className="material-symbols-outlined roteiro-item-icon">inventory_2</span>
+                      <span className="material-symbols-outlined roteiro-item-icon" aria-hidden="true">inventory_2</span>
                     )}
                   </div>
 
@@ -100,7 +105,7 @@ export default function RoteiroDrawer({
                       {item.nome}
                     </h4>
                     <div className="roteiro-item-corredor">
-                      <span className="material-symbols-outlined">location_on</span>
+                      <span className="material-symbols-outlined" aria-hidden="true">location_on</span>
                       <span>{item.corredor}</span>
                       {item.coletado && <span className="coletado-badge">Coletado</span>}
                     </div>
@@ -135,7 +140,7 @@ export default function RoteiroDrawer({
                           : 'Não encontrei este produto na prateleira'}
                         aria-label={`Não encontrei ${item.nome} na prateleira`}
                       >
-                        <span className="material-symbols-outlined">production_quantity_limits</span>
+                        <span className="material-symbols-outlined" aria-hidden="true">production_quantity_limits</span>
                       </button>
                     )}
 
@@ -146,7 +151,7 @@ export default function RoteiroDrawer({
                       title="Remover do roteiro"
                       aria-label={`Remover ${item.nome} do roteiro`}
                     >
-                      <span className="material-symbols-outlined">delete_outline</span>
+                      <span className="material-symbols-outlined" aria-hidden="true">delete_outline</span>
                     </button>
                   </div>
                 </div>
@@ -185,7 +190,7 @@ export default function RoteiroDrawer({
                   if (onStartRoute) onStartRoute(items)
                 }}
               >
-                <span className="material-symbols-outlined">directions_walk</span>
+                <span className="material-symbols-outlined" aria-hidden="true">directions_walk</span>
                 <span>Traçar Rota no Mapa</span>
               </button>
 
@@ -197,7 +202,7 @@ export default function RoteiroDrawer({
                   if (onEncerrarJornada) onEncerrarJornada()
                 }}
               >
-                <span className="material-symbols-outlined">point_of_sale</span>
+                <span className="material-symbols-outlined" aria-hidden="true">point_of_sale</span>
                 <span>Encerrar Compra & Ir ao Caixa</span>
               </button>
             </div>
