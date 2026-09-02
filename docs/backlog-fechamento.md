@@ -254,13 +254,13 @@ Onze cards. **Nenhum é trabalho grande**, e o que eles têm em comum é que o b
 
 ### F-7. ~~Avisar que o sistema está acordando~~ — **FEITO em 30/08/2026**
 
-> ✅ Faixa no topo passando de quatro segundos na primeira carga: *"Preparando o sistema… a primeira abertura do dia leva até dois minutos."* Some no primeiro desfecho, sucesso ou falha.
+> ✅ Faixa no topo passando de quatro segundos na primeira carga, com **cronômetro do tempo decorrido** em vez de promessa de prazo. Some no primeiro desfecho, sucesso ou falha.
 >
-> Verificado atrasando a resposta de propósito. A partida a frio foi medida hoje em **106 s e 109 s**.
+> Verificado atrasando a resposta de propósito. A partida a frio foi medida em **106 s e 109 s** (30/08) e em **183 s** (02/09) — foi essa última que derrubou o texto anterior, que prometia um teto de dois minutos.
 
 **O que fazer.** Detectar a espera longa da primeira chamada e mostrar "preparando o sistema…" em vez de parecer travado.
 
-**Por quê.** Medido em 30/08: a instância publicada leva **109 segundos** para acordar. O time decidiu seguir no plano gratuito e aquecer antes de apresentar — mas **isso vai acontecer com algum cliente**, e hoje a tela não diz nada durante quase dois minutos.
+**Por quê.** A instância publicada leva de **106 s a 183 s** para acordar, conforme o dia. O time decidiu seguir no plano gratuito e aquecer antes de apresentar — mas **isso vai acontecer com algum cliente**, e a variação é justamente o motivo de a tela não prometer prazo nenhum.
 
 **Verificar:** abrir o app publicado depois de horas parado e ver a mensagem.
 

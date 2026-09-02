@@ -42,6 +42,7 @@ import {
   limparRoteiroLocal
 } from './services/roteiroService'
 import './App.css'
+import AvisoAcordando from './components/AvisoAcordando'
 
 const SEARCH_SUGGESTIONS = [
   'Lâmpada LED',
@@ -100,8 +101,14 @@ function App() {
   const [falhaSecoes, setFalhaSecoes] = useState(false)
   const [falhaProdutos, setFalhaProdutos] = useState(false)
   /*
-   * O servidor publicado dorme e leva quase dois minutos para acordar — 106 s e 109 s nas duas
-   * medições de 30/08. Sem aviso, a tela fica parada nesse tempo todo e parece travada.
+   * O servidor publicado dorme, e acordar leva minutos. Sem aviso, a tela fica parada esse
+   * tempo todo e parece travada.
+   *
+   * NÃO se promete prazo aqui, e isso é deliberado. As medições da partida a frio variaram de
+   * 106 s (30/08) a 183 s (02/09), e o texto antigo dizia "até dois minutos" — um TETO, estourado
+   * em 63 s na última medição. Número fixo em tela envelhece sozinho e vira mentira sem ninguém
+   * mexer numa linha. Quem espera não precisa do prazo: precisa saber que não travou. Por isso a
+   * faixa conta o tempo decorrido, que é verdade em todo instante. Ver AvisoAcordando.jsx.
    *
    * NÃO é um estado de erro: a indisponibilidade tem aviso próprio, com outro texto. Este aqui
    * diz "está vindo, espere", e some no primeiro desfecho — sucesso ou falha.
@@ -779,7 +786,8 @@ function App() {
         <p className="tela-de-erro-texto">
           A loja não respondeu, então não dá para começar seu roteiro agora — e preferimos
           dizer isso a deixar você montar uma lista que se perderia. Se acabou de abrir o app,
-          o sistema pode estar acordando: a primeira abertura do dia leva até dois minutos.
+          o sistema pode estar acordando: o servidor hiberna quando ninguém está usando, e a
+          primeira abertura do dia leva alguns minutos.
         </p>
         <button
           type="button"
@@ -1032,12 +1040,7 @@ function App() {
         * Espera longa da primeira chamada — tipicamente o servidor publicado acordando.
         * Fica acima do aviso passageiro porque não é passageiro: dura o que a espera durar.
         */}
-      {servidorAcordando && (
-        <div className="aviso-acordando" role="status">
-          <span className="material-symbols-outlined" aria-hidden="true">hourglass_top</span>
-          <span>Preparando o sistema… a primeira abertura do dia leva até dois minutos.</span>
-        </div>
-      )}
+      {servidorAcordando && <AvisoAcordando />}
 
       {/*
         * O que o cliente marcou e o servidor ainda não soube.

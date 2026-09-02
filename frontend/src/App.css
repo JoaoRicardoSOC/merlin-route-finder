@@ -2442,6 +2442,17 @@
   font-size: 18px;
 }
 
+/* O cronômetro da espera. `tabular-nums` para os dígitos não dançarem a cada segundo —
+   sem isso o "1" é mais estreito que o "8" e a faixa inteira se mexe. */
+.aviso-acordando-relogio {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background-color: var(--surface-container-highest, rgba(0, 0, 0, 0.06));
+  color: var(--on-surface-variant, inherit);
+}
+
 /* Botão de carregar a próxima página do catálogo. Regra própria em vez de reusar
    .empty-actions: o nome diria a coisa errada num estado que não está vazio. */
 .carregar-mais {

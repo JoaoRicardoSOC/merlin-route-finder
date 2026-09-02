@@ -357,17 +357,29 @@ Sessão concluída: leitura sim, escrita não. Já tratado.
 
 ## Infraestrutura
 
-### ✅ A instância dorme e demora dois minutos para acordar
+### ✅ A instância dorme, e quanto tempo leva para acordar não é promessa que se possa fazer
 
-> **Resolvido na tela.** Passando de quatro segundos sem resposta na primeira carga, aparece uma faixa no topo: *"Preparando o sistema… a primeira abertura do dia leva até dois minutos."*
+> **Resolvido na tela.** Passando de quatro segundos sem resposta na primeira carga, aparece uma faixa no topo, e ela **conta o tempo decorrido em vez de prometer prazo**.
 >
 > **Não é um estado de erro, e o desenho separa os dois:** a indisponibilidade tem aviso próprio, com outro texto. Este diz "está vindo, espere", e some no primeiro desfecho — sucesso ou falha.
 >
-> **Verificado** atrasando a resposta de propósito: a faixa aparece durante a espera e some quando a carga termina. A partida a frio foi medida em **106 s e 109 s** em 30/08, contra os 176 s de 25/08.
+> **Verificado** atrasando a resposta de propósito: a faixa aparece durante a espera e some quando a carga termina, e o cronômetro anda.
+>
+> **A promessa de prazo saiu, e a medição explica por quê.** O texto dizia *"leva até dois minutos"* — um **teto**. As medições da partida a frio:
+>
+> | Data | Tempo até o primeiro byte |
+> |---|---|
+> | 25/08 | 176 s |
+> | 30/08 | 106 s e 109 s |
+> | **02/09** | **183 s** |
+>
+> Os 183 s de hoje passam do teto prometido em **63 segundos — 53% além**. Um número fixo numa tela envelhece sozinho e vira mentira sem ninguém mexer numa linha. O cronômetro não envelhece: *"esperando há 2:14"* é verdade no instante em que é lido.
+>
+> E resolve o problema que a pessoa de fato tem, que não é saber o prazo — é saber que **não travou**. Passando de três minutos o texto muda para *"está demorando mais que o normal, mas não travou"*, porque repetir a mesma frase para quem já esperou tanto é o que faz fechar o aplicativo.
 
 Medido: **134 segundos** no plano gratuito, por causa do décimo de CPU.
 
-O time decidiu seguir no gratuito e aquecer a aplicação antes de apresentar. **Mas o cliente numa loja de verdade seria o primeiro acesso do dia** — e esperaria dois minutos olhando uma tela em branco.
+O time decidiu seguir no gratuito e aquecer a aplicação antes de apresentar. **Mas o cliente numa loja de verdade seria o primeiro acesso do dia** — e esperaria três minutos olhando uma tela em branco.
 
 Para o vídeo e a banca, o aquecimento resolve. Vale a tela mostrar "preparando o sistema..." em vez de parecer travada, porque **isso vai acontecer em alguma demonstração**.
 

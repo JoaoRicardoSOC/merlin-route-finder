@@ -1359,7 +1359,7 @@ Para uma coluna `@Enumerated(EnumType.STRING)`, o Hibernate **cria** uma restri�
 
 **Duas guardas.**
 
-1. **Só age quando diverge.** Comparar antes evita DDL a cada inicialização, que seria ruído no log e tempo a mais num cold start que já leva mais de dois minutos ([D-45](#d-45-o-deploy-mudou-quais-avisos-do-hibernate-importavam)).
+1. **Só age quando diverge.** Comparar antes evita DDL a cada inicialização, que seria ruído no log e tempo a mais num cold start que já leva de dois a três minutos ([D-45](#d-45-o-deploy-mudou-quais-avisos-do-hibernate-importavam)).
 2. **Falhar aqui não derruba a aplicação.** Se o `ALTER` for recusado — permissão, lock —, fica um aviso no log e a subida continua. O erro reapareceria na primeira gravação de qualquer forma, e agora com uma pista.
 
 **A ordem em relação à [D-51](#d-51-um-valor-de-enum-removido-precisa-sumir-também-do-banco) não é acidental.** As linhas de tipo aposentado são apagadas **antes**: uma linha com valor fora do enum faria o `add check` ser recusado.
