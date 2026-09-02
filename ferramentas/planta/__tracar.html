@@ -1,0 +1,292 @@
+<meta charset="utf-8">
+<title>Traçar a planta</title>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--ok:#78be20;--esc:#00702f}
+  *{box-sizing:border-box}
+  body{margin:0;background:#20242a;color:#e9ecef;font-family:'Hanken Grotesk',system-ui,sans-serif}
+  .env{display:grid;grid-template-columns:1fr 310px;gap:14px;padding:14px;max-width:1560px;margin:0 auto}
+  @media(max-width:1040px){.env{grid-template-columns:1fr}}
+  h1{font-size:16px;margin:0 0 2px;font-weight:800}
+  .dica{font-size:12.5px;color:#a7b0b8;margin:0 0 10px;line-height:1.55}
+  .dica b{color:#cfd6dc}
+  kbd{background:#171a1e;border:1px solid #3a4149;border-bottom-width:2px;border-radius:4px;
+      padding:1px 5px;font:600 11px ui-monospace,monospace;color:#cfd6dc}
+  .palco{position:relative;background:#fff;border-radius:10px;overflow:hidden;line-height:0;
+         cursor:crosshair;user-select:none;touch-action:none}
+  .palco img{width:100%;display:block;pointer-events:none}
+  .palco svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .lado{background:#2a2f36;border:1px solid #3a4149;border-radius:10px;padding:12px;
+        max-height:90vh;overflow:auto}
+  .atual{background:#1a1e23;border:2px solid var(--ok);border-radius:8px;padding:10px;margin-bottom:10px}
+  .atual b{display:block;font-size:15px;color:var(--ok)}
+  .atual small{color:#98a2ab;font-size:11px;letter-spacing:.04em}
+  .atual .vert{font-size:11.5px;color:#a7b0b8;margin-top:4px}
+  select,button{font-family:inherit;font-size:13px}
+  select{width:100%;padding:7px;border-radius:6px;background:#171a1e;color:#e9ecef;
+         border:1px solid #3a4149;margin-bottom:8px}
+  button{padding:8px 11px;border-radius:7px;border:1px solid #3a4149;background:#343b43;
+         color:#e9ecef;cursor:pointer;font-weight:600}
+  button.primaria{background:var(--ok);color:#1b3800;border-color:var(--ok)}
+  button.perigo{background:#4a2b2b;border-color:#6b3b3b}
+  .linha{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+  .opcoes{font-size:12.5px;color:#a7b0b8;display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+  .opcoes label{display:flex;gap:7px;align-items:center;cursor:pointer}
+  ul{list-style:none;margin:0;padding:0;font-size:12.5px}
+  li{display:flex;justify-content:space-between;align-items:center;gap:6px;
+     padding:5px 7px;border-radius:6px;margin-bottom:3px;background:#1e2227}
+  li.feito{background:#1e2a1a}
+  li .x{cursor:pointer;color:#c98b8b;font-weight:800;padding:0 5px}
+  #saida{width:100%;height:130px;background:#141719;color:#b9c6a0;border:1px solid #3a4149;
+         border-radius:6px;font:11px/1.45 ui-monospace,monospace;padding:8px;margin-top:8px}
+  .contador{font-size:12px;color:#98a2ab;margin:6px 0}
+</style>
+
+<div class="env">
+  <div>
+    <h1>Traçar a planta da loja</h1>
+    <p class="dica">
+      <b>Clique em cada canto</b> do departamento. Para fechar, clique no primeiro ponto de novo
+      ou aperte <kbd>Enter</kbd>. <kbd>Backspace</kbd> tira o último ponto, <kbd>Esc</kbd> cancela.
+      Seções de 4, 6 ou mais lados — é só ir clicando.
+    </p>
+    <div class="palco" id="palco">
+      <img id="planta" src="planta-kickoff.png" alt="Planta técnica da loja">
+      <svg id="calco"></svg>
+    </div>
+  </div>
+
+  <aside class="lado">
+    <div class="atual">
+      <small>DESENHANDO AGORA</small>
+      <b id="alvo">—</b>
+      <div class="vert" id="vert">nenhum ponto ainda</div>
+    </div>
+    <select id="lista"></select>
+
+    <div class="opcoes">
+      <label><input type="checkbox" id="reto" checked> Travar em ângulo reto</label>
+      <label><input type="checkbox" id="grudar" checked> Grudar em canto já desenhado</label>
+    </div>
+
+    <div class="linha">
+      <button id="fechar" class="primaria">Fechar forma</button>
+      <button id="voltar">↶ Ponto</button>
+      <button id="cancelar">Cancelar</button>
+    </div>
+    <div class="linha">
+      <button id="pular">Pular →</button>
+      <button class="perigo" id="limpar">Limpar tudo</button>
+    </div>
+
+    <div class="contador" id="contador"></div>
+    <ul id="itens"></ul>
+    <button class="primaria" id="copiar" style="width:100%;margin-top:10px">Copiar coordenadas</button>
+    <textarea id="saida" readonly placeholder="As coordenadas aparecem aqui conforme você desenha."></textarea>
+  </aside>
+</div>
+
+<script>
+/* =========================================================================
+   TRACADOR DE POLIGONOS
+
+   Retangulo nao descreve a loja: Madeiras tem seis lados. Desenhar dois
+   retangulos por secao em L seria remendo - o vertice do meio ficaria
+   duplicado e os vizinhos nao encostariam.
+
+   Duas ajudas que mudam o resultado, e nao sao enfeite:
+
+   - TRAVA EM ANGULO RETO. Parede de loja e ortogonal. Sem a trava, cada lado
+     sai com um ou dois graus de inclinacao e a planta fica torta de um jeito
+     que so aparece depois, ampliada.
+   - GRUDAR EM CANTO EXISTENTE. E o que faz departamento vizinho COMPARTILHAR
+     a borda em vez de quase encostar. Sem isso sobra fresta de meio pixel
+     entre um e outro, que e exatamente o que fazia o mapa parecer cartoes
+     soltos.
+
+   A conversao para a grade 0-100 acontece no clique, com a mesma calibracao
+   do backend - nao ha etapa de traducao no meio onde o erro possa reentrar.
+   ========================================================================= */
+
+/*
+ * O CONTORNO vem primeiro de proposito: e o unico que precisa envolver os outros, e
+ * desenha-lo antes evita o grude puxar seus vertices para os cantos dos departamentos.
+ * Sao dois corpos - o galpao e o patio coberto -, e nao um: no patio a construcao e
+ * diferente, aberta nas laterais, e junta-los num poligano so mentiria sobre a loja.
+ */
+const DEPARTAMENTOS = [
+  'Contorno do galpão','Contorno do pátio',
+  'Madeiras','Ferragens','Ferramentas','Tintas','Elétrica','Sanitários','Encanamento',
+  'Cozinhas','Jardim','Jardim externo','Organização','Iluminação','Cerâmica',
+  'Pisos laminados','Tapetes','Decoração','Materiais de construção','Ofertas',
+  'Caixas','Serviços','Entrada'
+]
+
+const CAL = { x0: 20, y0: 15, ex: 0.109, ey: 0.107 }
+const paraGrade = p => ({
+  x: +(2 + (p.x - CAL.x0) * CAL.ex).toFixed(1),
+  y: +(2 + (p.y - CAL.y0) * CAL.ey).toFixed(1)
+})
+
+const CHAVE = 'tracado_planta_v2'
+let formas = JSON.parse(localStorage.getItem(CHAVE) || '[]')   // [{nome, pontos:[{x,y}]}]
+let atual = []
+let indice = 0
+let fantasma = null
+
+const palco = document.getElementById('palco')
+const img = document.getElementById('planta')
+const svg = document.getElementById('calco')
+const lista = document.getElementById('lista')
+
+DEPARTAMENTOS.forEach((d, i) => {
+  const o = document.createElement('option'); o.value = i; o.textContent = d; lista.appendChild(o)
+})
+
+const proximoNaoFeito = a => {
+  for (let k = 1; k <= DEPARTAMENTOS.length; k++) {
+    const i = (a + k) % DEPARTAMENTOS.length
+    if (!formas.some(f => f.nome === DEPARTAMENTOS[i])) return i
+  }
+  return a
+}
+
+/* ---------- ajudas de precisao ---------- */
+const RAIO_GRUDA = 9      // px da imagem
+
+function todosOsCantos() {
+  return formas.flatMap(f => f.pontos)
+}
+
+function ajustar(p) {
+  const ehContorno = DEPARTAMENTOS[indice].startsWith('Contorno')
+  if (document.getElementById('grudar').checked && !ehContorno) {
+    let melhor = null, dist = RAIO_GRUDA
+    for (const c of todosOsCantos()) {
+      const d = Math.hypot(c.x - p.x, c.y - p.y)
+      if (d < dist) { dist = d; melhor = c }
+    }
+    if (melhor) return { x: melhor.x, y: melhor.y }
+  }
+  if (document.getElementById('reto').checked && atual.length) {
+    const a = atual[atual.length - 1]
+    // o lado vira horizontal ou vertical, o que exigir menos correcao
+    return Math.abs(p.x - a.x) > Math.abs(p.y - a.y) ? { x: p.x, y: a.y } : { x: a.x, y: p.y }
+  }
+  return p
+}
+
+/* ---------- desenho ---------- */
+function pintar() {
+  svg.setAttribute('viewBox', `0 0 ${img.naturalWidth} ${img.naturalHeight}`)
+  const o = []
+
+  formas.forEach(f => {
+    const d = f.pontos.map(p => `${p.x},${p.y}`).join(' ')
+    o.push(`<polygon points="${d}" fill="#78be20" fill-opacity="0.2" stroke="#00702f" stroke-width="2"/>`)
+    const cx = f.pontos.reduce((s, p) => s + p.x, 0) / f.pontos.length
+    const cy = f.pontos.reduce((s, p) => s + p.y, 0) / f.pontos.length
+    o.push(`<rect x="${cx - f.nome.length*3.4 - 5}" y="${cy - 8}" width="${f.nome.length*6.8 + 10}"
+             height="16" rx="8" fill="#fff" fill-opacity="0.92"/>`)
+    o.push(`<text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="11" font-weight="700"
+             fill="#00702f" font-family="Hanken Grotesk, sans-serif">${f.nome}</text>`)
+  })
+
+  if (atual.length) {
+    const pts = fantasma ? [...atual, fantasma] : atual
+    o.push(`<polyline points="${pts.map(p => `${p.x},${p.y}`).join(' ')}" fill="#78be20"
+             fill-opacity="0.16" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="7 4"/>`)
+    atual.forEach((p, i) => o.push(
+      `<circle cx="${p.x}" cy="${p.y}" r="${i === 0 ? 6 : 4}"
+        fill="${i === 0 ? '#f59e0b' : '#fff'}" stroke="#b45309" stroke-width="2"/>`))
+  }
+
+  svg.innerHTML = o.join('')
+  document.getElementById('alvo').textContent = DEPARTAMENTOS[indice]
+  lista.value = indice
+  document.getElementById('vert').textContent = atual.length
+    ? `${atual.length} ponto${atual.length > 1 ? 's' : ''} — clique no laranja para fechar`
+    : 'nenhum ponto ainda'
+  document.getElementById('contador').textContent = `${formas.length} de ${DEPARTAMENTOS.length} desenhados`
+  document.getElementById('itens').innerHTML = DEPARTAMENTOS.map(d => {
+    const f = formas.find(f => f.nome === d)
+    return `<li class="${f ? 'feito' : ''}"><span>${f ? '✓ ' : ''}${d}${f ? ` <small style="color:#7d8a93">${f.pontos.length} lados</small>` : ''}</span>${f ? `<span class="x" data-nome="${d}">✕</span>` : ''}</li>`
+  }).join('')
+
+  document.getElementById('saida').value = formas.map(f =>
+    `['${f.nome}', [${f.pontos.map(p => { const g = paraGrade(p); return `[${g.x},${g.y}]` }).join(',')}]],`
+  ).join('\n')
+
+  localStorage.setItem(CHAVE, JSON.stringify(formas))
+}
+
+/* ---------- interacao ---------- */
+const paraImagem = e => {
+  const r = img.getBoundingClientRect()
+  const k = img.naturalWidth / r.width
+  const p = e.touches?.[0] ?? e.changedTouches?.[0] ?? e
+  return { x: (p.clientX - r.left) * k, y: (p.clientY - r.top) * k }
+}
+
+function fechar() {
+  if (atual.length < 3) return
+  formas.push({ nome: DEPARTAMENTOS[indice], pontos: atual })
+  atual = []; fantasma = null
+  indice = proximoNaoFeito(indice)
+  pintar()
+}
+
+palco.addEventListener('click', e => {
+  const bruto = paraImagem(e)
+  if (atual.length >= 3) {
+    const p0 = atual[0]
+    if (Math.hypot(bruto.x - p0.x, bruto.y - p0.y) < 12) { fechar(); return }
+  }
+  atual.push(ajustar(bruto))
+  pintar()
+})
+palco.addEventListener('mousemove', e => {
+  if (!atual.length) return
+  fantasma = ajustar(paraImagem(e))
+  pintar()
+})
+palco.addEventListener('touchstart', e => {
+  e.preventDefault()
+  const bruto = paraImagem(e)
+  if (atual.length >= 3) {
+    const p0 = atual[0]
+    if (Math.hypot(bruto.x - p0.x, bruto.y - p0.y) < 18) { fechar(); return }
+  }
+  atual.push(ajustar(bruto)); pintar()
+}, { passive: false })
+
+window.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); fechar() }
+  if (e.key === 'Backspace') { e.preventDefault(); atual.pop(); pintar() }
+  if (e.key === 'Escape') { atual = []; fantasma = null; pintar() }
+})
+
+lista.onchange = e => { indice = +e.target.value; atual = []; pintar() }
+document.getElementById('fechar').onclick = fechar
+document.getElementById('voltar').onclick = () => { atual.pop(); pintar() }
+document.getElementById('cancelar').onclick = () => { atual = []; fantasma = null; pintar() }
+document.getElementById('pular').onclick = () => { atual = []; indice = proximoNaoFeito(indice); pintar() }
+document.getElementById('limpar').onclick = () => {
+  if (confirm('Apagar todos os traçados?')) { formas = []; atual = []; indice = 0; pintar() }
+}
+document.getElementById('itens').onclick = e => {
+  const n = e.target.dataset?.nome
+  if (n) { formas = formas.filter(f => f.nome !== n); pintar() }
+}
+document.getElementById('copiar').onclick = () => {
+  const s = document.getElementById('saida'); s.select()
+  navigator.clipboard?.writeText(s.value)
+  const b = document.getElementById('copiar')
+  b.textContent = 'Copiado ✓'
+  setTimeout(() => b.textContent = 'Copiar coordenadas', 1600)
+}
+;['reto','grudar'].forEach(id => document.getElementById(id).onchange = pintar)
+
+img.onload = () => { indice = proximoNaoFeito(-1); pintar() }
+if (img.complete) img.onload()
+</script>

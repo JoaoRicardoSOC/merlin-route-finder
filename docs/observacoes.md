@@ -25,6 +25,8 @@
 | [O-35](#o-35-a-afinidade-empata-quando-muitos-produtos-dividem-o-tipo-e-o-desempate-é-alfabético) | Afinidade empata e desempata por ordem alfabética | Backend, depois do prazo | Média |
 | [O-36](#o-36-a-suíte-padrão-não-roda-os-testes-de-integração-e-isso-já-deixou-passar-oito-falhas) | A suíte padrão não roda os testes de integração | Time | **Alta** |
 | [O-37](#o-37-quatro-famílias-tipográficas-seguram-a-primeira-pintura-por-quase-nove-segundos) | Quatro fontes seguram a primeira pintura | Frontend e time | Média |
+| [O-38](#o-38-a-planta-do-backend-e-a-do-frontend-discordam-e-hoje-ninguém-percebe) | Duas geometrias da mesma loja, e só uma é usada | Backend | Baixa hoje |
+| [O-39](#o-39-materiais-de-construção-e-caixas-ainda-são-desenhados-por-fórmula) | Duas seções ainda desenhadas por fórmula | Frontend | Baixa |
 | [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
 | [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final--feito) | Limpar documentos de trabalho | Time | fim do ano |
@@ -732,6 +734,71 @@ acontecer em memória, sem tocar na consulta.
 outros quatro pares, que hoje acertam.
 
 **De quem.** Backend, depois de 13/09.
+
+---
+
+### O-38. A planta do backend e a do frontend discordam, e hoje ninguém percebe
+
+**O que é.** Desde o traçado da planta real ([D-89](decisoes-tecnicas.md#d-89-a-planta-é-decalcada-da-loja-real-não-gerada-por-fórmula)),
+existem **duas geometrias da mesma loja**:
+
+| | Onde | O que é |
+|---|---|---|
+| Backend | `PlantaDaLoja.java` | 10 retângulos na grade 0-100, aproximados a olho |
+| Frontend | `plantaInterlagos.js` | 21 polígonos decalcados da planta técnica |
+
+Tintas, por exemplo, é `(20, 4, 24×12)` no backend e um polígono em `x 31,6..44,1 / y 3..11,5`
+no frontend. **São lugares diferentes da loja.**
+
+**Por que não quebra nada hoje.** A tela do mapa **não lê nenhuma coordenada do backend**. Os
+pinos de roteiro vêm de `findSectorForProduct`, a posição do cliente vem de `STORE_QR_POINTS`, e
+ambos são do frontend. Do backend vinham apenas `largura` e `altura` — que valem 100 e 100. As
+funções que buscavam o mapa na API (`getStoreMapData`, `gridToCanvas`) eram **código morto**:
+nenhum componente as chamava, e foram removidas.
+
+**Por que ainda assim é dívida.** Duas fontes de verdade para a mesma coisa só ficam quietas
+enquanto uma delas não é usada. No dia em que a rota passar a ser calculada pelo backend com
+distância real, ou em que a posição do produto vier do banco para desenhar na tela, as duas
+plantas vão se contradizer — e a contradição vai aparecer como pino no corredor errado, que é
+difícil de rastrear justamente por não haver erro nenhum.
+
+**O que resolveria.** Levar os polígonos para `PlantaDaLoja`: `BlocoMapa` deixa de ser retângulo,
+`contem` vira ponto-em-polígono e o centro vira centroide. É trabalho contido, mas **toca o
+Oracle compartilhado**: o `CarregadorDadosIniciais` é um `ApplicationRunner` com
+`@ConditionalOnProperty(matchIfMissing = true)`, ou seja **roda em toda subida do backend** e
+reescreve as posições das seções a partir da planta.
+
+> [!WARNING]
+> Isso já mordeu uma vez: numa tentativa anterior, `git checkout` reverteu o código e **não
+> reverteu o banco** — as posições já tinham sido reescritas, e o time ficou vendo dado alterado.
+> Antes de mexer na `PlantaDaLoja`: despejar as posições atuais num arquivo, e subir com
+> `--merlin.seed.enabled=false` enquanto não quiser gravar.
+
+**De quem.** Backend. **Urgência:** baixa até o vídeo — é invisível hoje. Alta assim que alguém
+for usar coordenada do backend para desenhar ou para calcular distância.
+
+---
+
+### O-39. Materiais de construção e Caixas ainda são desenhados por fórmula
+
+**O que é.** Das 21 seções traçadas, 19 têm gôndolas decalcadas da planta. Duas continuam com o
+desenho **gerado**: **Materiais de construção**, porque a organização do pátio não é
+distinguível na planta técnica; e **Caixas**, cuja frente de caixa não foi traçada.
+
+Isso é decisão registrada, não esquecimento — ver
+[D-91](decisoes-tecnicas.md#d-91-departamento-sem-gôndola-traçada-fica-vazio-e-o-vazio-é-a-resposta).
+Preencher o pátio com prateleira imaginária repetiria a doença que o projeto vem consertando.
+
+**Como se reconhece na tela.** Materiais aparece com cinco barras gordas, idênticas e igualmente
+espaçadas, enquanto as outras dezenove têm ocupação variando de 14% a 48% e espessuras de 0,3 a
+2,2. **A diferença é visível a olho nu** — e é o melhor argumento de que traçar valeu a pena.
+
+**O que resolveria.** As bancadas de traçado ficaram no repositório em `ferramentas/planta/`
+exatamente para isso: `__gondolas.html` desenha as barras sobre a planta, com zoom, e
+`__render.html` mostra o resultado com a conferência. A frente de caixas está desenhada na
+planta e é traçável; o pátio depende de alguém conseguir ler a organização dele.
+
+**De quem.** Frontend. **Urgência:** baixa. É honesto do jeito que está.
 
 ---
 

@@ -4,8 +4,20 @@ import {
   STORE_SECTORS,
   STORE_AMENITIES,
   STORE_QR_POINTS,
+  STORE_OUTLINE,
+  CANVAS,
   findSectorForProduct
 } from '../services/mapService'
+
+/*
+ * Onde o cliente aparece quando ainda nao escaneou nada.
+ *
+ * Vem da placa ENT-01, que e a entrada tracada na planta - nao de um par de numeros
+ * escrito a mao. O desenho anterior tinha 195,550 cravado em dois lugares, e ao
+ * trocar a geometria esses dois pontos passaram a cair no patio de materiais: o
+ * pino aparecia longe da porta e ninguem seria avisado.
+ */
+const ENTRADA = STORE_QR_POINTS.find(q => q.codigo === 'ENT-01')
 
 export default function StoreMapPage({
   roteiroItems = [],
@@ -52,8 +64,8 @@ export default function StoreMapPage({
       return {
         ...item,
         sector,
-        pinX: sector.x + sector.w / 2 + offsetX,
-        pinY: sector.y + sector.h / 2 + offsetY,
+        pinX: sector.rotuloX + offsetX,
+        pinY: sector.rotuloY + offsetY,
         orderIndex: idx + 1
       }
     }).filter(Boolean)
@@ -61,7 +73,7 @@ export default function StoreMapPage({
 
   // Determine customer coordinates on the map
   const userPosition = useMemo(() => {
-    if (!currentLocation) return { x: 195, y: 550, name: 'Entrada Principal' }
+    if (!currentLocation) return { x: ENTRADA.x, y: ENTRADA.y, name: ENTRADA.nome }
     
     // Check if current location matches any QR code
     const qrMatch = STORE_QR_POINTS.find(
@@ -77,14 +89,10 @@ export default function StoreMapPage({
            (currentLocation.aisle || '').toLowerCase().includes(s.nome.toLowerCase())
     )
     if (sectorMatch) {
-      return {
-        x: sectorMatch.x + sectorMatch.w / 2,
-        y: sectorMatch.y + sectorMatch.h / 2,
-        name: sectorMatch.nome
-      }
+      return { x: sectorMatch.rotuloX, y: sectorMatch.rotuloY, name: sectorMatch.nome }
     }
 
-    return { x: 195, y: 550, name: currentLocation.aisle || 'Entrada' }
+    return { x: ENTRADA.x, y: ENTRADA.y, name: currentLocation.aisle || ENTRADA.nome }
   }, [currentLocation])
 
   // Focus on product if passed
@@ -116,9 +124,11 @@ export default function StoreMapPage({
       points.push({ x: p.pinX, y: p.pinY, label: p.nome })
     })
 
-    // End at checkout (Caixas)
-    const caixas = STORE_AMENITIES.find(a => a.tipo === 'CAIXA') || { x: 260, y: 575 }
-    points.push({ x: caixas.x, y: caixas.y, label: 'Caixas' })
+    // Termina nos caixas. Se a planta nao trouxer a frente de caixas, a rota
+    // simplesmente nao ganha esse trecho - antes havia um 260,575 de reserva, que
+    // com a geometria nova apontaria para dentro do patio de materiais.
+    const caixas = STORE_AMENITIES.find(a => a.tipo === 'CAIXA')
+    if (caixas) points.push({ x: caixas.x, y: caixas.y, label: 'Caixas' })
 
     return points
   }, [showRoute, mappedRoteiroPins, userPosition])
@@ -180,7 +190,6 @@ export default function StoreMapPage({
     const term = searchSectorTerm.toLowerCase()
     return STORE_SECTORS.filter(s =>
       s.nome.toLowerCase().includes(term) ||
-      s.corredor.toLowerCase().includes(term) ||
       s.descricao.toLowerCase().includes(term)
     )
   }, [searchSectorTerm])
@@ -286,8 +295,8 @@ export default function StoreMapPage({
                 setSelectedSector(sec)
                 // Center pan on selected sector
                 setPanOffset({
-                  x: 450 - sec.x * zoomLevel,
-                  y: 400 - sec.y * zoomLevel
+                  x: CANVAS.largura / 2 - sec.rotuloX * zoomLevel,
+                  y: CANVAS.altura / 2 - sec.rotuloY * zoomLevel
                 })
               }}
             >
@@ -358,11 +367,11 @@ export default function StoreMapPage({
         {/* SVG Drawing Canvas */}
         <svg
           ref={svgRef}
-          viewBox="0 0 950 950"
+          viewBox={`0 0 ${CANVAS.largura} ${CANVAS.altura}`}
           className="store-map-svg"
           style={{
             transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
-            transformOrigin: '475px 475px'
+            transformOrigin: `${CANVAS.largura / 2}px ${CANVAS.altura / 2}px`
           }}
         >
           <defs>
@@ -385,27 +394,24 @@ export default function StoreMapPage({
           </defs>
 
           {/* Background & Surroundings */}
-          <rect width="950" height="950" fill="#F8FAFC" />
-          <rect width="950" height="950" fill="url(#store-grid-pattern)" />
+          <rect width={CANVAS.largura} height={CANVAS.altura} fill="#F8FAFC" />
+          <rect width={CANVAS.largura} height={CANVAS.altura} fill="url(#store-grid-pattern)" />
 
-          {/* Street Labels (from Interlagos Map) */}
-          <g className="street-labels" opacity="0.65">
-            <text x="650" y="55" fill="#64748B" fontSize="13" fontWeight="600" transform="rotate(-15 650 55)">
-              R. do Shopping Interlagos ➔
-            </text>
-            <text x="60" y="420" fill="#64748B" fontSize="13" fontWeight="600" transform="rotate(75 60 420)">
-              R. São Canuto ➔
-            </text>
-          </g>
 
-          {/* Store Building Outer Shell */}
-          <polygon
-            points="140,510 340,260 520,110 770,110 830,220 860,370 780,520 620,830 460,920 220,920 120,780 140,510"
-            fill="#FFFFFF"
-            stroke="#CBD5E1"
-            strokeWidth="3"
-            className="store-outer-hull"
-          />
+          {/* O predio: galpao fechado e patio coberto, que sao dois corpos e nao
+              um. O patio vai tracejado porque e coberto e aberto nas laterais. */}
+          {STORE_OUTLINE.map(corpo => (
+            <polygon
+              key={corpo.nome}
+              points={corpo.pontos}
+              fill={corpo.patio ? '#FDFDFB' : '#FFFFFF'}
+              stroke="#94A3B8"
+              strokeWidth={corpo.patio ? '2.5' : '3.5'}
+              strokeDasharray={corpo.patio ? '9 6' : undefined}
+              strokeLinejoin="round"
+              className="store-outer-hull"
+            />
+          ))}
 
           {/* Corridors and Aisles */}
           <g className="store-sectors-group">
@@ -424,49 +430,62 @@ export default function StoreMapPage({
                   }}
                   style={{ cursor: 'pointer' }}
                 >
-                  {/* Aisle Box */}
-                  <rect
-                    x={sec.x}
-                    y={sec.y}
-                    width={sec.w}
-                    height={sec.h}
-                    rx="8"
+                  {/* A secao, com a forma que ela tem na planta: 4, 6 ou 8 lados */}
+                  <polygon
+                    points={sec.pontos}
                     fill={isSelected ? `${sec.color}25` : hasItems ? '#FEF3C7' : '#F1F5F9'}
                     stroke={isSelected ? sec.color : hasItems ? '#F59E0B' : '#CBD5E1'}
                     strokeWidth={isSelected ? '2.5' : hasItems ? '2' : '1.2'}
+                    strokeLinejoin="round"
                     className="sector-rect"
                   />
 
+                  {/* As gondolas: o que faz o desenho parecer loja em vez de caixa
+                      vazia. Vem tracadas uma a uma da planta, por isso variam de
+                      espessura e de arranjo entre uma secao e outra. Nao recebem
+                      evento -- quem escuta o clique e o grupo da secao. */}
+                  <g className="sector-shelves" pointerEvents="none">
+                    {sec.gondolas.map((pontos, i) => (
+                      <polygon
+                        key={i}
+                        points={pontos}
+                        fill={sec.color}
+                        fillOpacity={isSelected ? '0.42' : '0.26'}
+                      />
+                    ))}
+                  </g>
+
                   {/* Sector Title & Corredor text */}
+                  {/* Tarjeta atras do rotulo: sem ela o texto briga com a hachura
+                      das gondolas e nenhum dos dois se le. */}
+                  <rect
+                    x={sec.rotuloX - (sec.nome.length * 3.3 + 8)}
+                    y={sec.rotuloY - 9}
+                    width={sec.nome.length * 6.6 + 16}
+                    height="18"
+                    rx="9"
+                    fill="#FFFFFF"
+                    fillOpacity="0.9"
+                    pointerEvents="none"
+                  />
                   <text
-                    x={sec.x + sec.w / 2}
-                    y={sec.y + sec.h / 2 - 4}
+                    x={sec.rotuloX}
+                    y={sec.rotuloY + 4}
                     textAnchor="middle"
                     fill="#1E293B"
-                    fontSize={sec.w > 80 ? '12' : '10'}
+                    fontSize={sec.nome.length > 16 ? '9' : '11'}
                     fontWeight="700"
+                    pointerEvents="none"
                     className="sector-title-text"
                   >
                     {sec.nome}
-                  </text>
-
-                  <text
-                    x={sec.x + sec.w / 2}
-                    y={sec.y + sec.h / 2 + 12}
-                    textAnchor="middle"
-                    fill="#64748B"
-                    fontSize="9"
-                    fontWeight="500"
-                    className="sector-sub-text"
-                  >
-                    {sec.corredor.replace('Corredor ', '')}
                   </text>
 
                   {/* Highlight Glow if items inside */}
                   {hasItems && (
                     <circle
                       cx={sec.x + sec.w - 10}
-                      cy={sec.y + 10}
+                      cy={sec.y + 12}
                       r="5"
                       fill="#F59E0B"
                     />

@@ -54,6 +54,9 @@
 - [D-86. A sessão inventada sai, e o que o cliente marca sem sinal entra numa fila](#d-86-a-sessão-inventada-sai-e-o-que-o-cliente-marca-sem-sinal-entra-numa-fila)
 - [D-87. O alvo de toque cresce por sobreposição, e a pílula continua fina](#d-87-o-alvo-de-toque-cresce-por-sobreposição-e-a-pílula-continua-fina)
 - [D-88. O TIPO carrega a afinidade, porque a marca igual era dado inventado](#d-88-o-tipo-carrega-a-afinidade-porque-a-marca-igual-era-dado-inventado)
+- [D-89. A planta é decalcada da loja real, não gerada por fórmula](#d-89-a-planta-é-decalcada-da-loja-real-não-gerada-por-fórmula)
+- [D-90. A loja são dois corpos: o galpão fechado e o pátio coberto](#d-90-a-loja-são-dois-corpos-o-galpão-fechado-e-o-pátio-coberto)
+- [D-91. Departamento sem gôndola traçada fica vazio, e o vazio é a resposta](#d-91-departamento-sem-gôndola-traçada-fica-vazio-e-o-vazio-é-a-resposta)
 
 **Persistência**
 - [D-10. Entidades JPA espelho, separadas das de domínio](#d-10-entidades-jpa-espelho-separadas-das-de-domínio)
@@ -2424,6 +2427,156 @@ ordem alfabética. **Ela acerta a lâmpada por sorte, não por mérito.** Regist
 o perfil de integração, 150 testes e 35%.
 
 **Onde no código.** `CatalogoDaMassa.java`, três testes de integração, `pom.xml` (JaCoCo).
+
+
+---
+
+### D-89. A planta é decalcada da loja real, não gerada por fórmula
+
+**Contexto.** O mapa era o motivo de o projeto existir, e era a parte mais fraca dele: dezoito
+retângulos de posição e tamanho arbitrários, espalhados dentro de um contorno de doze vértices
+que não correspondia a prédio nenhum. Não havia gôndola, não havia corredor, e os códigos de
+corredor exibidos na tela — *"Corredor B01 - Tintas"* — eram **inventados**: ninguém conseguiria
+conferi-los na loja.
+
+**Três tentativas falharam antes desta, e cada uma ensinou uma coisa.**
+
+1. **Redesenhar "parecido".** Rejeitada como *"muito estranho"*. Aproximar a olho produz um
+   desenho que erra em todo lugar um pouco, e é justamente o que parece errado sem que se
+   consiga apontar onde.
+2. **Gerar o planograma por regra.** Rejeitada por ser *"'perfeito' demais"*. Grade 5×4, blocos
+   do mesmo tamanho, prateleiras com o mesmo passo. Loja de verdade não é regular, e a
+   regularidade denuncia a geração.
+3. **Cruzar o Google Maps com a planta do kickoff por transformação de semelhança.** Mínimos
+   quadrados sobre 15 departamentos comuns: rotação −121,9°, escala 0,1115, **erro médio de
+   10,11 unidades numa loja de 90 de largura (11%), máximo de 20,55 (23%)**. As projeções
+   colocavam Drive Thru, Serviços e Caixas todos dentro de Ferramentas. As causas: os rótulos do
+   Maps foram lidos a olho, rótulo não é centroide, e as duas imagens têm projeções diferentes —
+   uma ortográfica, outra em perspectiva de prédio inclinado. **Medir o erro foi o que salvou:**
+   sem medir, esse cruzamento teria virado a planta oficial.
+
+**A decisão: quem conhece a planta desenha; o código só converte.**
+
+Foram construídas duas bancadas de traçado sobre a imagem da planta técnica do kickoff, e a
+geometria saiu de lá — **21 seções, 2 contornos e 212 gôndolas**, vértice a vértice.
+
+Duas ajudas na bancada mudaram o resultado, e nenhuma é enfeite:
+
+- **Trava em ângulo reto.** Parede de galpão é ortogonal. Sem a trava, cada lado sai com um ou
+  dois graus de inclinação, e a planta fica torta de um jeito que só aparece ampliada.
+- **Grude em canto já desenhado.** É o que faz departamento vizinho **compartilhar** a borda em
+  vez de quase encostar. Sem isso sobra fresta de meio pixel entre um e outro — que era
+  exatamente o que fazia o mapa antigo parecer cartões soltos.
+
+**O que a conferência mediu, e por que ela vale mais que a impressão visual.**
+
+| Conferência | Resultado |
+|---|---|
+| seções fora do contorno | nenhuma |
+| seções sobrepostas | nenhuma |
+| centroide fora da própria forma | nenhum |
+| gôndola com ponta fora da seção | nenhuma |
+| gôndola sobre gôndola | nenhuma |
+| **ocupação do galpão por seção** | **78% — logo, 22% de circulação** |
+
+Os 78% são o número que valida o contorno. Se ele tivesse sido **derivado** da união dos
+departamentos, daria 100% e a loja não teria corredor nenhum junto da parede. Loja real fica
+entre 70% e 80%.
+
+**Alternativas descartadas.**
+
+- **Derivar o contorno dos departamentos.** Colaria nas bordas e engoliria a circulação de
+  perímetro (ver acima).
+- **Caixa envolvente como contorno.** Iria de x 1,2 a 91,8 por y 2,7 a 58,5 e **engoliria o
+  estacionamento**, que na planta aparece desenhado com as vagas e as setas de sentido.
+- **Guardar a geometria em pixel.** Ficou em **unidades da grade 0-100**, a mesma do backend
+  (`PlantaDaLoja`). Pixel exigiria uma tradução no meio, e é no meio que o erro entra.
+
+**Consequências.**
+
+- Mudar a planta deixa de ser mudar código: é traçar de novo e regerar o arquivo.
+- As seções passaram a ter 4, 6 e 8 lados, então o desenho usa `<polygon>` e não `<rect>`, e a
+  aferição do clique passou a respeitar o recorte real — o L de Madeiras responde como L.
+- O rótulo foi para o **centroide**, não para o meio da caixa envolvente: numa seção em L o meio
+  da caixa cai *fora* da seção. Madeiras e Cerâmica são exatamente esse caso.
+- A geometria do backend (dez retângulos) passou a **discordar** da do frontend. Hoje isso não
+  quebra nada, porque a tela não lê coordenada do backend, mas é dívida registrada — ver
+  [O-38](observacoes.md).
+
+**Duas coisas que o porte revelou, e que não eram do desenho.**
+
+- **Coordenadas cravadas do canvas antigo.** `195,550` aparecia em dois lugares como posição
+  padrão do cliente, e `260,575` como fim de rota. Com a geometria nova os três caíam **dentro
+  do pátio de materiais** — o pino *"você está aqui"* aparecia longe da porta, e nada no console
+  denunciava. Agora derivam da placa ENT-01 traçada.
+- **`findSectorForProduct` decidia pela ordem da lista.** Todos os critérios estavam num `find`
+  só com `||`, então vencia o primeiro **setor** que satisfizesse **qualquer** critério, e não a
+  melhor correspondência. Com *"Jardim"* e *"Jardim externo"* convivendo, um produto de Jardim
+  casaria por substring com o externo dependendo só do arranjo. O exato passou a vencer o
+  parcial.
+
+**Onde no código.** `frontend/src/services/plantaInterlagos.js` (a geometria),
+`frontend/src/services/mapService.js` (o significado), `frontend/src/components/StoreMapPage.jsx`
+(o desenho), `ferramentas/planta/` (as bancadas de traçado).
+
+---
+
+### D-90. A loja são dois corpos: o galpão fechado e o pátio coberto
+
+**Contexto.** Traçados os 21 departamentos, faltava delimitar a loja. A tentação era um contorno
+só — mas a geometria traçada não fecha num corpo único.
+
+**A evidência veio da planta, ampliada, e não de suposição.** Na área de Materiais de construção
+há uma **faixa larga e curva atravessando o setor**, entrando pela esquerda e fazendo uma volta
+em S. É via de veículo, não corredor de compra: larga demais, e nenhum departamento do galpão
+tem coisa parecida. É o pátio de carga, onde o carro entra para levar cimento, areia e tijolo —
+o que ninguém carrega no cesto. A planta ainda a desenha **fora do contorno pesado do galpão**,
+num hachurado mais claro.
+
+**E o que fecha o argumento:** o vazio grande no canto inferior direito **não é vazio, é
+estacionamento** — as vagas e as setas de sentido estão desenhadas. Um contorno único as
+engoliria para dentro da loja.
+
+**Decisão.** Dois polígonos: `Contorno do galpão` (traço contínuo) e `Contorno do pátio` (traço
+tracejado, porque é coberto e aberto nas laterais). Eles se sobrepõem em 0,3 unidade na borda
+comum, que é a espessura da parede compartilhada — e isso é fisicamente correto, não erro.
+
+**O que não foi verificado, e está assumido:** que o pátio é coberto e aberto nas laterais. Isso
+é inferência do tipo de operação; na resolução da planta não dá para afirmar. Muda só o traço,
+não a decisão de serem dois.
+
+**Onde no código.** `plantaInterlagos.js` (`CONTORNOS`), `mapService.js` (`STORE_OUTLINE`).
+
+---
+
+### D-91. Departamento sem gôndola traçada fica vazio, e o vazio é a resposta
+
+**Contexto.** Das 21 seções, quatro ficaram sem gôndola: **Materiais de construção**, porque a
+organização do pátio não é distinguível na planta; e **Caixas**, **Serviços** e **Entrada**,
+porque frente de caixa, balcão e porta não têm prateleira.
+
+**A tentação era preencher.** O código já sabia fazer isso: havia uma fórmula que gerava
+fileiras com passo constante para qualquer bloco. Ela produzia um resultado *plausível* para
+Materiais — cinco barras gordas e igualmente espaçadas.
+
+**Decisão: `gondolas: []`, e o vazio é registrado como decisão, não como pendência.**
+
+Este projeto tem uma doença recorrente e bem documentada: **quando o código não sabe, ele
+substitui por um valor plausível**. Já aconteceu com o mapa inventando Pintura, com o chat
+fabricando resposta, com o catálogo inventando loja, com a etiqueta de posição afirmando a
+entrada e com a sessão inteira sendo fabricada ([D-86](#d-86-a-sessão-inventada-sai-e-o-que-o-cliente-marca-sem-sinal-entra-numa-fila)).
+Preencher o pátio com prateleira imaginária seria a mesma doença num lugar novo.
+
+**A prova de que a decisão está certa está na própria tela.** Materiais de construção é a única
+seção que continua com fileiras geradas por fórmula, e ela **grita** ao lado das outras vinte:
+cinco barras idênticas, igualmente espaçadas, ao lado de departamentos onde a ocupação varia de
+14% a 48% e as espessuras vão de 0,3 a 2,2. Era assim que a loja inteira estava antes.
+
+**Consequência.** Enquanto Materiais e Caixas não forem traçados, o desenho deles é
+reconhecidamente aproximado — e as bancadas de traçado ficam no repositório justamente para que
+completá-los seja possível. Ver [O-39](observacoes.md).
+
+**Onde no código.** `plantaInterlagos.js` (comentário nas quatro seções vazias).
 
 ---
 
