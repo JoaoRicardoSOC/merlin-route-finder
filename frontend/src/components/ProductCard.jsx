@@ -1,4 +1,3 @@
-import React from 'react'
 import { SECTOR_METADATA, DEFAULT_SECTOR_META } from '../constants/setores'
 import { formatPrice } from '../utils/format'
 

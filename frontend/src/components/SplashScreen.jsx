@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import leroyLogo from '../assets/leroy_logo.png'
 
 export default function SplashScreen({ onFinish }) {

@@ -1,25 +1,15 @@
 // Catálogo da loja: seções, busca de produtos e detalhe.
 //
-// Estas funções lançam quando não conseguem falar com a API, em vez de devolver alguma coisa.
-// Existiam aqui 202 linhas de produtos e seções escritos à mão, devolvidas sempre que a
-// chamada falhava — um catálogo inventado, com SKUs que não são os nossos e corredores que
-// não existem na planta, apresentado como se fosse a loja. Aparecia exatamente quando ninguém
-// tinha como conferir.
-//
-// Devolver lista vazia no lugar seria a mesma doença em grau menor: a tela diria "nenhum
-// produto encontrado", que afirma *procuramos e não há* quando a verdade é *não conseguimos
-// procurar*. Quem chama precisa saber a diferença, e só uma exceção carrega essa informação.
-//
-// Ver D-77.
+// **Estas funções lançam quando a API não responde.** Devolver lista vazia faria a tela dizer
+// "nenhum produto encontrado", que afirma *procuramos e não há* quando a verdade é *não
+// conseguimos procurar* — e quem chama precisa saber a diferença. Ver D-77.
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 
 /**
- * Seções físicas do catálogo, com a contagem de produtos de cada uma.
  * GET /api/v1/produtos/secoes
  *
- * Lista vazia é resposta legítima, não falha: uma loja sem seção cadastrada é um estado
- * possível, e antes ele era confundido com erro.
+ * Lista vazia é resposta legítima, não falha — antes era confundida com erro.
  */
 export async function fetchSecoes() {
   const response = await fetch(`${API_BASE_URL}/api/v1/produtos/secoes`, {
@@ -35,8 +25,6 @@ export async function fetchSecoes() {
 }
 
 /**
- * Monta os parâmetros da busca de produtos.
- *
  * As características viajam como `atributo=CHAVE:valor` repetido, e aceitam os dois formatos
  * que a tela usa: o mapa de seleção das facetas e a lista já pronta.
  */

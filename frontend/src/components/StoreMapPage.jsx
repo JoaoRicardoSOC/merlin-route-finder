@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { formatPrice } from '../utils/format'
 import {
   STORE_SECTORS,
@@ -42,7 +42,6 @@ export default function StoreMapPage({
   const [searchSectorTerm, setSearchSectorTerm] = useState('')
   const svgRef = useRef(null)
 
-  // Map roteiro items to store sectors with coordinates
   //
   // Item cuja secao nao casa com bloco nenhum NAO ganha alfinete. Antes caia em
   // STORE_SECTORS[0] - Pintura -, e o mapa afirmava um corredor que nao era: quem pedia rota
@@ -58,7 +57,8 @@ export default function StoreMapPage({
         return null
       }
 
-      // Add slight random offset within sector if multiple items share the same sector
+      // Espalha os pinos dentro do setor: sem isso, dois itens da mesma seção ficam um
+      // exatamente em cima do outro e o cliente só vê um.
       const offsetX = (idx % 3 - 1) * 16
       const offsetY = (Math.floor(idx / 3) % 3 - 1) * 14
       return {
@@ -71,11 +71,9 @@ export default function StoreMapPage({
     }).filter(Boolean)
   }, [roteiroItems])
 
-  // Determine customer coordinates on the map
   const userPosition = useMemo(() => {
     if (!currentLocation) return { x: ENTRADA.x, y: ENTRADA.y, name: ENTRADA.nome }
     
-    // Check if current location matches any QR code
     const qrMatch = STORE_QR_POINTS.find(
       q => q.codigo === currentLocation.code || currentLocation.code?.includes(q.codigo)
     )
@@ -83,7 +81,6 @@ export default function StoreMapPage({
       return { x: qrMatch.x, y: qrMatch.y, name: qrMatch.nome }
     }
 
-    // Check if sector match
     const sectorMatch = STORE_SECTORS.find(
       s => s.nome.toLowerCase() === (currentLocation.sector || '').toLowerCase() ||
            (currentLocation.aisle || '').toLowerCase().includes(s.nome.toLowerCase())
@@ -95,7 +92,6 @@ export default function StoreMapPage({
     return { x: ENTRADA.x, y: ENTRADA.y, name: currentLocation.aisle || ENTRADA.nome }
   }, [currentLocation])
 
-  // Focus on product if passed
   useEffect(() => {
     if (focusedProduct) {
       const foundPin = mappedRoteiroPins.find(p => p.id === focusedProduct.id || p.produtoId === focusedProduct.id)
@@ -111,14 +107,11 @@ export default function StoreMapPage({
     }
   }, [focusedProduct, mappedRoteiroPins])
 
-  // Calculate route polyline through uncollected items -> checkout
   const routePoints = useMemo(() => {
     if (!showRoute || mappedRoteiroPins.length === 0) return []
 
-    // Start at customer position
     const points = [{ x: userPosition.x, y: userPosition.y, label: 'Início' }]
 
-    // Add uncollected items in order
     const pendingPins = mappedRoteiroPins.filter(p => !p.coletado)
     pendingPins.forEach(p => {
       points.push({ x: p.pinX, y: p.pinY, label: p.nome })

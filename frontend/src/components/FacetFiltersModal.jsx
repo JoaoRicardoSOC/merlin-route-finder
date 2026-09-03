@@ -1,4 +1,3 @@
-import React from 'react'
 import useModalAcessivel from '../hooks/useModalAcessivel'
 
 export default function FacetFiltersModal({

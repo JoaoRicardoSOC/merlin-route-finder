@@ -67,15 +67,6 @@ export function pendencias() {
   return lerFila().length
 }
 
-/** Um item específico tem pendência? A reconciliação usa para não sobrescrever o que ela não sabe. */
-export function temPendencia(idBackend) {
-  return lerFila().some(p => p.idBackend === idBackend)
-}
-
-export function limparFila() {
-  gravar([])
-}
-
 /**
  * Tenta reenviar tudo, em ordem, e devolve o que aconteceu.
  *

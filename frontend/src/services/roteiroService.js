@@ -1,4 +1,4 @@
-// Service for Roteiro / Shopping List (POST /api/v1/sessoes/{sessaoId}/roteiro/itens, GET, DELETE)
+// Roteiro do cliente: POST/GET/DELETE em /api/v1/sessoes/{sessaoId}/roteiro/itens.
 //
 // O item do roteiro carrega DUAS identidades, e elas não são a mesma coisa:
 //

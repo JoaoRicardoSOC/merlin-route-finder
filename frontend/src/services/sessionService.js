@@ -171,7 +171,7 @@ export async function obterOuCriarSessao(codigoUrl = null) {
       try {
         const updated = await recentrarPosicao(storedId, codigoUrl)
         if (updated && updated.status === 'ACTIVE') return updated
-      } catch (e) {
+      } catch {
         // Fallback to initializing new if recenter fails
       }
     }

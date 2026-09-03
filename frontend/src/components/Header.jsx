@@ -1,4 +1,3 @@
-import React from 'react'
 import leroyLogo from '../assets/leroy_logo.png'
 
 export default function Header({

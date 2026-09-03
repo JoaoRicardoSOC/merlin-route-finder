@@ -52,17 +52,6 @@
   position: relative;
 }
 
-.mobile-menu-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--min-touch-target);
-  height: var(--min-touch-target);
-  border-radius: var(--radius-full);
-  color: var(--on-surface-variant);
-  transition: background-color var(--transition-fast);
-}
-
 .brand-logo {
   display: flex;
   align-items: center;
@@ -306,17 +295,6 @@
   font-size: 18px;
 }
 
-.search-badge {
-  font-family: var(--font-label);
-  font-size: 11px;
-  font-weight: 600;
-  background-color: var(--primary-light);
-  color: var(--primary-dark);
-  padding: 2px 10px;
-  border-radius: var(--radius-full);
-  display: inline-block;
-}
-
 .search-bar-form {
   position: relative;
   display: flex;
@@ -463,68 +441,6 @@
   background-color: var(--primary-light);
   border-color: var(--primary-dark);
   color: var(--primary-dark);
-}
-
-/* --------------------------------------------------------------------------
-   Bento Grid Actions (Centered Mobile Stack)
-   -------------------------------------------------------------------------- */
-/* --------------------------------------------------------------------------
-   Product Recommendations Section
-   -------------------------------------------------------------------------- */
-.products-section {
-  width: 100%;
-  margin-bottom: 36px;
-}
-
-.section-header-wrap {
-  text-align: center;
-  margin-bottom: 18px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.section-heading {
-  font-size: var(--text-h2);
-  font-weight: 700;
-  color: var(--on-surface);
-  text-align: center;
-}
-
-.filter-category-tabs {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  width: 100%;
-  padding: 4px 2px 8px 2px;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  justify-content: flex-start;
-}
-
-.filter-category-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.filter-tab {
-  flex-shrink: 0;
-  scroll-snap-align: start;
-  padding: 8px 16px;
-  border-radius: var(--radius-full);
-  font-family: var(--font-label);
-  font-size: 13px;
-  font-weight: 600;
-  background-color: var(--surface-container);
-  color: var(--on-surface-variant);
-  border: 1px solid transparent;
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-}
-
-.filter-tab:active {
-  transform: scale(0.96);
 }
 
 .filter-tab.active {
@@ -864,7 +780,10 @@
   right: 0;
   height: calc(60px + var(--safe-bottom));
   padding-bottom: var(--safe-bottom);
-  background-color: rgba(255, 255, 255, 0.97);
+  /* Opaca de verdade. Estava em rgba(...,0.97) sem `backdrop-filter` nenhum, então os
+     3% de transparência não compravam desfoque — só deixavam o conteúdo transparecer
+     pela barra enquanto a página rolava. */
+  background-color: var(--surface);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--outline-variant);
@@ -916,18 +835,6 @@
   animation: fadeIn 0.2s ease-out;
 }
 
-.modal-container {
-  background-color: var(--surface);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  max-width: 100%;
-  width: 100%;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow-lg);
-  animation: slideUpMobile 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  padding-bottom: var(--safe-bottom);
-}
-
 .modal-header {
   padding: 16px 20px;
   border-bottom: 1px solid var(--outline-variant);
@@ -940,11 +847,6 @@
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.modal-header-icon {
-  color: var(--primary-dark);
-  font-size: 24px;
 }
 
 .modal-title-wrap h3 {
@@ -972,118 +874,11 @@
   text-align: center;
 }
 
-.map-visual-placeholder {
-  background-color: #f1f4f1;
-  border: 2px dashed #b7cbb8;
-  border-radius: var(--radius-md);
-  padding: 14px;
-  margin-bottom: 14px;
-}
-
-.store-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.aisle-block {
-  background-color: #ffffff;
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--radius-sm);
-  padding: 12px 8px;
-  text-align: center;
-  font-family: var(--font-label);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.aisle-block.active-aisle {
-  background-color: var(--primary-light);
-  border-color: var(--primary-dark);
-  color: var(--primary-dark);
-}
-
-.pin-indicator {
-  display: block;
-  font-size: 10px;
-  margin-top: 4px;
-  color: var(--primary-dark);
-  font-weight: 700;
-}
-
-
-
-
-
-
-
-.route-target-info {
-  margin-bottom: 14px;
-  text-align: center;
-}
-
-.route-target-info h4 {
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.route-aisle {
-  font-size: 13px;
-  color: var(--primary-dark);
-}
-
-.route-steps {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  text-align: left;
-}
-
-.route-step {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 13px;
-  padding: 10px;
-  border-radius: var(--radius-md);
-  background-color: var(--surface-container-low);
-}
-
-.step-number {
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-full);
-  background-color: var(--primary);
-  color: var(--on-primary);
-  font-size: 12px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
 .modal-footer {
   padding: 14px 20px;
   border-top: 1px solid var(--outline-variant);
   display: flex;
   justify-content: center;
-}
-
-.modal-primary-btn {
-  background-color: var(--primary);
-  color: var(--on-primary);
-  font-family: var(--font-label);
-  font-size: 14px;
-  font-weight: 600;
-  min-height: var(--min-touch-target);
-  width: 100%;
-  border-radius: var(--radius-md);
-  transition: background-color var(--transition-fast);
-}
-
-.modal-primary-btn:active {
-  background-color: var(--primary-hover);
 }
 
 /* --------------------------------------------------------------------------
@@ -1361,11 +1156,6 @@
   transform: translateX(100%);
 }
 
-/* Center Seam Light Line (Disabled for seamless minimalist green background) */
-.splash-seam-glow {
-  display: none;
-}
-
 /* Center Brand Content */
 .splash-center-content {
   position: relative;
@@ -1460,163 +1250,12 @@
   }
 }
 
-/* ==========================================================================
-   FEATURE: EXPLORAÇÃO POR SETORES (ListarSecoesUseCase & SecaoResponse)
-   ========================================================================== */
-
-/* Sector Explorer Section */
-.sector-explorer-section {
-  width: 100%;
-  margin-bottom: 32px;
-}
-
-.sector-explorer-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.sector-explorer-title-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.sector-title-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background-color: var(--primary-light);
-  color: var(--primary-dark);
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  font-family: var(--font-label);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  width: fit-content;
-  margin-bottom: 2px;
-}
-
-.sector-title-icon {
-  font-size: 15px;
-}
-
-.sector-explorer-heading {
-  font-size: var(--text-h2);
-  font-weight: 800;
-  color: var(--on-surface);
-  letter-spacing: -0.02em;
-}
-
-.sector-explorer-subheading {
-  font-size: 13px;
-  color: var(--text-muted);
-  max-width: 480px;
-}
-
-.sector-carousel-controls {
-  display: none;
-  gap: 6px;
-}
-
-.carousel-arrow-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-full);
-  background-color: var(--surface);
-  border: 1px solid var(--outline-variant);
-  color: var(--on-surface-variant);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition-fast);
-  cursor: pointer;
-}
-
-.carousel-arrow-btn:hover {
-  background-color: var(--primary-light);
-  color: var(--primary-dark);
-  border-color: var(--primary-dark);
-}
-
-.carousel-arrow-btn:active {
-  transform: scale(0.92);
-}
-
-/* Horizontal Scroll Track (Mobile-First) */
-.sector-scroll-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.sector-chips-track {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  padding: 4px 2px 14px 2px;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: var(--outline-variant) transparent;
-}
-
-.sector-chips-track::-webkit-scrollbar {
-  height: 6px;
-}
-
-.sector-chips-track::-webkit-scrollbar-thumb {
-  background-color: var(--outline-variant);
-  border-radius: var(--radius-full);
-}
-
-/* Sector Chip */
-.sector-chip {
-  flex-shrink: 0;
-  scroll-snap-align: start;
-  background-color: var(--surface);
-  border: 1.5px solid var(--outline-variant);
-  border-radius: var(--radius-lg);
-  padding: 10px 14px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  transition: all var(--transition-fast);
-  cursor: pointer;
-  position: relative;
-  box-shadow: var(--shadow-sm);
-  min-height: 58px;
-}
-
-.sector-chip:hover {
-  border-color: var(--primary-dark);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.sector-chip:active {
-  transform: scale(0.97);
-}
-
 .sector-chip.active {
   background-color: #ffffff;
   border-color: var(--primary-dark);
   box-shadow: 0 4px 14px rgba(0, 107, 39, 0.18);
   outline: 2px solid var(--primary);
   outline-offset: 1px;
-}
-
-.sector-chip-icon-box {
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all var(--transition-fast);
 }
 
 .sector-chip-icon-box .material-symbols-outlined {
@@ -1633,32 +1272,8 @@
   color: var(--on-primary)fff;
 }
 
-.sector-chip-content {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-}
-
-.sector-chip-name {
-  font-family: var(--font-headline);
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--on-surface);
-  line-height: 1.2;
-  white-space: nowrap;
-}
-
 .sector-chip.active .sector-chip-name {
   color: var(--primary-dark);
-}
-
-.sector-chip-count-badge {
-  font-family: var(--font-label);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-top: 2px;
 }
 
 .sector-chip.active .sector-chip-count-badge {
@@ -1666,178 +1281,12 @@
   font-weight: 700;
 }
 
-.sector-active-indicator {
-  position: absolute;
-  bottom: -4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 18px;
-  height: 3px;
-  background-color: var(--primary);
-  border-radius: var(--radius-full);
-}
-
-/* Skeleton Loading Track */
-.skeleton-track {
-  display: flex;
-  gap: 10px;
-  overflow-x: hidden;
-}
-
-.sector-chip-skeleton {
-  flex-shrink: 0;
-  width: 150px;
-  height: 58px;
-  background: linear-gradient(90deg, var(--surface-container) 25%, var(--surface-container-high) 50%, var(--surface-container) 75%);
-  background-size: 200% 100%;
-  animation: skeletonPulse 1.4s ease-in-out infinite;
-  border-radius: var(--radius-lg);
-}
-
-/* --------------------------------------------------------------------------
-   Sector Active Context Banner
-   -------------------------------------------------------------------------- */
-.sector-banner-active {
-  background: linear-gradient(135deg, #ffffff 0%, #f4fbf5 100%);
-  border: 1.5px solid #9fe2ad;
-  border-radius: var(--radius-lg);
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-bottom: 28px;
-  box-shadow: var(--shadow-sm);
-  animation: fadeIn 0.25s ease-out;
-}
-
-.sector-banner-visual {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.sector-banner-icon {
-  font-size: 28px;
-}
-
-.sector-banner-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.sector-banner-meta-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.sector-banner-tag {
-  font-family: var(--font-label);
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  background-color: var(--primary);
-  color: var(--on-primary);
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-}
-
-.sector-banner-aisle {
-  font-family: var(--font-label);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--primary-dark);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
 .sector-banner-aisle .material-symbols-outlined {
   font-size: 14px;
 }
 
-.sector-banner-title {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--on-surface);
-}
-
-.sector-banner-desc {
-  font-size: 13px;
-  color: var(--on-surface-variant);
-  line-height: 1.4;
-}
-
-.sector-banner-count-row {
-  margin-top: 4px;
-}
-
-.sector-banner-count-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background-color: rgba(0, 107, 39, 0.08);
-  color: var(--primary-dark);
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-  font-family: var(--font-label);
-  font-size: 12px;
-  font-weight: 600;
-}
-
 .sector-banner-count-badge .material-symbols-outlined {
   font-size: 15px;
-}
-
-.sector-banner-actions {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-
-.sector-banner-btn-map,
-.sector-banner-btn-clear {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: var(--radius-md);
-  font-family: var(--font-label);
-  font-size: 13px;
-  font-weight: 600;
-  min-height: 38px;
-  transition: all var(--transition-fast);
-  cursor: pointer;
-}
-
-.sector-banner-btn-map {
-  background-color: var(--primary);
-  color: var(--on-primary);
-}
-
-.sector-banner-btn-map:active {
-  background-color: var(--primary-hover);
-  transform: scale(0.96);
-}
-
-.sector-banner-btn-clear {
-  background-color: var(--surface);
-  border: 1px solid var(--outline-variant);
-  color: var(--on-surface-variant);
-}
-
-.sector-banner-btn-clear:active {
-  background-color: var(--surface-container);
-  transform: scale(0.96);
 }
 
 /* --------------------------------------------------------------------------
@@ -2061,16 +1510,6 @@
 .drawer-map-btn:hover {
   background-color: var(--primary-light);
   border-color: var(--primary-dark);
-}
-
-/* --------------------------------------------------------------------------
-   Product Grid Enhancements & Filters Bar
-   -------------------------------------------------------------------------- */
-.products-header-title-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
 }
 
 .products-count-badge {
@@ -2520,75 +1959,6 @@
 }
 
 @media (min-width: 1024px) {
-  .sector-carousel-controls {
-    display: flex;
-  }
-
-  .sector-chips-track {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    overflow-x: visible;
-    gap: 12px;
-    padding: 6px 0 16px 0;
-  }
-
-  .sector-chip {
-    min-height: 64px;
-  }
-}
-
-/* ==========================================================================
-   FEATURE: LOCATION CODE & QR CODE SCANNING (UC-001 - Plano A & Plano B)
-   ========================================================================== */
-
-/* Location Plate Pill in LocationStatus */
-.location-tag-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.location-plate-pill {
-  font-family: var(--font-label);
-  font-size: 10px;
-  font-weight: 800;
-  color: var(--primary-dark);
-  background-color: rgba(0, 107, 39, 0.1);
-  padding: 1px 6px;
-  border-radius: var(--radius-sm);
-  letter-spacing: 0.04em;
-}
-
-.location-card-buttons {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-
-.location-map-action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  flex: 1;
-  min-height: 38px;
-  padding: 8px 14px;
-  background-color: var(--primary);
-  border: 1px solid var(--primary);
-  border-radius: var(--radius-md);
-  color: var(--on-primary);
-  font-family: var(--font-label);
-  font-size: 13px;
-  font-weight: 600;
-  transition: all var(--transition-fast);
-  cursor: pointer;
-}
-
-.location-map-action-btn:active {
-  background-color: var(--primary-hover);
-  transform: scale(0.96);
 }
 
 /* Location Modal Container */
@@ -2818,12 +2188,6 @@
   color: var(--on-surface);
 }
 
-.plate-coords {
-  font-family: var(--font-label);
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
 .plate-check {
   font-family: var(--font-label);
   font-size: 11px;
@@ -2959,9 +2323,6 @@
 }
 
 @media (min-width: 640px) {
-  .location-card-buttons {
-    width: auto;
-  }
 
   .location-modal-container {
     border-radius: var(--radius-lg);
@@ -2974,291 +2335,10 @@
   }
 }
 
-/* ==========================================================================
-   FEATURE: PRODUCT DETAIL MODAL (UC-003)
-   ========================================================================== */
-
-.product-detail-modal-container {
-  background-color: var(--surface);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  width: 100%;
-  max-width: 560px;
-  max-height: 92vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--shadow-lg);
-  animation: slideUpMobile 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  padding-bottom: var(--safe-bottom);
-  overflow-y: auto;
-}
-
-.product-detail-header {
-  padding: 14px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--outline-variant);
-}
-
-.detail-sku-badge {
-  font-family: var(--font-label);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  background-color: var(--surface-container);
-  padding: 3px 8px;
-  border-radius: var(--radius-sm);
-}
-
-.product-detail-body {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  text-align: left;
-}
-
-.product-detail-visual {
-  height: 200px;
-  background: linear-gradient(180deg, #f7f9f7 0%, #ecefe9 100%);
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.product-detail-img {
-  max-width: 80%;
-  max-height: 80%;
-  object-fit: contain;
-}
-
-.detail-icon-fallback {
-  width: 80px;
-  height: 80px;
-  border-radius: var(--radius-full);
-  background-color: rgba(255, 255, 255, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.detail-icon-fallback span {
-  font-size: 44px;
-}
-
-.product-detail-sector-pill {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background-color: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(4px);
-  color: var(--on-surface-variant);
-  font-family: var(--font-label);
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--outline-variant);
-}
-
-.product-detail-main-info {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.product-detail-title {
-  font-size: 19px;
-  font-weight: 800;
-  color: var(--on-surface);
-  line-height: 1.3;
-}
-
-.product-detail-description {
-  font-size: 13.5px;
-  color: var(--on-surface-variant);
-  line-height: 1.5;
-}
-
-/* Location Card in Product Detail */
-.product-detail-location-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background-color: var(--primary-light);
-  border: 1.5px solid #9fe2ad;
-  border-radius: var(--radius-md);
-  padding: 12px 16px;
-}
-
-.detail-loc-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-full);
-  background-color: var(--primary);
-  color: var(--on-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.detail-loc-text {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.detail-loc-label {
-  font-family: var(--font-label);
-  font-size: 10.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--primary-dark);
-  letter-spacing: 0.04em;
-}
-
-.detail-loc-value {
-  font-family: var(--font-headline);
-  font-size: 14.5px;
-  color: var(--on-surface);
-}
-
-.detail-map-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background-color: var(--primary);
-  color: var(--on-primary);
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-label);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.detail-map-btn:active {
-  transform: scale(0.94);
-}
-
-/* Stock status in detail */
-.product-detail-stock-badge {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background-color: var(--surface-container-low);
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--radius-md);
-  font-family: var(--font-label);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--primary-dark);
-}
-
 .product-detail-stock-badge.out-of-stock {
   background-color: #fef2f2;
   border-color: #fca5a5;
   color: var(--error);
-}
-
-/* Specifications Table */
-.product-detail-attributes-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.detail-attributes-heading {
-  font-family: var(--font-label);
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-}
-
-.attributes-grid {
-  background-color: var(--surface-container-low);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--outline-variant);
-  overflow: hidden;
-}
-
-.attribute-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 14px;
-  font-size: 13px;
-  border-bottom: 1px solid var(--outline-variant);
-}
-
-.attribute-row:last-child {
-  border-bottom: none;
-}
-
-.attribute-key {
-  font-weight: 600;
-  color: var(--on-surface-variant);
-}
-
-.attribute-val {
-  font-weight: 700;
-  color: var(--on-surface);
-}
-
-/* Product Detail Footer */
-.product-detail-footer {
-  padding: 16px 20px;
-  border-top: 1px solid var(--outline-variant);
-  background-color: var(--surface);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.detail-price-box {
-  display: flex;
-  flex-direction: column;
-}
-
-.detail-price-label {
-  font-family: var(--font-label);
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.detail-price-value {
-  font-family: var(--font-headline);
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--primary-dark);
-}
-
-.detail-add-cart-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background-color: var(--primary);
-  color: var(--on-primary);
-  padding: 12px 20px;
-  border-radius: var(--radius-md);
-  font-family: var(--font-label);
-  font-size: 13.5px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  box-shadow: 0 2px 8px rgba(0, 107, 39, 0.3);
-}
-
-.detail-add-cart-btn:hover {
-  background-color: var(--primary-hover);
 }
 
 .detail-add-cart-btn.disabled {
@@ -3269,11 +2349,6 @@
 }
 
 @media (min-width: 640px) {
-  .product-detail-modal-container {
-    border-radius: var(--radius-lg);
-    max-width: 560px;
-    animation: scaleUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  }
 }
 
 /* ==========================================================================
@@ -4062,12 +3137,19 @@
   padding-bottom: calc(100px + var(--safe-bottom));
 }
 
+/* Barra grudada no topo da tela de catálogo.
+ *
+ * O fundo é o da PÁGINA, não `--surface`. Ela precisa ser opaca porque é sticky e o
+ * conteúdo rola por baixo — mas pintada de branco puro (#fff) sobre uma página #fafaf8,
+ * e sem raio de canto, ela virava um retângulo branco visível atrás da pílula de busca,
+ * que por sua vez é #f7f8f5. Três brancos diferentes empilhados, e o do meio aparecendo.
+ * Com o tom da página, a barra lê como página. */
 .search-page-top-bar {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
-  background-color: var(--surface);
+  background-color: var(--background);
   padding: 4px 0 10px 0;
   position: sticky;
   top: 60px;
@@ -4457,7 +3539,9 @@
   border-bottom: 1px solid var(--outline-variant);
   position: sticky;
   top: 60px;
-  background-color: var(--surface);
+  /* Mesmo caso da .search-page-top-bar: sticky precisa ser opaca, mas branco puro
+     sobre a página #fafaf8 desenha um retângulo. Ver o comentário de lá. */
+  background-color: var(--background);
   z-index: 30;
 }
 
@@ -4712,16 +3796,6 @@
 .product-page-map-action-btn:hover {
   background-color: var(--primary-light);
   border-color: var(--primary-dark);
-}
-
-.product-page-route-action-btn {
-  background-color: var(--primary);
-  border: none;
-  color: var(--on-primary);
-}
-
-.product-page-route-action-btn:hover {
-  background-color: var(--primary-hover);
 }
 
 /* Sections & Specifications Table */
@@ -6356,9 +5430,6 @@
 .fim-action-btn.secondary:hover {
   background-color: var(--surface-container-high);
 }
-
-
-
 
 
 /* ============================================================================

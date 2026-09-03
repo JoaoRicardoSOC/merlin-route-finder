@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Header from './components/Header'
 import LocationStatus from './components/LocationStatus'
 import SearchBar from './components/SearchBar'
@@ -25,8 +25,7 @@ import { SECTOR_METADATA, DEFAULT_SECTOR_META } from './constants/setores'
 import {
   obterOuCriarSessao,
   recentrarPosicao,
-  concluirSessao,
-  normalizarCodigo
+  concluirSessao
 } from './services/sessionService'
 
 import { pendencias } from './services/filaDeSincronizacao'
@@ -85,7 +84,6 @@ function App() {
   const [autoFocusSearch, setAutoFocusSearch] = useState(false)
   const [isGlidingSearch, setIsGlidingSearch] = useState(false)
 
-  // Data states
   const [secoes, setSecoes] = useState([])
   const [produtos, setProdutos] = useState([])
   const [facetas, setFacetas] = useState([])
@@ -144,11 +142,9 @@ function App() {
    */
   const rupturaEmVoo = useRef(false)
 
-  // Roteiro / Cart items state
   const [roteiroItems, setRoteiroItems] = useState([])
   const [isRoteiroDrawerOpen, setIsRoteiroDrawerOpen] = useState(false)
 
-  // Session & Location state (UC-001)
   const [session, setSession] = useState(null)
 
   /*
@@ -171,7 +167,6 @@ function App() {
    */
   const [currentLocation, setCurrentLocation] = useState(null)
 
-  // Drawer & Modals state
   const [isSectorsDrawerOpen, setIsSectorsDrawerOpen] = useState(false)
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false)
   const [isFacetModalOpen, setIsFacetModalOpen] = useState(false)
@@ -200,12 +195,11 @@ function App() {
     try {
       const params = new URLSearchParams(window.location.search)
       return params.get('ponto') || params.get('codigo') || params.get('plate') || null
-    } catch (e) {
+    } catch {
       return null
     }
   }
 
-  // 1. Initialize or Resume Session (UC-001) & Load Roteiro
   useEffect(() => {
     let isMounted = true
     async function initSession() {
@@ -249,7 +243,6 @@ function App() {
               : 'Não sabemos onde você está. Escaneie uma placa para o mapa mostrar sua posição.')
           }
 
-          // Load existing items in roteiro for this session
           const items = await consultarRoteiro(sess.id)
           if (isMounted) setRoteiroItems(items)
         }
@@ -262,7 +255,6 @@ function App() {
     return () => { isMounted = false }
   }, [])
 
-  // 2. Load sections from backend (ListarSecoesUseCase / SecaoResponse)
   useEffect(() => {
     let isMounted = true
     // Só a primeira carga arma o aviso: depois disso o servidor já está de pé.

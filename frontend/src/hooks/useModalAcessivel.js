@@ -1,32 +1,22 @@
 import { useEffect, useRef } from 'react'
 
 /**
- * Faz o modal cumprir o que ele já declara.
+ * Trava de foco e Escape para os modais.
  *
- * Os oito modais do app sempre trouxeram `role="dialog"` e `aria-modal="true"`. Esse atributo
- * diz à tecnologia assistiva: *ignore o resto da página, ela não existe agora*. O leitor de
- * tela obedece — mas o teclado não obedecia, porque nada prendia o foco. O Tab saía do modal e
- * entrava em botões que o leitor de tela tinha sido instruído a fingir que não estavam lá.
+ * `aria-modal="true"` manda o leitor de tela ignorar o resto da página, e os oito modais já
+ * traziam o atributo. O teclado não obedecia: o Tab saía do modal e entrava em botões que o
+ * leitor tinha sido instruído a fingir que não existiam. **Atributo sem trava é pior que
+ * atributo nenhum**, porque nenhuma ferramenta automática acusa — a marcação está formalmente
+ * correta. Ver D-83.
  *
- * Faltar o atributo seria um app sem suporte. Ter o atributo sem a trava é um app que mente
- * sobre o próprio estado — e é pior, porque nenhuma ferramenta automática acusa: a marcação
- * está formalmente correta. Este hook é a metade que faltava.
+ * Duas escolhas que não são óbvias no código:
  *
- * Três coisas, e nessa ordem:
- *
- * 1. **Ao abrir**, move o foco para o container. Ele recebe `tabindex="-1"` aqui mesmo, em vez
- *    de no JSX de cada modal, para que a correção caiba num arquivo só. Focar o container (e
- *    não o primeiro botão) faz o leitor de tela anunciar o `aria-label` do diálogo antes de
- *    qualquer controle — o cliente ouve *onde* chegou antes de ouvir *o que* pode fazer.
- * 2. **Enquanto aberto**, prende o Tab: do último volta ao primeiro, do primeiro com Shift
- *    volta ao último. E `Escape` fecha — não havia **um** tratador de teclado no projeto.
- * 3. **Ao fechar**, devolve o foco a quem abriu. Sem isso o foco volta para o começo da
- *    página, e quem navega por teclado precisa refazer todo o caminho.
- *
- * **A pilha existe por causa dos modais empilhados.** O detalhe do produto abre por cima da
- * gaveta do roteiro. Sem a pilha, os dois ouviriam o mesmo `Escape` no `document` e fechariam
- * juntos; `stopPropagation` não resolveria, porque ambos escutam no mesmo alvo. Só o modal do
- * topo responde.
+ * - **O foco vai para o container, não para o primeiro botão.** Assim o leitor anuncia o
+ *   rótulo do diálogo antes de qualquer controle: o cliente ouve *onde* chegou antes de ouvir
+ *   *o que* pode fazer.
+ * - **A pilha existe por causa dos modais empilhados.** O detalhe do produto abre por cima da
+ *   gaveta do roteiro; sem ela os dois ouviriam o mesmo `Escape` no `document` e fechariam
+ *   juntos. `stopPropagation` não resolveria, porque ambos escutam no mesmo alvo.
  *
  * @param {boolean} isOpen  se o modal está aberto
  * @param {Function} onClose  o que fazer no Escape

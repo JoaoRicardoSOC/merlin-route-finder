@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { fetchProdutoDetalhe } from '../services/catalogService'
 import { SECTOR_METADATA, DEFAULT_SECTOR_META } from '../constants/setores'
 import { formatPrice } from '../utils/format'
@@ -7,7 +7,6 @@ export default function ProductDetailPage({
   product,
   onBack,
   onAddToCart,
-  onNavigateToProduct,
   onViewOnMap
 }) {
   const [detailedProduct, setDetailedProduct] = useState(product || {})

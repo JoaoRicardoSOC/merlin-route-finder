@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { consultarHistoricoChat, enviarMensagemChat } from '../services/chatService'
 import { formatPrice } from '../utils/format'
 import useModalAcessivel from '../hooks/useModalAcessivel'
@@ -161,7 +161,7 @@ export default function AIChatModal({
       if (response) {
         setMessages(prev => [...prev, response])
       }
-    } catch (e) {
+    } catch {
       setMessages(prev => [
         ...prev,
         {

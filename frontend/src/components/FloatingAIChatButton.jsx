@@ -1,6 +1,5 @@
-import React from 'react'
 
-export default function FloatingAIChatButton({ onClick, hasUnread = false, isProductPage = false }) {
+export default function FloatingAIChatButton({ onClick, isProductPage = false }) {
   return (
     <button
       type="button"

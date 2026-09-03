@@ -1,15 +1,12 @@
-// A planta tracada da unidade Interlagos, em unidades da grade 0-100.
+// A planta tracada da unidade Interlagos: 21 secoes, 2 contornos, 212 gondolas.
 //
-// De onde vem: a planta tecnica que a Leroy compartilhou no kickoff, decalcada
-// vertice a vertice - 21 secoes, 2 contornos e 212 gondolas. Nao e aproximacao
-// nem geracao por formula, e por isso as secoes tem 4, 6 ou 8 lados, as gondolas
-// tem espessuras diferentes e a ocupacao varia de 14% a 48% por secao.
+// Decalcada vertice a vertice sobre a planta tecnica do kickoff -- nao e aproximacao nem
+// geracao por formula. Ver D-89.
 //
-// Por que a grade e nao pixel: e a MESMA grade 0-100 do backend (PlantaDaLoja).
-// Guardar em pixel exigiria uma traducao no meio, e e no meio que o erro entra.
+// Em unidades da GRADE 0-100, a mesma do backend (PlantaDaLoja): guardar em pixel exigiria
+// uma traducao no meio, e e no meio que o erro entra.
 //
-// O que este arquivo NAO faz: nao decide cor, icone nem rotulo. Isso e do
-// mapService. Aqui e so geometria.
+// So geometria. Cor, icone e rotulo sao do mapService.
 
 export const EXTENSAO = { x0: 1.2, y0: 2.7, x1: 91.8, y1: 58.5 }
 export const TELA = { largura: 950, altura: 616, margem: 40, escala: 9.6 }

@@ -1,20 +1,9 @@
-// Mapa da loja Interlagos: geometria traçada + o que cada bloco significa.
+// Mapa da loja Interlagos: a geometria traçada ganha nome, cor, ícone e o vínculo com a
+// seção do catálogo, e é convertida uma vez só para as coordenadas do desenho.
 //
-// A geometria vem de `plantaInterlagos.js`, decalcada sobre a planta técnica do
-// kickoff. Aqui ela ganha nome, cor, ícone e o vínculo com a seção do catálogo,
-// e é convertida uma única vez para as coordenadas do desenho.
-//
-// O que saiu daqui, e por quê:
-//
-// - Os RETÂNGULOS INVENTADOS. Eram 18 blocos com posição e tamanho arbitrários,
-//   espalhados num contorno de doze vértices que não era a loja. Viraram 21
-//   polígonos traçados, com 212 gôndolas.
-// - Os CÓDIGOS DE CORREDOR ("Corredor B01 - Tintas"). Nunca soubemos os códigos
-//   reais da unidade. O mapa os afirmava com a mesma confiança de um dado
-//   verificado, e ninguém conseguiria conferi-los na loja.
-// - `getStoreMapData` e `gridToCanvas`. Código morto: nenhum componente os
-//   chamava. A primeira buscava /api/v1/mapa e descartava `data.blocos`,
-//   devolvendo os retângulos inventados — mas nunca chegou a executar.
+// Saíram daqui os 18 retângulos inventados e os códigos de corredor ("Corredor B01 -
+// Tintas") — **nunca soubemos os códigos reais da unidade**, e o mapa os afirmava com a
+// confiança de um dado verificado. Ver D-89.
 
 import { SECOES, CONTORNOS, TELA, gradeParaTela } from './plantaInterlagos'
 
@@ -24,11 +13,10 @@ export const CANVAS = TELA
 const paraCadeia = pontos => pontos.map(p => gradeParaTela(p).join(',')).join(' ')
 
 /**
- * Uma gôndola é uma barra: eixo (a → b) mais espessura. Vira os quatro cantos.
+ * Uma gôndola é uma barra: eixo (a → b) mais espessura, virando os quatro cantos.
  *
- * O cálculo é feito na grade e só então convertido, e não o contrário: converter
- * ponta e espessura em separado deformaria a barra, porque a escala não é a mesma
- * nos dois eixos.
+ * O cálculo é feito na grade e só então convertido — converter ponta e espessura em
+ * separado deformaria a barra, porque a escala não é a mesma nos dois eixos.
  */
 function barraParaPoligono({ a, b, esp }) {
   const dx = b[0] - a[0], dy = b[1] - a[1]
@@ -62,12 +50,10 @@ export const STORE_SECTORS = SECOES.map(s => {
     descricao: s.descricao,
     pontos: paraCadeia(s.pontos),
     gondolas: s.gondolas.map(barraParaPoligono),
-    // O rótulo vai no centroide, não no meio da caixa: numa seção em L o meio da
-    // caixa cai fora da própria seção. Madeiras e Cerâmica são exatamente esse caso.
+    // No centroide, não no meio da caixa: numa seção em L o meio da caixa cai fora da
+    // própria seção. Madeiras e Cerâmica são exatamente esse caso.
     rotuloX: cx,
     rotuloY: cy,
-    // Caixa envolvente, para quem precisa de um ponto e não da forma — pino de
-    // roteiro, foco do zoom, centro do painel lateral.
     x: Math.min(...xs),
     y: Math.min(...ys),
     w: Math.max(...xs) - Math.min(...xs),
@@ -78,12 +64,10 @@ export const STORE_SECTORS = SECOES.map(s => {
 const acharSetor = id => STORE_SECTORS.find(s => s.id === id)
 
 /**
- * Serviços marcados por ícone. Só os três que foram traçados.
- *
- * Não há banheiro nem cafeteria aqui de propósito: a planta do kickoff não os
- * identifica, e a versão anterior os afirmava em coordenadas inventadas. "Sanitários"
- * na planta é o departamento de louças e metais, que é outra coisa — mandar um
- * cliente ao banheiro por causa dessa confusão seria pior que não oferecer.
+ * Sem banheiro nem cafeteria de propósito: a planta do kickoff não os identifica, e a versão
+ * anterior os afirmava em coordenadas inventadas. "Sanitários" na planta é o departamento de
+ * louças e metais — mandar um cliente ao banheiro por essa confusão seria pior que não
+ * oferecer.
  */
 export const STORE_AMENITIES = ['caixas', 'servicos', 'entrada']
   .map(acharSetor)
@@ -99,10 +83,7 @@ export const STORE_AMENITIES = ['caixas', 'servicos', 'entrada']
     y: s.rotuloY,
   }))
 
-/**
- * As placas de QR. Os seis códigos são fixos no backend, que os valida — mudar
- * qualquer um quebraria a entrada por `?ponto=`. Só a posição na tela mudou.
- */
+/** Os seis códigos são fixos no backend, que os valida: mudar um quebra a entrada por `?ponto=`. */
 const PLACAS = [
   { codigo: 'ENT-01', nome: 'Entrada Principal', setor: 'entrada' },
   { codigo: 'TIN-02', nome: 'Corredor de Tintas', setor: 'tintas' },
@@ -132,17 +113,15 @@ function comparavel(texto) {
 }
 
 /**
- * Encontra o bloco do mapa onde o produto está, ou null quando não sabe.
+ * O bloco onde o produto está, ou null quando não sabe.
  *
- * <b>Devolver null é a parte que importa.</b> Antes esta função devolvia STORE_SECTORS[0] —
- * Pintura — com a mesma confiança com que devolveria o certo, e quem pedia rota para um sifão
- * era mandado ao corredor de tintas. Não saber precisa parecer não saber.
+ * <b>Devolver null é a parte que importa.</b> Antes devolvia STORE_SECTORS[0] — Pintura — com
+ * a mesma confiança do acerto, e quem pedia rota para um sifão ia ao corredor de tintas.
  *
- * <b>A ordem das tentativas passou a importar.</b> Antes tudo estava num `find` só, com `||`
- * entre os critérios: vencia o primeiro SETOR da lista que satisfizesse qualquer critério, e
- * não a melhor correspondência. Com os blocos traçados isso virou risco concreto — "Jardim" e
- * "Jardim externo" agora convivem, e um produto de Jardim casaria por substring com o externo
- * dependendo só da ordem do arranjo. Agora o exato vence o parcial, sempre.
+ * <b>A ordem das tentativas importa.</b> Tudo estava num `find` só com `||`: vencia o primeiro
+ * setor que satisfizesse qualquer critério, não a melhor correspondência. Com "Jardim" e
+ * "Jardim externo" convivendo, um produto de Jardim casaria por substring com o externo
+ * dependendo só do arranjo. O exato vence o parcial, sempre.
  */
 export function findSectorForProduct(product) {
   if (!product) return null

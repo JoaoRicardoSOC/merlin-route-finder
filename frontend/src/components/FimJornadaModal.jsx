@@ -1,4 +1,3 @@
-import React, { useState } from 'react'
 import { formatPrice } from '../utils/format'
 import useModalAcessivel from '../hooks/useModalAcessivel'
 

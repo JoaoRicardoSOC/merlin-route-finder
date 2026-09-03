@@ -3,28 +3,15 @@ import { useEffect, useState } from 'react'
 /**
  * A faixa que aparece enquanto o servidor publicado acorda.
  *
- * <b>Por que existe um componente só para isto.</b> O aviso conta o tempo, e contar exige
- * um render por segundo. Deixar esse relógio no `App` faria o aplicativo inteiro se
- * redesenhar de segundo em segundo durante a espera — que é justamente o momento em que ele
- * já está com menos fôlego.
+ * <b>Componente próprio</b> porque contar exige um render por segundo, e esse relógio no
+ * `App` redesenharia o aplicativo inteiro a cada segundo — no momento em que ele já está com
+ * menos fôlego.
  *
- * <b>Por que contar o tempo em vez de prometer um prazo.</b> O texto anterior dizia
- * <i>"a primeira abertura do dia leva até dois minutos"</i>. Era verdade quando foi medido —
- * 106 s e 109 s em 30/08 — mas <b>"até" é um teto</b>, e o teto foi rompido. A partida a frio,
- * medida contra o ambiente publicado:
- *
- * <pre>
- *   25/08    176 s
- *   30/08    106 s e 109 s
- *   02/09    183 s   &lt;- 63 s além do teto prometido
- * </pre>
- *
- * Um número fixo numa tela envelhece sozinho e vira mentira sem que ninguém tenha mudado
- * uma linha.
- *
- * Um cronômetro não envelhece. <b>"Esperando há 2:14" é verdade no instante em que é lido</b>,
- * qualquer que seja o comportamento do provedor — e ainda resolve o problema real de quem
- * espera, que não é saber o prazo: é saber que o aplicativo não travou.
+ * <b>Conta o tempo em vez de prometer prazo.</b> O texto anterior dizia "leva até dois
+ * minutos" — um teto, estourado nas medições de 176 s, 180 s e 183 s. Número fixo em tela
+ * envelhece sozinho e vira mentira sem ninguém mexer numa linha; um cronômetro não envelhece.
+ * E resolve o problema que a pessoa de fato tem, que não é saber o prazo: é saber que o
+ * aplicativo não travou. Ver quebras-de-fluxo.md.
  */
 export default function AvisoAcordando() {
   const [segundos, setSegundos] = useState(0)
