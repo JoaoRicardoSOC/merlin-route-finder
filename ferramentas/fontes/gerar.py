@@ -14,8 +14,9 @@ As escolhas, e o porque de cada uma:
   pedidos ao Google e caiam no vizinho mais proximo. 53 KB contra 265 KB.
 - SO latin e latin-ext. O app e em portugues; os recortes cyrillic e vietnamese nunca
   seriam pedidos, e o unicode-range ja impedia o download deles.
-- MATERIAL SYMBOLS RECORTADO nos icones que o app de fato usa: ~19 KB contra 1.103 KB
-  da fonte variavel completa.
+- MATERIAL SYMBOLS RECORTADO nos icones que o app de fato usa, contra 1.103 KB da fonte
+  variavel completa. O tamanho do recorte muda quando um icone entra ou sai, entao o
+  script imprime o valor a cada geracao em vez de fixa-lo aqui.
 - font-display: block NO ICONE, swap no texto. Com swap o navegador desenha a LIGADURA
   enquanto a fonte nao chegou, e o cliente le "search", "home", "qr_code_scanner"
   escritos na tela. Icone nao tem texto de reserva que preste.

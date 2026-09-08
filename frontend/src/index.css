@@ -18,9 +18,11 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-/* Material Symbols, subsetado nos 61 ícones que o app usa. A fonte completa tem
-   1.103 KB; esta tem 19. Reduzir aqui exige acrescentar o ícone novo à lista em
-   ferramentas/fontes/README.md e regerar — e é por isso que a lista está documentada. */
+/* Material Symbols, recortado nos ícones que o app usa. A fonte completa tem 1.103 KB.
+   Ícone fora do recorte NÃO DESENHA e não dá erro — foi assim que 13 ícones de seção
+   sumiram do mapa e viraram palavra escrita. Ao acrescentar um, rode
+   `python ferramentas/fontes/gerar.py`, que varre o código e regera o recorte.
+   Não há número aqui de propósito: número em comentário envelhece sozinho. */
 @font-face {
   font-family: 'Material Symbols Outlined';
   font-style: normal;
