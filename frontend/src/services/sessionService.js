@@ -187,8 +187,19 @@ export async function obterOuCriarSessao(codigoUrl = null) {
     }
   }
 
-  // Default new session (e.g. Entrance ENT-01 by default or blank)
-  return await inicializarSessao('ENT-01')
+  /*
+   * Sessão nova SEM posição, e não na entrada.
+   *
+   * Aqui havia `inicializarSessao('ENT-01')`, que afirmava ao backend que o cliente estava na
+   * entrada sem nenhuma placa ter sido lida — e o chip repetia a afirmação. É o mesmo defeito
+   * que a O-19 corrigiu em 30/08 no estado inicial do chip; esta linha ficou para trás e o
+   * desfazia, porque a sessão chegava com posição preenchida logo em seguida.
+   *
+   * `null` faz o POST ir com corpo vazio, e o backend cria a sessão com `posicaoAtual` nula de
+   * propósito (D-54). O `App` já sabia tratar isso: o ramo do `else` que diz "não sabemos onde
+   * você está" existia e nunca era alcançado.
+   */
+  return await inicializarSessao(null)
 }
 
 /**

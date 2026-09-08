@@ -112,6 +112,31 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 > | Entrada manual com `tin02` | *"Posição atualizada para: Corredor de Tintas"* — a tolerância de grafia da D-54 funciona |
 >
 > **O título anterior — *"é uma tela que ainda não existe"* — estava desatualizado desde 30/08** e induziu a priorizar este item como se houvesse código a fazer. Não há.
+
+> [!CAUTION]
+> **A correção de 30/08 pegou metade, e a outra metade sobreviveu até 08/09.**
+>
+> O QA completo do ambiente publicado encontrou o chip afirmando *"Você está em — Placa ENT01 —
+> Entrada da loja"* na **primeira visita sem `?ponto=` e sem sessão guardada**. Reproduzido três
+> vezes.
+>
+> **Por que a correção anterior não bastou.** Ela mudou o estado inicial do chip em `App.jsx`
+> para nulo — e isso estava certo. Mas `sessionService.js` chamava `inicializarSessao('ENT-01')`
+> quando não havia código, então a sessão voltava do backend **com posição preenchida** logo em
+> seguida e o chip a exibia. O estado inicial honesto durava alguns milissegundos.
+>
+> **O que denuncia a assimetria:** com código **inválido** (`ZZZ-99`) o app sempre foi honesto —
+> o chip diz *"Ainda não sabemos onde você está"*. Só o caminho **sem parâmetro nenhum** mentia,
+> que é justamente o estado de quem abre o link pela primeira vez.
+>
+> **Corrigido em 08/09** trocando o `'ENT-01'` fixo por `null`. O backend já fazia o certo:
+> `POST /sessoes` com corpo vazio devolve `posicaoAtual` nula, como a
+> [D-54](decisoes-tecnicas.md#d-54-a-entrada-aceita-o-código-da-placa-num-campo-só-e-código-desconhecido-não-recusa-a-sessão)
+> prevê. E o `App` **já sabia tratar**: o ramo que diz *"Não sabemos onde você está. Escaneie uma
+> placa…"* existia e nunca era alcançado — era código morto criado pela própria linha errada.
+>
+> **A lição, que vale além deste item:** corrigir o estado inicial de uma tela não corrige o dado
+> que chega depois. Uma verificação feita nos primeiros instantes da carga aprova as duas.
 >
 > **Duas armadilhas de verificação, registradas porque custaram duas conclusões erradas:**
 >
