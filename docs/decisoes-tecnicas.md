@@ -57,6 +57,7 @@
 - [D-89. A planta é decalcada da loja real, não gerada por fórmula](#d-89-a-planta-é-decalcada-da-loja-real-não-gerada-por-fórmula)
 - [D-90. A loja são dois corpos: o galpão fechado e o pátio coberto](#d-90-a-loja-são-dois-corpos-o-galpão-fechado-e-o-pátio-coberto)
 - [D-91. Departamento sem gôndola traçada fica vazio, e o vazio é a resposta](#d-91-departamento-sem-gôndola-traçada-fica-vazio-e-o-vazio-é-a-resposta)
+- [D-92. Quem sabe o que a IA citou é o backend, não a tela](#d-92-quem-sabe-o-que-a-ia-citou-é-o-backend-não-a-tela)
 
 **Persistência**
 - [D-10. Entidades JPA espelho, separadas das de domínio](#d-10-entidades-jpa-espelho-separadas-das-de-domínio)
@@ -2577,6 +2578,60 @@ reconhecidamente aproximado — e as bancadas de traçado ficam no repositório 
 completá-los seja possível. Ver [O-39](observacoes.md).
 
 **Onde no código.** `plantaInterlagos.js` (comentário nas quatro seções vazias).
+
+---
+
+### D-92. Quem sabe o que a IA citou é o backend, não a tela
+
+**Contexto.** A [D-76](#d-76-o-cartão-de-produto-no-chat-exige-que-a-ia-tenha-escrito-o-nome) endureceu
+a regra do cartão de produto no chat: só aparece se o nome completo ou o SKU estiver escrito na
+resposta. Endureceu certo — antes bastavam duas palavras batendo, e o cartão era palpite nosso
+exibido como escolha da IA.
+
+**O efeito colateral, medido.** Com a regra estrita, **nenhum cartão aparecia**. A resposta real
+do Gemini no ambiente publicado nomeava produtos genericamente — *"tinta acrílica"*, *"rolo de
+lã"* —, e nenhum nome batia com o catálogo. A demonstração da IA, que é um dos eixos de
+avaliação do desafio, parecia mais fraca do que é.
+
+**A saída óbvia era afrouxar a regra. Não é saída** — seria voltar ao palpite com outra roupa.
+
+**A decisão: mover a pergunta de lugar.** A tela comparava o texto da resposta com o **catálogo
+inteiro**, sem saber o que a IA tinha chegado a ver. O backend sabe: ele executa a ferramenta de
+busca, então conhece exatamente os produtos que o assistente teve diante de si naquela pergunta.
+
+`ChatMensagemResponse` passa a trazer `produtosRecomendados`. E o conjunto de candidatos é o que
+a ferramenta devolveu — não o catálogo.
+
+**O rigor não mudou; o conjunto mudou.** Continua valendo nome completo ou SKU. O que era palpite
+contra 29 produtos virou verificação contra os 8 que o assistente viu. Reconhecer *"Lixa Grão
+120"* numa lista de oito que sabemos que ele leu é uma afirmação verificável.
+
+**Não é "o que a busca encontrou".** A ferramenta pode devolver oito e a resposta mencionar dois.
+Devolver os oito penduraria cartão de produto que o assistente nunca recomendou — a mesma doença,
+no lugar novo.
+
+**Duas coisas menores que o conserto exigiu.**
+
+- **O SKU passou a viajar para o modelo.** A ferramenta descrevia nome, preço, disponibilidade e
+  corredor. Sem o SKU, o assistente não tinha como citar um produto sem ambiguidade.
+- **A instrução de sistema pede o nome exato**, explicando *por quê*: nome completo vira cartão
+  com foto e preço, nome genérico não vira, e o cliente fica sem o atalho para adicionar à lista.
+  A regra do backend não afrouxa para compensar — é a instrução que torna a regra alcançável.
+
+**A comparação local continua na tela**, como reserva, para as mensagens que já estão no
+histórico da sessão e vieram antes desta mudança.
+
+**Consequências.**
+
+- Lista vazia continua sendo resposta legítima: se o assistente responder sem nomear nada por
+  extenso, nenhum cartão aparece. Há teste para isso, com a resposta real medida em 30/08.
+- O contrato OpenAPI mudou (`ChatMensagem` ganhou um campo de array). É acréscimo, então
+  consumidor antigo não quebra.
+- **Depende do modelo obedecer à instrução.** Se ele voltar a generalizar, os cartões somem de
+  novo — e é o comportamento certo. O que não acontece é o sistema inventar para preencher.
+
+**Onde no código.** `ConversarComAssistenteUseCase` (acumula os vistos, casa com a resposta),
+`ChatMensagemResponse`, `InstrucaoDoAssistente` (regra 4), `AIChatModal.jsx`, `openapi.yaml`.
 
 ---
 

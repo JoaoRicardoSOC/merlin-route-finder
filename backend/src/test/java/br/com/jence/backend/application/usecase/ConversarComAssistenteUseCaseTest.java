@@ -1,6 +1,7 @@
 package br.com.jence.backend.application.usecase;
 
 import br.com.jence.backend.application.dto.ChatMensagemResponse;
+import br.com.jence.backend.application.dto.ProdutoResponse;
 import br.com.jence.backend.domain.entity.*;
 import br.com.jence.backend.domain.exception.AssistenteIAIndisponivelException;
 import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
@@ -225,5 +226,118 @@ class ConversarComAssistenteUseCaseTest {
 
         assertThatThrownBy(() -> useCase.executar(sessaoId, "oi"))
                 .isInstanceOf(RecursoNaoEncontradoException.class);
+    }
+
+    // ---------------------------------------------------------------- O-31: os citados
+
+    /**
+     * Monta o cenario da O-31: a ferramenta devolve tres produtos e o assistente responde.
+     * O texto da resposta e o parametro -- e o que decide quais viram cartao.
+     */
+    private ChatMensagemResponse comTresProdutosERespostaDe(String resposta) {
+        comSessaoAtiva();
+        aoSalvarDevolverAMensagem();
+        when(chatMensagemRepository.buscarHistorico(sessaoId)).thenReturn(List.of());
+
+        PontoMapa tintas = new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 32, 10);
+        Produto tinta = new Produto(UUID.randomUUID(), "SKU-TIN-001",
+                "Tinta Acrílica Premium Branco Neve 18L", new BigDecimal("289.90"), 12, tintas);
+        Produto rolo = new Produto(UUID.randomUUID(), "SKU-TIN-002",
+                "Rolo de Lã 23cm com Cabo", new BigDecimal("34.90"), 40, tintas);
+        Produto lixa = new Produto(UUID.randomUUID(), "SKU-TIN-003",
+                "Lixa Grão 120", new BigDecimal("3.50"), 100, tintas);
+        when(produtoRepository.buscarPorTermo(eq("tinta"), anyInt(), anyInt()))
+                .thenReturn(new Pagina<>(List.of(tinta, rolo, lixa), 0, 8, 3L, 1));
+
+        when(assistenteIA.conversar(any(), any(), any(), any())).thenAnswer(invocacao -> {
+            ExecutorDeFerramenta executor = invocacao.getArgument(3);
+            executor.executar("buscar_produtos", Map.of("termos", "tinta"));
+            return resposta;
+        });
+
+        return useCase.executar(sessaoId, "o que preciso para pintar?");
+    }
+
+    @Test
+    @DisplayName("devolve os produtos que o assistente nomeou por extenso, e so eles")
+    void devolveApenasOsCitados() {
+        ChatMensagemResponse r = comTresProdutosERespostaDe(
+                "Voce vai precisar de Tinta Acrílica Premium Branco Neve 18L e de Lixa Grão 120. "
+                        + "Ambos ficam no corredor Tintas.");
+
+        // A ferramenta devolveu tres; a resposta nomeou dois. So os dois viram cartao --
+        // devolver os tres penduraria cartao de produto que o assistente nao recomendou.
+        assertThat(r.produtosRecomendados()).extracting(ProdutoResponse::sku)
+                .containsExactlyInAnyOrder("SKU-TIN-001", "SKU-TIN-003");
+    }
+
+    @Test
+    @DisplayName("reconhece o produto citado pelo SKU")
+    void reconhecePorSku() {
+        ChatMensagemResponse r = comTresProdutosERespostaDe(
+                "Leve o SKU-TIN-002, que da conta do servico.");
+
+        assertThat(r.produtosRecomendados()).extracting(ProdutoResponse::sku)
+                .containsExactly("SKU-TIN-002");
+    }
+
+    @Test
+    @DisplayName("nome generico nao vira cartao: a regra da D-76 continua estrita")
+    void nomeGenericoNaoViraCartao() {
+        // Esta e a resposta que a O-31 mediu no ambiente publicado: ancorada e correta, mas
+        // generica. Afrouxar a regra para faze-la virar cartao seria voltar ao palpite.
+        ChatMensagemResponse r = comTresProdutosERespostaDe(
+                "Para pintar uma parede voce precisa de tinta acrilica e lixa, "
+                        + "encontradas no corredor de Tintas.");
+
+        assertThat(r.produtosRecomendados()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("o acento nao separa o par: 'Lixa Grao 120' casa com 'Lixa Grão 120'")
+    void acentoNaoSeparaOPar() {
+        ChatMensagemResponse r = comTresProdutosERespostaDe(
+                "Pegue uma Lixa Grao 120 no corredor Tintas.");
+
+        assertThat(r.produtosRecomendados()).extracting(ProdutoResponse::sku)
+                .containsExactly("SKU-TIN-003");
+    }
+
+    @Test
+    @DisplayName("sem busca no catalogo, nenhum cartao -- nao ha candidato")
+    void semBuscaNenhumCartao() {
+        comSessaoAtiva();
+        aoSalvarDevolverAMensagem();
+        when(chatMensagemRepository.buscarHistorico(sessaoId)).thenReturn(List.of());
+        when(assistenteIA.conversar(any(), any(), any(), any()))
+                .thenReturn("Posso ajudar com o seu projeto de pintura?");
+
+        assertThat(useCase.executar(sessaoId, "oi").produtosRecomendados()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("o SKU viaja para o assistente: sem ele, ele nao tem como citar sem ambiguidade")
+    void aFerramentaMandaOSku() {
+        comSessaoAtiva();
+        aoSalvarDevolverAMensagem();
+        when(chatMensagemRepository.buscarHistorico(sessaoId)).thenReturn(List.of());
+
+        PontoMapa tintas = new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 32, 10);
+        when(produtoRepository.buscarPorTermo(eq("tinta"), anyInt(), anyInt()))
+                .thenReturn(new Pagina<>(List.of(new Produto(UUID.randomUUID(), "SKU-TIN-001",
+                        "Tinta Acrilica 18L", new BigDecimal("289.90"), 12, tintas)), 0, 8, 1L, 1));
+
+        when(assistenteIA.conversar(any(), any(), any(), any())).thenAnswer(invocacao -> {
+            ExecutorDeFerramenta executor = invocacao.getArgument(3);
+            Map<String, Object> resultado = executor.executar("buscar_produtos", Map.of("termos", "tinta"));
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> produtos = (List<Map<String, Object>>) resultado.get("produtos");
+            assertThat(produtos.get(0)).containsEntry("sku", "SKU-TIN-001");
+
+            return "ok";
+        });
+
+        useCase.executar(sessaoId, "quero tinta");
     }
 }

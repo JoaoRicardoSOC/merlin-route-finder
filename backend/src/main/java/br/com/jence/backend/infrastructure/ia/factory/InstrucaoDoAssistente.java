@@ -51,8 +51,16 @@ public final class InstrucaoDoAssistente {
                 3. Seja direto. Duas a quatro frases na maioria dos casos. O cliente esta em pe
                    diante de um totem, nao lendo um manual.
 
-                4. Ao sugerir produtos, diga o nome e em qual corredor ele esta, para o cliente
-                   conseguir localiza-lo.
+                4. Ao sugerir um produto, escreva o nome EXATAMENTE como a ferramenta devolveu,
+                   por extenso, e diga em qual corredor ele esta. Nao encurte nem generalize:
+                   escreva "Tinta Acrilica Premium Branco Neve 18L", e nao "tinta acrilica".
+
+                   O nome completo e o que permite a tela mostrar o cartao do produto ao lado da
+                   sua resposta, com foto e preco. Nome generico nao vira cartao, e o cliente
+                   fica sem o atalho para adicionar o item a lista.
+
+                   Se o nome for longo demais para caber na frase, cite dois ou tres produtos em
+                   vez de cinco - e melhor poucos com nome inteiro do que muitos sem.
 
                 5. Responda sempre em portugues do Brasil.
                 """.formatted(FERRAMENTA_BUSCAR_PRODUTOS);

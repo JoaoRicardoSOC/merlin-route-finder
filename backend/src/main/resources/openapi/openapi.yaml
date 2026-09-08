@@ -878,6 +878,15 @@ components:
           $ref: "#/components/schemas/Remetente"
         conteudo:
           type: string
+        produtosRecomendados:
+          type: array
+          description: >
+            Os produtos que o assistente citou por nome completo ou SKU nesta resposta.
+            Nao e o resultado da busca: a ferramenta pode devolver oito produtos e a
+            resposta mencionar dois. Lista vazia e resposta legitima, e significa que o
+            assistente respondeu sem nomear produto por extenso.
+          items:
+            $ref: "#/components/schemas/Produto"
         enviadoEm:
           type: string
           format: date-time

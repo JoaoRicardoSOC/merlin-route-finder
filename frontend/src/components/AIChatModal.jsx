@@ -111,17 +111,18 @@ export default function AIChatModal({
   /*
    * Os produtos que o assistente citou, para mostrar o cartao de cada um embaixo da resposta.
    *
-   * A regra e estrita de proposito: so entra o produto cujo nome completo ou SKU aparece
-   * escrito na resposta. Antes bastavam duas palavras de quatro letras baterem, e isso
-   * pendurava cartoes que a IA nunca recomendou - o backend nao devolve campo de recomendacao,
-   * entao todo cartao aqui era palpite nosso exibido como escolha dela. Com a regra estrita,
-   * mostrar o cartao passa a ser afirmacao verdadeira: o assistente escreveu aquele nome.
+   * QUEM MANDA E O BACKEND. Ele sabe o que a ferramenta devolveu naquela pergunta, entao
+   * reconhecer o nome no texto la e verificacao; aqui seria palpite contra o catalogo inteiro,
+   * sem saber o que a IA chegou a ver. Ver D-92.
    *
-   * Se a resposta nao nomear nenhum produto por extenso, o certo e nao mostrar cartao nenhum.
-   * Nao afrouxar a regra para faze-los aparecer.
+   * A comparacao local continua como reserva, para a mensagem que veio antes desta mudanca e
+   * ainda esta no historico da sessao. Ela mantem a regra estrita da D-76 -- nome completo ou
+   * SKU --, porque afrouxar traria de volta o cartao que a IA nunca recomendou.
+   *
+   * Se a resposta nao nomear nenhum produto por extenso, nenhum cartao aparece. E resposta
+   * legitima, nao falha.
    */
   const extractCitedProducts = (msg) => {
-    // Gancho para o dia em que o backend disser quais produtos citou. Hoje nada preenche.
     if (msg.produtosRecomendados && msg.produtosRecomendados.length > 0) {
       return msg.produtosRecomendados
     }

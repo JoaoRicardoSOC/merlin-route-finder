@@ -48,7 +48,7 @@ class ChatControllerTest {
 
     private ChatMensagemResponse mensagem(Remetente remetente, String conteudo) {
         return new ChatMensagemResponse(UUID.randomUUID(), sessaoId, remetente, conteudo,
-                LocalDateTime.now());
+                LocalDateTime.now(), java.util.List.of());
     }
 
     private MockHttpServletRequestBuilder enviar(String corpo) {

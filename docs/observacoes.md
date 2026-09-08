@@ -25,6 +25,7 @@
 | [O-35](#o-35-a-afinidade-empata-quando-muitos-produtos-dividem-o-tipo-e-o-desempate-é-alfabético) | Afinidade empata e desempata por ordem alfabética | Backend, depois do prazo | Média |
 | [O-36](#o-36-a-suíte-padrão-não-roda-os-testes-de-integração-e-isso-já-deixou-passar-oito-falhas) | A suíte padrão não roda os testes de integração | Time | **Alta** |
 | [O-37](#o-37-quatro-famílias-tipográficas-seguram-a-primeira-pintura-por-quase-nove-segundos) | Quatro fontes seguram a primeira pintura | Frontend e time | Média |
+| [O-31](#o-31-o-assistente-não-nomeia-produtos-por-extenso-e-por-isso-nenhum-cartão-aparece--resolvida) | ~~Nenhum cartão de produto aparece no chat~~ — resolvida | — | — |
 | [O-38](#o-38-a-planta-do-backend-e-a-do-frontend-discordam-e-hoje-ninguém-percebe) | Duas geometrias da mesma loja, e só uma é usada | Backend | Baixa hoje |
 | [O-39](#o-39-materiais-de-construção-e-caixas-ainda-são-desenhados-por-fórmula) | Duas seções ainda desenhadas por fórmula | Frontend | Baixa |
 | [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
@@ -553,7 +554,27 @@ O que existe no lugar de proteção: marcação explícita como `[Demonstracao]`
 
 ---
 
-### O-31. O assistente não nomeia produtos por extenso, e por isso nenhum cartão aparece
+### O-31. ~~O assistente não nomeia produtos por extenso, e por isso nenhum cartão aparece~~ — resolvida
+
+> [!NOTE]
+> **Resolvida em 03/09, e por um caminho diferente do que esta observação propunha.**
+>
+> As duas saídas listadas aqui eram *deixar como está* ou *pedir ao assistente que cite pelo nome
+> completo*. A segunda foi feita — mas sozinha ela seria frágil: dependeria inteiramente de o
+> modelo obedecer, e a tela continuaria adivinhando contra o catálogo inteiro.
+>
+> **O que se fez foi mover a pergunta de lugar.** O backend executa a ferramenta de busca, então
+> sabe exatamente quais produtos o assistente viu naquela pergunta. `ChatMensagemResponse` passa a
+> trazer `produtosRecomendados`, e o conjunto de candidatos é o que a ferramenta devolveu — não o
+> catálogo. O rigor da [D-76](decisoes-tecnicas.md#d-76-o-cartão-de-produto-no-chat-exige-que-a-ia-tenha-escrito-o-nome)
+> continua: nome completo ou SKU.
+>
+> Era o caminho que a própria D-76 tinha deixado apontado: *"o gancho para o backend fica […] é
+> por ali que o caso correto entra"*.
+>
+> Ver [D-92](decisoes-tecnicas.md#d-92-quem-sabe-o-que-a-ia-citou-é-o-backend-não-a-tela). Seis
+> testes novos, incluindo o de que a resposta genérica medida em 30/08 continua **não** gerando
+> cartão.
 
 **O quê.** Uma decisão em aberto para o time, não um defeito. O chat pode mostrar cartões dos produtos que o assistente citou, mas na prática **nenhum aparece** — e isso agora está medido, não suposto.
 
