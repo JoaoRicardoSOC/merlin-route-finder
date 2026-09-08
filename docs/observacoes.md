@@ -28,6 +28,7 @@
 | [O-31](#o-31-o-assistente-não-nomeia-produtos-por-extenso-e-por-isso-nenhum-cartão-aparece--resolvida) | ~~Nenhum cartão de produto aparece no chat~~ — resolvida | — | — |
 | [O-38](#o-38-a-planta-do-backend-e-a-do-frontend-discordam-e-hoje-ninguém-percebe) | Duas geometrias da mesma loja, e só uma é usada | Backend | Baixa hoje |
 | [O-39](#o-39-materiais-de-construção-e-caixas-ainda-são-desenhados-por-fórmula) | Duas seções ainda desenhadas por fórmula | Frontend | Baixa |
+| [QA](roteiro-de-qa.md) | Roteiro de verificação do ambiente publicado — **rodar na véspera da gravação** | Time | **Alta** |
 | [O-19](#o-19-o-plano-b-funciona-falta-a-placa-que-aponta-para-ele) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
 | [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final--feito) | Limpar documentos de trabalho | Time | fim do ano |

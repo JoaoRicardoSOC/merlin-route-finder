@@ -114,6 +114,7 @@ Este README é a porta de entrada. O detalhe está em [`docs/`](docs/):
 | [`observacoes.md`](docs/observacoes.md) | O que ainda está **aberto**, com dono e urgência |
 | [`fluxo-do-cliente.md`](docs/fluxo-do-cliente.md) | A jornada, ação por ação |
 | [`quebras-de-fluxo.md`](docs/quebras-de-fluxo.md) | O que acontece quando dá errado, e o que o app faz a respeito |
+| [`roteiro-de-qa.md`](docs/roteiro-de-qa.md) | **Verificação do ambiente publicado, para rodar na véspera da gravação** |
 | [`deploy.md`](docs/deploy.md) | Publicação no Render, passo a passo |
 | [`contexto-e-planejamento.md`](docs/contexto-e-planejamento.md) | O desafio, os prazos e a rubrica |
 
