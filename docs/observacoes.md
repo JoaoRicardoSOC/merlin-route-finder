@@ -688,8 +688,43 @@ O `index.html` carrega **quatro famílias tipográficas** — Hanken Grotesk, IB
 Source Sans 3 e Work Sans — mais os Material Symbols. O Lighthouse estima cerca de **7 s** de
 bloqueio somado no perfil de celular.
 
-**O que já foi feito, e não resolve a raiz.** As duas requisições ao Google Fonts viraram uma
-só, tirando uma ida e volta do caminho crítico sem mudar nada na tela.
+**O que já foi feito, e não resolve a raiz.**
+
+1. As duas requisições ao Google Fonts viraram uma só, tirando uma ida e volta do caminho
+   crítico sem mudar nada na tela.
+2. **Em 03/09, três das quatro famílias saíram** — e a descoberta foi que elas **nunca
+   renderizavam**. Os três tokens começavam todos com `'Hanken Grotesk'`, e Work Sans, Source
+   Sans 3 e IBM Plex Sans apareciam só como reserva. O app pedia quatro e pintava uma.
+
+   | | antes | depois |
+   |---|---|---|
+   | `@font-face` na folha | 85 | 21 |
+   | arquivos referenciados | 21 | 5 |
+   | folha transferida | 1.584 B | 893 B |
+
+   Conferido que a tela não muda: largura e altura de `h1`, `h2`, `p`, botão e campo de busca
+   são **idênticas** entre o local com uma família e o publicado com quatro.
+
+> [!WARNING]
+> **Isso não fecha esta observação, e é importante não confundir.** A economia é de ~700 bytes.
+> O FCP de 8,6 s não vem do tamanho da folha: vem de ela ser **uma requisição bloqueante para
+> um domínio de terceiros**, e o custo está na viagem de ida e volta, que continua lá.
+>
+> Uma medição minha chegou a dizer "34 KB → 9 KB". Estava errada: era `curl` com User-Agent
+> genérico recebendo a versão crua, com todos os formatos de reserva. O navegador recebe
+> comprimido e adaptado, e aí são 1,6 KB.
+
+**O que fecharia, e o custo de cada caminho:**
+
+| Caminho | O que ganha | O que custa |
+|---|---|---|
+| **Hospedar a fonte no projeto** | tira o terceiro do caminho crítico por completo; nada externo pode mudar de URL ou sair do ar | ~100–200 KB de `.woff2` no repositório, e atualizar a fonte vira tarefa manual |
+| **Embutir o `@font-face` no `index.html`** | some a requisição bloqueante da folha; o navegador descobre a URL da fonte já no HTML | as URLs do `gstatic` ficam fixas no HTML, e o Google as rotaciona de tempos em tempos — se rotacionar, a fonte quebra |
+| **Aceitar e citar** | custo zero | 8,6 s de primeira pintura no celular, e a nota 56 aparece se alguém rodar o Lighthouse |
+
+**Não dá para afirmar o ganho sem medir.** O Lighthouse não está instalado no projeto, e a
+medição original foi feita contra o ambiente publicado. Qualquer um dos dois primeiros caminhos
+precisa de uma nova rodada para dizer quanto rendeu.
 
 **O que resolveria.** Usar menos famílias. Quatro tipografias num app de uma tela e meia é
 muito, e cada uma custa uma fonte para baixar antes de o cliente ver qualquer coisa — dentro
