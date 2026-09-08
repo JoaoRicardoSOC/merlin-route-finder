@@ -1165,6 +1165,42 @@ do produto em falta, esse primeiro é apenas o mais próximo, de qualquer funç�
 produto**. Para esses não existe substituto de mesma função em lugar nenhum da loja, e a
 consulta espacial não tem o que eleger.
 
+> [!IMPORTANT]
+> **Os 58% descrevem o catálogo, e não o que de fato acontece. Medido contra os eventos reais em
+> 08/09.**
+>
+> O schema guarda **26 fallbacks que realmente ocorreram** em produção, desde 22/08. Conferindo o
+> `TIPO` de cada par gravado:
+>
+> | | eventos | |
+> |---|---|---|
+> | substituto do **mesmo tipo** | 19 | **73%** |
+> | substituto de **tipo diferente** | 7 | **27%** |
+>
+> **A diferença entre 58% e 27% não é erro de medição: são duas perguntas.** Os 58% respondem
+> *"se um produto fosse sorteado do catálogo"*; os 27% respondem *"dos casos que aconteceram"*.
+> Quem relata prateleira vazia não sorteia — usa os pares plantados, que por construção têm
+> parceiro do mesmo tipo.
+>
+> **Consequência prática:** a correção da [D-93](decisoes-tecnicas.md#d-93-o-fallback-por-proximidade-não-chama-de-substituto-o-que-é-apenas-o-mais-próximo)
+> mudaria o texto em **cerca de um quarto** dos fallbacks, e não em mais da metade. Continua
+> valendo — custa nada e o caso ruim é constrangedor —, mas o tamanho do problema era menor do
+> que esta observação dava a entender.
+>
+> **E os 7 casos são quase o mesmo caso:** um só par distinto se repete — *Lixa para Parede
+> Grão 120* recebendo *Fita Crepe 48mm* como substituto. Ambos de pintura, o que torna a sugestão
+> plausível a olho nu e errada na função: lixa não se substitui por fita.
+
+> [!NOTE]
+> **O fallback não roda em produção desde 31/08.** Nenhum registro `PROXIMIDADE` depois disso —
+> nem nas quinze chamadas do QA de 08/09, que tentaram provocá-lo de propósito. Naquele 31/08
+> foram **19 num único dia**, o padrão de uma sessão de testes estourando a cota.
+>
+> Duas leituras, e as duas importam: o texto novo da D-93 **ainda não foi visto em produção por
+> ninguém**; e a cota do `gemini-3.5-flash-lite` aguenta mais do que a documentação supunha — o
+> que não dispensa espaçar as tomadas na gravação, porque o 31/08 mostra que estourar em rajada
+> é possível.
+
 **Como isso aparece na tela:**
 
 | em falta | o fallback ofereceria |

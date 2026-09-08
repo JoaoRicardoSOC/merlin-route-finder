@@ -176,6 +176,61 @@ def main():
     if discordam:
         print()
         print('       Todos na mesma direcao: perto na tela, longe no calculo. Ver O-38.')
+    print()
+
+    # ------------------------------------------------------- 5: o que de fato aconteceu
+    ocorridos()
+
+
+def ocorridos():
+    """Os fallbacks que REALMENTE aconteceram, lidos do registro de ruptura.
+
+    Os itens 1 a 4 respondem "se um produto fosse sorteado do catalogo". Este responde
+    "dos casos que aconteceram" -- e os dois numeros divergem muito, porque quem relata
+    prateleira vazia nao sorteia: usa os pares plantados. Ver O-40.
+    """
+    with oracledb.connect(user=os.environ['DB_USER'], password=os.environ['DB_PASSWORD'],
+                          dsn='oracle.fiap.com.br:1521/orcl') as con:
+        cur = con.cursor()
+        cur.execute("""
+            select f.nome, s.nome,
+                   (select valor from tb_produto_atributo
+                     where produto_id = f.id and chave = 'TIPO'),
+                   (select valor from tb_produto_atributo
+                     where produto_id = s.id and chave = 'TIPO'),
+                   to_char(r.registrado_em, 'DD/MM')
+              from tb_registro_ruptura r
+              join tb_produto f on f.id = r.produto_faltante_id
+              join tb_produto s on s.id = r.produto_sugerido_id
+             where r.origem = 'PROXIMIDADE'
+             order by r.registrado_em
+        """)
+        linhas = cur.fetchall()
+        cur.execute("""select nvl(origem, '(sem sugestao)'), count(*),
+                              to_char(max(registrado_em), 'DD/MM/YYYY')
+                         from tb_registro_ruptura group by origem""")
+        por_origem = cur.fetchall()
+
+    print('  5. O QUE DE FATO ACONTECEU, no registro de ruptura:')
+    for origem, quantos, ultimo in sorted(por_origem, key=lambda t: -t[1]):
+        print('       %-16s %3d   ultimo em %s' % (origem, quantos, ultimo))
+
+    if not linhas:
+        print('       Nenhum fallback por proximidade gravado ainda.')
+        return
+
+    difer = [l for l in linhas if l[2] != l[3]]
+    print()
+    print('       Dos %d fallbacks reais, %d ofereceram OUTRA funcao (%.0f%%).'
+          % (len(linhas), len(difer), 100.0 * len(difer) / len(linhas)))
+    print('       Compare com o item 2: la o universo e o catalogo, aqui sao os casos vividos.')
+    vistos = set()
+    for fn, sn, ft, st, quando in difer:
+        if (fn, sn) in vistos:
+            continue
+        vistos.add((fn, sn))
+        print('         %s  %-30s (%s)' % (quando, fn[:30], ft))
+        print('                -> %-30s (%s)' % (sn[:30], st))
 
 
 if __name__ == '__main__':

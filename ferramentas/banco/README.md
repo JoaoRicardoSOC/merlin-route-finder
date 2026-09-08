@@ -92,6 +92,7 @@ cadastra produto:
 2. Para quantos o fallback por proximidade ofereceria algo de outra função.
 3. Se algum `TIPO` existe em mais de uma seção.
 4. Em quantos pares de seção a planta do backend e a traçada discordam sobre o raio de 25.
+5. **O que de fato aconteceu** — os fallbacks já gravados no registro de ruptura.
 
 Medição de 08/09/2026:
 
@@ -101,6 +102,15 @@ Medição de 08/09/2026:
 | fallback ofereceria outra função | **64 de 111 (58%)** |
 | `TIPO` em mais de uma seção | 0 de 82 |
 | pares de seção em que as plantas discordam | 9 de 45 |
+| **fallbacks reais que ofereceram outra função** | **7 de 26 (27%)** |
+
+### Por que os itens 2 e 5 discordam — e os dois estão certos
+
+O item 2 pergunta *"se um produto fosse sorteado do catálogo"*. O item 5 pergunta *"dos casos
+que aconteceram"*. **Quem relata prateleira vazia não sorteia:** usa os pares plantados, que por
+construção têm parceiro do mesmo tipo. Daí 58% contra 27%.
+
+Cite o item 5 quando a pergunta for sobre risco real, e o item 2 quando for sobre a massa.
 
 ### Por que o item 3 é o mais importante
 
