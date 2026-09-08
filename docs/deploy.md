@@ -126,9 +126,14 @@ Started BackendApplication in 134.503 seconds
 > | 22/08/2026 | 134 s | linha de log acima |
 > | 25/08/2026 | 176 s | catálogo foi de 29 para 111 produtos |
 > | 02/09/2026 | 183 s | — |
-> | **08/09/2026** | **180–183 s** | valor atual |
+> | 08/09/2026, manhã | 180–183 s | — |
+> | **08/09/2026, tarde** | **204,9 s** | valor atual, medido no QA completo |
 >
 > A carga inicial percorre 111 produtos, e cada verificação é uma ida ao Oracle a 5.000 km.
+>
+> **Os 204,9 s foram medidos pelo próprio `manter-acordado.mjs`**, cuja requisição disparou o
+> despertar. Quem mede tem de ser quem acorda: um navegador aberto no meio de uma partida já
+> em curso mediu 136 s na mesma ocasião, e o número não vale.
 > **Este é o único lugar onde o número deve ser mantido**; os outros documentos apontam para cá.
 >
 > **Para a demonstração, isso é o número que importa.** Acordar a instância três minutos antes de começar deixou de ser recomendação e virou obrigação — e vale acordá-la de novo se a apresentação atrasar, porque o Render suspende após 15 minutos parado.

@@ -117,7 +117,7 @@ Enquanto o frontend não estiver publicado, essa variável **tem que continuar v
 > **Duas coisas que precisam entrar no roteiro como comportamento esperado, e não como acidente:**
 >
 > - **o assistente pode ficar indisponível ao vivo.** Já aconteceu duas vezes (503 do Google em 28/08). O sistema degrada com uma mensagem honesta, e mostrar isso é ponto a favor, não contra;
-> - **a partida a frio leva cerca de três minutos** — 180 a 183 s medidos em 08/09; a série está em [`deploy.md`](deploy.md). O primeiro passo do roteiro, antes de a câmera ligar, é aquecer a aplicação, e `ferramentas/gravacao/manter-acordado.mjs` a mantém acordada durante toda a gravação.
+> - **a partida a frio passa de três minutos e meio** — 204,9 s na última medição, e o número **só sobe** a cada medição; a série datada está em [`deploy.md`](deploy.md). O primeiro passo do roteiro, antes de a câmera ligar, é aquecer a aplicação, e `ferramentas/gravacao/manter-acordado.mjs` a mantém acordada durante toda a gravação.
 
 > [!NOTE]
 > **Escrito pelo time, e revisado em 08/09/2026.** A versão corrigida está publicada como
