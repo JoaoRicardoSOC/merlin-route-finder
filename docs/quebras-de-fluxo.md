@@ -67,7 +67,9 @@ As três são trabalho de frontend. **A 1 eu trataria como obrigatória**; a 2 �
 
 ### ✅ O QR Code está rasgado, sujo ou riscado
 
-> **Backend — resolvido.** Código curto digitável em cada placa ([D-52](decisoes-tecnicas.md#d-52-o-código-curto-do-qr-code-é-normalizado-na-gravação-não-só-na-busca)), aceito em qualquer grafia. **Falta a tela de digitação** ([O-19](observacoes.md#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe)) e a URL impressa na placa.
+> **Resolvido nas duas pontas.** Código curto digitável em cada placa ([D-52](decisoes-tecnicas.md#d-52-o-código-curto-do-qr-code-é-normalizado-na-gravação-não-só-na-busca)), aceito em qualquer grafia, e a tela de digitação existe — verificada no ambiente publicado em 08/09, com `tin02` atualizando a posição para "Corredor de Tintas".
+>
+> **Falta a URL impressa na placa** ([O-19](observacoes.md#o-19-o-plano-b-funciona-falta-a-placa-que-aponta-para-ele)), sem a qual o código digitável não tem onde ser digitado.
 
 Adesivo em corredor de loja não sobrevive muito tempo. Sem conseguir ler, o cliente não entra.
 
@@ -441,7 +443,7 @@ Os oito viraram cards em [`backlog-fechamento.md`](backlog-fechamento.md), no bl
 
 **Travas em botão.** Duas, pelo mesmo motivo — cada toque custa cota do Gemini, que é de cinco por minuto: o botão de **prateleira vazia** ([O-05](observacoes.md#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição--resolvida-com-trava-síncrona)) e o campo do **assistente**, que leva cerca de oito segundos.
 
-**Telas que ainda não existem.** A de **digitar o código de localização** ([O-19](observacoes.md#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe)) e a de **"preparando o sistema"** para a partida a frio de 176 segundos, que vai acontecer em alguma demonstração.
+**Telas que faltavam, e não faltam mais.** A de **digitar o código de localização** ([O-19](observacoes.md#o-19-o-plano-b-funciona-falta-a-placa-que-aponta-para-ele)) e a de **"preparando o sistema"** para a partida a frio existem e foram verificadas no ambiente publicado. A segunda deixou de prometer prazo: mostra o tempo decorrido, porque a partida a frio variou de 106 s a 183 s entre medições.
 
 **Estado no aparelho.** Guardar o `sessaoId` no `localStorage` e conferir a sessão ao abrir, antes de tentar escrever ([O-06](observacoes.md#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar--já-existia-e-foi-verificada)). E recarregar a lista ao voltar para a aba, que resolve o caso das duas abas.
 

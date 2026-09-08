@@ -1439,7 +1439,7 @@ No recentrar, ele **já tem** uma sessão funcionando. Dizer "não encontramos e
 
 **A regra por trás, que vale além destes dois endpoints:** *recusar só quando o cliente pode fazer algo a respeito, e o silêncio custaria mais que o erro.*
 
-**Consequência para o frontend.** As duas telas precisam tratar o mesmo dado de formas diferentes, e a da entrada é a que engana: como não há erro HTTP, ela precisa **perceber `posicaoAtual` nula e avisar**. Registrado em [O-19](observacoes.md#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe).
+**Consequência para o frontend.** As duas telas precisam tratar o mesmo dado de formas diferentes, e a da entrada é a que engana: como não há erro HTTP, ela precisa **perceber `posicaoAtual` nula e avisar**. Registrado em [O-19](observacoes.md#o-19-o-plano-b-funciona-falta-a-placa-que-aponta-para-ele).
 
 **Por que `PUT` e não `POST`.** A operação define o valor de um recurso — onde o cliente está —, e reenviar "estou em CEN-03" duas vezes leva ao mesmo lugar. Cliente ou proxy podem repetir sem risco, que é o que se quer de alguém andando por uma loja com sinal ruim.
 
