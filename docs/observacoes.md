@@ -1296,7 +1296,8 @@ Foi exatamente isso: uma sessão ociosa bloqueando outra, que bloqueava mais dua
 - **sessões** — sobra um resto, tratado na [O-20](#o-20-rodar-a-suíte-deixa-um-resto-de-sessões-no-banco-de-demonstração);
 - **catálogo** — a carga é incremental e idempotente, e produtos que ela não conhece são deixados em paz.
 
-**O risco real é de momento, não de dados.** Rodar a suíte completa **durante** a gravação do vídeo ou a banca mexeria na massa que está sendo demonstrada — e a partida a frio de 176 segundos já torna a instância sensível a qualquer sobressalto.
+**O risco real é de momento, não de dados.** Rodar a suíte completa **durante** a gravação do vídeo ou a banca mexeria na massa que está sendo demonstrada — e a partida a frio de cerca de três minutos ([série medida em `deploy.md`](deploy.md)) já
+torna a instância sensível a qualquer sobressalto.
 
 **O que fazer.** Combinar uma regra simples: **ninguém roda a suíte de integração enquanto alguém estiver gravando ou apresentando.** Não custa nada e elimina o único cenário que machuca.
 

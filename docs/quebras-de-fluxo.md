@@ -379,7 +379,10 @@ Sessão concluída: leitura sim, escrita não. Já tratado.
 >
 > E resolve o problema que a pessoa de fato tem, que não é saber o prazo — é saber que **não travou**. Passando de três minutos o texto muda para *"está demorando mais que o normal, mas não travou"*, porque repetir a mesma frase para quem já esperou tanto é o que faz fechar o aplicativo.
 
-Medido: **134 segundos** no plano gratuito, por causa do décimo de CPU.
+Medido: **180 a 183 segundos** em 08/09/2026, no plano gratuito, por causa do décimo de CPU.
+O número **subiu ao longo do projeto** — 134 s em 22/08, 176 s em 25/08 quando o catálogo foi de
+29 para 111 produtos — e a tabela acima registra a série. Foi por isso que a tela ganhou
+cronômetro em vez de prazo escrito.
 
 O time decidiu seguir no gratuito e aquecer a aplicação antes de apresentar. **Mas o cliente numa loja de verdade seria o primeiro acesso do dia** — e esperaria três minutos olhando uma tela em branco.
 

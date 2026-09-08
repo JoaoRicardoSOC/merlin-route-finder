@@ -10,14 +10,18 @@
 
 ## Placar
 
-| Bloco | Cards | Quem |
-|---|---|---|
-| Entrega e publicação | 3 | João Ricardo e time | *(2 fechados em 30/08)*
-| Frontend — acabamentos | 1 | Bielecky e Marcela | *(10 fechados em 30/08)*
-| Banco e diagramas | 3 | Vicentini |
-| Decisões e trabalho do time | 4 | Time |
-| Backend e operação | 3 | João Ricardo e Caio |
-| Limpeza antes da entrega | 2 | Time |
+**Contado em 08/09/2026.** Três linhas estavam desatualizadas — o placar não se atualiza sozinho
+quando um card fecha, então vale reconferir contra os títulos riscados antes de citar estes números.
+
+| Bloco | Abertos | Fechados | Quem |
+|---|---|---|---|
+| Entrega e publicação | **3** | 2 | João Ricardo e time |
+| Frontend — acabamentos | 0 | 11 | Bielecky e Marcela |
+| Banco e diagramas | **3** | 0 | Vicentini |
+| Decisões e trabalho do time | **2** | 2 | Time |
+| Backend e operação | **3** | 0 | João Ricardo e Caio |
+| Limpeza antes da entrega | 0 | 2 | Time |
+| **total** | **11** | **17** | |
 
 **Nada aqui bloqueia a demonstração.** O sistema roda de ponta a ponta: entrar pela placa, buscar, montar a lista, ver no mapa, coletar, relatar prateleira vazia, aceitar o substituto e encerrar. O que falta é acabamento, publicação e material de apresentação.
 
@@ -113,7 +117,19 @@ Enquanto o frontend não estiver publicado, essa variável **tem que continuar v
 > **Duas coisas que precisam entrar no roteiro como comportamento esperado, e não como acidente:**
 >
 > - **o assistente pode ficar indisponível ao vivo.** Já aconteceu duas vezes (503 do Google em 28/08). O sistema degrada com uma mensagem honesta, e mostrar isso é ponto a favor, não contra;
-> - **a partida a frio leva ~110 segundos.** O primeiro passo do roteiro, antes de a câmera ligar, é aquecer a aplicação.
+> - **a partida a frio leva cerca de três minutos** — 180 a 183 s medidos em 08/09; a série está em [`deploy.md`](deploy.md). O primeiro passo do roteiro, antes de a câmera ligar, é aquecer a aplicação, e `ferramentas/gravacao/manter-acordado.mjs` a mantém acordada durante toda a gravação.
+
+> [!NOTE]
+> **Escrito pelo time, e revisado em 08/09/2026.** A versão corrigida está publicada como
+> página, com as falas verbatim e o que mostrar em cada bloco.
+>
+> **Sete afirmações foram conferidas contra o código e não passaram** — entre elas *"malha de
+> navegação real em A\*"*, *"ordem ótima de visitação"* e *"identifica rupturas de estoque"*.
+> Não existe cálculo de rota no projeto ([`App.jsx`](../frontend/src/App.jsx) diz isso por
+> extenso), a ordem dos pinos é a de inserção, e quem constata a prateleira vazia é o cliente.
+>
+> **Continua a fazer:** ler em voz alta e cronometrar. É a única parte do "verificar" que
+> ninguém pode fazer pelo time.
 
 **Verificar:** roteiro lido em voz alta e cronometrado, **abaixo de 5 minutos** com folga — cronometrar lendo, não estimando.
 
@@ -370,13 +386,28 @@ Três cards, e o primeiro é o mais urgente da lista inteira depois do E-1: **di
 
 ## [TIME] — decisões e trabalho manual
 
-### T-1. Decidir a planta da loja
+### T-1. ~~Decidir a planta da loja~~ — **DECIDIDA E FEITA, 06/09/2026**
+
+> [!NOTE]
+> **Escolhida a primeira opção, e ela foi até o fim.** A planta técnica da unidade Interlagos foi
+> **decalcada**: 21 seções e 212 gôndolas, traçadas uma a uma sobre a imagem do kickoff, com a
+> bancada em `ferramentas/planta/`.
+>
+> Registrado em [D-89](decisoes-tecnicas.md), [D-90](decisoes-tecnicas.md) e
+> [D-91](decisoes-tecnicas.md). O que ficou de fora está registrado também: Materiais de
+> construção e a frente de caixas aparecem **sem gôndola**, porque a organização do pátio não é
+> distinguível na planta ([O-39](observacoes.md)).
+>
+> **O texto abaixo dizia que "o mapa é genérico dos dois lados", e isso deixou de ser verdade
+> em 06/09** — ficou aqui até 08/09 sem ninguém notar.
+
+<details><summary>O registro original, de quando a decisão estava aberta</summary>
 
 **O que fazer.** Escolher entre levantar a planta real da loja de Interlagos ou assumir a atual como "loja de referência" e dizer isso à banca.
 
 **Por quê.** Hoje o mapa é genérico dos dois lados, e funciona. É o único item do projeto que não mudou de estado desde 28/08, porque depende de decisão, não de código. **A segunda opção é defensável e custa zero** — a primeira exige levantamento que ninguém começou.
 
-**Verificar:** decisão registrada, com data.
+</details>
 
 ---
 
