@@ -1259,6 +1259,25 @@ Foi exatamente isso: uma sessão ociosa bloqueando outra, que bloqueava mais dua
 - **Ao interromper a suíte, conferir se sobrou JVM.** No Windows: `Get-CimInstance Win32_Process -Filter "Name='java.exe'"` mostra o horário de início e a linha de comando — as do Surefire aparecem com `-jar ...\surefire`. Encerrar essas pela raiz libera o lock na hora.
 - **Não confundir com falha de teste.** Suíte parada sem sair do lugar por mais de dois minutos é lock, não lentidão. `select sid, blocking_session from v$session where username = user` responde em um segundo.
 
+> [!NOTE]
+> **As três conferências acima viraram um comando, em 08/09/2026.**
+>
+> ```bash
+> DB_USER=... DB_PASSWORD=... python ferramentas/banco/conferir-travas.py
+> ```
+>
+> Ele responde **TRAVADO**, **ATENÇÃO** ou **LIVRE**, lista quem bloqueia quem, e no Windows
+> aponta os `java.exe` do Surefire com o `taskkill` pronto. Somente leitura.
+>
+> **O detalhe que faz ele servir:** o pool de conexões do Render mantém três ou quatro sessões
+> `INACTIVE` o tempo todo, por projeto. Um detector ingênuo alarmaria com elas todas as vezes,
+> e um alarme que sempre toca deixa de ser lido. O script as reconhece pela máquina
+> (`srv-...`) e as separa do relatório.
+>
+> **Os dois alarmes foram exercitados, e não só o caminho feliz:** um bloqueio real, provocado
+> com duas conexões na mesma linha, foi reportado como *"SID 573 está bloqueada pela SID
+> 2295"*; e o de sessão ociosa, com o limite baixado por variável de ambiente.
+
 **De quem.** Backend. **Urgência:** alta — um lock preso na véspera da gravação custaria meia hora que não vamos ter.
 
 ---

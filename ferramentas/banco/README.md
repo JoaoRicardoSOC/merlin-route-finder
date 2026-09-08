@@ -112,3 +112,45 @@ entre as duas plantas passa a escolher substituto, e escolher errado.
 ### Quando rodar
 
 Depois de cadastrar produto novo, e antes de gravar. É rápido e não escreve nada.
+
+---
+
+## `conferir-travas.py`
+
+Diz em segundos se o schema está travado, e por quem. **Somente leitura.**
+Ver [O-23](../../docs/observacoes.md).
+
+```bash
+DB_USER=... DB_PASSWORD=... python ferramentas/banco/conferir-travas.py
+```
+
+### Quando rodar
+
+**Suíte parada há mais de dois minutos sem sair do lugar.** Isso é trava, não lentidão — e
+não avisa: não falha, não estoura tempo, só fica. Rode também antes de gravar.
+
+### O que ele distingue, e por que isso importa
+
+A instância do Render mantém um **pool de conexões**, e conexão de pool em repouso fica
+`INACTIVE` por projeto — são três ou quatro o tempo todo. Um detector ingênuo apontaria todas
+como travadas. Aqui elas são reconhecidas pela máquina (`srv-...`) e listadas à parte.
+
+| Veredito | Quando aparece |
+|---|---|
+| **TRAVADO** | `blocking_session` preenchida. É fato, não heurística. |
+| **ATENÇÃO** | Sessão de máquina de gente, `INACTIVE` há mais de 5 min. Ainda não bloqueia ninguém. |
+| **LIVRE** | Nenhuma das duas. |
+
+No Windows ele ainda lista os `java.exe` e aponta os do Surefire com o `taskkill` pronto —
+que é a única saída, já que **não há privilégio para derrubar sessão** no Oracle da FIAP
+(`alter system kill session` responde `ORA-01031`).
+
+### Os dois alarmes foram exercitados
+
+Em 08/09/2026, e não só o caminho feliz:
+
+- **TRAVADO** — duas conexões disputando a mesma linha; o script reportou
+  *"SID 573 está bloqueada pela SID 2295"*, sem confundir com as três do Render.
+- **ATENÇÃO** — sessão ociosa com `OCIOSA_SUSPEITA_SEG=10`. A variável existe para o alarme
+  poder ser exercitado sem esperar cinco minutos: **detecção que nunca disparou em teste não
+  vale como detecção.**
