@@ -131,7 +131,7 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 > | qualquer outra | **403 Forbidden** |
 >
 > Renomear o projeto muda o domínio `.vercel.app`, e a partir desse segundo **toda chamada do
-> navegador volta 403** — com o sintoma clássico e enganâoso já registrado no
+> navegador volta 403** — com o sintoma clássico e enganoso já registrado no
 > [backlog](backlog-fechamento.md): a API responde no Postman e o navegador bloqueia.
 >
 > **A ordem que não quebra em nenhum instante:**
