@@ -52,7 +52,7 @@ console.table(r.violations.map(v => ({ id: v.id, impacto: v.impact, nos: v.nodes
 ## JaCoCo — o achado não foi o número
 
 O que ele mostrou primeiro não foi cobertura: foi que **`mvnw test` roda 150 testes e a suíte
-inteira tem 285**. Os 19 testes de integração exigem `-Pintegracao` e Oracle. Rodando a
+inteira tem 285**. Os **135** testes de integração exigem `-Pintegracao` e Oracle. Rodando a
 completa, **8 falhavam** — introduzidas por um commit dado como verificado com "150 testes
 passam". Ver `O-36`.
 

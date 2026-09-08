@@ -95,12 +95,79 @@
 				<excluded.test.groups></excluded.test.groups>
 			</properties>
 		</profile>
+
+		<!--
+			O AVISO DO QUE NAO RODOU. Ver O-36.
+
+			A exclusao acima e uma boa decisao, mas ela e SILENCIOSA: quem roda `mvnw test`
+			ve "BUILD SUCCESS" e conclui que a suite passou inteira. Nao passou - fica de
+			fora a maior parte dela, justamente a que toca o banco.
+
+			Isso ja custou caro uma vez. O commit da D-85 foi dado como verificado com a
+			suite padrao; rodando o perfil completo, oito testes falhavam, incluindo o que
+			garante que o substituto oferecido durante a banca faz sentido.
+
+			O aviso nao cita quantidade de proposito. Numero fixo em mensagem envelhece
+			sozinho: o proprio texto da O-36 dizia "19 testes de integracao" quando ja eram
+			132, e ninguem percebeu porque o numero nao tem quem o atualize.
+
+			Por que um profile com activeByDefault, e nao um plugin no build principal: o
+			Maven DESATIVA os profiles activeByDefault assim que qualquer profile e ativado
+			na linha de comando. Entao `mvnw test` avisa, e `mvnw test -Pintegracao` nao
+			avisa - que e exatamente o comportamento desejado, sem nenhuma condicao escrita
+			a mao.
+		-->
+		<profile>
+			<id>avisar-testes-de-fora</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<version>3.1.0</version>
+						<executions>
+							<execution>
+								<id>avisar-integracao</id>
+								<phase>test</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<configuration>
+									<target>
+										<echo level="warning">
+========================================================================
+ ATENCAO: esta execucao NAO rodou os testes de integracao.
+
+ Os testes marcados com @Tag("integracao") sobem o contexto contra o
+ Oracle e ficam de fora por padrao. Sao quase metade da suite.
+
+ "BUILD SUCCESS" aqui NAO significa que a suite inteira passa.
+
+ Para rodar tudo, com as credenciais no ambiente:
+
+     mvnw test -Pintegracao
+
+ Obrigatorio antes de qualquer commit que mexa na massa de dados.
+ Ver O-36 em docs/observacoes.md.
+========================================================================
+										</echo>
+									</target>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
 
 	<build>
 		<plugins>
 			<!--
-			  Cobertura de testes. A suite tem 150 testes e ninguem sabia que fracao do codigo
+			  Cobertura de testes. A suite PADRAO tem 150 testes e ninguem sabia que fracao do codigo
 			  eles tocam - 19 casos de uso em producao contra 5 testes unitarios de caso de uso,
 			  com o resto vindo dos testes de integracao. Sem medida, "temos testes" e uma
 			  afirmacao sem tamanho.

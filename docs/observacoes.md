@@ -804,9 +804,19 @@ planta e é traçável; o pátio depende de alguém conseguir ler a organizaçã
 
 ### O-36. A suíte padrão não roda os testes de integração, e isso já deixou passar oito falhas
 
-**O quê.** `mvnw test` roda **150 testes**. A suíte inteira tem **285**. Os 19 testes de
-integração ficam de fora por padrão — exigem `-Pintegracao` e credenciais do Oracle, e a
-exclusão está declarada no `pom` de propósito, porque nem todo ambiente tem banco.
+**O quê.** `mvnw test` roda **150 testes**. A suíte inteira tem **285**. Os **135 testes de
+integração, em 22 classes**, ficam de fora por padrão — exigem `-Pintegracao` e credenciais do
+Oracle, e a exclusão está declarada no `pom` de propósito, porque nem todo ambiente tem banco.
+
+> [!NOTE]
+> **Correção de 03/09.** Esta observação dizia "19 testes de integração". São **135** — quase
+> metade da suíte. O número errado fazia o risco parecer sete vezes menor do que é, e é
+> exatamente o tipo de dado que envelhece sem que ninguém perceba, porque não tem quem o
+> atualize. Medido contando os relatórios do Surefire das duas execuções, com e sem o perfil.
+>
+> Um aviso ao medir: `target/surefire-reports/` guarda relatórios de execuções anteriores. A
+> primeira contagem misturou os de hoje com os de 01/09 e deu 285 para a suíte padrão. É
+> preciso filtrar por data, ou limpar antes.
 
 **A decisão é boa. O risco é o que ela não diz.** Quem roda `mvnw test`, vê "150 testes,
 0 falhas" e conclui que está tudo certo, está errado — e não tem como saber disso pela saída.
@@ -818,14 +828,25 @@ substituto oferecido durante a banca faz sentido. Nenhuma delas era visível pel
 **O que reduz o risco, em ordem de esforço:**
 
 1. **Combinar no time**: nenhum commit que toque a massa de dados vai sem `-Pintegracao`. Custo
-   zero, depende de disciplina.
-2. **Fazer a suíte padrão dizer o que não rodou** — uma linha no fim do `mvnw test` avisando
-   que 19 testes ficaram de fora e como rodá-los. É o mesmo princípio que o app inteiro segue:
+   zero, depende de disciplina. **Em aberto.**
+2. ✅ **Fazer a suíte padrão dizer o que não rodou.** *Implantado em 03/09.* O `mvnw test`
+   termina com um aviso de que os testes de integração ficaram de fora, que `BUILD SUCCESS` ali
+   não significa suíte inteira passando, e como rodá-la. É o mesmo princípio que o app segue:
    silêncio sobre o que não se sabe é pior que o aviso.
 3. **Integração contínua** rodando o perfil completo a cada envio. É o certo, e é o único que
-   não depende de ninguém lembrar.
+   não depende de ninguém lembrar. **Em aberto** — precisa das credenciais do Oracle nos
+   segredos do repositório, o que é decisão do time.
 
-**De quem.** Time — e vale decidir antes de 13/09, porque a massa de dados ainda vai mudar.
+**Como o aviso foi feito, e por que assim.** Um profile `avisar-testes-de-fora` com
+`activeByDefault`, porque o Maven **desativa os profiles `activeByDefault` assim que qualquer
+profile é ativado na linha de comando**. Então `mvnw test` avisa e `mvnw test -Pintegracao` não
+avisa, sem nenhuma condição escrita à mão.
+
+**O aviso não cita quantidade, de propósito.** Número fixo em mensagem envelhece sozinho — foi
+o que aconteceu com o "19" desta própria observação, e com o "até dois minutos" do cold start.
+
+**De quem.** Time — os itens 1 e 3 continuam abertos, e valem decidir antes de 13/09, porque a
+massa de dados ainda vai mudar.
 
 ---
 
