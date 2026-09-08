@@ -634,7 +634,7 @@ O limiar de 70 foi calibrado empiricamente: mais alto perde `"furadera"` → `"F
 
 ### D-16. Carga inicial em Java em vez de SQL
 
-**Contexto.** O esqueleto do repositório tem uma pasta `database/seeds/`, sugerindo scripts SQL. Mas o projeto usa `ddl-auto: update` (sem Flyway), e cada integrante tem seu próprio schema Oracle.
+**Contexto.** O esqueleto do repositório tinha uma pasta `database/seeds/`, sugerindo scripts SQL. Mas o projeto usa `ddl-auto: update` (sem Flyway), e cada integrante tem seu próprio schema Oracle. A pasta ficou vazia do primeiro ao último dia e **foi removida em 08/09/2026**, junto de `database/migrations` e `database/diagrams`: diretório vazio que sobrevive à decisão que o dispensou sugere um caminho que ninguém vai tomar.
 
 **Decisão.** Um `ApplicationRunner` que popula o banco usando os ports de domínio. Na Fase 0 ele só agia com o catálogo **vazio**; desde 23/08/2026 a carga é **incremental**, item a item, para que produtos acrescentados depois cheguem aos bancos que já tinham a massa antiga — ver [D-47](#d-47-a-massa-ganhou-pares-de-substituição-e-a-carga-passou-a-ser-incremental).
 

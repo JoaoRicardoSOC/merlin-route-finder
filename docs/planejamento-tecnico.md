@@ -70,7 +70,7 @@ O próprio backlog já denuncia uma arquitetura hexagonal com **entidades de dom
 - `domain/entity` — POJOs puros (Sessao, ListaRoteiro, ItemRoteiro, Produto, PontoMapa, ChatMensagem), sem anotações JPA, com os métodos de comportamento do diagrama de classes (`isValida()`, `gerarTokenHandoff()`, `temDisponibilidade()` etc.).
 - `domain/exception` — exceções de domínio, capturadas pelo `GlobalExceptionHandler` (`presentation/advice/GlobalExceptionHandler.java`, já existente e reaproveitável).
 - `domain/repository` — interfaces (ports) dos repositórios, sem dependência de JPA.
-- `domain/factory` — fábricas que garantem invariantes na construção de agregados.
+- ~~`domain/factory` — fábricas que garantem invariantes na construção de agregados.~~ **Nunca foi usada, e a pasta foi removida em 08/09/2026.** As nove fábricas que existem são de *reconstituição* — convertem entidade JPA em entidade de domínio — e por isso vivem em `infrastructure/database/factory` e `infrastructure/ia/factory`. Invariante de construção ficou nos próprios construtores das entidades.
 - `application/dto` — DTOs de request/response, alinhados ao contrato OpenAPI (card 1).
 - `application/usecase` — um caso de uso por operação de negócio, mapeando quase 1:1 com os cards de "Orquestração".
 - `infrastructure/database/repository` + `infrastructure/database/factory` — implementações JPA (`@Entity`) e mapeadores entidade JPA ↔ entidade de domínio.
