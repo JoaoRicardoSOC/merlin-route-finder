@@ -28,7 +28,7 @@
 | [O-31](#o-31-o-assistente-não-nomeia-produtos-por-extenso-e-por-isso-nenhum-cartão-aparece--resolvida) | ~~Nenhum cartão de produto aparece no chat~~ — resolvida | — | — |
 | [O-38](#o-38-a-planta-do-backend-e-a-do-frontend-discordam-e-hoje-ninguém-percebe) | Duas geometrias da mesma loja, e só uma é usada | Backend | Baixa hoje |
 | [O-39](#o-39-materiais-de-construção-e-caixas-ainda-são-desenhados-por-fórmula) | Duas seções ainda desenhadas por fórmula | Frontend | Baixa |
-| [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
+| [O-19](#o-19-o-plano-b-funciona-falta-a-placa-que-aponta-para-ele) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
 | [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final--feito) | Limpar documentos de trabalho | Time | fim do ano |
 | [O-20](#o-20-rodar-a-suíte-deixa-um-resto-de-sessões-no-banco-de-demonstração) | Limpar sessões de teste antes da banca | Backend | Baixa |
@@ -90,7 +90,7 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 
 **Verificado antes de escolher o provedor:** `oracle.fiap.com.br` resolve para IP público e aceita conexão de fora sem VPN — não há lista de IPs autorizados. O plano B era Fly.io, com região em São Paulo, caso houvesse filtro por país. Não houve.
 
-### O-19. A entrada tem um plano B, e ele é uma tela que ainda não existe
+### O-19. O plano B funciona; falta a placa que aponta para ele
 
 > [!NOTE]
 > **Atualizada em 30/08/2026 — a metade de tela está fechada.**
@@ -100,6 +100,24 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 > **E um defeito maior apareceu no caminho:** o chip de localização tinha `ENT-01 / Entrada da Loja` como valor inicial fixo, então afirmava que o cliente estava na entrada **antes de qualquer placa ser lida** — e continuava afirmando com código desconhecido. O aviso dizia a verdade e o chip ao lado dizia o contrário. A posição passa a nascer **nula**, e o chip a dizer *"Ainda não sabemos onde você está"*.
 >
 > **Continua aberto, e é do time:** a **arte da placa** com QR, URL curta e código legível.
+
+> [!NOTE]
+> **Reverificada em 08/09/2026, no ambiente publicado.** A metade de código está fechada:
+>
+> | Verificação | Resultado |
+> |---|---|
+> | `?ponto=ZZZ-99` | *"Não encontramos a localização "ZZZ-99". Você pode continuar e escanear outra placa depois."* |
+> | Chip sem placa lida | *"Ainda não sabemos onde você está"* — não afirma a entrada |
+> | Entrada manual com `tin02` | *"Posição atualizada para: Corredor de Tintas"* — a tolerância de grafia da D-54 funciona |
+>
+> **O título anterior — *"é uma tela que ainda não existe"* — estava desatualizado desde 30/08** e induziu a priorizar este item como se houvesse código a fazer. Não há.
+>
+> **Duas armadilhas de verificação, registradas porque custaram duas conclusões erradas:**
+>
+> - O aviso é um **toast**, e some. Esperar dez segundos antes de ler a tela faz parecer que ele não existe. Observar o DOM com `MutationObserver` é o que pega.
+> - A sessão fica no `localStorage`. Testar código desconhecido **sem limpar** faz o chip exibir a posição da sessão anterior, o que parece exatamente o defeito que a D-54 corrigiu.
+>
+> **O que falta, e é decisão do time:** a arte da placa. E um detalhe que a decisão precisa resolver — **a URL impressa tem de ser digitável**. Hoje é `merlin-route-finder.vercel.app/?ponto=TIN-02`, longa demais para alguém copiar de um adesivo. Renomear o projeto na Vercel encurta sem custo; domínio próprio tem custo, e o projeto é de orçamento zero.
 
 <details><summary>O registro original, de quando a tela não existia</summary>
 
