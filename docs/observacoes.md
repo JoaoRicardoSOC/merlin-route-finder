@@ -120,6 +120,34 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 >
 > **O que falta, e é decisão do time:** a arte da placa. E um detalhe que a decisão precisa resolver — **a URL impressa tem de ser digitável**. Hoje é `merlin-route-finder.vercel.app/?ponto=TIN-02`, longa demais para alguém copiar de um adesivo. Renomear o projeto na Vercel encurta sem custo; domínio próprio tem custo, e o projeto é de orçamento zero.
 
+> [!CAUTION]
+> **Renomear na Vercel derruba o app na hora, se feito sozinho. Medido em 08/09/2026.**
+>
+> O CORS do backend libera **uma única origem**. Verificado por requisição real ao Render:
+>
+> | origem enviada | resposta |
+> |---|---|
+> | `https://merlin-route-finder.vercel.app` | `access-control-allow-origin` com essa URL |
+> | qualquer outra | **403 Forbidden** |
+>
+> Renomear o projeto muda o domínio `.vercel.app`, e a partir desse segundo **toda chamada do
+> navegador volta 403** — com o sintoma clássico e enganâoso já registrado no
+> [backlog](backlog-fechamento.md): a API responde no Postman e o navegador bloqueia.
+>
+> **A ordem que não quebra em nenhum instante:**
+>
+> 1. No Render, colocar as **duas** origens em `CORS_ALLOWED_ORIGINS`, separadas por vírgula —
+>    a atual e a futura. A variável aceita lista; `application.yml` já a lê assim.
+> 2. **Esperar o Render reiniciar.** Mudar variável de ambiente reinicia a instância, e isso
+>    custa uma partida a frio de cerca de três minutos.
+> 3. Só então renomear na Vercel.
+> 4. Conferir no navegador, não no Postman — CORS só existe no navegador.
+> 5. Remover a origem antiga depois, com calma, ou deixar as duas.
+>
+> **Não faça isso na véspera da gravação.** São dois serviços, um reinicio e uma janela em que
+> o link antigo para de existir. Se for renomear, que seja com folga — e a arte da placa
+> depende dessa decisão, então **decidir cedo destrava duas coisas de uma vez**.
+
 <details><summary>O registro original, de quando a tela não existia</summary>
 
 > **Reauditada em 30/08/2026 — a tela existe, o aviso não.**
