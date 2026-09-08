@@ -1,0 +1,135 @@
+/* ==========================================================================
+   FEATURE: HOME MINIMALIST BENTO GRID & DEDICATED SEARCH PAGE
+   ========================================================================== */
+
+.animate-fade-in {
+  animation: fadeInFast 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInFast {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Home Minimalist Bento Grid */
+/* Dedicated Search Page View */
+.search-page-view {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: calc(100px + var(--safe-bottom));
+}
+
+/* Barra grudada no topo da tela de catálogo.
+ *
+ * O fundo é o da PÁGINA, não `--surface`. Ela precisa ser opaca porque é sticky e o
+ * conteúdo rola por baixo — mas pintada de branco puro (#fff) sobre uma página #fafaf8,
+ * e sem raio de canto, ela virava um retângulo branco visível atrás da pílula de busca,
+ * que por sua vez é #f7f8f5. Três brancos diferentes empilhados, e o do meio aparecendo.
+ * Com o tom da página, a barra lê como página. */
+.search-page-top-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background-color: var(--background);
+  padding: 4px 0 10px 0;
+  position: sticky;
+  top: 60px;
+  z-index: 40;
+}
+
+.search-back-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--surface-container-high);
+  color: var(--on-surface);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.search-back-btn:hover {
+  background-color: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.search-back-btn:active {
+  transform: scale(0.92);
+}
+
+.search-page-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  position: relative;
+  background-color: var(--surface-container-low);
+  border: 1.5px solid var(--outline);
+  border-radius: var(--radius-full);
+  padding: 0 14px;
+  transition: all var(--transition-fast);
+}
+
+.search-page-input-wrap:focus-within {
+  border-color: var(--primary-dark);
+  background-color: var(--surface);
+  box-shadow: 0 0 0 3px rgba(0, 107, 39, 0.12);
+}
+
+.search-input-icon {
+  color: var(--primary-dark);
+  font-size: 20px;
+  margin-right: 8px;
+}
+
+.search-page-input {
+  flex: 1;
+  height: 42px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--on-surface);
+  outline: none;
+}
+
+.search-page-clear-btn {
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.search-page-clear-btn:hover {
+  color: var(--on-surface);
+}
+
+.search-page-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: calc(48px + var(--safe-bottom));
+}
+
+.search-results-info-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0 2px 0;
+}
+
+.search-results-heading {
+  font-family: var(--font-headline);
+  font-size: 16.5px;
+  font-weight: 750;
+  color: var(--on-surface);
+}

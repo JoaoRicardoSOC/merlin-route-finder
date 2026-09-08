@@ -1,0 +1,108 @@
+/* ==========================================================================
+   FLOATING AI CHAT CTA BUTTON (Omnipresent on All Pages)
+   ========================================================================== */
+
+.floating-ai-chat-btn {
+  position: fixed;
+  bottom: 82px; /* above mobile BottomNav (64px) */
+  right: 18px;
+  z-index: 95;
+  background: linear-gradient(135deg, #006B27 0%, #008733 100%);
+  color: #ffffff;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  border-radius: var(--radius-full);
+  padding: 8px 14px 8px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 18px rgba(0, 107, 39, 0.38), 0 2px 6px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(8px);
+}
+
+.floating-ai-chat-btn.on-product-page {
+  bottom: 86px; /* above product fixed bottom bar */
+}
+
+.floating-ai-chat-btn:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 6px 24px rgba(0, 107, 39, 0.48), 0 2px 8px rgba(0, 0, 0, 0.16);
+  background: linear-gradient(135deg, #007a2d 0%, #00993a 100%);
+}
+
+.floating-ai-chat-btn:active {
+  transform: scale(0.96);
+}
+
+.floating-ai-icon-box {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.floating-ai-sparkle {
+  font-size: 16px;
+  color: #ffffff;
+  animation: aiSparkleRotate 3s infinite linear;
+}
+
+@keyframes aiSparkleRotate {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(15deg) scale(1.1); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+.floating-ai-beacon {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 9px;
+  height: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-beacon-dot {
+  width: 6px;
+  height: 6px;
+  background-color: #4ade80;
+  border: 1px solid #ffffff;
+  border-radius: var(--radius-full);
+  z-index: 2;
+}
+
+.ai-beacon-ping {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: #4ade80;
+  border-radius: var(--radius-full);
+  opacity: 0.75;
+  animation: beaconPulse 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.floating-ai-label {
+  font-family: var(--font-label);
+  font-size: 12.5px;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .floating-ai-chat-btn {
+    padding: 8px 12px 8px 8px;
+    gap: 6px;
+  }
+  .floating-ai-label {
+    font-size: 11.5px;
+  }
+}

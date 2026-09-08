@@ -59,6 +59,7 @@
 - [D-91. Departamento sem gôndola traçada fica vazio, e o vazio é a resposta](#d-91-departamento-sem-gôndola-traçada-fica-vazio-e-o-vazio-é-a-resposta)
 - [D-92. Quem sabe o que a IA citou é o backend, não a tela](#d-92-quem-sabe-o-que-a-ia-citou-é-o-backend-não-a-tela)
 - [D-93. O fallback por proximidade não chama de substituto o que é apenas o mais próximo](#d-93-o-fallback-por-proximidade-não-chama-de-substituto-o-que-é-apenas-o-mais-próximo)
+- [D-94. O CSS virou 13 arquivos, e a numeração deles é funcional](#d-94-o-css-virou-13-arquivos-e-a-numeração-deles-é-funcional)
 
 **Persistência**
 - [D-10. Entidades JPA espelho, separadas das de domínio](#d-10-entidades-jpa-espelho-separadas-das-de-domínio)
@@ -2692,6 +2693,47 @@ o texto que afirma menos é o que não pode estar errado. Hoje os 111 produtos t
 `Sugestao.porProximidadeSemMesmoTipo`), `TratarRupturaEstoqueUseCaseTest`.
 
 ---
+
+---
+
+### D-94. O CSS virou 13 arquivos, e a numeração deles é funcional
+
+**Contexto.** `App.css` tinha **5.829 linhas** — 46% de todo o frontend num arquivo só. Achar
+onde uma regra mora custava busca textual, e duas pessoas mexendo em telas diferentes
+conflitavam no mesmo arquivo.
+
+**Decisão.** Dividido nas **13 seções que o próprio arquivo já demarcava** com `/* ==== */`,
+em `src/styles/`. Onze delas correspondem 1:1 a um componente que já era arquivo próprio.
+`App.css` passou a ser um índice de 13 `@import`.
+
+**Nenhuma regra foi alterada, e isso foi verificado em dois níveis.** No **fonte**, a
+concatenação dos 13 arquivos difere do `App.css` original em **12 linhas em branco** — uma
+em cada emenda, onde a linha vazia que separava as seções foi absorvida. Nenhuma outra
+diferença. No **build**, o CSS construído saiu **idêntico byte a byte**: 94.293 bytes, mesmo
+MD5, e até o hash de conteúdo no nome do arquivo (`index-T_pzdBrx.css`) não mudou.
+
+A conferência no fonte importa porque a do build sozinha **não bastaria**: a minificação
+remove comentários, então um bloco de comentário perdido no recorte passaria despercebido.
+
+**A numeração dos arquivos carrega significado.** Cascata depende de ordem: várias regras aqui
+têm a mesma especificidade, e quem vence é a última. Reordenar os `@import` **muda o layout sem
+gerar erro nenhum**. Por isso o prefixo numérico, que torna a ordem visível na lista de arquivos
+em vez de escondida no índice.
+
+Verificado também em modo de desenvolvimento, onde o Vite resolve `@import` por outro caminho:
+a 800 px de largura, `.products-grid` resolve para duas colunas — o `02-breakpoints` vencendo o
+`1fr` do `01-base`, que é exatamente o que a ordem correta produz.
+
+**O que ficou por fazer, de propósito.** O `02-breakpoints.css` tem 1.440 linhas e continua
+**transversal**: estiliza componentes de todos os outros doze arquivos. A estrutura certa é
+levar cada media query para junto do componente que ela estiliza — mas isso **altera a
+cascata**, e o frontend não tem test runner. Adiado para depois de 13/09.
+
+**Consequências.** Duas pessoas em telas diferentes deixam de conflitar no mesmo arquivo. Em
+troca, um estilo compartilhado agora pode morar em dois lugares plausíveis (`01-base` ou o
+arquivo do componente), e a resposta é `01-base` quando mais de um componente usa.
+
+**Onde no código.** `frontend/src/App.css` (índice) e `frontend/src/styles/`.
 
 ---
 
