@@ -47,6 +47,9 @@ curl -s "$U/$JS" | grep -c "até dois minutos"      # 0 = o texto antigo saiu
 >
 > A partida a frio (seção 1) é testada **de propósito**, uma vez, e depois o backend fica quente
 > para o resto.
+>
+> Para o QA longo e para a gravação, deixe rodando em outro terminal:
+> `node ferramentas/gravacao/manter-acordado.mjs`
 
 > [!WARNING]
 > **A armadilha mais cara é a sessão guardada.** O `localStorage` mantém `sessaoId`, roteiro e

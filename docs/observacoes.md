@@ -1055,7 +1055,7 @@ Ou seja: **240 ms de banco viram 2.421 ms de resposta.** Cerca de 90% da latênc
 
 A tela de entrada é a mais lenta de todas, e é a única de 2,4 segundos. Abrir pelo **menu de seções** (355 ms) e só então mostrar produtos de uma seção (814 ms) dá ao cliente duas telas rápidas em vez de uma lenta. É como um e-commerce de material de construção funciona de qualquer forma: ninguém navega 111 produtos sem categoria.
 
-**2. Guardar o mapa no aparelho.** `GET /mapa` não depende de sessão justamente para isso ([D-58](decisoes-tecnicas.md#d-58-a-planta-da-loja-não-vive-no-banco-e-é-dela-que-saem-as-coordenadas-das-seções)). Buscar uma vez e reusar economiza 669 ms a cada abertura do mapa, que é a tela central do produto.
+**2. ~~Guardar o mapa no aparelho.~~ Sem objeto desde 03/09.** A tela do mapa **não chama mais `GET /mapa`**: a geometria passou a vir de `plantaInterlagos.js`, traçada da planta real ([D-89](decisoes-tecnicas.md#d-89-a-planta-é-decalcada-da-loja-real-não-gerada-por-fórmula)), e a função que buscava o endpoint era código morto que ninguém chamava. Não há 669 ms a economizar porque não há requisição. O endpoint continua servindo o contrato, e a divergência entre as duas plantas está na [O-38](#o-38-a-planta-do-backend-e-a-do-frontend-discordam-e-hoje-ninguém-percebe).
 
 **3. Cache do mapa no backend** — não feito, e vale discutir antes. Os pontos só mudam quando a carga roda, no startup, então guardar a resposta em memória seria seguro. Economiza os 669 ms para quem não guardou no aparelho. É código novo com uma premissa declarada, e por isso não entrou sem conversa.
 
