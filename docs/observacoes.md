@@ -743,9 +743,31 @@ bloqueio somado no perfil de celular.
 > acrescentar um, rodar `python ferramentas/fontes/gerar.py` — o script varre o código, então
 > a lista não envelhece sozinha.
 >
-> **Falta medir.** O Lighthouse não está instalado no projeto e a medição original foi
-> contra o ambiente publicado. Depois do próximo deploy, vale repetir para dizer quanto o FCP
-> de 8,6 s caiu de fato.
+> **Medido em 03/09, e o resultado é mais modesto do que parecia.** A/B controlado: as duas
+> versões do build servidas lado a lado, Lighthouse 12.8.2 no perfil de celular, duas rodadas
+> de cada. A versão antiga continuou buscando as fontes no Google pela rede real, que é a
+> variável que se queria isolar.
+>
+> | | antes | depois | |
+> |---|---|---|---|
+> | nota de performance | 84 / 84 | 84 / 85 | **sem mudança** |
+> | First Contentful Paint | 3.161 / 3.154 ms | 2.854 / 2.853 ms | −303 ms |
+> | Largest Contentful Paint | 3.575 / 3.634 ms | 3.705 / 3.697 ms | **+97 ms, pior** |
+> | bytes de fonte transferidos | 1.139 KB | 53 KB | **−1.085 KB** |
+>
+> **A nota não mudou.** O ganho real é 1 MB a menos de transferência e ~300 ms de primeira
+> pintura. A variância entre rodadas é de ±10 ms, então nem os 303 ms nem os 97 ms são ruído.
+>
+> **O LCP piorou de forma consistente, e não sei por quê ainda.** A suspeita é o `preload` das
+> duas fontes competindo por banda com o que pinta o maior elemento — mas é hipótese, não
+> medição. Vale um teste sem o `preload` antes de afirmar.
+>
+> **O que não dá para dizer:** que a nota subiu de 56 para 84. Os 56 e os 8,6 s de 01/09 foram
+> medidos em outra máquina, outro navegador e outra rede. Uma rodada solta contra o publicado
+> deu 96 hoje — e isso mede o meu computador, não a mudança.
+>
+> **Esta observação continua aberta**, portanto. O 1 MB era real e saiu; o FCP de 8,6 s que ela
+> descreve não foi reproduzido aqui, e sem reproduzi-lo não há como dizer que foi resolvido.
 
 | Caminho | O que ganha | O que custa |
 |---|---|---|
