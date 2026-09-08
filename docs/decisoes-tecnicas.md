@@ -58,6 +58,7 @@
 - [D-90. A loja são dois corpos: o galpão fechado e o pátio coberto](#d-90-a-loja-são-dois-corpos-o-galpão-fechado-e-o-pátio-coberto)
 - [D-91. Departamento sem gôndola traçada fica vazio, e o vazio é a resposta](#d-91-departamento-sem-gôndola-traçada-fica-vazio-e-o-vazio-é-a-resposta)
 - [D-92. Quem sabe o que a IA citou é o backend, não a tela](#d-92-quem-sabe-o-que-a-ia-citou-é-o-backend-não-a-tela)
+- [D-93. O fallback por proximidade não chama de substituto o que é apenas o mais próximo](#d-93-o-fallback-por-proximidade-não-chama-de-substituto-o-que-é-apenas-o-mais-próximo)
 
 **Persistência**
 - [D-10. Entidades JPA espelho, separadas das de domínio](#d-10-entidades-jpa-espelho-separadas-das-de-domínio)
@@ -2638,6 +2639,57 @@ histórico da sessão e vieram antes desta mudança.
 
 **Onde no código.** `ConversarComAssistenteUseCase` (acumula os vistos, casa com a resposta),
 `ChatMensagemResponse`, `InstrucaoDoAssistente` (regra 4), `AIChatModal.jsx`, `openapi.yaml`.
+
+---
+
+### D-93. O fallback por proximidade não chama de substituto o que é apenas o mais próximo
+
+**Contexto.** Quando o assistente não responde — e a cota gratuita é de **5 chamadas por
+minuto** —, a ruptura cai para `candidatos.getFirst()`, o primeiro da ordem
+`tipo → marca → distância → nome` ([D-68](#d-68-o-substituto-é-escolhido-por-semelhança-antes-de-proximidade)).
+Quando **nenhum** candidato divide o `TIPO` do produto em falta, esse primeiro não é o mais
+semelhante: é só o que estava mais perto.
+
+**O tamanho disso foi medido, e não é caso de borda.** Em 08/09/2026, na massa de demonstração:
+**64 dos 111 produtos** não têm nenhum vizinho do mesmo tipo, porque **64 dos 82 tipos existem
+num produto só** ([O-40](observacoes.md#o-40-quando-a-cota-do-gemini-estoura-58-dos-produtos-recebem-um-substituto-de-outra-função--resolvida-no-texto)).
+São 58% das rupturas possíveis.
+
+**Decisão.** O fallback compara o `TIPO` do produto em falta com o do candidato eleito e escolhe
+entre **dois textos**:
+
+| | justificativa |
+|---|---|
+| mesmo tipo | *"Este é o produto disponível mais próximo de onde você está. Confira na embalagem…"* |
+| tipo diferente **ou desconhecido** | *"Não encontramos por perto nenhum produto do mesmo tipo que o que acabou. Este é o disponível mais próximo — confira na embalagem…"* |
+
+**Por que não recusar, que era a alternativa óbvia.** O caminho da IA sabe responder `NENHUM`, e
+dar a mesma saída ao fallback pareceria coerente. Mas isso apagaria a sugestão em 58% das
+rupturas, e a funcionalidade que a banca vem ver passaria a não fazer nada na maior parte das
+tentativas. **A informação útil não é a recusa; é a ressalva.** O cliente está em pé diante da
+prateleira: dizer "não tem nada igual, mas tem isto aqui do lado" resolve mais do que o silêncio.
+
+**Por que não mexer no raio.** O produto equivalente não existe na loja de demonstração. Aumentar
+o raio traria candidatos mais distantes e igualmente de outra função — mais ruído, mesmo defeito.
+O que resolveria de verdade é plantar pares de mesmo `TIPO` na massa, que é trabalho de dados.
+
+**Tipo desconhecido cai no texto cauteloso.** Sem o atributo não há como afirmar equivalência, e
+o texto que afirma menos é o que não pode estar errado. Hoje os 111 produtos têm `TIPO`, mas isso
+é propriedade da massa e não do código.
+
+**Consequências.**
+
+- **A tela não muda.** É o mesmo campo `justificativa` e o mesmo selo *"Disponível mais
+  próximo"* ([O-04](observacoes.md#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela)).
+  Nada para a dupla de frontend fazer.
+- **Uma consulta a mais**, e só no caminho do fallback: os atributos do candidato eleito. A
+  afinidade do produto em falta passou a ser lida uma vez em `executar` e reaproveitada, então
+  o caminho feliz não ficou mais caro.
+- `OrigemSugestao` continua `PROXIMIDADE` nos dois casos — a origem é a mesma; o que muda é o
+  que ela pode afirmar.
+
+**Onde no código.** `TratarRupturaEstoqueUseCase` (`porProximidade` e
+`Sugestao.porProximidadeSemMesmoTipo`), `TratarRupturaEstoqueUseCaseTest`.
 
 ---
 

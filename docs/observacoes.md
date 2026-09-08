@@ -28,7 +28,7 @@
 | [O-31](#o-31-o-assistente-não-nomeia-produtos-por-extenso-e-por-isso-nenhum-cartão-aparece--resolvida) | ~~Nenhum cartão de produto aparece no chat~~ — resolvida | — | — |
 | [O-38](#o-38-a-planta-do-backend-e-a-do-frontend-discordam-e-hoje-ninguém-percebe) | Duas geometrias da mesma loja, e só uma é usada | Backend | Baixa hoje |
 | [O-39](#o-39-materiais-de-construção-e-caixas-aparecem-sem-gôndola) | Duas seções aparecem sem gôndola | Frontend | Baixa |
-| [O-40](#o-40-quando-a-cota-do-gemini-estoura-58-dos-produtos-recebem-um-substituto-de-outra-função) | Substituto de outra função em 58% dos produtos quando a cota estoura | Backend e time | **Alta** |
+| [O-40](#o-40-quando-a-cota-do-gemini-estoura-58-dos-produtos-recebem-um-substituto-de-outra-função--resolvida-no-texto) | ~~Substituto de outra função em 58% dos produtos~~ — resolvida no texto | — | — |
 | [QA](roteiro-de-qa.md) | Roteiro de verificação do ambiente publicado — **rodar na véspera da gravação** | Time | **Alta** |
 | [O-19](#o-19-o-plano-b-funciona-falta-a-placa-que-aponta-para-ele) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
@@ -1078,7 +1078,21 @@ planta e é traçável; o pátio depende de alguém conseguir ler a organizaçã
 
 ---
 
-### O-40. Quando a cota do Gemini estoura, 58% dos produtos recebem um substituto de outra função
+### O-40. ~~Quando a cota do Gemini estoura, 58% dos produtos recebem um substituto de outra função~~ — resolvida no texto
+
+> [!NOTE]
+> **Encerrada em 08/09/2026, pela terceira saída da tabela abaixo.** O fallback compara o `TIPO`
+> do produto em falta com o do candidato eleito e, quando diferem — ou quando o tipo é
+> desconhecido —, usa uma justificativa que **nomeia a limitação em vez de escondê-la**:
+>
+> > *"Não encontramos por perto nenhum produto do mesmo tipo que o que acabou. Este é o
+> > disponível mais próximo — confira na embalagem se ele atende ao seu caso antes de levar."*
+>
+> A tela não mudou: mesmo campo, mesmo selo. Ver [D-93](decisoes-tecnicas.md#d-93-o-fallback-por-proximidade-não-chama-de-substituto-o-que-é-apenas-o-mais-próximo).
+>
+> **O número não mudou, e não era para mudar.** Continuam sendo 64 dos 111 produtos sem vizinho
+> do mesmo tipo — isso é propriedade da massa, e só some plantando mais pares. O que mudou é que
+> o sistema **passou a dizer** quando está nessa situação.
 
 **Medido em 08/09/2026** contra o schema, com
 [`ferramentas/banco/medir-substitutos.py`](../ferramentas/banco/medir-substitutos.py).

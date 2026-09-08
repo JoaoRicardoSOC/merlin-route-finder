@@ -97,14 +97,22 @@ public class TratarRupturaEstoqueUseCase {
         sessaoRepository.salvar(sessao);
 
         Produto emFalta = item.getProduto();
-        List<Produto> candidatos = candidatosProximosDe(emFalta, lista);
+
+        /*
+         * A afinidade do produto em falta serve a dois usos - ordenar a consulta e, se o
+         * assistente cair, decidir o que o fallback pode afirmar -, entao e lida uma vez so.
+         */
+        AfinidadeDeProduto afinidade = AfinidadeDeProduto.de(
+                produtoRepository.buscarAtributosDe(emFalta.getId()));
+
+        List<Produto> candidatos = candidatosProximosDe(emFalta, lista, afinidade);
 
         if (candidatos.isEmpty()) {
             return recusar(sessao.getId(), item,
                     "Nenhum produto com estoque está num raio caminhável deste ponto.");
         }
 
-        Sugestao sugestao = eleger(emFalta, candidatos);
+        Sugestao sugestao = eleger(emFalta, candidatos, afinidade);
 
         if (!sugestao.temProduto()) {
             return recusar(sessao.getId(), item, sugestao.justificativa());
@@ -137,7 +145,8 @@ public class TratarRupturaEstoqueUseCase {
 
     // ---------------------------------------------------------------- pre-filtragem espacial
 
-    private List<Produto> candidatosProximosDe(Produto emFalta, ListaRoteiro lista) {
+    private List<Produto> candidatosProximosDe(Produto emFalta, ListaRoteiro lista,
+                                               AfinidadeDeProduto afinidade) {
         PontoMapa origem = emFalta.getPontoMapa();
         if (origem == null) {
             // Sem posicao conhecida nao existe "perto": nao ha como filtrar espacialmente.
@@ -154,9 +163,6 @@ public class TratarRupturaEstoqueUseCase {
          * aplicado pelo banco, entao ordenar em memoria chegaria tarde - os semelhantes ja
          * teriam sido cortados. Ver D-68.
          */
-        AfinidadeDeProduto afinidade = AfinidadeDeProduto.de(
-                produtoRepository.buscarAtributosDe(emFalta.getId()));
-
         return produtoRepository
                 .buscarDisponiveisProximosDe(origem, emFalta.getId(), afinidade,
                         RAIO_DE_BUSCA, LIMITE_DE_CANDIDATOS)
@@ -168,7 +174,7 @@ public class TratarRupturaEstoqueUseCase {
 
     // ---------------------------------------------------------------- eleicao do substituto
 
-    private Sugestao eleger(Produto emFalta, List<Produto> candidatos) {
+    private Sugestao eleger(Produto emFalta, List<Produto> candidatos, AfinidadeDeProduto afinidade) {
         try {
             String resposta = assistenteIA.conversar(
                     InstrucaoDeRuptura.instrucaoDeSistema(emFalta.getNome(), corredorDe(emFalta)),
@@ -177,7 +183,7 @@ public class TratarRupturaEstoqueUseCase {
                     InstrucaoDeRuptura.ferramentas(),
                     (ferramenta, argumentos) -> Map.of("candidatos", descrever(candidatos, emFalta)));
 
-            return interpretar(resposta, candidatos);
+            return interpretar(resposta, candidatos, afinidade);
 
         } catch (AssistenteIAIndisponivelException e) {
             /*
@@ -193,8 +199,32 @@ public class TratarRupturaEstoqueUseCase {
              * importa justamente aqui, no caminho que roda quando a cota do Gemini estoura -
              * que e o cenario mais provavel de acontecer durante a banca.
              */
-            return Sugestao.porProximidade(candidatos.getFirst());
+            return porProximidade(candidatos.getFirst(), afinidade);
         }
+    }
+
+    /**
+     * O fallback nao julga funcao - so obedece a ordem da consulta. Quando o primeiro candidato
+     * nao divide o TIPO do produto em falta, ele <b>nao e substituto</b>: e o que estava mais
+     * perto. Nesse caso o texto diz isso, em vez de deixar o cliente supor equivalencia.
+     * <p>
+     * <b>Nao e detalhe de redacao, e o caso comum.</b> Medido em 08/09/2026 na massa de
+     * demonstracao, 64 dos 111 produtos nao tem nenhum vizinho do mesmo tipo - 64 dos 82 tipos
+     * existem num produto so. Ver O-40 e {@code ferramentas/banco/medir-substitutos.py}.
+     * <p>
+     * <b>Tipo desconhecido cai no texto cauteloso</b>, e nao no outro: sem o atributo nao ha
+     * como afirmar equivalencia, e afirmar de menos custa menos que afirmar de mais.
+     */
+    private Sugestao porProximidade(Produto maisProximo, AfinidadeDeProduto doEmFalta) {
+        AfinidadeDeProduto doCandidato = AfinidadeDeProduto.de(
+                produtoRepository.buscarAtributosDe(maisProximo.getId()));
+
+        boolean mesmaFuncao = doEmFalta.tipo() != null
+                && doEmFalta.tipo().equalsIgnoreCase(doCandidato.tipo());
+
+        return mesmaFuncao
+                ? Sugestao.porProximidade(maisProximo)
+                : Sugestao.porProximidadeSemMesmoTipo(maisProximo);
     }
 
     /*
@@ -204,7 +234,8 @@ public class TratarRupturaEstoqueUseCase {
      * um produto que existe mas nao estava na lista, e descartado como se a IA nao tivesse
      * respondido. Ver D-38.
      */
-    private Sugestao interpretar(String resposta, List<Produto> candidatos) {
+    private Sugestao interpretar(String resposta, List<Produto> candidatos,
+                                 AfinidadeDeProduto afinidade) {
         String[] partes = resposta.strip().split("\\" + InstrucaoDeRuptura.SEPARADOR, 2);
         String codigo = normalizar(partes[0]);
         String justificativa = partes.length > 1 ? partes[1].strip().replaceAll("\\s+", " ") : "";
@@ -222,7 +253,7 @@ public class TratarRupturaEstoqueUseCase {
         if (escolhido.isEmpty() || justificativa.isBlank()) {
             log.warn("Assistente respondeu fora do combinado ('{}'); usando o disponivel mais proximo",
                     resposta.strip());
-            return Sugestao.porProximidade(candidatos.getFirst());
+            return porProximidade(candidatos.getFirst(), afinidade);
         }
 
         return new Sugestao(escolhido.get(), justificativa, OrigemSugestao.ASSISTENTE_IA);
@@ -268,6 +299,18 @@ public class TratarRupturaEstoqueUseCase {
             return new Sugestao(maisProximo,
                     "Este é o produto disponível mais próximo de onde você está. Confira na "
                             + "embalagem se ele atende ao seu caso antes de levar.",
+                    OrigemSugestao.PROXIMIDADE);
+        }
+
+        /*
+         * O corredor nao entra no texto: a tela ja o mostra ao lado do nome, com icone
+         * proprio (RupturaModal). Repetir aqui so encompridaria a frase.
+         */
+        static Sugestao porProximidadeSemMesmoTipo(Produto maisProximo) {
+            return new Sugestao(maisProximo,
+                    "Não encontramos por perto nenhum produto do mesmo tipo que o que acabou. "
+                            + "Este é o disponível mais próximo — confira na embalagem se ele "
+                            + "atende ao seu caso antes de levar.",
                     OrigemSugestao.PROXIMIDADE);
         }
 

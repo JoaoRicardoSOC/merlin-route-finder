@@ -1,6 +1,7 @@
 package br.com.jence.backend.application.usecase;
 
 import br.com.jence.backend.application.dto.RupturaEstoqueResponse;
+import br.com.jence.backend.domain.entity.AtributoProduto;
 import br.com.jence.backend.domain.entity.ItemRoteiro;
 import br.com.jence.backend.domain.entity.ListaRoteiro;
 import br.com.jence.backend.domain.entity.OrigemSugestao;
@@ -10,6 +11,7 @@ import br.com.jence.backend.domain.entity.RegistroRuptura;
 import br.com.jence.backend.domain.entity.Sessao;
 import br.com.jence.backend.domain.entity.StatusSessao;
 import br.com.jence.backend.domain.entity.TipoPonto;
+import br.com.jence.backend.domain.entity.ValorDeAtributo;
 import br.com.jence.backend.domain.exception.AssistenteIAIndisponivelException;
 import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
@@ -108,6 +110,17 @@ class TratarRupturaEstoqueUseCaseTest {
 
     private void assistenteResponde(String resposta) {
         when(assistenteIA.conversar(any(), any(), any(), any())).thenReturn(resposta);
+    }
+
+    /**
+     * O TIPO de cada produto, que decide o que o fallback pode afirmar (O-40).
+     * <p>
+     * Sem isto os dois lados voltariam nulos e todo teste de proximidade cairia no texto
+     * cauteloso sem dizer que queria - foi o que aconteceu quando a regra entrou.
+     */
+    private void comTipo(Produto produto, String tipo) {
+        when(produtoRepository.buscarAtributosDe(produto.getId()))
+                .thenReturn(List.of(new ValorDeAtributo(AtributoProduto.TIPO, tipo)));
     }
 
     private RegistroRuptura registroSalvo() {
@@ -248,6 +261,8 @@ class TratarRupturaEstoqueUseCaseTest {
     void assistenteIndisponivelCaiNoMaisProximo() {
         comSessaoAtiva();
         comCandidatosProximos(lixaDagua, disjuntor);
+        comTipo(lixaEmFalta, "Lixa para parede");
+        comTipo(lixaDagua, "Lixa para parede");
         when(assistenteIA.conversar(any(), any(), any(), any()))
                 .thenThrow(new AssistenteIAIndisponivelException("cota esgotada"));
 
@@ -259,6 +274,44 @@ class TratarRupturaEstoqueUseCaseTest {
                 .as("a mensagem precisa ser honesta sobre nao ter havido analise")
                 .contains("mais próximo");
         assertThat(registroSalvo().getOrigem()).isEqualTo(OrigemSugestao.PROXIMIDADE);
+    }
+
+    /*
+     * O caso comum da massa de demonstracao, e nao a excecao: 64 dos 111 produtos nao tem
+     * nenhum vizinho do mesmo tipo. Ver O-40.
+     */
+    @Test
+    @DisplayName("fallback nao chama de substituto o que e apenas o mais proximo")
+    void fallbackSemMesmoTipoNaoAfirmaEquivalencia() {
+        comSessaoAtiva();
+        comCandidatosProximos(disjuntor);
+        comTipo(lixaEmFalta, "Lixa para parede");
+        comTipo(disjuntor, "Disjuntor");
+        when(assistenteIA.conversar(any(), any(), any(), any()))
+                .thenThrow(new AssistenteIAIndisponivelException("cota esgotada"));
+
+        RupturaEstoqueResponse resposta = useCase.executar(itemId);
+
+        assertThat(resposta.produtoSugeridoId())
+                .as("continua entregando algo: sumir com a sugestao seria pior")
+                .isEqualTo(disjuntor.getId());
+        assertThat(resposta.justificativa())
+                .as("precisa dizer que nao ha nada do mesmo tipo, e nao deixar supor")
+                .contains("nenhum produto do mesmo tipo");
+    }
+
+    @Test
+    @DisplayName("tipo desconhecido cai no texto cauteloso, e nao no que afirma equivalencia")
+    void semAtributoDeTipoNaoAfirmaEquivalencia() {
+        comSessaoAtiva();
+        comCandidatosProximos(lixaDagua);
+        // Nenhum comTipo(): a massa pode nao ter o atributo, e ai nao ha o que comparar.
+        when(assistenteIA.conversar(any(), any(), any(), any()))
+                .thenThrow(new AssistenteIAIndisponivelException("cota esgotada"));
+
+        RupturaEstoqueResponse resposta = useCase.executar(itemId);
+
+        assertThat(resposta.justificativa()).contains("nenhum produto do mesmo tipo");
     }
 
     // ---------------------------------------------------------------- sem substituto
