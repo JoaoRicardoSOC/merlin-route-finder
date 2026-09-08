@@ -27,6 +27,7 @@
 | [O-31](#o-31-o-assistente-não-nomeia-produtos-por-extenso-e-por-isso-nenhum-cartão-aparece--resolvida) | ~~Nenhum cartão de produto aparece no chat~~ — resolvida | — | — |
 | [O-38](#o-38-a-planta-do-backend-e-a-do-frontend-discordam-e-hoje-ninguém-percebe) | Duas geometrias da mesma loja, e só uma é usada | Backend | Baixa hoje |
 | [O-39](#o-39-materiais-de-construção-e-caixas-aparecem-sem-gôndola) | Duas seções aparecem sem gôndola | Frontend | Baixa |
+| [O-41](#o-41-os-sete-modais-não-prendem-o-foco-e-ao-fechar-ele-não-volta) | Modais sem armadilha de foco nem restauração | Frontend | Baixa até 13/09 |
 | [O-40](#o-40-quando-a-cota-do-gemini-estoura-58-dos-produtos-recebem-um-substituto-de-outra-função--resolvida-no-texto) | ~~Substituto de outra função em 58% dos produtos~~ — resolvida no texto | — | — |
 | [QA](roteiro-de-qa.md) | Roteiro de verificação do ambiente publicado — **rodar na véspera da gravação** | Time | **Alta** |
 | [O-19](#o-19-o-plano-b-funciona-falta-a-placa-que-aponta-para-ele) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
@@ -1204,6 +1205,57 @@ na loja de demonstração. Plantar mais pares de mesmo `TIPO` na massa resolveri
 trabalho de dados, não de código.
 
 **De quem.** Backend, com decisão do time sobre qual saída.
+
+---
+
+### O-41. Os sete modais não prendem o foco, e ao fechar ele não volta
+
+**Encontrado no QA completo de 08/09/2026**, contra o ambiente publicado.
+
+**O que está certo, e vale registrar antes:** os modais têm `role="dialog"` e
+`aria-modal="true"`, `Esc` fecha todos, e o foco **entra** no modal ao abrir. Nada disso precisa
+ser refeito.
+
+**O que falta.** Duas metades da mesma coisa:
+
+| | Medido |
+|---|---|
+| **O foco não fica preso** | Com um modal aberto, **40 elementos do fundo continuam alcançáveis por Tab**. Nenhum está `inert` nem `aria-hidden` |
+| **O foco não volta** | Ao fechar, `document.activeElement` vira o `body` — e não o botão que abriu |
+
+Confirmado no código, e não só na tela: **não existe armadilha de foco nem restauração em
+componente nenhum**. As únicas chamadas de foco no frontend são `input.focus()`, para focar um
+campo ao abrir — em `AIChatModal` e `CatalogSearchPage`.
+
+**Não é regressão.** O bloco de acessibilidade fechado em 30/08 cobriu contraste
+([D-79](decisoes-tecnicas.md#d-79-o-texto-sobre-o-verde-da-marca-é-escuro-e-o-verde-que-carrega-texto-é-outro)),
+movimento reduzido ([D-80](decisoes-tecnicas.md#d-80-movimento-reduzido-usa-duração-de-001ms-e-não-animation-none))
+e barreira de erro. **Gestão de foco nunca esteve nele** — é lacuna, não algo que quebrou.
+
+**Um vizinho, que aparece na mesma auditoria.** Só existem **4 regras de foco** na folha inteira,
+todas `:focus-within` em campos de texto. Botões e links dependem do **anel padrão do
+navegador** — que funciona hoje, porque ninguém escreveu `outline: none` global. Os três
+`outline: none` que existem são benignos: dois na tela de abertura, um num campo que já tem
+`:focus-within`. **Isso quebra silenciosamente** no dia em que alguém "limpar" o visual dos
+botões.
+
+**Onde precisa entrar.** Sete arquivos: `AIChatModal`, `FacetFiltersModal`, `FimJornadaModal`,
+`LocationCodeModal`, `RoteiroDrawer`, `RupturaModal`, `SectorsDrawer`.
+
+**O que resolveria, e por que é um gancho e não sete correções.** Um `useArmadilhaDeFoco(aberto,
+refDoModal)` que, ao abrir, guarda `document.activeElement`, cicla o Tab dentro do modal, e ao
+fechar devolve o foco a quem guardou. Corrigir modal a modal deixaria a classe do defeito de pé:
+o oitavo modal que alguém escrever nasce sem.
+
+**Por que não foi feito agora.** Toca os sete modais a cinco dias da entrega, **o frontend não
+tem test runner** para segurar a queda, e nada disso aparece no vídeo — a demonstração é por
+toque, não por teclado. O risco de introduzir um foco preso no lugar errado é maior que o ganho
+até 13/09.
+
+**O que isso custa antes da entrega:** nada no vídeo. Depois dele, é acessibilidade de teclado —
+e a rubrica paga usabilidade.
+
+**De quem.** Frontend. **Urgência:** baixa até 13/09; média depois.
 
 ---
 
