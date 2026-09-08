@@ -827,36 +827,58 @@ bloqueio somado no perfil de celular.
 > |---|---|---|---|
 > | nota de performance | 84 / 84 / 84 | 84 / 85 / 84 | **sem mudança** |
 > | First Contentful Paint | 3161 / 3154 / 3155 ms | 2854 / 2853 / 2854 ms | **−301 ms** |
-> | Largest Contentful Paint | 3575 / 3634 / 3624 ms | 3705 / 3697 / 3772 ms | **+81 ms, pior** |
+> | Largest Contentful Paint | 3575 / 3634 / 3624 ms | 3705 / 3697 / 3772 ms | ~~+81 ms~~ **inválido** |
 > | bytes de fonte | 1.139 KB | 53 KB | **−1.085 KB** |
 >
 > **A nota não mudou.** O ganho real é 1 MB a menos de transferência e ~300 ms de primeira
 > pintura.
 >
-> **Os dois números são definitivos, e não ruído.** A variação dentro de cada grupo é de ±4 ms
-> no FCP, e as faixas de LCP dos dois grupos **não se sobrepõem** (3575–3634 contra
-> 3697–3772).
+> **O FCP é definitivo:** a variação dentro de cada grupo é de ±4 ms, e os dois grupos não
+> chegam perto de se tocar.
 >
-> **O LCP piorou de forma consistente.** A primeira suspeita foi o `preload` das duas fontes
-> competindo por banda. **Testado, e a hipótese estava errada — ao contrário, inclusive.** Uma
-> terceira variante, sem `preload`, em mais três rodadas:
+> **O LCP desta tabela não vale, e foram precisas três hipóteses até aparecer o porquê.**
 >
-> | variante | nota | FCP (mediana) | LCP (mediana) |
-> |---|---|---|---|
-> | antes, buscando no Google | 84 / 84 / 84 | 3.155 ms | 3.624 ms |
-> | **depois, com `preload`** | 84 / 85 / 84 | **2.854 ms** | 3.705 ms |
-> | depois, sem `preload` | 82 / 82 / 82 | 3.303 ms | 3.773 ms |
+> > [!CAUTION]
+> > **Descoberto em 08/09: as quinze rodadas do A/B mediram a tela de erro, não o app.**
+> >
+> > O servidor estático que serve os dois builds lado a lado **não tem proxy para a API**. Sem
+> > backend, o app cai na tela *"Não conseguimos abrir sua sessão"* — e o Lighthouse informa
+> > qual elemento define o LCP:
+> >
+> > | rodada | elemento do LCP |
+> > |---|---|
+> > | as 15 do A/B local | `<p class="tela-de-erro-texto">` |
+> > | uma rodada contra o **publicado** | `<p class="welcome-subtitle">` |
+> >
+> > O relógio daquele parágrafo é **a chamada de API desistindo**, não a fonte chegando. Os
+> > 81 ms não medem a mudança de fonte; medem quanto o `fetch` levou para falhar na rodada.
+> >
+> > **O FCP escapa**, porque acontece antes: é a primeira pintura da casca, idêntica nos dois
+> > caminhos. **A nota escapa em parte** — ela pondera o LCP —, mas as duas versões deram 84
+> > nas seis rodadas, e a variante sem `preload` caiu para 82 puxada pelo FCP.
 >
-> O `preload` **ajuda os dois**: vale 449 ms de FCP e 67 ms de LCP. Sem ele, a versão nova
-> ficaria pior que a antiga no FCP também. **Ele fica.**
+> **Duas hipóteses foram testadas e falseadas antes de alguém olhar o elemento.** Ficam
+> registradas porque o resultado de cada uma continua valendo:
 >
-> **A causa do LCP, então, é outra, e a candidata é o `font-display: block` dos ícones.** Antes,
-> com `swap`, qualquer elemento com ícone pintava na hora — como a palavra escrita. Agora ele
-> fica invisível até a fonte chegar. Se o elemento que define o LCP tem ícone, isso o atrasa.
+> **1. O `preload` competindo por banda.** Errada, e ao contrário — ele ajuda:
 >
-> Se for isso, **é uma troca que se aceita de olhos abertos**: 81 ms de LCP para o cliente não
-> ler *"search"* e *"home"* escritos na tela. Mas continua sendo hipótese — o teste seria uma
-> quarta variante com `swap` no ícone.
+> | variante | nota | FCP (mediana) |
+> |---|---|---|
+> | antes, buscando no Google | 84 / 84 / 84 | 3.155 ms |
+> | **depois, com `preload`** | 84 / 85 / 84 | **2.854 ms** |
+> | depois, sem `preload` | 82 / 82 / 82 | 3.303 ms |
+>
+> Vale 449 ms de FCP. Sem ele a versão nova ficaria **pior que a antiga**. **Ele fica.**
+>
+> **2. O `font-display: block` dos ícones** segurando algum elemento com ícone. Também errada:
+> três rodadas de cada variante deram 3.772–3.789 ms de LCP com `block` contra 3.772–3.788 ms
+> com `swap` — **indistinguíveis**. O `block` fica pelo motivo por que entrou: sem ele o cliente
+> lê *"search"* e *"home"* escritos na tela.
+>
+> **A lição é maior que o item.** O A/B foi montado para isolar a rede e isolou junto o backend,
+> sem que nada avisasse. O Lighthouse não reclama de medir uma tela de erro — ele mede o que
+> estiver lá. **Ler qual elemento define o LCP é barato, e devia ter sido o primeiro passo em
+> vez do quarto.**
 >
 > **O que não dá para dizer:** que a nota subiu de 56 para 84. Os 56 e os 8,6 s de 01/09 foram
 > medidos em outra máquina, outro navegador e outra rede. Uma rodada solta contra o publicado
