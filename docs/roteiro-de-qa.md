@@ -140,9 +140,38 @@ O servidor hiberna. **A primeira abertura do dia é o que o cliente real enfrent
 
 ## 6. Ruptura e encerramento
 
+> [!IMPORTANT]
+> **Escolha o produto certo para este teste, ou ele "falha" sem haver defeito.**
+>
+> O botão não exige estoque zero: **qualquer item do roteiro** pode ser relatado como
+> prateleira vazia — é o cliente quem constata, não o sistema ([D-23](decisoes-tecnicas.md)).
+> Mas a qualidade da sugestão depende de existir outro produto do **mesmo tipo** por perto, e
+> **64 dos 111 produtos não têm nenhum** ([O-40](observacoes.md)). Para esses, o assistente
+> **recusa** — e recusar é o comportamento correto, não um defeito.
+>
+> **Use um dos cinco pares plantados na massa**, que existem exatamente para isto:
+>
+> | relate ruptura em | e deve vir |
+> |---|---|
+> | `SKU-ILU-001` lâmpada LED branca | `SKU-ILU-005`, outra branca |
+> | `SKU-TIN-003` lixa grão 120 | `SKU-TIN-004`, lixa d'água 150 |
+> | `SKU-ENC-004` sifão sanfonado | `SKU-ENC-005`, sifão copo |
+> | `SKU-FER-002` trena 5 m | `SKU-FER-003`, trena 7,5 m |
+> | `SKU-MAT-001` argamassa AC-II | `SKU-MAT-003`, AC-III |
+>
+> **Verificado no ambiente publicado em 08/09:** o `SKU-ILU-004` (lâmpada 3000 K) rendeu
+> *"possui a mesma tonalidade amarela (3000k) e está logo ao lado na mesma prateleira"*. Já o
+> `SKU-TIN-012` (pincel), que não tem outro pincel na loja, devolveu **422 com recusa
+> honesta** — *"não temos outro pincel ou trincha disponível"*. **Não grave a cena da
+> ruptura com o pincel.**
+>
+> Para saber quais produtos estão em cada grupo hoje:
+> `DB_USER=... DB_PASSWORD=... python ferramentas/banco/medir-substitutos.py`
+
 | # | Passo | Esperado |
 |---|---|---|
-| 6.1 | Num item, tocar em *"não encontrei este produto"* | Substituto sugerido, com foto, corredor e explicação. |
+| 6.1 | Num item **de um par plantado**, tocar em *"não encontrei este produto"* | Substituto sugerido, com foto, corredor e explicação. |
+| 6.1b | Repetir num produto **sem par** — o pincel `SKU-TIN-012` serve | Recusa com motivo, e não um substituto qualquer. **É o esperado.** |
 | 6.2 | Tocar duas vezes rápido no botão | Uma requisição só. Há trava síncrona. |
 | 6.3 | Aceitar o substituto | Numa ação: o substituto entra **não coletado** e o item que faltou sai. |
 | 6.4 | Tocar em *Encerrar* com itens pendentes | Encerra assim mesmo, perguntando sobre os caixas. |
