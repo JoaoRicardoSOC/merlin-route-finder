@@ -764,9 +764,26 @@ bloqueio somado no perfil de celular.
 > no FCP, e as faixas de LCP dos dois grupos **não se sobrepõem** (3575–3634 contra
 > 3697–3772).
 >
-> **O LCP piorou de forma consistente, e não sei por quê ainda.** A suspeita é o `preload` das
-> duas fontes competindo por banda com o que pinta o maior elemento — mas é hipótese, não
-> medição. Vale um teste sem o `preload` antes de afirmar.
+> **O LCP piorou de forma consistente.** A primeira suspeita foi o `preload` das duas fontes
+> competindo por banda. **Testado, e a hipótese estava errada — ao contrário, inclusive.** Uma
+> terceira variante, sem `preload`, em mais três rodadas:
+>
+> | variante | nota | FCP (mediana) | LCP (mediana) |
+> |---|---|---|---|
+> | antes, buscando no Google | 84 / 84 / 84 | 3.155 ms | 3.624 ms |
+> | **depois, com `preload`** | 84 / 85 / 84 | **2.854 ms** | 3.705 ms |
+> | depois, sem `preload` | 82 / 82 / 82 | 3.303 ms | 3.773 ms |
+>
+> O `preload` **ajuda os dois**: vale 449 ms de FCP e 67 ms de LCP. Sem ele, a versão nova
+> ficaria pior que a antiga no FCP também. **Ele fica.**
+>
+> **A causa do LCP, então, é outra, e a candidata é o `font-display: block` dos ícones.** Antes,
+> com `swap`, qualquer elemento com ícone pintava na hora — como a palavra escrita. Agora ele
+> fica invisível até a fonte chegar. Se o elemento que define o LCP tem ícone, isso o atrasa.
+>
+> Se for isso, **é uma troca que se aceita de olhos abertos**: 81 ms de LCP para o cliente não
+> ler *"search"* e *"home"* escritos na tela. Mas continua sendo hipótese — o teste seria uma
+> quarta variante com `swap` no ícone.
 >
 > **O que não dá para dizer:** que a nota subiu de 56 para 84. Os 56 e os 8,6 s de 01/09 foram
 > medidos em outra máquina, outro navegador e outra rede. Uma rodada solta contra o publicado
