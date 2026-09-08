@@ -131,9 +131,10 @@ O servidor hiberna. **A primeira abertura do dia é o que o cliente real enfrent
 | 5.5 | Marcar um item como coletado | Contador sobe. Marcar duas vezes não duplica. |
 
 > [!NOTE]
-> **Materiais de construção e a frente de caixas** aparecem com gôndolas geradas por fórmula —
-> cinco barras iguais. É [decisão registrada](decisoes-tecnicas.md), não defeito. Não vale a pena
-> dar close nelas no vídeo.
+> **Materiais de construção e a frente de caixas aparecem sem gôndola nenhuma** — só o contorno
+> e o nome. É [decisão registrada](decisoes-tecnicas.md#d-91-departamento-sem-gôndola-traçada-fica-vazio-e-o-vazio-é-a-resposta),
+> não defeito: a organização do pátio não é distinguível na planta. Materiais é a maior área da
+> tela, então **vazio chama atenção** — não vale dar close nele no vídeo.
 
 ---
 
@@ -171,7 +172,7 @@ O servidor hiberna. **A primeira abertura do dia é o que o cliente real enfrent
 
 **Pode gravar mesmo com:**
 
-- Materiais e Caixas com gôndolas por fórmula ([O-39](observacoes.md));
+- Materiais e Caixas sem gôndola nenhuma ([O-39](observacoes.md#o-39-materiais-de-construção-e-caixas-aparecem-sem-gôndola));
 - a partida a frio de até três minutos — é limitação do plano gratuito, e o app avisa;
 - produto sem foto ([O-18](observacoes.md));
 - número de cartões do assistente variando entre execuções.

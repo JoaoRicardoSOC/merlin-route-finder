@@ -2556,9 +2556,10 @@ não a decisão de serem dois.
 organização do pátio não é distinguível na planta; e **Caixas**, **Serviços** e **Entrada**,
 porque frente de caixa, balcão e porta não têm prateleira.
 
-**A tentação era preencher.** O código já sabia fazer isso: havia uma fórmula que gerava
-fileiras com passo constante para qualquer bloco. Ela produzia um resultado *plausível* para
-Materiais — cinco barras gordas e igualmente espaçadas.
+**A tentação era preencher.** A bancada de traçado já sabia fazer isso: tinha uma fórmula que
+gerava fileiras com passo constante para qualquer bloco, e ela produzia um resultado *plausível*
+para Materiais — cinco barras gordas e igualmente espaçadas. **Essa fórmula nunca foi levada
+para o app.**
 
 **Decisão: `gondolas: []`, e o vazio é registrado como decisão, não como pendência.**
 
@@ -2568,10 +2569,15 @@ fabricando resposta, com o catálogo inventando loja, com a etiqueta de posiçã
 entrada e com a sessão inteira sendo fabricada ([D-86](#d-86-a-sessão-inventada-sai-e-o-que-o-cliente-marca-sem-sinal-entra-numa-fila)).
 Preencher o pátio com prateleira imaginária seria a mesma doença num lugar novo.
 
-**A prova de que a decisão está certa está na própria tela.** Materiais de construção é a única
-seção que continua com fileiras geradas por fórmula, e ela **grita** ao lado das outras vinte:
-cinco barras idênticas, igualmente espaçadas, ao lado de departamentos onde a ocupação varia de
-14% a 48% e as espessuras vão de 0,3 a 2,2. Era assim que a loja inteira estava antes.
+**A prova de que a decisão está certa apareceu na bancada de conferência.** O
+`ferramentas/planta/__render.html` preenche por fórmula o que não tem traçado, justamente para o
+contraste ficar visível: Materiais de construção sai com **cinco barras idênticas e igualmente
+espaçadas**, ao lado de departamentos onde a ocupação varia de 14% a 48% e as espessuras vão de
+0,3 a 2,2. Ela **grita**. Era assim que a loja inteira estava antes de ser traçada.
+
+**No app não há geração nenhuma.** `plantaInterlagos.js` traz `gondolas: []` para as quatro
+seções sem traçado, e elas aparecem no mapa como área com contorno e nome. O preenchimento por
+fórmula existe só na bancada, como ferramenta de comparação.
 
 **Consequência.** Enquanto Materiais e Caixas não forem traçados, o desenho deles é
 reconhecidamente aproximado — e as bancadas de traçado ficam no repositório justamente para que

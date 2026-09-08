@@ -128,9 +128,10 @@ fabricada quando o servidor não respondia. Cada um desses está documentado com
 - **Não integra com o ERP.** O estoque exibido é o do nosso banco.
 - **Não calcula rota ótima.** A linha no mapa liga os pontos na ordem da lista.
 - **Não tem leitor de QR próprio** — quem lê é a câmera do celular, que abre o app pela URL.
-- **Materiais de construção e a frente de caixas** ainda são desenhados por fórmula: a
-  organização do pátio não é distinguível na planta, e preencher com prateleira imaginária
-  repetiria o problema que o resto do projeto corrige.
+- **Não desenha as gôndolas de Materiais de construção nem da frente de caixas.** A
+  organização do pátio não é distinguível na planta técnica, e preencher com prateleira
+  imaginária repetiria o problema que o resto do projeto corrige. As duas seções aparecem
+  no mapa como área, com o contorno e o nome, e sem prateleira.
 
 ## Equipe
 

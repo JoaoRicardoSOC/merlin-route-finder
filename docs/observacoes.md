@@ -27,7 +27,7 @@
 | [O-37](#o-37-quatro-famílias-tipográficas-seguram-a-primeira-pintura-por-quase-nove-segundos) | Quatro fontes seguram a primeira pintura | Frontend e time | Média |
 | [O-31](#o-31-o-assistente-não-nomeia-produtos-por-extenso-e-por-isso-nenhum-cartão-aparece--resolvida) | ~~Nenhum cartão de produto aparece no chat~~ — resolvida | — | — |
 | [O-38](#o-38-a-planta-do-backend-e-a-do-frontend-discordam-e-hoje-ninguém-percebe) | Duas geometrias da mesma loja, e só uma é usada | Backend | Baixa hoje |
-| [O-39](#o-39-materiais-de-construção-e-caixas-ainda-são-desenhados-por-fórmula) | Duas seções ainda desenhadas por fórmula | Frontend | Baixa |
+| [O-39](#o-39-materiais-de-construção-e-caixas-aparecem-sem-gôndola) | Duas seções aparecem sem gôndola | Frontend | Baixa |
 | [QA](roteiro-de-qa.md) | Roteiro de verificação do ambiente publicado — **rodar na véspera da gravação** | Time | **Alta** |
 | [O-19](#o-19-o-plano-b-funciona-falta-a-placa-que-aponta-para-ele) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
@@ -995,19 +995,35 @@ for usar coordenada do backend para desenhar ou para calcular distância.
 
 ---
 
-### O-39. Materiais de construção e Caixas ainda são desenhados por fórmula
+### O-39. Materiais de construção e Caixas aparecem sem gôndola
 
-**O que é.** Das 21 seções traçadas, 19 têm gôndolas decalcadas da planta. Duas continuam com o
-desenho **gerado**: **Materiais de construção**, porque a organização do pátio não é
-distinguível na planta técnica; e **Caixas**, cuja frente de caixa não foi traçada.
+> [!NOTE]
+> **Corrigida em 08/09.** O título e o corpo diziam que as duas seções eram *"desenhadas por
+> fórmula"*. **No app não são desenhadas de forma nenhuma**: `plantaInterlagos.js` traz
+> `gondolas: []` para elas, e `mapService` mapeia lista vazia para nada.
+>
+> A geração por fórmula existia apenas na bancada `ferramentas/planta/__render.html`, que
+> preenche o vazio para tornar visível o contraste entre o traçado e o gerado. **Nunca esteve
+> no produto** — e a afirmação errada estava em três lugares, incluindo o README.
+
+**O que é.** Das 21 seções traçadas, 19 têm gôndolas decalcadas da planta. Duas ficam sem
+nenhuma: **Materiais de construção**, porque a organização do pátio não é distinguível na planta
+técnica; e **Caixas**, cuja frente de caixa não foi traçada.
 
 Isso é decisão registrada, não esquecimento — ver
 [D-91](decisoes-tecnicas.md#d-91-departamento-sem-gôndola-traçada-fica-vazio-e-o-vazio-é-a-resposta).
 Preencher o pátio com prateleira imaginária repetiria a doença que o projeto vem consertando.
 
-**Como se reconhece na tela.** Materiais aparece com cinco barras gordas, idênticas e igualmente
-espaçadas, enquanto as outras dezenove têm ocupação variando de 14% a 48% e espessuras de 0,3 a
-2,2. **A diferença é visível a olho nu** — e é o melhor argumento de que traçar valeu a pena.
+**Como se reconhece na tela.** As duas aparecem como área com contorno e nome, sem prateleira,
+enquanto as outras dezenove têm ocupação variando de 14% a 48% e espessuras de 0,3 a 2,2.
+
+**Materiais é a maior área do mapa** — 74.443 px² medidos no ambiente publicado, contra 5.684 da
+segunda maior sem gôndola. Vazia, ela chama atenção: lê como *inacabada*, e não como *pátio sem
+prateleira*.
+
+**Decidido em 08/09 deixar como está.** Desenhar textura de área aberta foi avaliado e
+descartado; o vazio é honesto, e o vídeo pode simplesmente não dar close no pátio. Fica anotado
+para depois da entrega.
 
 **O que resolveria.** As bancadas de traçado ficaram no repositório em `ferramentas/planta/`
 exatamente para isso: `__gondolas.html` desenha as barras sobre a planta, com zoom, e
