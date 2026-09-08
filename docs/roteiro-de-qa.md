@@ -255,7 +255,7 @@ telas, os 7 modais e os 23 manipuladores de `App.jsx`.
 | 1.1 faixa da partida a frio | **passa** | *"Preparando o sistema… o servidor hiberna quando ninguém está usando, e acordar leva alguns minutos"* — sem prazo fixo |
 | 1.2 cronômetro anda | **passa** | 0:13 → 0:17. **Partida a frio: 204,9 s**, a maior já medida |
 | 1.3 texto muda aos 3 min | **não observável** | Ver a armadilha registrada abaixo |
-| 2.1 sem parâmetro | **REPROVA** | Chip afirma *"Você está em — Placa ENT01 — Entrada da loja"*. **Defeito 1** |
+| 2.1 sem parâmetro | **reprovou, corrigido no mesmo dia** | Chip afirmava *"Você está em — Placa ENT01 — Entrada da loja"*. **Defeito 1**, corrigido e reverificado — ver abaixo |
 | 2.2 `?ponto=TIN-02` | **passa** | *"Placa TIN02 — Corredor de Tintas"* |
 | 2.3 `?ponto=ZZZ-99` | **passa** | Toast em **1,1 s**; chip diz *"Ainda não sabemos onde você está"* |
 | 2.4 digitar `tin02` | **passa** | Vira `TIN02`; *"Posição atualizada para: Corredor de Tintas (Placa TIN02)"* |
@@ -284,9 +284,29 @@ telas, os 7 modais e os 23 manipuladores de `App.jsx`.
 | 7.3 foco volta ao gatilho | **REPROVA** | **Defeito 2** |
 | 7.4 375 px | **passa** | Zero vazamento em mapa, home, setores e busca |
 
-#### Defeito 1 — o chip afirma a entrada sem placa lida
+#### Defeito 1 — o chip afirma a entrada sem placa lida — **CORRIGIDO em 08/09**
 
-**Está na lista de "não grave se".** Primeira visita, sem `?ponto=` e sem sessão guardada: o chip
+> [!NOTE]
+> **Corrigido e reverificado contra o ambiente publicado**, com o pacote novo servido pela
+> Vercel (`index-B-1eECw8.js`).
+>
+> | caminho | depois da correção |
+> |---|---|
+> | sem parâmetro | *"Ainda não sabemos onde você está"*, e `posicaoAtual` nula no servidor |
+> | `?ponto=TIN-02` | *"Placa TIN02 — Corredor de Tintas"* — sem regressão |
+> | `?ponto=ZZZ-99` | *"Ainda não sabemos onde você está"* — sem regressão |
+> | recarga sem parâmetro, com sessão ativa | mesma sessão, TIN02 preservado — **sem regressão**, que era o risco real da mudança |
+>
+> **Um ramo morto ganhou vida.** O toast *"Não sabemos onde você está. Escaneie uma placa para o
+> mapa mostrar sua posição."* estava escrito em `App.jsx` desde 30/08 e **nunca havia sido
+> alcançado**, porque a linha errada garantia que sempre houvesse posição. Capturado rodando
+> pela primeira vez nesta reverificação.
+>
+> **A lição:** corrigir o estado inicial de uma tela não corrige o dado que chega depois — e uma
+> verificação feita nos primeiros instantes da carga aprova as duas. Ver
+> [O-19](observacoes.md#o-19-o-plano-b-funciona-falta-a-placa-que-aponta-para-ele).
+
+**Estava na lista de "não grave se".** Primeira visita, sem `?ponto=` e sem sessão guardada: o chip
 diz *"Você está em — Placa ENT01 — Entrada da loja"*. Reproduzido três vezes, sempre.
 
 **A causa é uma linha do frontend**, não do backend: `sessionService.js` chama
