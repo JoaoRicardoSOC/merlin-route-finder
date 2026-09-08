@@ -28,6 +28,7 @@
 | [O-31](#o-31-o-assistente-não-nomeia-produtos-por-extenso-e-por-isso-nenhum-cartão-aparece--resolvida) | ~~Nenhum cartão de produto aparece no chat~~ — resolvida | — | — |
 | [O-38](#o-38-a-planta-do-backend-e-a-do-frontend-discordam-e-hoje-ninguém-percebe) | Duas geometrias da mesma loja, e só uma é usada | Backend | Baixa hoje |
 | [O-39](#o-39-materiais-de-construção-e-caixas-aparecem-sem-gôndola) | Duas seções aparecem sem gôndola | Frontend | Baixa |
+| [O-40](#o-40-quando-a-cota-do-gemini-estoura-58-dos-produtos-recebem-um-substituto-de-outra-função) | Substituto de outra função em 58% dos produtos quando a cota estoura | Backend e time | **Alta** |
 | [QA](roteiro-de-qa.md) | Roteiro de verificação do ambiente publicado — **rodar na véspera da gravação** | Time | **Alta** |
 | [O-19](#o-19-o-plano-b-funciona-falta-a-placa-que-aponta-para-ele) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
@@ -1012,8 +1013,29 @@ reescreve as posições das seções a partir da planta.
 > Antes de mexer na `PlantaDaLoja`: despejar as posições atuais num arquivo, e subir com
 > `--merlin.seed.enabled=false` enquanto não quiser gravar.
 
-**De quem.** Backend. **Urgência:** baixa até o vídeo — é invisível hoje. Alta assim que alguém
-for usar coordenada do backend para desenhar ou para calcular distância.
+> [!IMPORTANT]
+> **Corrigido em 08/09: o gatilho descrito abaixo já aconteceu.** A frase *"alta assim que alguém
+> for usar coordenada do backend para calcular distância"* estava escrita como se fosse futuro.
+> A ruptura **já calcula**: `buscarDisponiveisProximosDe` filtra por
+> `sqrt(power(coordenada_x - :x, 2) + power(coordenada_y - :y, 2)) <= 25`, sobre
+> `tb_ponto_mapa` — que a carga inicial preenche com o centro dos blocos de `PlantaDaLoja`.
+>
+> **A planta do backend é mais esticada na vertical.** As dez seções ocupam 70 unidades de
+> altura lá contra 41 na traçada; na horizontal a diferença é pequena (74 contra 65). O raio de
+> 25 é o mesmo nos dois, então ele cobre **menos loja** no cálculo do que o cliente vê na tela.
+>
+> Medido com [`medir-substitutos.py`](../ferramentas/banco/medir-substitutos.py): **9 dos 45
+> pares de seção discordam**, e todos na mesma direção — vizinhos na tela, distantes no cálculo.
+> Iluminação e Decoração distam 15,4 na traçada e 25,9 no backend, logo acima do corte.
+>
+> **Não aparece hoje, e o motivo é frágil:** nenhum dos 82 valores de `TIPO` existe em mais de
+> uma seção, então o melhor candidato está sempre no próprio corredor e nunca depende do raio
+> para ser alcançado. **Nada no código garante essa propriedade** — ela é um acidente da massa
+> de demonstração, e some no dia em que alguém cadastrar dois produtos do mesmo tipo em seções
+> diferentes. O `medir-substitutos.py` existe para detectar esse dia.
+
+**De quem.** Backend. **Urgência:** baixa até o vídeo — a divergência existe, mas a massa atual
+não a alcança. Alta assim que um `TIPO` passar a existir em duas seções.
 
 ---
 
@@ -1053,6 +1075,69 @@ exatamente para isso: `__gondolas.html` desenha as barras sobre a planta, com zo
 planta e é traçável; o pátio depende de alguém conseguir ler a organização dele.
 
 **De quem.** Frontend. **Urgência:** baixa. É honesto do jeito que está.
+
+---
+
+### O-40. Quando a cota do Gemini estoura, 58% dos produtos recebem um substituto de outra função
+
+**Medido em 08/09/2026** contra o schema, com
+[`ferramentas/banco/medir-substitutos.py`](../ferramentas/banco/medir-substitutos.py).
+
+Se a chamada ao assistente falha — e a cota gratuita é de **5 chamadas por minuto** —, a ruptura
+cai no fallback previsto na [D-35](decisoes-tecnicas.md) e entrega `candidatos.getFirst()`: o
+primeiro da ordem `tipo → marca → distância → nome`. Quando **nenhum** candidato divide o `TIPO`
+do produto em falta, esse primeiro é apenas o mais próximo, de qualquer função.
+
+| | produtos | |
+|---|---|---|
+| o fallback ofereceria algo do **mesmo tipo funcional** | 47 | 42% |
+| o fallback ofereceria algo de **outra função** | **64** | **58%** |
+| ficariam **sem candidato nenhum** | 0 | — |
+
+**A causa é a massa, não o código:** dos 82 valores distintos de `TIPO`, **64 têm um único
+produto**. Para esses não existe substituto de mesma função em lugar nenhum da loja, e a
+consulta espacial não tem o que eleger.
+
+**Como isso aparece na tela:**
+
+| em falta | o fallback ofereceria |
+|---|---|
+| Tapete de Banheiro em Microfibra | Cabideiro de Parede com 5 Ganchos |
+| Cortina Blackout Alycia | Cabideiro de Parede com 5 Ganchos |
+| Tijolo Refratário | Areia Fina saco 20 kg |
+| Manta Líquida Impermeabilizante | Areia Fina saco 20 kg |
+
+> [!NOTE]
+> **A tela não mente, e isso é importante separar.** O selo é *"Disponível mais próximo"*, com
+> bússola e não com brilho ([O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela)),
+> e a justificativa é *"Este é o produto disponível mais próximo de onde você está. Confira na
+> embalagem se ele atende ao seu caso antes de levar."* Nenhuma das duas afirma substituição.
+>
+> **Não é um defeito de honestidade. É um defeito de utilidade** — e, numa gravação,
+> de constrangimento.
+
+**Por que isso importa agora, e não depois.** O caminho da IA sabe recusar: a regra 3 da
+`InstrucaoDeRuptura` manda responder `NENHUM` quando nada cumpre a mesma função, e o
+`interpretar` transforma isso em `Sugestao.recusada`. **O fallback não tem essa saída.** E o
+fallback é justamente o caminho que roda quando várias pessoas testam ao mesmo tempo — cinco
+chamadas por minuto acabam numa sessão de testes do time, não numa semana de uso.
+
+**Três saídas, e a escolha é do time:**
+
+| Saída | O que ganha | O que custa |
+|---|---|---|
+| **Deixar como está** | zero risco de regressão a cinco dias da entrega | o vídeo pode capturar "acabou o tijolo, leve areia" |
+| **Dar ao fallback a mesma recusa da IA** — sem candidato de mesmo `TIPO`, devolve `recusada` | nunca sugere algo absurdo | 58% das rupturas passam a não sugerir nada, e a funcionalidade parece não funcionar |
+| **Mudar só o texto do fallback** quando o `TIPO` difere: *"não encontramos um substituto do mesmo tipo por perto; o mais próximo disponível neste corredor é…"* | continua entregando algo útil, e nomeia a limitação em vez de escondê-la | é texto novo, precisa passar pela dupla de frontend se aparecer na tela |
+
+**Recomendação:** a terceira. Ela não remove a funcionalidade, não afirma nada falso e converte
+o caso ruim numa demonstração de cuidado — que é exatamente o que uma banca valoriza.
+
+**O que não resolve:** aumentar o raio. O problema não é distância; é que o produto não existe
+na loja de demonstração. Plantar mais pares de mesmo `TIPO` na massa resolveria de verdade, e é
+trabalho de dados, não de código.
+
+**De quem.** Backend, com decisão do time sobre qual saída.
 
 ---
 

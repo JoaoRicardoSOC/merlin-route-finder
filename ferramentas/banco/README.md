@@ -73,3 +73,42 @@ com ele que se descobriu, em 08/09, que a solução proposta pela O-35 — conta
 
 Rode antes de mexer na cláusula `order by` de `buscarDisponiveisProximosDe`: mudar a ordenação
 sem simular é como o defeito nasce.
+
+---
+
+## `medir-substitutos.py`
+
+Mede, **sem alterar código nem dado**, a qualidade dos substitutos que a ruptura ofereceria.
+Ver [O-40](../../docs/observacoes.md) e [O-38](../../docs/observacoes.md).
+
+```bash
+DB_USER=... DB_PASSWORD=... python ferramentas/banco/medir-substitutos.py
+```
+
+Responde quatro perguntas que **a massa determina** e que mudam sozinhas quando alguém
+cadastra produto:
+
+1. Quantos produtos ficariam sem candidato nenhum se entrassem em falta.
+2. Para quantos o fallback por proximidade ofereceria algo de outra função.
+3. Se algum `TIPO` existe em mais de uma seção.
+4. Em quantos pares de seção a planta do backend e a traçada discordam sobre o raio de 25.
+
+Medição de 08/09/2026:
+
+| | |
+|---|---|
+| sem candidato nenhum | 0 de 111 |
+| fallback ofereceria outra função | **64 de 111 (58%)** |
+| `TIPO` em mais de uma seção | 0 de 82 |
+| pares de seção em que as plantas discordam | 9 de 45 |
+
+### Por que o item 3 é o mais importante
+
+É a linha que hoje mantém o item 4 inofensivo. Enquanto nenhum `TIPO` cruzar seção, o melhor
+candidato está sempre no próprio corredor e o raio nunca decide nada. **Nada no código garante
+isso** — é propriedade da massa. No dia em que essa linha deixar de ser zero, a divergência
+entre as duas plantas passa a escolher substituto, e escolher errado.
+
+### Quando rodar
+
+Depois de cadastrar produto novo, e antes de gravar. É rápido e não escreve nada.
