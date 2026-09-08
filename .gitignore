@@ -201,3 +201,5 @@ sketch
 .idea
 
 # End of https://www.toptal.com/developers/gitignore/api/maven,java,react,node
+# Saida intermediaria do gerador: as regras ja vivem em frontend/src/index.css
+ferramentas/fontes/fontface.css

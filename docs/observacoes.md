@@ -716,6 +716,37 @@ bloqueio somado no perfil de celular.
 
 **O que fecharia, e o custo de cada caminho:**
 
+> [!NOTE]
+> **Caminho escolhido em 03/09: hospedar a fonte.** Feito. O que a medição revelou no
+> caminho é maior que a observação supunha — **o Material Symbols eram 1.103 KB baixados a
+> cada visita sem cache, para desenhar 61 ícones.** Não era a folha de estilo o peso; era a
+> fonte de ícones.
+>
+> | | antes | depois |
+> |---|---|---|
+> | Material Symbols | 1.103 KB (conjunto completo) | **19 KB** (recorte dos 61 usados) |
+> | Hanken Grotesk | 265 KB (5 pesos × 2 alfabetos) | **53 KB** (variável, cobre 100–900) |
+> | requisições a domínio de terceiros | 1, bloqueante | **0** |
+> | no repositório | 0 | 72 KB |
+>
+> Três coisas melhoraram de brinde:
+>
+> - **Os pesos 750 e 900 passaram a existir.** O CSS os usa, não estavam entre os cinco
+>   pedidos ao Google, e caíam no vizinho mais próximo. A variável cobre 100 a 900.
+> - **`font-display: block` nos ícones.** Com `swap`, o navegador desenhava a **ligadura**
+>   enquanto a fonte não chegava — o cliente lia *"search"*, *"home"*, *"qr_code_scanner"*
+>   escritos na tela.
+> - **Um `preload`** das duas fontes críticas, para o download não esperar o CSS do app.
+>
+> **A armadilha que isso cria, e está documentada em [`ferramentas/fontes/README.md`](../ferramentas/fontes/README.md):**
+> a fonte de ícones é um recorte. Ícone fora dele **não desenha, e não dá erro**. Ao
+> acrescentar um, rodar `python ferramentas/fontes/gerar.py` — o script varre o código, então
+> a lista não envelhece sozinha.
+>
+> **Falta medir.** O Lighthouse não está instalado no projeto e a medição original foi
+> contra o ambiente publicado. Depois do próximo deploy, vale repetir para dizer quanto o FCP
+> de 8,6 s caiu de fato.
+
 | Caminho | O que ganha | O que custa |
 |---|---|---|
 | **Hospedar a fonte no projeto** | tira o terceiro do caminho crítico por completo; nada externo pode mudar de URL ou sair do ar | ~100–200 KB de `.woff2` no repositório, e atualizar a fonte vira tarefa manual |

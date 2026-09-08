@@ -16,11 +16,18 @@
       e isso e decisao de desenho (O-37) -, mas tira uma ida e volta do caminho critico sem
       mudar nada na tela.
     -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-      rel="stylesheet" />
+    <!--
+      As fontes moram no projeto, em /fontes. Antes vinham do Google, e aquela folha
+      era uma requisicao BLOQUEANTE para um dominio de terceiros: o navegador so
+      descobria a URL da fonte depois de baixar o CSS de la, o que somava uma viagem
+      de ida e volta inteira antes da primeira pintura. Ver O-37.
+
+      O preload existe porque o CSS do app tambem e bloqueante: sem ele, a fonte so
+      seria descoberta depois que o navegador terminasse de ler a folha de estilo.
+      Com ele, o download comeca junto.
+    -->
+    <link rel="preload" href="/fontes/hanken-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fontes/material-symbols.woff2" as="font" type="font/woff2" crossorigin>
   </head>
   <body>
     <div id="root"></div>
