@@ -54,3 +54,22 @@ backend, mas apagá-los aqui derrubaria as sessões `ACTIVE` que os referenciam.
 As consultas das Partes 1 e 3 foram executadas contra o schema em 08/09/2026, com `rollback`
 ao final e nenhum `delete` enviado. Sintaxe validada e números conferidos contra a medição
 acima.
+
+
+---
+
+## `simular-afinidade.py`
+
+Compara, **sem alterar código nem dado**, as ordenações candidatas do substituto de ruptura.
+Ver [O-35](../../docs/observacoes.md).
+
+```bash
+DB_USER=... DB_PASSWORD=... python ferramentas/banco/simular-afinidade.py
+```
+
+Percorre os cinco pares plantados na massa e mostra qual produto cada ordenação elegeria. Foi
+com ele que se descobriu, em 08/09, que a solução proposta pela O-35 — contar atributos em comum
+— **empata** no caso que a motivou, e portanto não corrige nada.
+
+Rode antes de mexer na cláusula `order by` de `buscarDisponiveisProximosDe`: mudar a ordenação
+sem simular é como o defeito nasce.

@@ -901,13 +901,45 @@ Renomear um produto quebra isso de novo.
 fora do ar ou a cota gratuita estourou — cinco chamadas por minuto, o cenário mais provável
 durante a banca.
 
-**A saída, quando houver tempo.** Ordenar os empates por **quantidade de atributos em comum**,
-em vez de por nome. A ILU-003 divide `QUANTIDADE` com a ILU-001 e a ILU-005 não; a cor de luz
-entraria na conta sozinha. Como o teto de candidatos já limita a lista a 20, a reordenação pode
-acontecer em memória, sem tocar na consulta.
+**A saída, quando houver tempo.** ~~Ordenar os empates por **quantidade de atributos em
+comum**, em vez de por nome.~~
 
-**Não foi feito agora** porque mexe na ordenação a doze dias da entrega e pode reordenar os
-outros quatro pares, que hoje acertam.
+> [!IMPORTANT]
+> **Simulado em 08/09 contra o schema, e a saída acima não resolve.**
+>
+> A observação afirmava que *"a ILU-003 divide `QUANTIDADE` com a ILU-001 e a ILU-005 não"*.
+> Medido, as duas dividem **dois** atributos com a ILU-001:
+>
+> | candidato | atributos em comum | contagem |
+> |---|---|---|
+> | **ILU-005** (o certo) | `TEMPERATURA_DE_COR=Branca`, `TIPO` | **2** |
+> | ILU-003 | `QUANTIDADE=3 un`, `TIPO` | **2** |
+>
+> **Elas empatam.** Contar atributos em comum não desempata nada — a ordem volta a cair no nome,
+> e a ILU-005 continua vencendo pela mesma sorte. A mudança seria um **no-op disfarçado de
+> correção**: o teste passaria, o resultado seria o mesmo, e a razão continuaria errada.
+>
+> **O que funciona: contar apenas os atributos FUNCIONAIS**, ignorando `TIPO` e `MARCA` — que já
+> são as chaves primárias da ordenação — e `QUANTIDADE`, que descreve a embalagem e não o
+> produto. Duas lâmpadas da mesma cor são substitutas independentemente de virem em caixa de 3
+> ou de 10.
+>
+> | candidato | funcionais em comum |
+> |---|---|
+> | **ILU-005** | **1** — a cor da luz |
+> | ILU-003 | **0** |
+>
+> Desempata pela razão certa. E `QUANTIDADE` é o único atributo de embalagem no vocabulário de
+> `AtributoProduto`: os outros dezesseis descrevem o que o produto é ou faz.
+
+**Estado atual, medido em 08/09:** os **cinco pares acertam**, e continuam acertando nas três
+ordenações simuladas — a atual, a proposta original e a corrigida. **Nenhum par muda de
+resultado.**
+
+Isso derruba o motivo original do adiamento — *"pode reordenar os outros quatro pares"* —, mas
+**o adiamento continua certo por outro motivo**: como nenhum resultado muda, a alteração não
+compra nada observável antes de 13/09. Ela protege contra renomeação futura de produto, e não há
+renomeação prevista para os próximos dias.
 
 **De quem.** Backend, depois de 13/09.
 
