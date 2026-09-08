@@ -42,10 +42,16 @@ def icones_em_uso():
     Fixar a lista aqui garantiria que ela envelhecesse: alguem acrescenta um icone
     numa tela, esquece de atualizar o script, e o icone nao desenha. Varrendo, o
     recorte acompanha o codigo sozinho.
+
+    O padrao dos dados aceita AS DUAS grafias de aspas. A primeira versao so aceitava
+    simples, e plantaInterlagos.js e gerado com duplas: 13 icones de secao ficaram
+    fora do recorte e apareceram como palavra escrita no mapa -- "FOREST Madeiras",
+    "BOLT Eletrica". O recorte nao avisa quando falta um icone, entao o extrator
+    precisa ser abrangente por conta propria.
     """
     padrao_jsx = re.compile(
         r'material-symbols-outlined[^>]*>\s*\{?\s*[\'"]?([a-z0-9_]+)[\'"]?\s*\}?\s*<')
-    padrao_dado = re.compile(r"\bicone?:\s*'([a-z0-9_]+)'")
+    padrao_dado = re.compile(r'\bicone?:\s*[\'"]([a-z0-9_]+)[\'"]')
     achados = set()
     for caminho in glob.glob(os.path.join(FRONTEND, 'src', '**', '*.js*'), recursive=True):
         texto = io.open(caminho, encoding='utf-8', errors='ignore').read()
@@ -65,6 +71,7 @@ def main():
 
     lista = icones_em_uso()
     print('  icones encontrados no codigo: %d' % len(lista))
+    print('  ' + ', '.join(lista))
     print()
 
     # ---------------------------------------------------------------- texto

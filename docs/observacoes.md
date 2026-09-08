@@ -808,6 +808,14 @@ bloqueio somado no perfil de celular.
 > acrescentar um, rodar `python ferramentas/fontes/gerar.py` — o script varre o código, então
 > a lista não envelhece sozinha.
 >
+> > [!CAUTION]
+> > **A armadilha pegou o próprio recorte, no mesmo dia.** O extrator só aceitava aspas
+> > simples, e `plantaInterlagos.js` é gerado com duplas: **13 ícones de seção ficaram de
+> > fora** e apareceram como palavra escrita nos chips do mapa — *"FOREST Madeiras"*,
+> > *"BOLT Elétrica"*, *"WC Sanitários"*. Corrigido em 08/09; o extrator passa de 61 para 74
+> > ícones e imprime a lista, para dar para conferir a olho. A fonte foi de 19,1 KB para
+> > 23,5 KB.
+>
 > **Medido em 03/09, e o resultado é mais modesto do que parecia.** A/B controlado: as duas
 > versões do build servidas lado a lado, Lighthouse 12.8.2 no perfil de celular, **três rodadas
 > de cada**. A versão antiga continuou buscando as fontes no Google pela rede real, que é a
