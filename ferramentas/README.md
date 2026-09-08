@@ -5,5 +5,6 @@ trabalho que dependeu deles possa ser refeito ou continuado.
 
 | Pasta | O que é |
 |---|---|
+| [`banco/`](banco/) | Limpeza das sessões de teste no schema de demonstração. **Rodar na véspera da gravação**, não antes. |
 | [`fontes/`](fontes/) | Baixa as fontes para dentro do projeto e recorta a de ícones nos que o app usa. **Rode ao acrescentar um ícone novo** — fora do recorte, ele não desenha. |
 | [`planta/`](planta/) | As bancadas que decalcaram a planta da loja Interlagos sobre a planta técnica do kickoff, e a própria planta. Duas seções ainda não foram traçadas. |

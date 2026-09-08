@@ -482,6 +482,31 @@ Qualquer um deles pode ser disparado pela ferramenta de simulação ([D-40](deci
 
 **O que fazer.** Nada urgente no código. Antes da gravação do vídeo e da banca, vale **limpar as sessões de teste** para que qualquer número citado seja verdade. Um `delete` das sessões finalizadas resolve, respeitando a ordem das chaves estrangeiras: registros de ruptura, mensagens de chat, itens, lista, sessão.
 
+> [!NOTE]
+> **Remedido em 08/09/2026, e o volume quadruplicou.**
+>
+> | status | 25/08 | 08/09 |
+> |---|---|---|
+> | total | 23 | **91** |
+> | `ABANDONED` | 17 | **28** |
+> | `EXPIRED` | — | 52 |
+> | `COMPLETED` | — | 4 |
+> | `ACTIVE` | nenhuma vencida | 7, todas do dia |
+>
+> A distribuição por dia mostra a origem: **em 23/08 foram 11 sessões e as 11 terminaram
+> `ABANDONED`**; em 22/08, 6 de 9. São suítes interrompidas.
+>
+> **A limpeza do código continua funcionando:** zero listas órfãs, zero itens órfãos, zero
+> mensagens órfãs, zero rupturas órfãs. O que sobra é histórico, não vazamento.
+>
+> **O script está pronto em [`ferramentas/banco/`](../ferramentas/banco/)**, com conferência
+> antes e depois e `commit` deixado comentado. As consultas de leitura foram executadas contra
+> o schema com `rollback` ao final; nenhum `delete` foi enviado.
+>
+> **Não foi executado, e é deliberado.** O banco é compartilhado, a operação é irreversível, e
+> limpar agora só adia o problema: os cinco dias restantes de teste recriam o resíduo. O
+> momento certo é a véspera da gravação.
+
 **De quem.** Backend. **Urgência:** baixa até a véspera da demonstração.
 
 ---
