@@ -744,19 +744,25 @@ bloqueio somado no perfil de celular.
 > a lista não envelhece sozinha.
 >
 > **Medido em 03/09, e o resultado é mais modesto do que parecia.** A/B controlado: as duas
-> versões do build servidas lado a lado, Lighthouse 12.8.2 no perfil de celular, duas rodadas
-> de cada. A versão antiga continuou buscando as fontes no Google pela rede real, que é a
+> versões do build servidas lado a lado, Lighthouse 12.8.2 no perfil de celular, **três rodadas
+> de cada**. A versão antiga continuou buscando as fontes no Google pela rede real, que é a
 > variável que se queria isolar.
 >
 > | | antes | depois | |
 > |---|---|---|---|
-> | nota de performance | 84 / 84 | 84 / 85 | **sem mudança** |
-> | First Contentful Paint | 3.161 / 3.154 ms | 2.854 / 2.853 ms | −303 ms |
-> | Largest Contentful Paint | 3.575 / 3.634 ms | 3.705 / 3.697 ms | **+97 ms, pior** |
-> | bytes de fonte transferidos | 1.139 KB | 53 KB | **−1.085 KB** |
+> | | antes (3 rodadas) | depois (3 rodadas) | mediana |
+> |---|---|---|---|
+> | nota de performance | 84 / 84 / 84 | 84 / 85 / 84 | **sem mudança** |
+> | First Contentful Paint | 3161 / 3154 / 3155 ms | 2854 / 2853 / 2854 ms | **−301 ms** |
+> | Largest Contentful Paint | 3575 / 3634 / 3624 ms | 3705 / 3697 / 3772 ms | **+81 ms, pior** |
+> | bytes de fonte | 1.139 KB | 53 KB | **−1.085 KB** |
 >
 > **A nota não mudou.** O ganho real é 1 MB a menos de transferência e ~300 ms de primeira
-> pintura. A variância entre rodadas é de ±10 ms, então nem os 303 ms nem os 97 ms são ruído.
+> pintura.
+>
+> **Os dois números são definitivos, e não ruído.** A variação dentro de cada grupo é de ±4 ms
+> no FCP, e as faixas de LCP dos dois grupos **não se sobrepõem** (3575–3634 contra
+> 3697–3772).
 >
 > **O LCP piorou de forma consistente, e não sei por quê ainda.** A suspeita é o `preload` das
 > duas fontes competindo por banda com o que pinta o maior elemento — mas é hipótese, não
