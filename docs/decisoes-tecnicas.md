@@ -61,6 +61,7 @@
 - [D-93. O fallback por proximidade não chama de substituto o que é apenas o mais próximo](#d-93-o-fallback-por-proximidade-não-chama-de-substituto-o-que-é-apenas-o-mais-próximo)
 - [D-94. O CSS virou 13 arquivos, e a numeração deles é funcional](#d-94-o-css-virou-13-arquivos-e-a-numeração-deles-é-funcional)
 - [D-95. No monitor o app aparece dentro de um celular desenhado, e a moldura é um iframe](#d-95-no-monitor-o-app-aparece-dentro-de-um-celular-desenhado-e-a-moldura-é-um-iframe)
+- [D-96. Converter entre o viewBox e a tela passa por um caminho só](#d-96-converter-entre-o-viewbox-e-a-tela-passa-por-um-caminho-só)
 
 **Persistência**
 - [D-10. Entidades JPA espelho, separadas das de domínio](#d-10-entidades-jpa-espelho-separadas-das-de-domínio)
@@ -2802,6 +2803,51 @@ no celular fazer diferença: são a mesma folha e o mesmo pacote. Aceito.
 
 **Onde no código.** `frontend/src/moldura/` (o palco, a decisão e o botão de volta) e
 `frontend/src/main.jsx` (a escolha).
+
+---
+
+### D-96. Converter entre o viewBox e a tela passa por um caminho só
+
+**Contexto.** O mapa vive em dois sistemas de coordenadas ao mesmo tempo. O SVG desenha em
+**unidades do viewBox** (0–950 × 0–616, a planta decalcada). O `translate()` que desloca a
+planta trabalha em **pixels de tela**. Entre os dois existe a escala com que o SVG se ajusta ao
+palco — cerca de **0,41** num celular, porque 390 px mostram 950 unidades.
+
+**Três defeitos vieram de misturar os dois**, e todos apareceram na demonstração de 09/09:
+
+| onde | o que fazia | efeito |
+|---|---|---|
+| botão de localização | `450 - x * zoom` | a planta saía da tela — foi o defeito relatado |
+| chip de setor | `CANVAS.largura / 2 - rotuloX * zoom` | deslocava para o lugar errado |
+| `transform-origin` | `475px 308px` | ponto **fora** de um elemento de 390 × 512: o zoom pivotava por um canto imaginário |
+
+Os dois primeiros erravam por um fator de ~2,4 — exatamente o inverso da escala de ajuste.
+
+**Decisão.** Existe **uma** função que converte, e todo mundo que queira trazer um ponto ao
+centro passa por ela:
+
+```js
+centralizarEm(x, y) // x, y em unidades do viewBox
+  → pan = -(ponto - centroDoViewBox) * escalaDeAjuste * zoom
+```
+
+A `escalaDeAjuste` é **medida** do palco por `ResizeObserver`, e não presumida — o mesmo mapa
+roda em 390 px dentro da moldura de celular e em largura cheia no desktop.
+
+**A regra que fica:** número que sai de `plantaInterlagos.js` está em unidades do viewBox e
+**nunca** pode ser escrito direto num `translate()`. Se a conta não passou pela escala, está
+errada por um fator que muda com o tamanho da tela — e por isso pode passar despercebida em uma
+largura e explodir em outra.
+
+**Junto veio o zoom padrão.** A planta é deitada (1,54:1) e a tela do celular é em pé: cabendo
+inteira, ela ocupava **49%** da área e as gôndolas decalcadas viravam traços de 3 px — o
+diferencial do projeto invisível. O padrão passou a **preencher** o palco
+(`max(l/950, a/616) / min(l/950, a/616)`, sempre ≥ 1, ~2,02 num celular), e quem quiser a loja
+inteira usa o botão de reiniciar. O teto do zoom subiu de 2,5 para 4, já que o padrão agora
+parte de 2.
+
+**Onde no código.** `StoreMapPage.jsx`: `escalaDeAjuste`, `zoomDePreenchimento` e
+`centralizarEm`.
 
 ---
 
