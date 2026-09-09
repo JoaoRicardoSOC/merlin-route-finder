@@ -31,6 +31,25 @@ export default function StoreMapPage({
   focusedProduct = null
 }) {
 
+  /*
+   * ZOOM E DESLOCAMENTO VIVEM EM DOIS SISTEMAS DE COORDENADAS, e confundi-los era a raiz de
+   * três defeitos que a demonstração de 09/09 revelou.
+   *
+   * O SVG desenha em UNIDADES DO VIEWBOX (0–950 × 0–616). O `translate()` do CSS desloca em
+   * PIXELS DE TELA. Entre um e outro existe a escala com que o SVG se ajusta ao palco — cerca
+   * de 0,41 num celular. Contas feitas em unidades do viewBox e aplicadas como pixels erravam
+   * por um fator de 2,4:
+   *
+   * - o botão de localização jogava a planta para fora da tela;
+   * - o chip de setor deslocava para o lugar errado;
+   * - o `transform-origin` era `475px 308px`, um ponto FORA de um elemento de 390 × 512, então
+   *   o zoom pivotava por um canto imaginário.
+   *
+   * Agora existe um só caminho: `centralizarEm`, que converte de viewBox para pixels.
+   */
+  const palcoRef = useRef(null)
+  const [palco, setPalco] = useState({ largura: 0, altura: 0 })
+
   const [zoomLevel, setZoomLevel] = useState(1)
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
@@ -130,11 +149,73 @@ export default function StoreMapPage({
     return routePoints.map(p => `${p.x},${p.y}`).join(' ')
   }, [routePoints])
 
+  /* Quantos pixels de tela vale uma unidade do viewBox, com o SVG ajustado ao palco. */
+  const escalaDeAjuste = useMemo(() => {
+    if (!palco.largura || !palco.altura) return 0
+    return Math.min(palco.largura / CANVAS.largura, palco.altura / CANVAS.altura)
+  }, [palco])
+
+  /*
+   * O zoom que faz a planta PREENCHER o palco em vez de caber nele.
+   *
+   * A planta é deitada (1,54:1) e a tela do celular é em pé: cabendo inteira, ela usava 49%
+   * da área e as gôndolas decalcadas viravam traços de 3 px. Preenchendo, o desenho dobra de
+   * tamanho e o cliente arrasta para ver as pontas — que é como se lê mapa no celular.
+   *
+   * É sempre ≥ 1, então nunca encolhe a planta abaixo do ajuste.
+   */
+  const zoomDePreenchimento = useMemo(() => {
+    if (!palco.largura || !palco.altura) return 1
+    const ajuste = Math.min(palco.largura / CANVAS.largura, palco.altura / CANVAS.altura)
+    const preenchimento = Math.max(palco.largura / CANVAS.largura, palco.altura / CANVAS.altura)
+    return preenchimento / ajuste
+  }, [palco])
+
+  useEffect(() => {
+    const alvo = palcoRef.current
+    if (!alvo) return
+
+    const medir = () => {
+      const r = alvo.getBoundingClientRect()
+      setPalco({ largura: r.width, altura: r.height })
+    }
+    medir()
+
+    /*
+     * A referência precisa ficar numa variável. Um `new ResizeObserver(...).observe(...)` sem
+     * nome já foi coletado pelo navegador antes de disparar uma vez — defeito que este projeto
+     * já teve na bancada da planta.
+     */
+    const observador = new ResizeObserver(medir)
+    observador.observe(alvo)
+    return () => observador.disconnect()
+  }, [])
+
+  /* O zoom inicial acompanha o palco enquanto ninguém tiver mexido nos controles. */
+  const zoomTocadoPeloCliente = useRef(false)
+  useEffect(() => {
+    if (!zoomTocadoPeloCliente.current) setZoomLevel(zoomDePreenchimento)
+  }, [zoomDePreenchimento])
+
+  /** Traz um ponto do viewBox para o centro do palco, convertendo para pixels de tela. */
+  const centralizarEm = (x, y, zoom = zoomLevel) => {
+    setPanOffset({
+      x: -(x - CANVAS.largura / 2) * escalaDeAjuste * zoom,
+      y: -(y - CANVAS.altura / 2) * escalaDeAjuste * zoom
+    })
+  }
+
   // Zoom handlers
-  const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.25, 2.5))
-  const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 0.25, 0.75))
+  const aoMexerNoZoom = () => { zoomTocadoPeloCliente.current = true }
+  /*
+   * O teto subiu de 2,5 para 4: com o padrão em ~2 num celular, 2,5 dava meio passo de folga.
+   * O piso de 0,75 passou a significar "ver a loja inteira com margem", já que 1 é o ajuste.
+   */
+  const handleZoomIn = () => { aoMexerNoZoom(); setZoomLevel(prev => Math.min(prev + 0.25, 4)) }
+  const handleZoomOut = () => { aoMexerNoZoom(); setZoomLevel(prev => Math.max(prev - 0.25, 0.75)) }
   const handleResetZoom = () => {
-    setZoomLevel(1)
+    zoomTocadoPeloCliente.current = false
+    setZoomLevel(zoomDePreenchimento)
     setPanOffset({ x: 0, y: 0 })
     setSelectedSector(null)
     setSelectedPinItem(null)
@@ -289,11 +370,7 @@ export default function StoreMapPage({
               className={`map-sector-chip ${selectedSector?.id === sec.id ? 'active' : ''}`}
               onClick={() => {
                 setSelectedSector(sec)
-                // Center pan on selected sector
-                setPanOffset({
-                  x: CANVAS.largura / 2 - sec.rotuloX * zoomLevel,
-                  y: CANVAS.altura / 2 - sec.rotuloY * zoomLevel
-                })
+                centralizarEm(sec.rotuloX, sec.rotuloY)
               }}
             >
               <span className="material-symbols-outlined chip-icon" style={{ color: sec.color }} aria-hidden="true">
@@ -307,6 +384,7 @@ export default function StoreMapPage({
 
       {/* Interactive SVG Canvas Area */}
       <div
+        ref={palcoRef}
         className="store-map-canvas-viewport"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -342,22 +420,17 @@ export default function StoreMapPage({
             type="button"
             className="map-control-btn"
             onClick={handleResetZoom}
-            title="Centralizar planta"
-            aria-label="Centralizar planta"
+            title="Reiniciar a visão do mapa"
+            aria-label="Reiniciar a visão: desfaz zoom, arraste e seleção"
           >
             <span className="material-symbols-outlined" aria-hidden="true">restart_alt</span>
           </button>
           <button
             type="button"
             className="map-control-btn highlight-user-btn"
-            onClick={() => {
-              setPanOffset({
-                x: 450 - userPosition.x * zoomLevel,
-                y: 400 - userPosition.y * zoomLevel
-              })
-            }}
-            title="Focar na minha localização"
-            aria-label="Focar na minha localização"
+            onClick={() => centralizarEm(userPosition.x, userPosition.y)}
+            title="Centralizar em mim"
+            aria-label="Centralizar o mapa na minha posição"
           >
             <span className="material-symbols-outlined filled" aria-hidden="true">my_location</span>
           </button>
@@ -370,7 +443,9 @@ export default function StoreMapPage({
           className="store-map-svg"
           style={{
             transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
-            transformOrigin: `${CANVAS.largura / 2}px ${CANVAS.altura / 2}px`
+            /* O centro do elemento, e nao `475px 308px`: aquilo era um ponto do viewBox
+               aplicado a uma caixa de CSS de 390 x 512, ou seja, fora do proprio elemento. */
+            transformOrigin: 'center'
           }}
         >
           <defs>
