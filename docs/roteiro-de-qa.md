@@ -351,6 +351,17 @@ reduzido e barreira de erro; gestão de foco nunca esteve nele.
 > origem carrega, e **nenhuma requisição chega a ser disparada** — o painel bloqueia imagem de
 > terceiro. **Confira as fotos num navegador de verdade.**
 
+> [!CAUTION]
+> **Nada que dependa de `document.visibilityState` é verificável com o painel do navegador
+> recolhido.** A reconciliação de duas abas desiste de propósito quando o documento está
+> oculto (`App.jsx:321`), e um painel recolhido reporta `visibilityState: "hidden"`,
+> `hasFocus: false` e largura zero. Disparar `visibilitychange` à mão **não contorna** — o
+> guarda lê o estado, não o evento.
+>
+> Custou um falso negativo em 08/09: o item adicionado pelo servidor não apareceu na lista, e
+> por um instante pareceu que a reconciliação tinha quebrado. **Verifique duas abas num
+> navegador de verdade**, alternando entre elas.
+
 > [!NOTE]
 > **O `localStorage` fica temporariamente atrás do servidor** durante a sessão — chegou a mostrar
 > zero coletados enquanto o servidor tinha um. **Sincroniza na recarga**, e o mapa sempre leu o
