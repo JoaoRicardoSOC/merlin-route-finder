@@ -60,6 +60,7 @@
 - [D-92. Quem sabe o que a IA citou é o backend, não a tela](#d-92-quem-sabe-o-que-a-ia-citou-é-o-backend-não-a-tela)
 - [D-93. O fallback por proximidade não chama de substituto o que é apenas o mais próximo](#d-93-o-fallback-por-proximidade-não-chama-de-substituto-o-que-é-apenas-o-mais-próximo)
 - [D-94. O CSS virou 13 arquivos, e a numeração deles é funcional](#d-94-o-css-virou-13-arquivos-e-a-numeração-deles-é-funcional)
+- [D-95. No monitor o app aparece dentro de um celular desenhado, e a moldura é um iframe](#d-95-no-monitor-o-app-aparece-dentro-de-um-celular-desenhado-e-a-moldura-é-um-iframe)
 
 **Persistência**
 - [D-10. Entidades JPA espelho, separadas das de domínio](#d-10-entidades-jpa-espelho-separadas-das-de-domínio)
@@ -2734,6 +2735,73 @@ troca, um estilo compartilhado agora pode morar em dois lugares plausíveis (`01
 arquivo do componente), e a resposta é `01-base` quando mais de um componente usa.
 
 **Onde no código.** `frontend/src/App.css` (índice) e `frontend/src/styles/`.
+
+---
+
+### D-95. No monitor o app aparece dentro de um celular desenhado, e a moldura é um iframe
+
+**Contexto.** O produto é de celular, mas a demonstração e a gravação acontecem num monitor,
+onde o app usa o layout de desktop. Abrir o DevTools para emular um aparelho na frente da
+câmera é feio e frágil.
+
+**Decisão.** Acima de **1024 px** de largura, o app é montado **dentro de um celular desenhado**.
+Abaixo disso — celular, tablet em pé, janela estreita — nada muda: o app é o próprio conteúdo.
+
+**Por que um iframe, e não uma `div` de 390 px.** Esta é a decisão inteira; o resto é acabamento.
+
+**Media query responde ao viewport, não ao contêiner.** Numa `div` estreita, as regras de
+`@media (min-width: 640px)` continuariam valendo, e o app renderizaria o **layout de desktop
+espremido em 390 px** — pior que a tela cheia que se queria evitar. O iframe cria um viewport
+real de 390 px.
+
+Medido no navegador, dentro da moldura:
+
+| | |
+|---|---|
+| largura interna | **390 px** |
+| `matchMedia('(max-width: 639px)')` | **`true`** |
+| `matchMedia('(min-width: 640px)')` | `false` |
+
+**Consequências que vieram de graça.** O app não sabe que está numa moldura, e a moldura não
+sabe nada do app. A fronteira do iframe também isola o CSS: nenhuma regra do palco alcança o
+produto, e nenhuma regra do produto alcança o palco.
+
+**O `App.jsx` não foi tocado.** A funcionalidade inteira vive em `src/moldura/` mais a escolha
+no `main.jsx`. Apagar a pasta e a escolha devolve o comportamento anterior — o que importa a
+quatro dias da entrega.
+
+**A escolha é feita antes de montar qualquer um dos dois**, no `main.jsx` e não dentro do
+`App`. Se a decisão morasse no `App`, ele já teria aberto uma sessão, e a moldura abriria uma
+**segunda** dentro do iframe: duas sessões por visita de monitor, sujando a métrica de carrinho
+abandonado ([O-20](observacoes.md#o-20-rodar-a-suíte-deixa-um-resto-de-sessões-no-banco-de-demonstração)).
+
+**A troca entre os modos é uma navegação, não estado de React.** `?telaCheia=1` liga a tela
+cheia; tirar o parâmetro devolve a moldura. Trocar por estado deixaria o layout de desktop
+desenhado num viewport de celular — exatamente o defeito que a moldura existe para não ter. A
+query original é preservada nos dois sentidos, então `?ponto=TIN-02` sobrevive à troca.
+
+**A decisão não reage a redimensionar a janela, de propósito.** Trocar de modo no meio de uma
+demonstração desmontaria o app e perderia sessão, roteiro e posição. Redimensionar apenas
+reescala o aparelho. **O efeito colateral aceito:** quem abre a janela estreita e depois
+maximiza continua sem moldura até recarregar.
+
+**Escala em vez de tamanho fixo.** O aparelho tem 414 × 868 com a borda, e não cabe inteiro em
+tela de 900 px de altura junto do cabeçalho. Um `transform: scale()` resolve **sem alterar o
+viewport interno** — o iframe continua com 390 px lógicos por mais que encolha na tela. Como
+`scale()` não muda a caixa de layout, existe um encaixe com o tamanho já escalado; sem ele o
+cabeçalho era empurrado para fora e a página ganhava rolagem.
+
+**Ícones da barra de status em SVG, e não Material Symbols.** A fonte de ícones do app é um
+**recorte** gerado por `ferramentas/fontes/gerar.py`, e ícone fora do recorte não desenha e não
+dá erro — armadilha que já custou 13 ícones ao projeto
+([O-37](observacoes.md#o-37-quatro-famílias-tipográficas-seguram-a-primeira-pintura-por-quase-nove-segundos)).
+Três formas triviais não justificam acoplar a moldura à regeneração da fonte.
+
+**Custo.** +3 kB de CSS e +4 kB de JavaScript no pacote, e nenhum deles é baixado por quem abre
+no celular fazer diferença: são a mesma folha e o mesmo pacote. Aceito.
+
+**Onde no código.** `frontend/src/moldura/` (o palco, a decisão e o botão de volta) e
+`frontend/src/main.jsx` (a escolha).
 
 ---
 
