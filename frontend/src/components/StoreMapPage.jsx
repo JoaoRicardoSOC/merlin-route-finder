@@ -196,15 +196,18 @@ export default function StoreMapPage({
     <div className="store-map-page-container">
       {/* Top Floating Control Bar */}
       <div className="store-map-header">
+        {/*
+          * O título saiu daqui em 09/09.
+          *
+          * Ele ocupava 143 px dos 800 de um celular — e renderizava a 30 px porque a regra
+          * dizia `.map-title-info h2` e a marcação era `h1`, então caía no tamanho de herói
+          * global. Numa tela onde o mapa é o assunto, o nome da tela é a informação menos
+          * útil: o item aceso na navegação de baixo já diz "Mapa".
+          *
+          * O nome da loja não se perdeu — virou etiqueta sobre a própria planta, que é onde
+          * um mapa costuma se identificar, e ali não custa altura nenhuma.
+          */}
         <div className="map-title-row">
-          <div className="map-title-info">
-            <span className="material-symbols-outlined map-main-icon filled" aria-hidden="true">map</span>
-            <div>
-              <h1>Planta Inteligente da Loja</h1>
-              <p className="store-name-sub">Leroy Merlin Interlagos • Grid Interativo</p>
-            </div>
-          </div>
-
           <div
             className="map-user-beacon-pill"
             onClick={onOpenLocationModal}
@@ -312,6 +315,9 @@ export default function StoreMapPage({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
+        {/* A loja se identifica sobre a própria planta, como num mapa impresso. */}
+        <span className="map-etiqueta-da-loja">Leroy Merlin Interlagos</span>
+
         {/* Floating Zoom & Pan Controls */}
         <div className="map-floating-controls">
           <button

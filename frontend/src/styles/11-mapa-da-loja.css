@@ -2,70 +2,51 @@
    FEATURE: DEDICATED STORE MAP PAGE (INTERLAGOS INTERACTIVE PLAN)
    ========================================================================== */
 
+/*
+ * O MAPA É A TELA, e não um cartão dentro dela.
+ *
+ * Até 09/09 esta página era um cartão com borda, canto arredondado e respiro em volta,
+ * dentro do respiro do `main-content`. Somados, cabeçalho, margens e enchimento comiam
+ * 424 dos 800 px de um celular, e a planta — que é o assunto — ficava com menos da metade,
+ * ainda por cima coberta pela barra de resumo. A página também rolava 127 px.
+ *
+ * Agora ela ocupa exatamente o que sobra entre o cabeçalho do app e a navegação de baixo.
+ * Borda e canto arredondado saíram: moldura em volta de mapa rouba área e não informa nada.
+ */
 .store-map-page-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 128px);
-  min-height: 520px;
+  /* Os dois valores são as alturas fixas do cabeçalho do app e da navegação inferior. Se
+     algum deles mudar, esta conta muda junto — é o preço de a navegação ser fixa. */
+  height: calc(100dvh - 61px - 60px - var(--safe-bottom, 0px));
   position: relative;
   overflow: hidden;
   background-color: var(--surface-container-low);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--outline-variant);
-  box-shadow: var(--shadow-sm);
-  margin-bottom: 20px;
   animation: fadeIn 0.25s ease-out;
 }
 
 .store-map-header {
   background-color: var(--surface);
   border-bottom: 1px solid var(--outline-variant);
-  padding: 12px 16px;
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  /* Nunca encolhe nem cresce: a altura do cabeçalho é o que sobra ou falta para o mapa. */
+  flex: 0 0 auto;
   z-index: 10;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
+/* Desde 09/09 esta linha carrega só a pílula de posição, que ocupa a largura toda. */
 .map-title-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
-  flex-wrap: wrap;
-}
-
-.map-title-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.map-main-icon {
-  font-size: 26px;
-  color: var(--primary-dark);
-  background-color: var(--primary-light);
-  padding: 6px;
-  border-radius: var(--radius-md);
-}
-
-.map-title-info h2 {
-  font-family: var(--font-headline);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--on-surface);
-  margin: 0;
-  line-height: 1.2;
-}
-
-.store-name-sub {
-  font-size: 11.5px;
-  color: var(--on-surface-variant);
-  margin: 2px 0 0 0;
 }
 
 .map-user-beacon-pill {
+  width: 100%;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -488,8 +469,18 @@
   gap: 12px;
 }
 
+/*
+ * O selo e a próxima parada dividem UMA linha, e não duas.
+ *
+ * `min-width: 0` é o que faz as reticências funcionarem: sem ele um filho flexível se recusa
+ * a encolher abaixo do próprio conteúdo, e o texto volta a empurrar o cartão.
+ */
 .route-summary-info {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .route-status-badge {
@@ -502,18 +493,32 @@
   background-color: var(--primary-light);
   padding: 3px 8px;
   border-radius: var(--radius-full);
-  margin-bottom: 3px;
+  /* Nunca encolhe: a contagem é curta e é o que o cliente procura primeiro. Quem cede
+     espaço é o nome do produto, que tem reticências. */
+  flex: 0 0 auto;
 }
 
 .route-status-badge .material-symbols-outlined {
   font-size: 14px;
 }
 
+/*
+ * UMA linha, com reticências.
+ *
+ * Sem isto, "Caixa Sifonada Quadrada Com 3 Entradas Branca 100x100x50mm - Krona no
+ * Encanamento" quebrava em SETE linhas numa coluna de 110 px e o cartão tomava um oitavo
+ * da tela. O nome inteiro continua no roteiro, a um toque de distância; aqui o que importa
+ * é para onde ir agora.
+ */
 .next-stop-text {
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--on-surface-variant);
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.35;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .next-stop-text.success {
@@ -541,9 +546,13 @@
 }
 
 @media (max-width: 640px) {
+  /*
+   * A regra base já dá a altura exata. Aqui sobrava um `margin-bottom: 70px` que, somado ao
+   * enchimento de 96 px do `main-content`, fazia o documento ter 927 px num viewport de 800 —
+   * a página rolava, num mapa que deveria caber inteiro.
+   */
   .store-map-page-container {
-    height: calc(100vh - 120px);
-    margin-bottom: 70px;
+    margin: 0;
   }
 
   .map-actions-bar {
@@ -618,4 +627,76 @@
   background-color: #15803D;
   color: #FFFFFF;
   box-shadow: 0 2px 8px rgba(21, 128, 61, 0.3);
+}
+
+/* ==========================================================================
+   O mapa como assunto da tela — reforma de 09/09/2026
+
+   Três causas somadas deixavam a planta com menos da metade de um celular:
+   o respiro do container, o cabeçalho grande e o cartão de resumo que
+   quebrava o nome do produto em sete linhas. Medições em docs/observacoes.md.
+   ========================================================================== */
+
+/*
+ * A página do mapa é a única que dispensa o respiro do `main-content`.
+ *
+ * `:has()` evita ter de marcar a tela no JSX só para o CSS saber quem ela é — a condição
+ * já está no DOM. O enchimento de baixo continua existindo em todas as outras telas, porque
+ * é ele que reserva espaço para a navegação fixa; aqui quem reserva é a altura calculada
+ * do container.
+ */
+.main-content:has(.store-map-page-container) {
+  padding: 0;
+  max-width: none;
+}
+
+/*
+ * A loja se identifica sobre a própria planta, como num mapa impresso.
+ *
+ * Substitui o bloco de título que ocupava 143 px de altura no cabeçalho. Aqui não custa
+ * nenhuma, porque flutua sobre o mapa — e é onde a informação faz sentido.
+ */
+.map-etiqueta-da-loja {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  z-index: 12;
+  padding: 5px 11px;
+  border-radius: var(--radius-full);
+  background-color: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border-subtle);
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--on-surface-variant);
+  /* Não intercepta o arraste do mapa: é rótulo, não controle. */
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  /*
+   * O resumo empilha: informação numa linha de largura inteira, ações embaixo.
+   *
+   * Lado a lado, a coluna de texto ficava com ~110 px e o nome do produto quebrava em sete
+   * linhas. Empilhado, o texto recebe os ~340 px da tela e cabe numa linha com reticências.
+   */
+  .map-route-summary-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .map-summary-actions-group {
+    display: flex;
+    gap: 8px;
+  }
+
+  /* Os dois botões dividem a largura em partes iguais — alvos maiores e simétricos. */
+  .map-summary-actions-group .open-roteiro-action-btn {
+    flex: 1;
+    justify-content: center;
+    min-height: var(--min-touch-target);
+  }
 }
