@@ -7,8 +7,8 @@
  */
 
 /**
- * Abaixo disto, ninguém está num monitor: é celular, tablet em pé, ou janela estreita —
- * e nesses casos o app é a própria demonstração, sem moldura.
+ * Largura mínima para a moldura caber com folga. **É o segundo critério, não o primeiro** —
+ * quem decide se isto é um monitor é o ponteiro, em `pareceMonitor()`.
  *
  * 1024 e não 768: entre 768 e 1024 o app ainda tem um layout próprio que serve, e a moldura
  * de 414 px de largura não caberia com folga ao lado do cabeçalho.
@@ -38,21 +38,43 @@ export function pediuTelaCheia() {
   return new URLSearchParams(window.location.search).has(PARAMETRO_TELA_CHEIA)
 }
 
-export function deveMostrarMoldura() {
-  return (
-    !estaDentroDaMoldura() &&
-    window.innerWidth >= LIMIAR_DE_MONITOR &&
-    !pediuTelaCheia()
-  )
+/** Força a moldura mesmo onde a detecção diria que não. Escape para demonstração. */
+export function pediuMoldura() {
+  return new URLSearchParams(window.location.search).has('moldura')
 }
 
-/** Verdadeiro quando o app está em tela cheia num monitor, e cabe oferecer a volta. */
+/**
+ * `true` só num computador de verdade.
+ *
+ * **Largura não basta, e supor que bastava foi um erro.** Um celular com o navegador em
+ * "site para computador" ignora o `meta viewport` e passa a reportar 980 a 1100 px; um tablet
+ * em pé reporta 1024. Nos dois casos a moldura aparecia — celular desenhado dentro de um
+ * celular de verdade.
+ *
+ * O que separa um monitor de um aparelho de toque não é o tamanho, é o **ponteiro**: mouse e
+ * trackpad são `fine` e sabem pairar; dedo é `coarse` e não paira. Notebook com tela sensível
+ * continua sendo `fine`, porque o ponteiro primário dele é o trackpad.
+ */
+function pareceMonitor() {
+  return window.matchMedia('(hover: hover) and (pointer: fine)').matches
+}
+
+export function deveMostrarMoldura() {
+  if (estaDentroDaMoldura() || pediuTelaCheia()) return false
+  if (pediuMoldura()) return true
+  return pareceMonitor() && window.innerWidth >= LIMIAR_DE_MONITOR
+}
+
+/**
+ * Verdadeiro quando o app está em tela cheia num monitor, e cabe oferecer a volta.
+ *
+ * A mesma condição de `deveMostrarMoldura`, com o `telaCheia` invertido — senão o botão de
+ * voltar apareceria em aparelho que nunca teve moldura para onde voltar.
+ */
 export function podeVoltarParaMoldura() {
-  return (
-    !estaDentroDaMoldura() &&
-    window.innerWidth >= LIMIAR_DE_MONITOR &&
-    pediuTelaCheia()
-  )
+  if (estaDentroDaMoldura() || !pediuTelaCheia()) return false
+  if (pediuMoldura()) return true
+  return pareceMonitor() && window.innerWidth >= LIMIAR_DE_MONITOR
 }
 
 /*
