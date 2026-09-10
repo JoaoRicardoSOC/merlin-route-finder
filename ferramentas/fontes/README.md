@@ -34,6 +34,30 @@ não o desta tabela.
 > O script varre o código, encontra os ícones em uso e regera o recorte. Confira o
 > número que ele imprime: se subiu, o ícone novo entrou.
 
+### Como CONFERIR, em vez de confiar
+
+O extrator já falhou **três vezes**, cada uma por um motivo novo: aspas duplas (13 ícones),
+ternarios (6 ícones), e antes disso a lista escrita à mão. Corrigir o extrator não impede a
+quarta — **conferir impede**.
+
+Cole isto no console do app publicado. Ele mede cada ícone: uma ligadura que compõe ocupa
+~24 px; renderizada como palavra, o nome inteiro fica largo.
+
+```js
+await document.fonts.ready
+const medir = (n) => { const s = document.createElement('span'); s.className = 'material-symbols-outlined';
+  s.textContent = n; s.style.cssText = 'position:absolute;visibility:hidden;font-size:24px';
+  document.body.appendChild(s); const w = s.getBoundingClientRect().width; s.remove(); return w }
+const usados = [...document.querySelectorAll('.material-symbols-outlined')].map(e => e.textContent.trim())
+const falhando = [...new Set(usados)].filter(n => medir(n) > 40)
+console.log(falhando.length ? 'VIRAM TEXTO: ' + falhando.join(', ') : 'todos desenham')
+```
+
+Percorra as telas com ele aberto: só mede o que está na página naquele momento, e é assim que
+`done`, `shopping_bag` e `radio_button_unchecked` passariam despercebidos numa tela só.
+
+**Verificado em 10/09/2026:** 80 de 80 desenhando, zero como texto.
+
 ## Por que recortar
 
 A fonte variável completa do Material Symbols tem **1.103 KB** e era baixada inteira, a cada
