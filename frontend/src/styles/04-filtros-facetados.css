@@ -10,6 +10,7 @@
 }
 
 .characteristics-filter-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -23,6 +24,17 @@
   color: var(--on-surface);
   cursor: pointer;
   transition: all var(--transition-fast);
+}
+
+/* 38px na tela, 44 no dedo. */
+.characteristics-filter-btn::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: var(--min-touch-target);
 }
 
 .characteristics-filter-btn:hover {

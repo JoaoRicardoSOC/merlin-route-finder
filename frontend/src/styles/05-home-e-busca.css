@@ -64,6 +64,7 @@
 }
 
 .search-page-input-wrap {
+  min-height: var(--min-touch-target);
   flex: 1;
   display: flex;
   align-items: center;
@@ -98,15 +99,32 @@
   outline: none;
 }
 
+/*
+ * De 28 para 40px, com a area sensivel chegando a 44 na vertical pelo ::after.
+ *
+ * A expansao e SO vertical de proposito: alargar roubaria o toque do fim do texto digitado,
+ * que fica logo a esquerda deste botao.
+ */
 .search-page-clear-btn {
+  position: relative;
   color: var(--text-muted);
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+}
+
+.search-page-clear-btn::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: var(--min-touch-target);
 }
 
 .search-page-clear-btn:hover {

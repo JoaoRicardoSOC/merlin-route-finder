@@ -256,12 +256,15 @@
   gap: 6px;
 }
 
+/* Ha espaco nesta tela, entao os dois crescem de verdade ate o alvo minimo. */
 .product-page-map-action-btn,
 .product-page-route-action-btn {
+  min-height: var(--min-touch-target);
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  padding: 7px 11px;
+  padding: 7px 14px;
   border-radius: var(--radius-md);
   font-family: var(--font-label);
   font-size: 12px;

@@ -41,6 +41,7 @@
 
 /* Search input inside sectors page */
 .sectors-search-bar-wrap {
+  min-height: var(--min-touch-target);
   display: flex;
   align-items: center;
   position: relative;

@@ -48,6 +48,8 @@
 }
 
 .map-user-beacon-pill {
+  /* Ancora da area de toque abaixo. */
+  position: relative;
   width: 100%;
   display: inline-flex;
   align-items: center;
@@ -58,6 +60,20 @@
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: all var(--transition-fast);
+}
+
+/*
+ * A pilula mede 37px. Cresce so a area sensivel: engordar a barra de posicao empurraria a
+ * planta para baixo, e ela e o assunto da tela.
+ */
+.map-user-beacon-pill::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: var(--min-touch-target);
 }
 
 .map-user-beacon-pill:hover {
@@ -118,6 +134,7 @@
 }
 
 .map-toggle-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -132,6 +149,20 @@
   transition: all var(--transition-fast);
 }
 
+/*
+ * Os botoes de camada medem 30px. A sobreposicao cresce 7px para cada lado e cabe no vao
+ * de 12px ate a busca de setor -- foi por isso que aquele vao subiu de 8 para 12.
+ */
+.map-toggle-btn::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: var(--min-touch-target);
+}
+
 .map-toggle-btn.active {
   background-color: var(--primary);
   border-color: var(--primary-dark);
@@ -142,7 +173,15 @@
   font-size: 16px;
 }
 
+/*
+ * 34px, e nao 44.
+ *
+ * Chegar aos 44 custaria 18px de cabecalho, e os chips logo abaixo fazem o mesmo trabalho de
+ * filtrar por setor. O campo passa a encher o invólucro (abaixo), entao a area que responde
+ * dobrou sem custar altura nenhuma.
+ */
 .map-search-sector-input-wrap {
+  min-height: 34px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -159,7 +198,9 @@
   color: var(--on-surface-variant);
 }
 
+/* Enche o invólucro: sem isto so os 16px da linha de texto respondiam ao toque. */
 .map-sector-search-input {
+  align-self: stretch;
   border: none;
   background: transparent;
   font-size: 12px;

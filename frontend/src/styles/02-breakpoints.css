@@ -758,6 +758,7 @@
 }
 
 .view-all-sectors-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -768,6 +769,17 @@
   padding: 4px 8px;
   border-radius: var(--radius-sm);
   transition: background-color var(--transition-fast);
+}
+
+/* 32px na tela, 44 no dedo. */
+.view-all-sectors-btn::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: var(--min-touch-target);
 }
 
 .view-all-sectors-btn:hover {
