@@ -11,7 +11,8 @@ export default function RoteiroDrawer({
   isBuscandoSubstituto = false,
   onClearAll,
   onStartRoute,
-  onEncerrarJornada
+  onEncerrarJornada,
+  onExplorarCatalogo
 }) {
 
   // Antes do retorno antecipado: hook nao pode ficar atras de um `return`.
@@ -66,10 +67,16 @@ export default function RoteiroDrawer({
               <span className="material-symbols-outlined empty-cart-icon" aria-hidden="true">remove_shopping_cart</span>
               <h4>Seu roteiro está vazio</h4>
               <p>Explore os setores ou busque produtos na vitrine e adicione os itens que deseja buscar na loja.</p>
+              {/*
+                * Leva ao catalogo, e nao apenas fecha a gaveta.
+                *
+                * Chamava `onClose`: a gaveta sumia e o cliente continuava na mesma tela, entao
+                * o botao parecia nao fazer nada -- e o rotulo dele promete uma tela.
+                */}
               <button
                 type="button"
                 className="empty-action-btn primary"
-                onClick={onClose}
+                onClick={onExplorarCatalogo || onClose}
               >
                 Explorar Catálogo
               </button>

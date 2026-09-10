@@ -44,20 +44,44 @@ def icones_em_uso():
     numa tela, esquece de atualizar o script, e o icone nao desenha. Varrendo, o
     recorte acompanha o codigo sozinho.
 
-    O padrao dos dados aceita AS DUAS grafias de aspas. A primeira versao so aceitava
-    simples, e plantaInterlagos.js e gerado com duplas: 13 icones de secao ficaram
-    fora do recorte e apareceram como palavra escrita no mapa -- "FOREST Madeiras",
-    "BOLT Eletrica". O recorte nao avisa quando falta um icone, entao o extrator
-    precisa ser abrangente por conta propria.
+    EXTRAI TUDO QUE PARECE NOME DE ICONE DENTRO DO SPAN, em vez de casar um formato.
+
+    As duas versoes anteriores casavam uma FORMA especifica de escrever o icone, e as
+    duas foram furadas pela forma seguinte:
+
+    - a primeira so aceitava aspas simples, e `plantaInterlagos.js` e gerado com
+      duplas: 13 icones de secao viraram palavra escrita no mapa;
+    - a segunda so aceitava um valor unico, e nao viu os TERNARIOS
+      (`{coletado ? 'check_circle' : 'radio_button_unchecked'}`): mais seis icones
+      viraram palavra, entre eles o "DONE" do aviso de item adicionado e o
+      "SHOPPING_BAG" do encerramento.
+
+    Por isso agora o span e recortado primeiro e o conteudo dele e vasculhado depois:
+    qualquer literal serve, venha de ternario, variavel ou concatenacao. Falso
+    positivo aqui custa alguns bytes no recorte; falso negativo custa um icone que
+    nao desenha e nao avisa.
     """
-    padrao_jsx = re.compile(
-        r'material-symbols-outlined[^>]*>\s*\{?\s*[\'"]?([a-z0-9_]+)[\'"]?\s*\}?\s*<')
+    # 1. o span inteiro, com o que houver dentro
+    padrao_span = re.compile(
+        r'<span[^>]*className=[^>]*material-symbols-outlined[^>]*>(.*?)</span>', re.S)
+    # 2. qualquer literal com cara de nome de icone, dentro daquele conteudo
+    padrao_literal = re.compile(r'[\'"]([a-z][a-z0-9_]{2,})[\'"]')
+    # 3. o nome cru, quando escrito direto: <span ...>search</span>
+    padrao_cru = re.compile(r'^[a-z][a-z0-9_]{2,}$')
+    # 4. os dados gerados, como plantaInterlagos.js
     padrao_dado = re.compile(r'\bicone?:\s*[\'"]([a-z0-9_]+)[\'"]')
+
     achados = set()
     for caminho in glob.glob(os.path.join(FRONTEND, 'src', '**', '*.js*'), recursive=True):
         texto = io.open(caminho, encoding='utf-8', errors='ignore').read()
-        achados |= set(padrao_jsx.findall(texto))
+        for conteudo in padrao_span.findall(texto):
+            conteudo = conteudo.strip()
+            if padrao_cru.match(conteudo):
+                achados.add(conteudo)
+            else:
+                achados |= set(padrao_literal.findall(conteudo))
         achados |= set(padrao_dado.findall(texto))
+
     achados.discard('icon')          # do proprio padrao `icon:`, nao e um icone
     return sorted(achados)
 

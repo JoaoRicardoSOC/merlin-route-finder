@@ -979,6 +979,10 @@ function App() {
         isOpen={isRoteiroDrawerOpen}
         onClose={() => setIsRoteiroDrawerOpen(false)}
         items={roteiroItems}
+        onExplorarCatalogo={() => {
+          setIsRoteiroDrawerOpen(false)
+          handleOpenSearchPage(true)
+        }}
         onRemoveItem={handleRemoveFromRoteiro}
         onToggleCollectItem={handleToggleCollectItem}
         onClearAll={handleClearRoteiro}
