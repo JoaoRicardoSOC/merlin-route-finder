@@ -27,7 +27,7 @@
   background-color: var(--error);
   color: #ffffff;
   font-family: var(--font-label);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 800;
   min-width: 20px;
   height: 20px;
@@ -251,7 +251,7 @@
   align-items: center;
   gap: 3px;
   font-family: var(--font-label);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--primary-dark);
   font-weight: 600;
   margin: 2px 0;
@@ -324,7 +324,7 @@
 }
 
 .roteiro-clear-all-btn {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--error);
   text-align: left;
   font-weight: 600;
@@ -341,7 +341,7 @@
 
 .total-label {
   font-family: var(--font-label);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--text-muted);
 }
 

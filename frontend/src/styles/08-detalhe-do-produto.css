@@ -50,8 +50,8 @@
 }
 
 .product-page-quick-cart-btn {
-  width: 40px;
-  height: 40px;
+  width: var(--min-touch-target);
+  height: var(--min-touch-target);
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
@@ -167,7 +167,7 @@
 
 .product-page-price-label {
   font-family: var(--font-label);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -237,7 +237,7 @@
 
 .product-page-loc-label {
   font-family: var(--font-label);
-  font-size: 10.5px;
+  font-size: var(--text-2xs);
   text-transform: uppercase;
   color: var(--text-muted);
   letter-spacing: 0.04em;
@@ -389,7 +389,7 @@
 
 .bottom-price-label {
   font-family: var(--font-label);
-  font-size: 10.5px;
+  font-size: var(--text-2xs);
   color: var(--text-muted);
   text-transform: uppercase;
 }

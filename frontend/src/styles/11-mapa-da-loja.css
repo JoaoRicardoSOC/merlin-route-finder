@@ -31,7 +31,9 @@
   padding: 10px 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  /* 12 e nao 8: a area de toque dos chips se estende 9,5px para cima, e com 8 ela
+     encostaria na busca de setor e roubaria toques dela. */
+  gap: 12px;
   /* Nunca encolhe nem cresce: a altura do cabeçalho é o que sobra ou falta para o mapa. */
   flex: 0 0 auto;
   z-index: 10;
@@ -85,7 +87,7 @@
 }
 
 .beacon-label {
-  font-size: 9.5px;
+  font-size: var(--text-2xs);
   color: var(--on-surface-variant);
   text-transform: uppercase;
   font-weight: 600;
@@ -180,6 +182,8 @@
 }
 
 .map-sector-chip {
+  /* Ancora da area de toque abaixo. */
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -193,6 +197,22 @@
   white-space: nowrap;
   cursor: pointer;
   transition: all var(--transition-fast);
+}
+
+/*
+ * Area de toque de 44px sem engordar o chip, pelo mesmo padrao que a O-33 usou em
+ * `.suggestion-chip`: uma sobreposicao invisivel centrada. Engordar o visual custaria
+ * altura numa fileira que ja e apertada, e o alvo minimo e sobre o DEDO, nao sobre o
+ * desenho.
+ */
+.map-sector-chip::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: var(--min-touch-target);
 }
 
 .map-sector-chip:hover {
@@ -250,8 +270,8 @@
 }
 
 .map-control-btn {
-  width: 38px;
-  height: 38px;
+  width: var(--min-touch-target);
+  height: var(--min-touch-target);
   border-radius: var(--radius-md);
   background-color: var(--surface);
   border: 1px solid var(--outline-variant);
@@ -381,7 +401,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 10.5px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   color: var(--primary-dark);
 }
@@ -491,7 +511,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   color: var(--primary-dark);
   background-color: var(--primary-light);
@@ -671,7 +691,7 @@
   backdrop-filter: blur(6px);
   border: 1px solid var(--border-subtle);
   font-family: var(--font-label);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--on-surface-variant);

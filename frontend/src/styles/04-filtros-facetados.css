@@ -41,7 +41,7 @@
 .filter-count-badge {
   background-color: var(--primary);
   color: var(--on-primary)fff;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 800;
   min-width: 18px;
   height: 18px;
@@ -209,7 +209,7 @@
 
 .facet-group-badge {
   font-family: var(--font-label);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   color: var(--primary-dark);
   background-color: var(--primary-light);

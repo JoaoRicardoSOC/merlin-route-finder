@@ -41,8 +41,8 @@
 }
 
 .search-back-btn {
-  width: 40px;
-  height: 40px;
+  width: var(--min-touch-target);
+  height: var(--min-touch-target);
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;

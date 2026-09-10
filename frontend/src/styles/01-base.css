@@ -60,6 +60,22 @@
   cursor: pointer;
   /* Virou <button>: o reset global tira borda e fundo, o preenchimento sobra. */
   padding: 0;
+  /* Ancora da area de toque abaixo. */
+  position: relative;
+}
+
+/*
+ * A marca tem 38px de altura e leva ao inicio. Esticar a imagem ate 44 deformaria o logo,
+ * entao quem cresce e so a area sensivel -- mesmo padrao de `.suggestion-chip`.
+ */
+.brand-logo::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: var(--min-touch-target);
 }
 
 .brand-logo-img {
@@ -212,7 +228,7 @@
 
 .modern-location-label {
   font-family: var(--font-label);
-  font-size: 10.5px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -223,7 +239,7 @@
 
 .modern-plate-tag {
   font-family: var(--font-label);
-  font-size: 10.5px;
+  font-size: var(--text-2xs);
   font-weight: 750;
   /* Verde escuro sobre tingido verde dá 3,83, e este selo tem 10,5px. O quase-preto do
      `--on-primary-container` é o mesmo tom de família, e sobe para bem acima de 4,5. */
@@ -608,7 +624,7 @@
 }
 
 .price-label {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--text-muted);
   font-family: var(--font-label);
 }
@@ -707,7 +723,7 @@
   padding: 4px 12px;
   border-radius: var(--radius-full);
   font-family: var(--font-label);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -813,7 +829,7 @@
 
 .bottom-nav-label {
   font-family: var(--font-label);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   text-align: center;
 }

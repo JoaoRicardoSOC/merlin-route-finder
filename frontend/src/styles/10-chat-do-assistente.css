@@ -94,7 +94,7 @@
 
 .chat-status-text {
   font-family: var(--font-label);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--primary-dark);
   font-weight: 600;
 }
@@ -154,7 +154,7 @@
 
 .chat-context-aisle-pill {
   font-family: var(--font-label);
-  font-size: 10.5px;
+  font-size: var(--text-2xs);
   font-weight: 750;
   color: var(--primary-dark);
   background-color: rgba(255, 255, 255, 0.85);
@@ -177,7 +177,7 @@
 
 .chat-suggestions-title {
   font-family: var(--font-label);
-  font-size: 10.5px;
+  font-size: var(--text-2xs);
   text-transform: uppercase;
   color: var(--text-muted);
   letter-spacing: 0.04em;
@@ -197,6 +197,8 @@
 }
 
 .chat-suggestion-chip {
+  /* Ancora da area de toque. */
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -212,6 +214,22 @@
   white-space: nowrap;
   transition: all var(--transition-fast);
   flex-shrink: 0;
+}
+
+/*
+ * Area de toque de 44px sem engordar o chip, pelo mesmo padrao que a O-33 usou em
+ * `.suggestion-chip`: uma sobreposicao invisivel centrada. Engordar o visual custaria
+ * altura numa fileira que ja e apertada, e o alvo minimo e sobre o DEDO, nao sobre o
+ * desenho.
+ */
+.chat-suggestion-chip::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: var(--min-touch-target);
 }
 
 .chat-suggestion-chip:hover {
@@ -312,7 +330,7 @@
 
 .cited-products-label {
   font-family: var(--font-label);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 750;
   color: var(--primary-dark);
   text-transform: uppercase;
@@ -399,7 +417,7 @@
   align-items: center;
   gap: 2px;
   font-family: var(--font-label);
-  font-size: 10.5px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   color: var(--primary-dark);
 }
@@ -430,7 +448,7 @@
   border: 1px solid var(--outline-variant);
   border-radius: var(--radius-sm);
   font-family: var(--font-label);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   color: var(--on-surface);
   cursor: pointer;

@@ -631,6 +631,7 @@
 }
 
 .minimal-sector-pill {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -645,6 +646,22 @@
   cursor: pointer;
   transition: all var(--transition-fast);
   white-space: nowrap;
+}
+
+/*
+ * Area de toque de 44px sem engordar o chip, pelo mesmo padrao que a O-33 usou em
+ * `.suggestion-chip`: uma sobreposicao invisivel centrada. Engordar o visual custaria
+ * altura numa fileira que ja e apertada, e o alvo minimo e sobre o DEDO, nao sobre o
+ * desenho.
+ */
+.minimal-sector-pill::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: var(--min-touch-target);
 }
 
 .minimal-sector-pill:hover {
@@ -666,7 +683,7 @@
 }
 
 .minimal-pill-count {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   opacity: 0.85;
   font-weight: 600;
 }
@@ -1277,7 +1294,7 @@
 
 .plate-check {
   font-family: var(--font-label);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   color: var(--primary-dark);
 }
