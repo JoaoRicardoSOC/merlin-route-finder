@@ -27,7 +27,7 @@
 | [O-31](#o-31-o-assistente-não-nomeia-produtos-por-extenso-e-por-isso-nenhum-cartão-aparece--resolvida) | ~~Nenhum cartão de produto aparece no chat~~ — resolvida | — | — |
 | [O-38](#o-38-a-planta-do-backend-e-a-do-frontend-discordam-e-hoje-ninguém-percebe) | Duas geometrias da mesma loja, e só uma é usada | Backend | Baixa hoje |
 | [O-39](#o-39-materiais-de-construção-e-caixas-aparecem-sem-gôndola) | Duas seções aparecem sem gôndola | Frontend | Baixa |
-| [O-41](#o-41-os-sete-modais-não-prendem-o-foco-e-ao-fechar-ele-não-volta) | Modais sem armadilha de foco nem restauração | Frontend | Baixa até 13/09 |
+| [O-41](#o-41-os-sete-modais-não-prendem-o-foco--observação-falsa-retirada) | ~~Modais sem trava de foco~~ — **falsa**, o hook existe desde a D-83 | — | retirada |
 | [O-40](#o-40-quando-a-cota-do-gemini-estoura-58-dos-produtos-recebem-um-substituto-de-outra-função--resolvida-no-texto) | ~~Substituto de outra função em 58% dos produtos~~ — resolvida no texto | — | — |
 | [QA](roteiro-de-qa.md) | Roteiro de verificação do ambiente publicado — **rodar na véspera da gravação** | Time | **Alta** |
 | [O-19](#o-19-o-plano-b-funciona-falta-a-placa-que-aponta-para-ele) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
@@ -1244,7 +1244,34 @@ trabalho de dados, não de código.
 
 ---
 
-### O-41. Os sete modais não prendem o foco, e ao fechar ele não volta
+### O-41. ~~Os sete modais não prendem o foco~~ — **OBSERVAÇÃO FALSA, retirada**
+
+> [!CAUTION]
+> **Retirada em 10/09/2026: o defeito não existe, e os dois sintomas eram do meu teste.**
+>
+> `useModalAcessivel` existe desde a [D-83](decisoes-tecnicas.md#d-83-aria-modal-sem-trava-de-foco-é-pior-que-não-ter-aria-modal),
+> é usado pelos **sete** modais, trava o `Tab`, trata o `Escape` com uma pilha para modais
+> empilhados, e **guarda `document.activeElement` ao abrir para restaurar ao fechar**.
+>
+> **Por que eu não o vi.** Procurei por `focus()`, `inert` e `restoreFocus` **dentro de
+> `components/`**. O hook mora em `hooks/`. O grep estava certo e o escopo estava errado.
+>
+> **Por que as duas medições "confirmaram" o defeito que não havia:**
+>
+> | o que medi | por que deu falso |
+> |---|---|
+> | "40 elementos do fundo alcançáveis por Tab" | Testei se estavam `inert` ou `aria-hidden`. A trava não usa nenhum dos dois — ela **intercepta o `Tab`**. Medi o mecanismo errado |
+> | "ao fechar, o foco vai para o `body`" | Abri o modal com `.click()` programático, que **não foca** o botão. Não havia foco de origem, então voltar ao `body` era o comportamento **correto** |
+>
+> **A lição, que é a mesma de sempre neste projeto:** duas medições concordando não confirmam
+> nada quando as duas partem da mesma suposição errada. Antes de abrir uma observação sobre
+> algo **ausente**, procurar o nome da coisa no repositório inteiro — não na pasta onde eu
+> imaginava que ela estaria.
+>
+> O texto abaixo fica como registro do erro.
+
+<details><summary>O registro original, que estava errado</summary>
+
 
 **Encontrado no QA completo de 08/09/2026**, contra o ambiente publicado.
 
@@ -1292,6 +1319,10 @@ até 13/09.
 e a rubrica paga usabilidade.
 
 **De quem.** Frontend. **Urgência:** baixa até 13/09; média depois.
+
+---
+
+</details>
 
 ---
 

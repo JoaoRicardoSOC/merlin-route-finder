@@ -280,8 +280,8 @@ telas, os 7 modais e os 23 manipuladores de `App.jsx`.
 | 6.3 aceitar o substituto | **passa** | Troca em uma ação; substituto entra **não coletado**; lista não cresce |
 | 6.4 encerrar com pendências | **passa** | Pergunta sobre os caixas, com as duas saídas |
 | 7.1 foco visível | **passa, com ressalva** | Pelo **anel padrão do navegador**: só há 4 regras de foco na folha, todas `:focus-within` em campos de texto |
-| 7.2 foco preso no modal | **REPROVA** | **Defeito 2** |
-| 7.3 foco volta ao gatilho | **REPROVA** | **Defeito 2** |
+| 7.2 foco preso no modal | ~~reprova~~ **passa** | Meu teste checou `inert`; a trava intercepta o `Tab`. Ver a retratação abaixo |
+| 7.3 foco volta ao gatilho | ~~reprova~~ **passa** | Idem: abri o modal com `.click()`, que não foca — não havia foco a restaurar |
 | 7.4 375 px | **passa** | Zero vazamento em mapa, home, setores e busca |
 
 #### Defeito 1 — o chip afirma a entrada sem placa lida — **CORRIGIDO em 08/09**
@@ -322,7 +322,17 @@ A [O-19](observacoes.md#o-19-o-plano-b-funciona-falta-a-placa-que-aponta-para-el
 correção em 30/08, mas ela foi feita apenas no estado inicial do chip em `App.jsx`; o serviço
 continuou com o valor fixo.
 
-#### Defeito 2 — não há armadilha de foco nem restauração
+#### ~~Defeito 2 — não há armadilha de foco nem restauração~~ — **NÃO EXISTE**
+
+> [!CAUTION]
+> **Retirado em 10/09.** `useModalAcessivel` existe desde a [D-83](decisoes-tecnicas.md), é
+> usado pelos sete modais, trava o `Tab` e restaura o foco de origem. Eu procurei o hook em
+> `components/` e ele mora em `hooks/`.
+>
+> As duas medições que o "confirmaram" partiam da mesma suposição errada — detalhe completo na
+> [O-41](observacoes.md#o-41-os-sete-modais-não-prendem-o-foco--observação-falsa-retirada).
+
+<details><summary>O registro original, que estava errado</summary>
 
 `Esc` fecha os modais, e `role="dialog"` com `aria-modal="true"` estão corretos. Mas:
 
@@ -335,6 +345,8 @@ Confirmado no código: não existe armadilha de foco nem restauração em compon
 
 **Não é regressão.** O bloco de acessibilidade fechado em 30/08 cobriu contraste, movimento
 reduzido e barreira de erro; gestão de foco nunca esteve nele.
+
+</details>
 
 #### Armadilhas desta execução, para a próxima não repetir
 
