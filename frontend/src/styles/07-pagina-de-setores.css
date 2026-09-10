@@ -58,9 +58,12 @@
   box-shadow: 0 0 0 3px rgba(0, 107, 39, 0.12);
 }
 
+/* `align-self: stretch` e nao `height` fixa: o campo acompanha o involucro, que ja tem
+   os 44px do alvo minimo. Com 42px cravados, a borda do involucro era visivel e nao
+   respondia ao toque. */
 .sectors-search-input {
   flex: 1;
-  height: 42px;
+  align-self: stretch;
   border: none;
   background: transparent;
   font-family: var(--font-body);

@@ -88,9 +88,12 @@
   margin-right: 8px;
 }
 
+/* `align-self: stretch` e nao `height` fixa: o campo acompanha o involucro, que ja tem
+   os 44px do alvo minimo. Com 42px cravados, a borda do involucro era visivel e nao
+   respondia ao toque. */
 .search-page-input {
   flex: 1;
-  height: 42px;
+  align-self: stretch;
   border: none;
   background: transparent;
   font-family: var(--font-body);
