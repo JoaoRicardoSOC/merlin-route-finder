@@ -53,6 +53,8 @@ export default function StoreMapPage({
   const [zoomLevel, setZoomLevel] = useState(1)
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
+  /* Verdadeiro enquanto o dedo ou o mouse estao sobre o mapa. Desliga a transicao. */
+  const [emGesto, setEmGesto] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [selectedSector, setSelectedSector] = useState(null)
   const [selectedPinItem, setSelectedPinItem] = useState(null)
@@ -224,6 +226,7 @@ export default function StoreMapPage({
   // Pan dragging handlers
   const handleMouseDown = (e) => {
     setIsDragging(true)
+    setEmGesto(true)
     setDragStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y })
   }
 
@@ -235,12 +238,41 @@ export default function StoreMapPage({
     })
   }
 
-  const handleMouseUp = () => setIsDragging(false)
+  const handleMouseUp = () => { setIsDragging(false); setEmGesto(false) }
 
   // Touch handlers for mobile
+  /*
+   * PINÇA DE DOIS DEDOS.
+   *
+   * Os manipuladores só olhavam `touches.length === 1`, então dois dedos não faziam nada — e
+   * pinçar para aproximar é o primeiro gesto que qualquer pessoa tenta num mapa de celular.
+   *
+   * O estado do gesto mora num ref, e não em `useState`, porque ele é lido e escrito a cada
+   * `touchmove`: guardá-lo em estado dispararia um render só para anotar a distância entre os
+   * dedos, sem nada novo para desenhar.
+   */
+  const pincaRef = useRef(null)
+
+  const distanciaEntre = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)
+  const meioEntre = (a, b) => ({ x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 })
+
   const handleTouchStart = (e) => {
+    if (e.touches.length === 2) {
+      setIsDragging(false)
+      zoomTocadoPeloCliente.current = true
+      pincaRef.current = {
+        distancia: distanciaEntre(e.touches[0], e.touches[1]),
+        zoom: zoomLevel,
+        pan: { ...panOffset },
+        meio: meioEntre(e.touches[0], e.touches[1])
+      }
+      setEmGesto(true)
+      return
+    }
     if (e.touches.length === 1) {
+      pincaRef.current = null
       setIsDragging(true)
+      setEmGesto(true)
       setDragStart({
         x: e.touches[0].clientX - panOffset.x,
         y: e.touches[0].clientY - panOffset.y
@@ -249,6 +281,29 @@ export default function StoreMapPage({
   }
 
   const handleTouchMove = (e) => {
+    const pinca = pincaRef.current
+    if (e.touches.length === 2 && pinca && pinca.distancia > 0) {
+      const proporcao = distanciaEntre(e.touches[0], e.touches[1]) / pinca.distancia
+      const novoZoom = Math.min(4, Math.max(0.75, pinca.zoom * proporcao))
+
+      /*
+       * O ponto entre os dedos fica parado enquanto o zoom muda — sem isto, aproximar
+       * empurraria a planta para um canto e o cliente perderia o que estava olhando.
+       */
+      const palcoRect = palcoRef.current?.getBoundingClientRect()
+      if (palcoRect) {
+        const k = novoZoom / pinca.zoom
+        const centroX = palcoRect.x + palcoRect.width / 2
+        const centroY = palcoRect.y + palcoRect.height / 2
+        setPanOffset({
+          x: pinca.pan.x + (pinca.meio.x - centroX - pinca.pan.x) * (1 - k),
+          y: pinca.pan.y + (pinca.meio.y - centroY - pinca.pan.y) * (1 - k)
+        })
+      }
+      setZoomLevel(novoZoom)
+      return
+    }
+
     if (!isDragging || e.touches.length !== 1) return
     setPanOffset({
       x: e.touches[0].clientX - dragStart.x,
@@ -256,7 +311,24 @@ export default function StoreMapPage({
     })
   }
 
-  const handleTouchEnd = () => setIsDragging(false)
+  const handleTouchEnd = (e) => {
+    if (e.touches.length === 1) {
+      /*
+       * Saiu de dois dedos para um. Sem reancorar aqui, o arraste continuaria com o
+       * `dragStart` de antes da pinça e a planta daria um salto.
+       */
+      pincaRef.current = null
+      setIsDragging(true)
+      setDragStart({
+        x: e.touches[0].clientX - panOffset.x,
+        y: e.touches[0].clientY - panOffset.y
+      })
+      return
+    }
+    pincaRef.current = null
+    setIsDragging(false)
+    setEmGesto(false)
+  }
 
   // Filtered sectors for search chip bar
   const visibleSectors = useMemo(() => {
@@ -443,6 +515,17 @@ export default function StoreMapPage({
           className="store-map-svg"
           style={{
             transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
+            /*
+             * NENHUMA transicao enquanto o dedo esta na tela.
+             *
+             * A folha declarava `transition: transform 0.1s ease-out` sempre, entao cada
+             * atualizacao do arraste virava uma animacao de 100 ms: a planta perseguia o dedo
+             * com atraso e nunca o alcancava. Era o que parecia travamento.
+             *
+             * Fora do gesto ela fica, porque e ela que suaviza o zoom pelos botoes e o
+             * "centralizar em mim".
+             */
+            transition: emGesto ? 'none' : 'transform 0.12s ease-out',
             /* O centro do elemento, e nao `475px 308px`: aquilo era um ponto do viewBox
                aplicado a uma caixa de CSS de 390 x 512, ou seja, fora do proprio elemento. */
             transformOrigin: 'center'

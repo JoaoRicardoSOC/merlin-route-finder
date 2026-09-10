@@ -227,11 +227,15 @@
   cursor: grabbing;
 }
 
+/*
+ * Sem `transition` aqui. Ela e decidida em linha pelo componente, porque precisa SUMIR
+ * enquanto o dedo arrasta -- declarada na folha, cada quadro do arraste virava uma animacao
+ * de 100 ms e a planta perseguia o dedo com atraso.
+ */
 .store-map-svg {
   width: 100%;
   height: 100%;
   display: block;
-  transition: transform 0.1s ease-out;
 }
 
 /* Floating Zoom & Pan Controls */
