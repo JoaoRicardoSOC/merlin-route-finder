@@ -58,12 +58,16 @@
   box-shadow: 0 0 0 3px rgba(0, 107, 39, 0.12);
 }
 
-/* `align-self: stretch` e nao `height` fixa: o campo acompanha o involucro, que ja tem
-   os 44px do alvo minimo. Com 42px cravados, a borda do involucro era visivel e nao
-   respondia ao toque. */
+/*
+ * O alvo minimo vai NO CAMPO, e nao so no involucro.
+ *
+ * `min-height` no involucro faz o CONTEINER ter 44px, mas a linha do flex continua
+ * dimensionada pelo conteudo -- e `align-self: stretch` estica ate a linha, nao ate o
+ * conteiner. O campo ficava com 42 e os 2px viravam folga que nao respondia ao toque.
+ */
 .sectors-search-input {
   flex: 1;
-  align-self: stretch;
+  min-height: var(--min-touch-target);
   border: none;
   background: transparent;
   font-family: var(--font-body);
