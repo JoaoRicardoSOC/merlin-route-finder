@@ -178,6 +178,31 @@ O servidor hiberna. **A primeira abertura do dia é o que o cliente real enfrent
 
 ---
 
+## 6b. A sessão acaba com o app aberto
+
+> **Por que este bloco existe.** A sessão vence com **4 horas de inatividade**, e o app fica
+> aberto entre as tomadas de gravação. Até 15/09 isso dava a frase da loja fora do ar em toda
+> ação — foi assim que o defeito apareceu ([D-97](decisoes-tecnicas.md#d-97-sessão-vencida-é-renovada-e-a-chamada-refeita-sessão-encerrada-não)).
+>
+> **Para forçar o vencimento sem esperar 4 horas**, com o app aberto e a sessão em uso:
+>
+> ```
+> update tb_sessao set status='EXPIRED', expiracao_ttl=sysdate-1 where id='<id da sessão>';
+> ```
+>
+> O id está em `localStorage.merlin_route_finder_session_id`. Credenciais **só** como variável
+> de ambiente, nunca escritas em arquivo.
+
+| # | Passo | Esperado |
+|---|---|---|
+| 6b.1 | Com 2 itens na lista e 1 coletado, vencer a sessão pelo SQL acima e **perguntar algo ao assistente** | Ele **responde**. Aparece *"Sua sessão expirou e abrimos outra. Sua lista continua aqui."* Os 2 itens continuam na tela, e o coletado segue coletado. |
+| 6b.2 | Conferir no banco a sessão nova | Existe **uma** só, `ACTIVE`, na mesma placa; a lista dela tem os 2 itens, com `coletado=1` no primeiro. |
+| 6b.3 | Marcar a sessão como `COMPLETED` e tentar adicionar um produto | Tela *"Esta compra já foi encerrada"*. **Nenhuma** sessão nova nasce no banco até o botão ser tocado. |
+| 6b.4 | Tocar em *"Começar nova compra"* | Sessão nova, lista readotada com as marcas, e o app volta ao normal. |
+| 6b.5 | Relatar ruptura num item readotado | Funciona — os ids do servidor foram trocados junto com a sessão. |
+
+---
+
 ## 7. Acessibilidade e telas estreitas
 
 | # | Passo | Esperado |

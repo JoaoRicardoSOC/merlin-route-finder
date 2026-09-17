@@ -62,6 +62,7 @@
 - [D-94. O CSS virou 13 arquivos, e a numeração deles é funcional](#d-94-o-css-virou-13-arquivos-e-a-numeração-deles-é-funcional)
 - [D-95. No monitor o app aparece dentro de um celular desenhado, e a moldura é um iframe](#d-95-no-monitor-o-app-aparece-dentro-de-um-celular-desenhado-e-a-moldura-é-um-iframe)
 - [D-96. Converter entre o viewBox e a tela passa por um caminho só](#d-96-converter-entre-o-viewbox-e-a-tela-passa-por-um-caminho-só)
+- [D-97. Sessão vencida é renovada e a chamada refeita; sessão encerrada, não](#d-97-sessão-vencida-é-renovada-e-a-chamada-refeita-sessão-encerrada-não)
 
 **Persistência**
 - [D-10. Entidades JPA espelho, separadas das de domínio](#d-10-entidades-jpa-espelho-separadas-das-de-domínio)
@@ -2850,6 +2851,69 @@ parte de 2.
 `centralizarEm`.
 
 ---
+
+### D-97. Sessão vencida é renovada e a chamada refeita; sessão encerrada, não
+
+**Contexto.** Em 15/09/2026 o assistente respondeu *"Não consegui falar com a loja agora"* à
+primeira pergunta do dia. A loja respondia: a mesma pergunta, feita por fora, voltou em 10 s com
+quatro produtos. O que tinha acabado era a **sessão**, aberta em 13/09 às 23:09 e vencida de
+madrugada pelo TTL de 4 horas ([D-24](#d-24-ttl-da-sessão-é-renovado-a-cada-interação)):
+
+```
+POST /api/v1/sessoes/3cbd8f70-.../chat/mensagens
+HTTP 409 — "Sessao 3cbd8f70-... nao esta mais ativa (status EXPIRED)"
+```
+
+O frontend distinguia só **sucesso** de **não-sucesso**, e todo não-sucesso virava a frase do
+servidor fora do ar. Uma busca em `frontend/src` não achava **uma linha sequer** tratando 409,
+404, 410 ou `EXPIRED` — inclusive onde a `quebras-de-fluxo.md` afirmava que havia.
+
+**Decisão.** Quando o servidor recusa por causa da sessão, o app **abre outra, leva a lista
+junto e refaz a chamada uma vez**. Quem faz isso é `frontend/src/services/sessaoViva.js`, e ele
+é o único lugar do app que sabe renovar.
+
+**"Acabou" não é uma coisa só**, e por isso a renovação **lê o status** antes de agir, em vez de
+deduzir do 409:
+
+| Estado | O que acontece | Por quê |
+|---|---|---|
+| `EXPIRED`, `ABANDONED`, ou 404 | renova calado e repete a chamada | quem desistiu foi o relógio, não o cliente |
+| `COMPLETED` | **não renova**; a tela pergunta se ele quer começar outra compra | encerrar foi escolha dele na frente de caixa, e desfazê-la sozinho seria pior que o defeito |
+| `ACTIVE` | **não renova**; a falha original sobe | o 409 veio de outra coisa, e renovar esconderia o defeito verdadeiro |
+
+A consulta extra custa uma chamada, e só no caminho de falha.
+
+**A lista atravessa a troca** (`readotarRoteiro`). A sessão nova nasce vazia no servidor; sem
+readotar, os itens continuariam desenhados com `idBackend` de uma sessão morta e **marcar,
+remover e relatar ruptura falhariam em silêncio** até o próximo recarregamento apagar tudo. A
+readoção repõe item a item, na ordem da tela, e reaplica a marca de coletado — o backend devolve
+o item existente quando o produto se repete ([D-18](#d-18-adicionar-produto-repetido-devolve-o-item-existente-em-vez-de-recusar)),
+então ela nunca duplica. Item que falhar fica com `idBackend` nulo, estado que o serviço já
+sabia tratar.
+
+**Três detalhes que a implementação não podia errar:**
+
+- **Uma renovação por vez.** O chat e a lista podem falhar no mesmo instante; sem a promessa
+  compartilhada, cada um abriria uma sessão e a segunda sobrescreveria o id da primeira.
+- **Os ouvintes são aguardados.** A readoção roda **antes** de a chamada ser repetida — senão a
+  repetição sairia com o id da sessão morta, que é exatamente o erro que se está corrigindo.
+- **Uma repetição só.** Se a segunda tentativa falhar, o problema não era a sessão; insistir
+  viraria laço, que o cliente lê como tela travada.
+
+**A sessão zumbi some junto.** `consultarSessao` resgata a cópia local quando a rede falha —
+gravada como `ACTIVE` —, então uma carga com o Render hibernando deixava o app apontando para
+sempre a uma sessão que o servidor já não aceitava. O resgate **continua**, porque é ele que
+sustenta o uso sem sinal dentro da loja; o que muda é que agora o zumbi se cura na primeira
+chamada que receber 409.
+
+**De brinde, um teto de espera no chat.** A chamada do assistente não tinha nenhum: um socket
+pendurado deixava o cliente esperando sem resposta e sem erro. Passou a 45 s, o mesmo valor da
+ruptura e pela mesma razão — o backend tenta o Gemini até três vezes antes de desistir.
+
+**Onde no código.** `services/sessaoViva.js` (novo), `services/roteiroService.js`
+(`readotarRoteiro`, `comItemVivo`), `services/chatService.js`, `services/sessionService.js`
+(`recentrarPosicao`), `services/filaDeSincronizacao.js` (`limparFila`) e `App.jsx` (os dois
+ouvintes e a tela de compra encerrada).
 
 ---
 

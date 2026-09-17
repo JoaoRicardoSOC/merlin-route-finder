@@ -36,10 +36,12 @@ import {
   adicionarAoRoteiro,
   removerDoRoteiro,
   alternarColetaItem,
+  readotarRoteiro,
   relatarRuptura,
   aceitarSubstituto,
   limparRoteiroLocal
 } from './services/roteiroService'
+import { abrirOutraSessao, aoEncerrarJornada, aoRenovar } from './services/sessaoViva'
 import './App.css'
 import AvisoAcordando from './components/AvisoAcordando'
 
@@ -154,6 +156,7 @@ function App() {
    * era necessário — e o cliente montava a lista dentro de um buraco. Ver [D-86].
    */
   const [falhaDeSessao, setFalhaDeSessao] = useState(false)
+  const [jornadaEncerrada, setJornadaEncerrada] = useState(false)
 
   /** Marcações de coleta feitas sem sinal, esperando a conexão voltar. */
   const [marcacoesPendentes, setMarcacoesPendentes] = useState(0)
@@ -254,6 +257,37 @@ function App() {
     initSession()
     return () => { isMounted = false }
   }, [])
+
+  /*
+   * A sessão acabou com o app aberto, e o serviço abriu outra.
+   *
+   * O que este efeito faz é levar a lista junto. A sessão nova nasce vazia no servidor, e sem
+   * a readoção os itens continuariam desenhados com o `idBackend` da sessão morta — marcar,
+   * remover e relatar ruptura falhariam em silêncio até o próximo recarregamento apagar tudo.
+   *
+   * Roda ANTES de a chamada que falhou ser repetida: `renovarSePreciso` espera os ouvintes.
+   */
+  useEffect(() => aoRenovar(async (novaSessao, motivo) => {
+    setSession(novaSessao)
+    setRoteiroItems(await readotarRoteiro(novaSessao.id))
+    if (novaSessao.posicaoAtual) {
+      setCurrentLocation({
+        sector: novaSessao.posicaoAtual.corredor,
+        aisle: novaSessao.posicaoAtual.corredor,
+        code: novaSessao.posicaoAtual.codigoCurto,
+        coords: novaSessao.posicaoAtual.coordenadaX != null
+          ? `${novaSessao.posicaoAtual.coordenadaX}, ${novaSessao.posicaoAtual.coordenadaY}`
+          : null
+      })
+    }
+    showToast(motivo === 'pedido'
+      ? 'Nova compra começada. Sua lista continua aqui.'
+      : 'Sua sessão expirou e abrimos outra. Sua lista continua aqui.')
+  }), [])
+
+  // A jornada foi encerrada na frente de caixa, e o app continuou aberto. Quem recomeça é o
+  // cliente: abrir outra sessão sozinho apagaria uma decisão que foi dele.
+  useEffect(() => aoEncerrarJornada(() => setJornadaEncerrada(true)), [])
 
   useEffect(() => {
     let isMounted = true
@@ -788,6 +822,42 @@ function App() {
         >
           Tentar de novo
         </button>
+        </div>
+      </main>
+    )
+  }
+
+  /*
+   * A compra já foi encerrada, e o cliente tentou continuar usando o app.
+   *
+   * Reaproveita a tela de erro porque a forma é a mesma — um anúncio e uma saída —, mas o texto
+   * não fala em falha: aqui nada quebrou. O botão é o único caminho para outra sessão, e é o
+   * que mantém a conclusão como decisão do cliente.
+   */
+  if (jornadaEncerrada) {
+    return (
+      <main className="tela-de-erro">
+        <div className="tela-de-erro-anuncio" role="alert">
+          <span className="material-symbols-outlined tela-de-erro-icone" aria-hidden="true">shopping_bag</span>
+          <h1 className="tela-de-erro-titulo">Esta compra já foi encerrada</h1>
+          <p className="tela-de-erro-texto">
+            Você finalizou esta jornada, então ela não aceita mais mudanças. Se ainda falta algo,
+            dá para começar uma compra nova — sua lista atual vem junto.
+          </p>
+          <button
+            type="button"
+            className="tela-de-erro-botao"
+            onClick={async () => {
+              try {
+                await abrirOutraSessao('pedido')
+                setJornadaEncerrada(false)
+              } catch {
+                showToast('Não conseguimos começar outra compra agora. Tente de novo em instantes.')
+              }
+            }}
+          >
+            Começar nova compra
+          </button>
         </div>
       </main>
     )

@@ -1,5 +1,17 @@
 // Chat & Virtual AI Assistant Service with Screen Context Awareness (UC-007 a UC-009 / Passo 7)
+import { comSessao } from './sessaoViva'
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+
+/**
+ * Teto de espera pela resposta do assistente.
+ *
+ * Nao havia nenhum, e sem teto um socket pendurado deixa o cliente esperando para sempre —
+ * sem resposta, sem erro e sem nada para tocar. O backend tenta o Gemini ate tres vezes antes
+ * de devolver o texto de indisponibilidade, e o pior caso medido passou de trinta segundos;
+ * por isso 45 s, o mesmo valor da ruptura, e nao menos.
+ */
+const ESPERA_MAXIMA_MS = 45000
 
 /**
  * Consultar histórico de mensagens da sessão
@@ -43,23 +55,35 @@ export async function enviarMensagemChat(sessaoId, conteudo, screenContext = nul
 
   // Sem sessao nao ha a quem perguntar, e o caminho abaixo ja e o unico honesto.
   if (sessaoId) {
+    const relogio = new AbortController()
+    const expira = setTimeout(() => relogio.abort(), ESPERA_MAXIMA_MS)
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/sessoes/${sessaoId}/chat/mensagens`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ conteudo: mensagemEnriquecida })
-      })
+      /*
+       * Por `comSessao`: a sessão vive 4 horas de inatividade, e quando ela vence o servidor
+       * recusa a mensagem com 409. Antes isso virava "não consegui falar com a loja" — a frase
+       * do servidor fora do ar — e o cliente não tinha como saber que bastava recomeçar. Agora
+       * o app abre outra sessão, leva a lista junto e refaz a pergunta.
+       */
+      const { resposta } = await comSessao(sessaoId, id => fetch(
+        `${API_BASE_URL}/api/v1/sessoes/${id}/chat/mensagens`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ conteudo: mensagemEnriquecida }),
+          signal: relogio.signal
+        }))
 
-      if (response.ok) {
-        return await response.json()
+      if (resposta.ok) {
+        return await resposta.json()
       }
 
-      console.warn('O backend recusou a mensagem de chat. Status:', response.status)
+      console.warn('O backend recusou a mensagem de chat. Status:', resposta.status)
     } catch (err) {
       console.warn('Falha na requisição de chat ao backend:', err)
+    } finally {
+      clearTimeout(expira)
     }
   }
 

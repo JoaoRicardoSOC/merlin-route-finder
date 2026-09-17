@@ -1,5 +1,12 @@
 // Service for Session & Location Code lifecycle (POST /api/v1/sessoes, GET /api/v1/sessoes/{id}, PUT /api/v1/sessoes/{id}/posicao)
 
+/*
+ * A importação de `sessaoViva` volta para cá — `sessaoViva` importa `inicializarSessao` daqui.
+ * O laço é inofensivo porque os dois lados só se usam DENTRO de função, nunca no corpo do
+ * módulo: quando `recentrarPosicao` roda, os dois módulos já foram avaliados.
+ */
+import { comSessao } from './sessaoViva'
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 const SESSION_STORAGE_KEY = 'merlin_route_finder_session_id'
 const SESSION_DATA_KEY = 'merlin_route_finder_session_data'
@@ -114,14 +121,17 @@ export async function recentrarPosicao(sessaoId, codigoPonto) {
   if (!codigoPonto) throw new Error('Código do ponto obrigatório')
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/sessoes/${sessaoId}/posicao`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ codigoPonto: codigoPonto.trim() })
-    })
+    // Ler outra placa numa sessão vencida passa a abrir outra sessão e recentrar nela, em vez
+    // de cair no ramo local — que atualizaria a posição só na tela deste aparelho.
+    const { resposta: response } = await comSessao(sessaoId, id => fetch(
+      `${API_BASE_URL}/api/v1/sessoes/${id}/posicao`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ codigoPonto: codigoPonto.trim() })
+      }))
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status} ao recentrar posição`)

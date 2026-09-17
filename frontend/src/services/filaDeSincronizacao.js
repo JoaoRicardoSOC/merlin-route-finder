@@ -62,6 +62,17 @@ export function enfileirarColeta(idBackend, coletado) {
   gravar(fila)
 }
 
+/**
+ * Esquece tudo o que está na fila.
+ *
+ * Só há um motivo legítimo para isto: a sessão acabou e os itens foram repostos noutra. As
+ * pendências guardam o `idBackend` da sessão morta, e a intenção de cada uma já viajou de novo
+ * pelo id novo, na readoção. Sem limpar, cada pendência viraria um 404 até a fila descartá-la.
+ */
+export function limparFila() {
+  gravar([])
+}
+
 /** Quantas ações esperam conexão. A tela usa para avisar em vez de ficar calada. */
 export function pendencias() {
   return lerFila().length

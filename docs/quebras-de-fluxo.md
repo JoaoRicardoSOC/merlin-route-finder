@@ -105,13 +105,27 @@ O backend já responde se a sessão vale; falta o frontend perguntar **antes** d
 
 ### ✅ O cliente volta a uma sessão já concluída
 
-> **Backend — resolvido.** Leitura sim, escrita 409 ([D-41](decisoes-tecnicas.md#d-41-sessão-encerrada-continua-legível-mas-não-gravável)). **A tela trata o 409 como "jornada encerrada"**, não como falha.
+> **Backend — resolvido** desde o começo: leitura sim, escrita 409 ([D-41](decisoes-tecnicas.md#d-41-sessão-encerrada-continua-legível-mas-não-gravável)).
+>
+> **A tela, só em 15/09/2026 — e até lá esta linha afirmava o contrário.** Ela dizia que "a tela trata o 409 como jornada encerrada"; uma busca por `409` em `frontend/src` não achava nada. O que o cliente via era a mensagem de loja fora do ar. Agora existe a tela *"Esta compra já foi encerrada"*, com o botão que abre outra sessão levando a lista junto — e a decisão de **não** abrir sozinho está em [D-97](decisoes-tecnicas.md#d-97-sessão-vencida-é-renovada-e-a-chamada-refeita-sessão-encerrada-não).
 
 Ele encerrou, agradeceu, e abre a página de novo pelo aparelho.
 
 **O que acontece:** leitura funciona, escrita não. Ele consegue ver a lista e o histórico do que fez, mas não adicionar nem marcar nada — recebe `409`.
 
 Está correto e já implementado ([D-41](decisoes-tecnicas.md#d-41-sessão-encerrada-continua-legível-mas-não-gravável)). **O frontend precisa tratar esse 409 como "jornada encerrada, quer começar outra?"**, e não como falha.
+
+### ✅ A sessão vence com o app aberto
+
+> **Resolvido em 15/09/2026, e este cenário não existia na auditoria.** Ele veio de uso real: a primeira pergunta do dia ao assistente voltou *"Não consegui falar com a loja agora"* — com a loja no ar, respondendo a mesma pergunta em 10 s por fora.
+
+A auditoria previu a sessão morta **entre visitas** (o caso acima, tratado na carga). Não previu a sessão morrendo **durante** o uso: a aba fica aberta, o TTL de 4 horas vence, e a partir dali toda ação ligada à sessão — chat, adicionar, marcar, ruptura, substituir — recebe `409` do servidor.
+
+**O que o cliente via:** a frase do servidor fora do ar, em qualquer uma dessas ações. Nada distinguia "a loja não respondeu" de "sua sessão venceu", e nada oferecia saída — recarregar resolvia, mas ninguém tinha como saber disso.
+
+**O que ele vê agora:** o app abre outra sessão, repõe a lista nela com as marcas de coletado, refaz a ação e avisa *"Sua sessão expirou e abrimos outra. Sua lista continua aqui."* Ver [D-97](decisoes-tecnicas.md#d-97-sessão-vencida-é-renovada-e-a-chamada-refeita-sessão-encerrada-não).
+
+**Um segundo caminho levava ao mesmo lugar, e também fechou.** Se a primeira carga pegasse o Render hibernando, `consultarSessao` resgatava a cópia local — gravada como `ACTIVE` — e o app seguia apontando para uma sessão que o servidor já não aceitava. O resgate continua, porque é ele que sustenta o uso sem sinal na loja; o que mudou é que agora o zumbi se cura na primeira recusa.
 
 ### ✅ O cliente toca num item de navegação que abre modal
 
