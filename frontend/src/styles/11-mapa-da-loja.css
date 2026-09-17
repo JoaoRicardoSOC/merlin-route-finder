@@ -452,7 +452,6 @@
   font-weight: 700;
   color: var(--on-surface);
   margin: 2px 0 3px 0;
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
