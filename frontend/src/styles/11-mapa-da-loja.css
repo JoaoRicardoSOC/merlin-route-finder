@@ -380,10 +380,6 @@
   transition: transform var(--transition-fast);
 }
 
-.product-pin-marker:hover {
-  transform: scale(1.2);
-}
-
 .product-pin-marker.selected .pin-bubble {
   stroke: #1E293B;
   stroke-width: 3.5px;
