@@ -59,7 +59,7 @@ Objetivo: ter com o que comparar o antes e o depois, e ter o schema escrito ante
 
 Objetivo: o frontend publicado chamar a API no mesmo domínio, para o backend não precisar mais de CORS. Vem cedo porque precisa ser confirmado em produção antes de o Spring sair.
 
-- [ ] **1.1** Criar `frontend/vercel.json` com rewrite de `/api/:caminho*` para `https://merlin-route-finder-api.onrender.com/api/:caminho*`.
+- [x] **1.1** Criar `frontend/vercel.json` com rewrite de `/api/:caminho*` para `https://merlin-route-finder-api.onrender.com/api/:caminho*`.
 - [ ] **1.2** Push (perguntar antes) e, **no painel da Vercel**, apagar `VITE_API_BASE_URL` e publicar de novo. *Manual, feito por quem administra o projeto na Vercel.*
 - [ ] **1.3** Percorrer a jornada no frontend publicado e confirmar, nas ferramentas do navegador, que as chamadas vão para o domínio da Vercel.
 - [ ] **1.4** Remover `CorsConfig` e a propriedade `merlin.cors.allowed-origins`.

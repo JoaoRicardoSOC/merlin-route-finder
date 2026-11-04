@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/:caminho*",
+      "destination": "https://merlin-route-finder-api.onrender.com/api/:caminho*"
+    }
+  ]
+}
