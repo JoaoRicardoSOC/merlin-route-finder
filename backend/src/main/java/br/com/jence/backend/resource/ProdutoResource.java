@@ -1,5 +1,6 @@
 package br.com.jence.backend.resource;
 
+import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dto.CatalogoResponse;
 import br.com.jence.backend.dto.EstoqueUpdateRequest;
 import br.com.jence.backend.dto.PaginaResponse;
@@ -127,7 +128,7 @@ public class ProdutoResource {
     @Operation(summary = "Detalhamento de produto (UC-003)",
             description = "Inclui o ponto de mapa onde o produto esta fisicamente na loja.")
     public ResponseEntity<ProdutoDetalhadoResponse> consultar(@PathVariable UUID produtoId)
-            throws SQLException {
+            throws SQLException, RecursoNaoEncontradoException {
         return ResponseEntity.ok(consultarProdutoUseCase.executar(produtoId));
     }
 
@@ -146,7 +147,7 @@ public class ProdutoResource {
                     + "positivo para restaurar.")
     public ResponseEntity<ProdutoResponse> simularEstoque(
             @PathVariable UUID produtoId,
-            @Valid @RequestBody EstoqueUpdateRequest request) throws SQLException {
+            @Valid @RequestBody EstoqueUpdateRequest request) throws SQLException, RecursoNaoEncontradoException {
 
         return ResponseEntity.ok(simularEstoqueUseCase.executar(produtoId, request.saldoEstoque()));
     }

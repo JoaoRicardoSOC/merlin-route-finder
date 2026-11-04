@@ -24,7 +24,7 @@ public class ConsultarListaRoteiroUseCase {
         this.listaRoteiroDao = listaRoteiroDao;
     }
 
-    public ListaRoteiroResponse executar(UUID sessaoId) throws SQLException {
+    public ListaRoteiroResponse executar(UUID sessaoId) throws SQLException, RecursoNaoEncontradoException {
         try (Transacao transacao = Transacao.iniciarSomenteLeitura()) {
             ListaRoteiroResponse resposta = consultar(sessaoId);
             transacao.confirmar();
@@ -32,7 +32,7 @@ public class ConsultarListaRoteiroUseCase {
         }
     }
 
-    private ListaRoteiroResponse consultar(UUID sessaoId) throws SQLException {
+    private ListaRoteiroResponse consultar(UUID sessaoId) throws SQLException, RecursoNaoEncontradoException {
         return listaRoteiroDao.buscarPorSessao(sessaoId)
                 .map(ListaRoteiroResponse::de)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Lista de roteiro da sessao", sessaoId));

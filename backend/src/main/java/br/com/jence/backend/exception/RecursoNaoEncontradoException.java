@@ -9,7 +9,7 @@ package br.com.jence.backend.exception;
  * <p>
  * Convertida em HTTP 404 pelo {@code GlobalExceptionHandler}.
  */
-public class RecursoNaoEncontradoException extends RuntimeException {
+public class RecursoNaoEncontradoException extends Exception {
 
     public RecursoNaoEncontradoException(String recurso, Object identificador) {
         super("%s nao encontrado(a): %s".formatted(recurso, identificador));

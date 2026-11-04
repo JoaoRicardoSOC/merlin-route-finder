@@ -29,7 +29,7 @@ public class ConsultarProdutoUseCase {
         this.produtoDao = produtoDao;
     }
 
-    public ProdutoDetalhadoResponse executar(UUID produtoId) throws SQLException {
+    public ProdutoDetalhadoResponse executar(UUID produtoId) throws SQLException, RecursoNaoEncontradoException {
         try (Transacao transacao = Transacao.iniciarSomenteLeitura()) {
             ProdutoDetalhadoResponse resposta = consultar(produtoId);
             transacao.confirmar();
@@ -37,7 +37,7 @@ public class ConsultarProdutoUseCase {
         }
     }
 
-    private ProdutoDetalhadoResponse consultar(UUID produtoId) throws SQLException {
+    private ProdutoDetalhadoResponse consultar(UUID produtoId) throws SQLException, RecursoNaoEncontradoException {
         Produto produto = produtoDao.buscarPorId(produtoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Produto", produtoId));
 

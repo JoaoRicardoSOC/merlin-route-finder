@@ -1,5 +1,6 @@
 package br.com.jence.backend.resource;
 
+import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dto.AdicionarItemRequest;
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.dto.ListaRoteiroResponse;
@@ -48,7 +49,7 @@ public class RoteiroResource {
     @GetMapping
     @Operation(summary = "Consultar a lista de compras da sessao (UC-005)")
     public ResponseEntity<ListaRoteiroResponse> consultar(@PathVariable UUID sessaoId)
-            throws SQLException {
+            throws SQLException, RecursoNaoEncontradoException {
         return ResponseEntity.ok(consultarListaRoteiroUseCase.executar(sessaoId));
     }
 
@@ -63,7 +64,7 @@ public class RoteiroResource {
                     + "sem duplicar a parada na rota.")
     public ResponseEntity<ItemRoteiroDetalhadoResponse> adicionar(
             @PathVariable UUID sessaoId,
-            @Valid @RequestBody AdicionarItemRequest request) throws SQLException {
+            @Valid @RequestBody AdicionarItemRequest request) throws SQLException, RecursoNaoEncontradoException {
 
         ItemRoteiroDetalhadoResponse item =
                 adicionarProdutoAoRoteiroUseCase.executar(sessaoId, request.produtoId());
@@ -74,7 +75,7 @@ public class RoteiroResource {
     @DeleteMapping("/itens/{itemId}")
     @Operation(summary = "Remover produto da lista (UC-006)")
     public ResponseEntity<Void> remover(@PathVariable UUID sessaoId, @PathVariable UUID itemId)
-            throws SQLException {
+            throws SQLException, RecursoNaoEncontradoException {
         removerProdutoDoRoteiroUseCase.executar(sessaoId, itemId);
         return ResponseEntity.noContent().build();
     }

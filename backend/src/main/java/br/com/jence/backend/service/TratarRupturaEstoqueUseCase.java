@@ -92,7 +92,7 @@ public class TratarRupturaEstoqueUseCase {
      * transacao desfaz a renovacao da sessao, como o @Transactional fazia. O registro da ruptura
      * nao vai junto: o RegistroRupturaDao o grava numa transacao propria (D-39).
      */
-    public RupturaEstoqueResponse executar(UUID itemId) throws SQLException {
+    public RupturaEstoqueResponse executar(UUID itemId) throws SQLException, RecursoNaoEncontradoException {
         try (Transacao transacao = Transacao.iniciar()) {
             RupturaEstoqueResponse resposta = tratar(itemId);
             transacao.confirmar();
@@ -100,7 +100,7 @@ public class TratarRupturaEstoqueUseCase {
         }
     }
 
-    private RupturaEstoqueResponse tratar(UUID itemId) throws SQLException {
+    private RupturaEstoqueResponse tratar(UUID itemId) throws SQLException, RecursoNaoEncontradoException {
         ItemRoteiro item = itemRoteiroDao.buscarPorId(itemId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Item de roteiro", itemId));
 

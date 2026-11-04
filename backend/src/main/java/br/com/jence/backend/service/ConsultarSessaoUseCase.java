@@ -29,7 +29,7 @@ public class ConsultarSessaoUseCase {
         this.listaRoteiroDao = listaRoteiroDao;
     }
 
-    public SessaoResponse executar(UUID sessaoId) throws SQLException {
+    public SessaoResponse executar(UUID sessaoId) throws SQLException, RecursoNaoEncontradoException {
         try (Transacao transacao = Transacao.iniciarSomenteLeitura()) {
             SessaoResponse resposta = consultar(sessaoId);
             transacao.confirmar();
@@ -37,7 +37,7 @@ public class ConsultarSessaoUseCase {
         }
     }
 
-    private SessaoResponse consultar(UUID sessaoId) throws SQLException {
+    private SessaoResponse consultar(UUID sessaoId) throws SQLException, RecursoNaoEncontradoException {
         Sessao sessao = sessaoDao.buscarPorId(sessaoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao", sessaoId));
 

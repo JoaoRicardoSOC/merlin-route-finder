@@ -33,7 +33,7 @@ public class ConsultarHistoricoChatUseCase {
         this.chatMensagemDao = chatMensagemDao;
     }
 
-    public List<ChatMensagemResponse> executar(UUID sessaoId) throws SQLException {
+    public List<ChatMensagemResponse> executar(UUID sessaoId) throws SQLException, RecursoNaoEncontradoException {
         try (Transacao transacao = Transacao.iniciarSomenteLeitura()) {
             List<ChatMensagemResponse> historico = consultar(sessaoId);
             transacao.confirmar();
@@ -41,7 +41,7 @@ public class ConsultarHistoricoChatUseCase {
         }
     }
 
-    private List<ChatMensagemResponse> consultar(UUID sessaoId) throws SQLException {
+    private List<ChatMensagemResponse> consultar(UUID sessaoId) throws SQLException, RecursoNaoEncontradoException {
         /*
          * A sessao e verificada mesmo sem ser usada depois. Sem isso, um id inexistente
          * devolveria lista vazia - indistinguivel de uma conversa que ainda nao comecou, e o

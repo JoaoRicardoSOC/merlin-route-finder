@@ -29,7 +29,7 @@ public class SimularEstoqueUseCase {
         this.produtoDao = produtoDao;
     }
 
-    public ProdutoResponse executar(UUID produtoId, int novoSaldo) throws SQLException {
+    public ProdutoResponse executar(UUID produtoId, int novoSaldo) throws SQLException, RecursoNaoEncontradoException {
         try (Transacao transacao = Transacao.iniciar()) {
             ProdutoResponse resposta = simular(produtoId, novoSaldo);
             transacao.confirmar();
@@ -37,7 +37,7 @@ public class SimularEstoqueUseCase {
         }
     }
 
-    private ProdutoResponse simular(UUID produtoId, int novoSaldo) throws SQLException {
+    private ProdutoResponse simular(UUID produtoId, int novoSaldo) throws SQLException, RecursoNaoEncontradoException {
         Produto produto = produtoDao.buscarPorId(produtoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Produto", produtoId));
 

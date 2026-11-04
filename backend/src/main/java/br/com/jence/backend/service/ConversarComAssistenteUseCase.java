@@ -49,7 +49,7 @@ public class ConversarComAssistenteUseCase {
         this.assistenteIA = assistenteIA;
     }
 
-    public ChatMensagemResponse executar(UUID sessaoId, String pergunta) throws SQLException {
+    public ChatMensagemResponse executar(UUID sessaoId, String pergunta) throws SQLException, RecursoNaoEncontradoException {
         try (Transacao transacao = Transacao.iniciar()) {
             ChatMensagemResponse resposta = conversar(sessaoId, pergunta);
             transacao.confirmar();
@@ -57,7 +57,7 @@ public class ConversarComAssistenteUseCase {
         }
     }
 
-    private ChatMensagemResponse conversar(UUID sessaoId, String pergunta) throws SQLException {
+    private ChatMensagemResponse conversar(UUID sessaoId, String pergunta) throws SQLException, RecursoNaoEncontradoException {
         Sessao sessao = sessaoDao.buscarPorId(sessaoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao", sessaoId));
 

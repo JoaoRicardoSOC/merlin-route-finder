@@ -1,5 +1,6 @@
 package br.com.jence.backend.resource;
 
+import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dto.IniciarSessaoRequest;
 import br.com.jence.backend.dto.RecentrarSessaoRequest;
 import br.com.jence.backend.dto.SessaoResponse;
@@ -70,7 +71,7 @@ public class SessaoResource {
     @Operation(summary = "Consultar status da sessao",
             description = "Devolve o status da sessao e onde o cliente esta.")
     public ResponseEntity<SessaoResponse> consultar(@PathVariable UUID sessaoId)
-            throws SQLException {
+            throws SQLException, RecursoNaoEncontradoException {
         return ResponseEntity.ok(consultarSessaoUseCase.executar(sessaoId));
     }
 
@@ -81,7 +82,7 @@ public class SessaoResource {
                     + "permanecem intactos, e nenhuma sessao nova e criada.")
     public ResponseEntity<SessaoResponse> recentrar(
             @PathVariable UUID sessaoId,
-            @Valid @RequestBody RecentrarSessaoRequest requisicao) throws SQLException {
+            @Valid @RequestBody RecentrarSessaoRequest requisicao) throws SQLException, RecursoNaoEncontradoException {
         return ResponseEntity.ok(
                 recentrarSessaoUseCase.executar(sessaoId, requisicao.codigoPonto()));
     }
@@ -91,7 +92,7 @@ public class SessaoResource {
             description = "Acionado quando o cliente finaliza a compra. Nao exige "
                     + "que todos os itens tenham sido coletados.")
     public ResponseEntity<SessaoResponse> concluir(@PathVariable UUID sessaoId)
-            throws SQLException {
+            throws SQLException, RecursoNaoEncontradoException {
         return ResponseEntity.ok(concluirRotaUseCase.executar(sessaoId));
     }
 }

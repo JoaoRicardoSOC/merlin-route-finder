@@ -27,7 +27,7 @@ public class ConcluirRotaUseCase {
         this.sessaoDao = sessaoDao;
     }
 
-    public SessaoResponse executar(UUID sessaoId) throws SQLException {
+    public SessaoResponse executar(UUID sessaoId) throws SQLException, RecursoNaoEncontradoException {
         try (Transacao transacao = Transacao.iniciar()) {
             SessaoResponse resposta = concluir(sessaoId);
             transacao.confirmar();
@@ -35,7 +35,7 @@ public class ConcluirRotaUseCase {
         }
     }
 
-    private SessaoResponse concluir(UUID sessaoId) throws SQLException {
+    private SessaoResponse concluir(UUID sessaoId) throws SQLException, RecursoNaoEncontradoException {
         Sessao sessao = sessaoDao.buscarPorId(sessaoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao", sessaoId));
 

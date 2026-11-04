@@ -35,7 +35,7 @@ public class DesmarcarItemColetadoUseCase {
         this.sessaoDao = sessaoDao;
     }
 
-    public ItemRoteiroDetalhadoResponse executar(UUID itemId) throws SQLException {
+    public ItemRoteiroDetalhadoResponse executar(UUID itemId) throws SQLException, RecursoNaoEncontradoException {
         try (Transacao transacao = Transacao.iniciar()) {
             ItemRoteiroDetalhadoResponse resposta = desmarcar(itemId);
             transacao.confirmar();
@@ -43,7 +43,7 @@ public class DesmarcarItemColetadoUseCase {
         }
     }
 
-    private ItemRoteiroDetalhadoResponse desmarcar(UUID itemId) throws SQLException {
+    private ItemRoteiroDetalhadoResponse desmarcar(UUID itemId) throws SQLException, RecursoNaoEncontradoException {
         // Pela raiz do agregado, e nao pelo item isolado: e por ela que se chega a sessao.
         ListaRoteiro lista = listaRoteiroDao.buscarPorItem(itemId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Item do roteiro", itemId));

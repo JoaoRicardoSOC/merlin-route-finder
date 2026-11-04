@@ -1,5 +1,6 @@
 package br.com.jence.backend.resource;
 
+import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dto.ChatMensagemResponse;
 import br.com.jence.backend.dto.EnviarMensagemRequest;
 import br.com.jence.backend.service.ConsultarHistoricoChatUseCase;
@@ -52,7 +53,7 @@ public class ChatResource {
             @ApiResponse(responseCode = "404", description = "Sessao inexistente")
     })
     public ResponseEntity<List<ChatMensagemResponse>> historico(@PathVariable UUID sessaoId)
-            throws SQLException {
+            throws SQLException, RecursoNaoEncontradoException {
         return ResponseEntity.ok(consultarHistoricoChatUseCase.executar(sessaoId));
     }
 
@@ -78,7 +79,7 @@ public class ChatResource {
     })
     public ResponseEntity<ChatMensagemResponse> enviar(
             @PathVariable UUID sessaoId,
-            @Valid @RequestBody EnviarMensagemRequest request) throws SQLException {
+            @Valid @RequestBody EnviarMensagemRequest request) throws SQLException, RecursoNaoEncontradoException {
 
         ChatMensagemResponse resposta =
                 conversarComAssistenteUseCase.executar(sessaoId, request.conteudo());

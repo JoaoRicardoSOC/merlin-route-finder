@@ -33,7 +33,7 @@ public class MarcarItemColetadoUseCase {
         this.sessaoDao = sessaoDao;
     }
 
-    public ItemRoteiroDetalhadoResponse executar(UUID itemId) throws SQLException {
+    public ItemRoteiroDetalhadoResponse executar(UUID itemId) throws SQLException, RecursoNaoEncontradoException {
         try (Transacao transacao = Transacao.iniciar()) {
             ItemRoteiroDetalhadoResponse resposta = marcar(itemId);
             transacao.confirmar();
@@ -41,7 +41,7 @@ public class MarcarItemColetadoUseCase {
         }
     }
 
-    private ItemRoteiroDetalhadoResponse marcar(UUID itemId) throws SQLException {
+    private ItemRoteiroDetalhadoResponse marcar(UUID itemId) throws SQLException, RecursoNaoEncontradoException {
         /*
          * Carrega pela raiz do agregado em vez de alterar o item isolado: e por ela que se
          * chega a sessao, que precisa ser renovada abaixo.

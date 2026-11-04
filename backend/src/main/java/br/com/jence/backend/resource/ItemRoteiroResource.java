@@ -1,5 +1,6 @@
 package br.com.jence.backend.resource;
 
+import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.dto.ListaRoteiroResponse;
 import br.com.jence.backend.dto.SubstituirItemRequest;
@@ -56,7 +57,7 @@ public class ItemRoteiroResource {
                     + "E o que faz o marcador avancar na navegacao e o que indica ao sistema "
                     + "onde o cliente esta. Idempotente.")
     public ResponseEntity<ItemRoteiroDetalhadoResponse> coletar(@PathVariable UUID itemId)
-            throws SQLException {
+            throws SQLException, RecursoNaoEncontradoException {
         return ResponseEntity.ok(marcarItemColetadoUseCase.executar(itemId));
     }
 
@@ -66,7 +67,7 @@ public class ItemRoteiroResource {
                     + "prateleira. A posicao dele volta sozinha para o item marcado antes "
                     + "deste - ou para a placa lida, se nao houver nenhum. Idempotente.")
     public ResponseEntity<ItemRoteiroDetalhadoResponse> desmarcar(@PathVariable UUID itemId)
-            throws SQLException {
+            throws SQLException, RecursoNaoEncontradoException {
         return ResponseEntity.ok(desmarcarItemColetadoUseCase.executar(itemId));
     }
 
@@ -86,7 +87,7 @@ public class ItemRoteiroResource {
     })
     public ResponseEntity<ListaRoteiroResponse> substituir(
             @PathVariable UUID itemId,
-            @Valid @RequestBody SubstituirItemRequest requisicao) throws SQLException {
+            @Valid @RequestBody SubstituirItemRequest requisicao) throws SQLException, RecursoNaoEncontradoException {
 
         return ResponseEntity.ok(substituirItemDoRoteiroUseCase.executar(
                 itemId, requisicao.produtoSubstitutoId()));
@@ -112,7 +113,7 @@ public class ItemRoteiroResource {
                     description = "Ruptura registrada, mas nenhum substituto plausivel por perto")
     })
     public ResponseEntity<RupturaEstoqueResponse> relatarRuptura(@PathVariable UUID itemId)
-            throws SQLException {
+            throws SQLException, RecursoNaoEncontradoException {
         return ResponseEntity.ok(tratarRupturaEstoqueUseCase.executar(itemId));
     }
 }

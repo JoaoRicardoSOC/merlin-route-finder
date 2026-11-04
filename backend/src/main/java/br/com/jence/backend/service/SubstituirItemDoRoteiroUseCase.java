@@ -49,7 +49,7 @@ public class SubstituirItemDoRoteiroUseCase {
         this.produtoDao = produtoDao;
     }
 
-    public ListaRoteiroResponse executar(UUID itemId, UUID produtoSubstitutoId) throws SQLException {
+    public ListaRoteiroResponse executar(UUID itemId, UUID produtoSubstitutoId) throws SQLException, RecursoNaoEncontradoException {
         try (Transacao transacao = Transacao.iniciar()) {
             ListaRoteiroResponse resposta = substituir(itemId, produtoSubstitutoId);
             transacao.confirmar();
@@ -57,7 +57,7 @@ public class SubstituirItemDoRoteiroUseCase {
         }
     }
 
-    private ListaRoteiroResponse substituir(UUID itemId, UUID produtoSubstitutoId) throws SQLException {
+    private ListaRoteiroResponse substituir(UUID itemId, UUID produtoSubstitutoId) throws SQLException, RecursoNaoEncontradoException {
         ListaRoteiro lista = listaRoteiroDao.buscarPorItem(itemId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Item do roteiro", itemId));
 
