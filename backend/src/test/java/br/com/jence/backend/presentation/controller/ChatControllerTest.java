@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -89,7 +89,7 @@ class ChatControllerTest {
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(conversarComAssistenteUseCase).executar(eq(sessaoId), captor.capture());
 
-        assertThat(captor.getValue()).isEqualTo("quanto custa a torneira cromada?");
+        assertEquals("quanto custa a torneira cromada?", captor.getValue());
     }
 
     @Test
