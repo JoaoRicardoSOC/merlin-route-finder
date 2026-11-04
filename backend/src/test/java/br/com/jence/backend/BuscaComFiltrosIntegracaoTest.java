@@ -11,9 +11,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * A busca do catalogo contra o Oracle real, que e onde os riscos desta implementacao moram:
@@ -47,11 +51,12 @@ class BuscaComFiltrosIntegracaoTest {
         // e nenhum parametro e vinculado.
         List<Produto> todos = buscar(FiltroDeProdutos.nenhum());
 
-        assertThat(todos).isNotEmpty();
+        assertFalse(todos.isEmpty());
 
         /*
-         * A ordem alfabetica e verificada pela primeira letra, e nao com isSorted() sobre a
-         * String inteira, porque quem ordena e o Oracle - e a colacao dele nao e a do Java.
+         * A ordem alfabetica e verificada pela primeira letra, e nao comparando a String
+         * inteira com uma copia ordenada, porque quem ordena e o Oracle - e a colacao dele nao
+         * e a do Java.
          * Medido: o banco devolve "Lampada LED Filamento" ANTES de "Lampada LED 12W", ou seja
          * ordena letra antes de digito, ao contrario da comparacao natural de String.
          *
@@ -62,7 +67,9 @@ class BuscaComFiltrosIntegracaoTest {
                 .map(nome -> Character.toUpperCase(nome.charAt(0)))
                 .toList();
 
-        assertThat(iniciais).isSorted();
+        List<Character> iniciaisOrdenadas = new ArrayList<>(iniciais);
+        Collections.sort(iniciaisOrdenadas);
+        assertEquals(iniciaisOrdenadas, iniciais);
     }
 
     @Test
@@ -72,8 +79,8 @@ class BuscaComFiltrosIntegracaoTest {
          * E a propriedade que de fato importa para o cliente: a lista nao pode se rearranjar
          * entre uma consulta e outra. Sem ordenacao explicita, o SQL nao garante isso.
          */
-        assertThat(nomes(buscar(FiltroDeProdutos.nenhum())))
-                .isEqualTo(nomes(buscar(FiltroDeProdutos.nenhum())));
+        List<String> primeiraChamada = nomes(buscar(FiltroDeProdutos.nenhum()));
+        assertEquals(nomes(buscar(FiltroDeProdutos.nenhum())), primeiraChamada);
     }
 
     @Test
@@ -82,13 +89,11 @@ class BuscaComFiltrosIntegracaoTest {
         Pagina<Produto> primeira = produtoRepository.buscar(FiltroDeProdutos.nenhum(), 0, 3);
         Pagina<Produto> segunda = produtoRepository.buscar(FiltroDeProdutos.nenhum(), 1, 3);
 
-        assertThat(primeira.conteudo()).hasSize(3);
-        assertThat(primeira.totalElementos()).isGreaterThan(3);
-        assertThat(primeira.totalPaginas())
-                .isEqualTo((int) Math.ceil(primeira.totalElementos() / 3.0));
-        assertThat(nomes(segunda.conteudo()))
-                .as("a segunda pagina precisa continuar de onde a primeira parou")
-                .doesNotContainAnyElementsOf(nomes(primeira.conteudo()));
+        assertEquals(3, primeira.conteudo().size());
+        assertTrue(primeira.totalElementos() > 3);
+        assertEquals((int) Math.ceil(primeira.totalElementos() / 3.0), primeira.totalPaginas());
+        assertTrue(Collections.disjoint(nomes(segunda.conteudo()), nomes(primeira.conteudo())),
+                "a segunda pagina precisa continuar de onde a primeira parou");
     }
 
     // ---------------------------------------------------------------- secao
@@ -98,24 +103,25 @@ class BuscaComFiltrosIntegracaoTest {
     void porSecao() {
         List<Produto> tintas = buscar(new FiltroDeProdutos(null, "Tintas", false));
 
-        assertThat(tintas).isNotEmpty();
-        assertThat(tintas).allSatisfy(produto ->
-                assertThat(produto.getPontoMapa().getCorredor()).isEqualTo("Tintas"));
+        assertFalse(tintas.isEmpty());
+        for (Produto produto : tintas) {
+            assertEquals("Tintas", produto.getPontoMapa().getCorredor());
+        }
     }
 
     @Test
     @DisplayName("a secao nao depende de maiuscula ou minuscula")
     void secaoSemCaixa() {
         // O nome chega de um menu, mas tambem pode chegar de uma URL colada ou digitada.
-        assertThat(buscar(new FiltroDeProdutos(null, "tintas", false)))
-                .hasSameSizeAs(buscar(new FiltroDeProdutos(null, "Tintas", false)));
+        List<Produto> minusculas = buscar(new FiltroDeProdutos(null, "tintas", false));
+        assertEquals(buscar(new FiltroDeProdutos(null, "Tintas", false)).size(), minusculas.size());
     }
 
     @Test
     @DisplayName("secao inexistente devolve vazio, e nao o catalogo inteiro")
     void secaoInexistente() {
         // O erro classico de predicado opcional: montar a condicao e nunca aplica-la.
-        assertThat(buscar(new FiltroDeProdutos(null, "Secao Que Nao Existe", false))).isEmpty();
+        assertTrue(buscar(new FiltroDeProdutos(null, "Secao Que Nao Existe", false)).isEmpty());
     }
 
     // ---------------------------------------------------------------- disponibilidade
@@ -127,8 +133,8 @@ class BuscaComFiltrosIntegracaoTest {
          * De proposito: o cliente precisa ver que o produto existe na loja para entender que
          * ele esta esgotado. Esconder do catalogo transformaria "acabou" em "nao vendemos".
          */
-        assertThat(nomes(buscar(FiltroDeProdutos.nenhum())))
-                .contains("Pincel Chato Tigre 815 - 2 Embalagem Com 12 Unidades");
+        assertTrue(nomes(buscar(FiltroDeProdutos.nenhum()))
+                .contains("Pincel Chato Tigre 815 - 2 Embalagem Com 12 Unidades"));
     }
 
     @Test
@@ -136,10 +142,11 @@ class BuscaComFiltrosIntegracaoTest {
     void apenasDisponiveis() {
         List<Produto> disponiveis = buscar(new FiltroDeProdutos(null, null, true));
 
-        assertThat(disponiveis).isNotEmpty();
-        assertThat(disponiveis).allSatisfy(produto ->
-                assertThat(produto.temDisponibilidade()).isTrue());
-        assertThat(nomes(disponiveis)).doesNotContain("Pincel Chato 2 Polegadas");
+        assertFalse(disponiveis.isEmpty());
+        for (Produto produto : disponiveis) {
+            assertTrue(produto.temDisponibilidade());
+        }
+        assertFalse(nomes(disponiveis).contains("Pincel Chato 2 Polegadas"));
     }
 
     // ---------------------------------------------------------------- termo, e termo com filtro
@@ -148,8 +155,8 @@ class BuscaComFiltrosIntegracaoTest {
     @DisplayName("a busca tolerante a erro de digitacao continua funcionando")
     void erroDeDigitacao() {
         // A garantia que a unificacao das consultas mais arriscava perder.
-        assertThat(nomes(buscar(FiltroDeProdutos.porTermo("tnta"))))
-                .anyMatch(nome -> nome.startsWith("Tinta"));
+        assertTrue(nomes(buscar(FiltroDeProdutos.porTermo("tnta"))).stream()
+                .anyMatch(nome -> nome.startsWith("Tinta")));
     }
 
     // ---------------------------------------------------------------- acento
@@ -173,17 +180,18 @@ class BuscaComFiltrosIntegracaoTest {
          * garantir nunca foi a posicao da palavra, e sim que a busca sem acento devolva
          * lampadas e so lampadas.
          */
-        assertThat(achados)
-                .isNotEmpty()
-                .allMatch(nome -> nome.toLowerCase().contains("lâmpada"));
+        assertFalse(achados.isEmpty());
+        assertTrue(achados.stream().allMatch(nome -> nome.toLowerCase().contains("lâmpada")));
     }
 
     @Test
     @DisplayName("quem digita com acento acha do mesmo jeito")
     void comAcentoTambemAcha() {
-        assertThat(nomes(buscar(FiltroDeProdutos.porTermo("lâmpada"))))
-                .containsExactlyInAnyOrderElementsOf(
-                        nomes(buscar(FiltroDeProdutos.porTermo("lampada"))));
+        List<String> comAcento = new ArrayList<>(nomes(buscar(FiltroDeProdutos.porTermo("lâmpada"))));
+        List<String> semAcento = new ArrayList<>(nomes(buscar(FiltroDeProdutos.porTermo("lampada"))));
+        Collections.sort(comAcento);
+        Collections.sort(semAcento);
+        assertEquals(semAcento, comAcento);
     }
 
     @Test
@@ -197,33 +205,34 @@ class BuscaComFiltrosIntegracaoTest {
          * p.nome, entao "construcao" nao serviria: a palavra so existe no nome da secao e nas
          * descricoes.
          */
-        assertThat(nomes(buscar(FiltroDeProdutos.porTermo("sifao"))))
-                .as("til: 'sifao' precisa achar 'Sifão'")
-                .isNotEmpty()
-                .allMatch(nome -> nome.startsWith("Sifão"));
+        List<String> sifoes = nomes(buscar(FiltroDeProdutos.porTermo("sifao")));
+        assertFalse(sifoes.isEmpty(), "til: 'sifao' precisa achar 'Sifão'");
+        assertTrue(sifoes.stream().allMatch(nome -> nome.startsWith("Sifão")),
+                "til: 'sifao' precisa achar 'Sifão'");
 
         /*
          * Era "distribuicao", que casava com "Quadro de Distribuição". O nome real do produto
          * e "Quadro Pvc Embutir 12 Disjuntores Branco" (D-85), entao a palavra saiu da massa.
          * "Mão Francesa" carrega o mesmo til e existe no catalogo de verdade.
          */
-        assertThat(nomes(buscar(FiltroDeProdutos.porTermo("mao"))))
-                .as("til: 'mao' precisa achar 'Mão'")
-                .anyMatch(nome -> nome.contains("Mão"));
+        assertTrue(nomes(buscar(FiltroDeProdutos.porTermo("mao"))).stream()
+                        .anyMatch(nome -> nome.contains("Mão")),
+                "til: 'mao' precisa achar 'Mão'");
 
-        assertThat(nomes(buscar(FiltroDeProdutos.porTermo("pecas"))))
-                .as("cedilha: 'pecas' precisa achar 'Peças'")
-                .anyMatch(nome -> nome.contains("Peças"));
+        assertTrue(nomes(buscar(FiltroDeProdutos.porTermo("pecas"))).stream()
+                        .anyMatch(nome -> nome.contains("Peças")),
+                "cedilha: 'pecas' precisa achar 'Peças'");
     }
 
     @Test
     @DisplayName("a secao tambem casa sem acento")
     void secaoSemAcento() {
         // Um link digitado a mao com "Decoracao" nao pode devolver vazio por falta de cedilha.
-        assertThat(buscar(new FiltroDeProdutos(null, "Decoracao", false)))
-                .isNotEmpty()
-                .allSatisfy(produto ->
-                        assertThat(produto.getPontoMapa().getCorredor()).isEqualTo("Decoração"));
+        List<Produto> decoracao = buscar(new FiltroDeProdutos(null, "Decoracao", false));
+        assertFalse(decoracao.isEmpty());
+        for (Produto produto : decoracao) {
+            assertEquals("Decoração", produto.getPontoMapa().getCorredor());
+        }
     }
 
     @Test
@@ -233,11 +242,11 @@ class BuscaComFiltrosIntegracaoTest {
 
         System.out.println(">>> lixa em Tintas: " + nomes(lixasEmTintas));
 
-        assertThat(lixasEmTintas).isNotEmpty();
-        assertThat(lixasEmTintas).allSatisfy(produto -> {
-            assertThat(produto.getNome().toLowerCase()).contains("lixa");
-            assertThat(produto.getPontoMapa().getCorredor()).isEqualTo("Tintas");
-        });
+        assertFalse(lixasEmTintas.isEmpty());
+        for (Produto produto : lixasEmTintas) {
+            assertTrue(produto.getNome().toLowerCase().contains("lixa"));
+            assertEquals("Tintas", produto.getPontoMapa().getCorredor());
+        }
     }
 
     @Test
@@ -255,10 +264,9 @@ class BuscaComFiltrosIntegracaoTest {
          */
         List<Produto> resultado = buscar(new FiltroDeProdutos("lâmpada", "Iluminação", true));
 
-        assertThat(resultado).isNotEmpty();
-        assertThat(nomes(resultado))
-                .as("a lampada amarela esta zerada e o filtro de disponibilidade a exclui")
-                .doesNotContain("Lâmpada LED 9W Amarela - kit 3");
+        assertFalse(resultado.isEmpty());
+        assertFalse(nomes(resultado).contains("Lâmpada LED 9W Amarela - kit 3"),
+                "a lampada amarela esta zerada e o filtro de disponibilidade a exclui");
     }
 
     @Test
@@ -274,9 +282,9 @@ class BuscaComFiltrosIntegracaoTest {
         Pagina<Produto> vazia = produtoRepository.buscar(
                 new FiltroDeProdutos("disjuntor", "Cozinhas", false), 0, TAMANHO);
 
-        assertThat(vazia.conteudo()).isEmpty();
-        assertThat(vazia.totalElementos()).isZero();
-        assertThat(vazia.totalPaginas()).isZero();
+        assertTrue(vazia.conteudo().isEmpty());
+        assertEquals(0L, vazia.totalElementos());
+        assertEquals(0, vazia.totalPaginas());
     }
 
     // ---------------------------------------------------------------- secoes
@@ -288,16 +296,18 @@ class BuscaComFiltrosIntegracaoTest {
 
         System.out.println(">>> secoes: " + secoes);
 
-        assertThat(secoes).isNotEmpty();
-        assertThat(secoes.stream().map(SecaoDoCatalogo::nome).toList()).isSorted();
+        assertFalse(secoes.isEmpty());
+        List<String> nomesDasSecoes = secoes.stream().map(SecaoDoCatalogo::nome).toList();
+        List<String> nomesOrdenados = new ArrayList<>(nomesDasSecoes);
+        Collections.sort(nomesOrdenados);
+        assertEquals(nomesOrdenados, nomesDasSecoes);
 
         for (SecaoDoCatalogo secao : secoes) {
-            assertThat(secao.quantidadeProdutos())
-                    .as("secao sem produto nao deveria aparecer no menu")
-                    .isPositive();
-            assertThat(buscar(new FiltroDeProdutos(null, secao.nome(), false)))
-                    .as("contagem de %s", secao.nome())
-                    .hasSize((int) secao.quantidadeProdutos());
+            assertTrue(secao.quantidadeProdutos() > 0,
+                    "secao sem produto nao deveria aparecer no menu");
+            assertEquals((int) secao.quantidadeProdutos(),
+                    buscar(new FiltroDeProdutos(null, secao.nome(), false)).size(),
+                    "contagem de " + secao.nome());
         }
     }
 
@@ -309,7 +319,7 @@ class BuscaComFiltrosIntegracaoTest {
                 .mapToLong(SecaoDoCatalogo::quantidadeProdutos)
                 .sum();
 
-        assertThat(soma).isEqualTo(
-                produtoRepository.buscar(FiltroDeProdutos.nenhum(), 0, 1).totalElementos());
+        assertEquals(
+                produtoRepository.buscar(FiltroDeProdutos.nenhum(), 0, 1).totalElementos(), soma);
     }
 }
