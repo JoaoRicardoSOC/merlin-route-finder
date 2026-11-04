@@ -3,7 +3,6 @@ package br.com.jence.backend.application.usecase;
 import br.com.jence.backend.domain.entity.Sessao;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -18,7 +17,6 @@ import java.util.List;
  * sempre, e qualquer contagem de jornadas em andamento seria ficcao.
  */
 @Service
-@Slf4j
 public class ExpirarSessoesInativasUseCase {
 
     private final SessaoRepository sessaoRepository;
@@ -75,15 +73,15 @@ public class ExpirarSessoesInativasUseCase {
 
             } catch (Exception e) {
                 falhas++;
-                log.warn("Falha ao encerrar a sessao {} na varredura: {}", sessao.getId(), e.toString());
+                System.out.println(String.format("AVISO: Falha ao encerrar a sessao %s na varredura: %s", sessao.getId(), e.toString()));
             }
         }
 
         ResultadoDaVarredura resultado = new ResultadoDaVarredura(abandonadas, expiradas, falhas);
 
         if (!resultado.vazio()) {
-            log.info("Varredura de TTL: {} abandonada(s), {} expirada(s), {} falha(s)",
-                    abandonadas, expiradas, falhas);
+            System.out.println(String.format("Varredura de TTL: %s abandonada(s), %s expirada(s), %s falha(s)",
+                    abandonadas, expiradas, falhas));
         }
 
         return resultado;
