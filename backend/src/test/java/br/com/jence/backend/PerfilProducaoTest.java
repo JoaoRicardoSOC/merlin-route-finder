@@ -3,7 +3,6 @@ package br.com.jence.backend;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.env.Environment;
@@ -25,8 +24,6 @@ class PerfilProducaoTest {
     @LocalServerPort int porta;
     @Autowired Environment environment;
 
-    @Value("${merlin.cors.allowed-origins}") String[] origens;
-
     @Test
     void aplicacaoSobeComPerfilDeProducao() throws Exception {
         assertThat(environment.getActiveProfiles()).contains("prod");
@@ -37,7 +34,6 @@ class PerfilProducaoTest {
 
         System.out.println(">>> perfil ativo    : prod");
         System.out.println(">>> show-sql        : " + environment.getProperty("spring.jpa.show-sql"));
-        System.out.println(">>> origens CORS    : " + String.join(", ", origens));
 
         // a API responde normalmente
         HttpResponse<String> res = HttpClient.newHttpClient().send(

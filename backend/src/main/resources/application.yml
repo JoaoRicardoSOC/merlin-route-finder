@@ -59,10 +59,6 @@ server:
   port: ${PORT:8080}
 
 merlin:
-  cors:
-    # Origens do Totem e do Mobile. Em producao, definir CORS_ALLOWED_ORIGINS com as URLs
-    # publicadas, separadas por virgula.
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
   agendador:
     # Varredura de sessoes com TTL vencido. Nao protege regra de negocio - Sessao.isValida()
     # ja compara com o relogio - apenas mantem o banco condizente com a realidade.
