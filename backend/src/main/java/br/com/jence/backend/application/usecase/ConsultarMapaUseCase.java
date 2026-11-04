@@ -6,7 +6,6 @@ import br.com.jence.backend.application.dto.PontoMapaResponse;
 import br.com.jence.backend.domain.entity.PlantaDaLoja;
 import br.com.jence.backend.domain.entity.TipoPonto;
 import br.com.jence.backend.domain.repository.PontoMapaRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +21,6 @@ import java.util.List;
  * com a conexao caindo dentro da loja.
  */
 @Service
-@RequiredArgsConstructor
 public class ConsultarMapaUseCase {
 
     /** O grid em que tudo no mapa e expresso. Vai junto para o frontend nao precisar supor. */
@@ -33,6 +31,10 @@ public class ConsultarMapaUseCase {
             List.of(TipoPonto.CAIXA, TipoPonto.BANHEIRO, TipoPonto.QR_CODE);
 
     private final PontoMapaRepository pontoMapaRepository;
+
+    public ConsultarMapaUseCase(PontoMapaRepository pontoMapaRepository) {
+        this.pontoMapaRepository = pontoMapaRepository;
+    }
 
     @Transactional(readOnly = true)
     public MapaResponse executar() {
