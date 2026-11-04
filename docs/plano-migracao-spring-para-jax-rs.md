@@ -77,10 +77,10 @@ Objetivo: o frontend publicado chamar a API no mesmo domínio, para o backend n�
 
 Ficam de fora desta fase os arquivos que a fase 7 apaga (entidades JPA, adaptadores, fábricas de conversão, repositórios JPA).
 
-- [ ] **3.1** `domain/entity` (7 arquivos, só `@Getter`): getters escritos à mão. As regras e a imutabilidade não mudam.
-- [ ] **3.2** `application` (19 arquivos): construtores escritos à mão no lugar de `@RequiredArgsConstructor`.
-- [ ] **3.3** `infrastructure` (os que sobrevivem à fase 7: IA, agendador, carga de dados, configuração).
-- [ ] **3.4** `presentation` (6 controllers).
+- [x] **3.1** `domain/entity` (7 arquivos, só `@Getter`): getters escritos à mão. As regras e a imutabilidade não mudam.
+- [x] **3.2** `application` (19 arquivos): construtores escritos à mão no lugar de `@RequiredArgsConstructor`.
+- [x] **3.3** `infrastructure` (os que sobrevivem à fase 7: IA, agendador, carga de dados, configuração).
+- [x] **3.4** `presentation` (6 controllers).
 
 Um commit por pacote ou subpacote. A dependência do Lombok sai na fase 7, quando o último arquivo que a usa for apagado.
 
