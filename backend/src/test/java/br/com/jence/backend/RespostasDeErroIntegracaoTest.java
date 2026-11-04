@@ -46,7 +46,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class RespostasDeErroIntegracaoTest {
 
     @LocalServerPort int porta;
-    @Autowired RestClient.Builder builder;
+    // Criado aqui: o RestClientConfig saiu junto com o RestClient do cliente do Gemini.
+    private final RestClient.Builder builder = RestClient.builder();
 
     @Autowired SessaoJpaRepository sessaoJpa;
     @Autowired ListaRoteiroJpaRepository listaJpa;

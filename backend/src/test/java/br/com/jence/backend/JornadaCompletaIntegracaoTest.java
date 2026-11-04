@@ -49,7 +49,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class JornadaCompletaIntegracaoTest {
 
     @LocalServerPort int porta;
-    @Autowired RestClient.Builder builder;
+    // Criado aqui: o RestClientConfig saiu junto com o RestClient do cliente do Gemini.
+    private final RestClient.Builder builder = RestClient.builder();
 
     /* Leitor proprio: o teste so precisa navegar o JSON da resposta, e nao depender da
      * configuracao de serializacao da aplicacao - que e justamente uma das coisas que

@@ -34,7 +34,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ContratoOpenApiIntegracaoTest {
 
     @LocalServerPort int porta;
-    @Autowired RestClient.Builder builder;
+    // Criado aqui: o RestClientConfig saiu junto com o RestClient do cliente do Gemini.
+    private final RestClient.Builder builder = RestClient.builder();
 
     private static final String PREFIXO = "/api/v1";
 
