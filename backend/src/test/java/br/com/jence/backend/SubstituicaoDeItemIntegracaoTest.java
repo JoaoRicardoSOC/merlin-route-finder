@@ -1,8 +1,8 @@
 package br.com.jence.backend;
 
-import br.com.jence.backend.application.dto.ItemRoteiroDetalhadoResponse;
-import br.com.jence.backend.application.dto.ListaRoteiroResponse;
-import br.com.jence.backend.application.dto.SessaoResponse;
+import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
+import br.com.jence.backend.dto.ListaRoteiroResponse;
+import br.com.jence.backend.dto.SessaoResponse;
 import br.com.jence.backend.application.usecase.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.application.usecase.ConcluirRotaUseCase;
 import br.com.jence.backend.application.usecase.ConsultarSessaoUseCase;

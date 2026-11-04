@@ -1,7 +1,7 @@
 package br.com.jence.backend.presentation.controller;
 
-import br.com.jence.backend.application.dto.ChatMensagemResponse;
-import br.com.jence.backend.application.dto.EnviarMensagemRequest;
+import br.com.jence.backend.dto.ChatMensagemResponse;
+import br.com.jence.backend.dto.EnviarMensagemRequest;
 import br.com.jence.backend.application.usecase.ConsultarHistoricoChatUseCase;
 import br.com.jence.backend.application.usecase.ConversarComAssistenteUseCase;
 import io.swagger.v3.oas.annotations.Operation;

@@ -1,6 +1,6 @@
 package br.com.jence.backend.application.usecase;
 
-import br.com.jence.backend.application.dto.ProdutoResponse;
+import br.com.jence.backend.dto.ProdutoResponse;
 import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.TipoPonto;

@@ -1,6 +1,6 @@
 package br.com.jence.backend;
 
-import br.com.jence.backend.application.dto.ChatMensagemResponse;
+import br.com.jence.backend.dto.ChatMensagemResponse;
 import br.com.jence.backend.application.usecase.ConversarComAssistenteUseCase;
 import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
 import br.com.jence.backend.model.ChatMensagem;

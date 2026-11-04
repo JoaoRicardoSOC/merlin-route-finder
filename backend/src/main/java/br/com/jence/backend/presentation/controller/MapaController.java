@@ -1,6 +1,6 @@
 package br.com.jence.backend.presentation.controller;
 
-import br.com.jence.backend.application.dto.MapaResponse;
+import br.com.jence.backend.dto.MapaResponse;
 import br.com.jence.backend.application.usecase.ConsultarMapaUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

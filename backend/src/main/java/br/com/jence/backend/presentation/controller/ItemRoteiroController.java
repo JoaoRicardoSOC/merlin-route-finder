@@ -1,9 +1,9 @@
 package br.com.jence.backend.presentation.controller;
 
-import br.com.jence.backend.application.dto.ItemRoteiroDetalhadoResponse;
-import br.com.jence.backend.application.dto.ListaRoteiroResponse;
-import br.com.jence.backend.application.dto.SubstituirItemRequest;
-import br.com.jence.backend.application.dto.RupturaEstoqueResponse;
+import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
+import br.com.jence.backend.dto.ListaRoteiroResponse;
+import br.com.jence.backend.dto.SubstituirItemRequest;
+import br.com.jence.backend.dto.RupturaEstoqueResponse;
 import br.com.jence.backend.application.usecase.DesmarcarItemColetadoUseCase;
 import br.com.jence.backend.application.usecase.MarcarItemColetadoUseCase;
 import br.com.jence.backend.application.usecase.SubstituirItemDoRoteiroUseCase;

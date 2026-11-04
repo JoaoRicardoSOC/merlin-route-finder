@@ -1,9 +1,9 @@
 package br.com.jence.backend.presentation.controller;
 
-import br.com.jence.backend.application.dto.ItemRoteiroDetalhadoResponse;
-import br.com.jence.backend.application.dto.ListaRoteiroResponse;
-import br.com.jence.backend.application.dto.PontoMapaResponse;
-import br.com.jence.backend.application.dto.ProdutoResponse;
+import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
+import br.com.jence.backend.dto.ListaRoteiroResponse;
+import br.com.jence.backend.dto.PontoMapaResponse;
+import br.com.jence.backend.dto.ProdutoResponse;
 import br.com.jence.backend.application.usecase.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.application.usecase.ConsultarListaRoteiroUseCase;
 import br.com.jence.backend.application.usecase.RemoverProdutoDoRoteiroUseCase;

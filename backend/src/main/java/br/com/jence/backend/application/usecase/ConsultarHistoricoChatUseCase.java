@@ -1,6 +1,6 @@
 package br.com.jence.backend.application.usecase;
 
-import br.com.jence.backend.application.dto.ChatMensagemResponse;
+import br.com.jence.backend.dto.ChatMensagemResponse;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ChatMensagemRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;

@@ -1,7 +1,7 @@
 package br.com.jence.backend;
 
-import br.com.jence.backend.application.dto.ItemRoteiroDetalhadoResponse;
-import br.com.jence.backend.application.dto.RupturaEstoqueResponse;
+import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
+import br.com.jence.backend.dto.RupturaEstoqueResponse;
 import br.com.jence.backend.application.usecase.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
 import br.com.jence.backend.application.usecase.TratarRupturaEstoqueUseCase;

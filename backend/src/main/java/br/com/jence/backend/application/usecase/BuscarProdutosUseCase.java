@@ -1,6 +1,6 @@
 package br.com.jence.backend.application.usecase;
 
-import br.com.jence.backend.application.dto.CatalogoResponse;
+import br.com.jence.backend.dto.CatalogoResponse;
 import br.com.jence.backend.model.AtributoProduto;
 import br.com.jence.backend.model.Produto;
 

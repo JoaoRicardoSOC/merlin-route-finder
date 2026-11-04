@@ -1,6 +1,6 @@
 package br.com.jence.backend.application.usecase;
 
-import br.com.jence.backend.application.dto.RupturaEstoqueResponse;
+import br.com.jence.backend.dto.RupturaEstoqueResponse;
 import br.com.jence.backend.model.ItemRoteiro;
 import br.com.jence.backend.model.ListaRoteiro;
 import br.com.jence.backend.model.OrigemSugestao;

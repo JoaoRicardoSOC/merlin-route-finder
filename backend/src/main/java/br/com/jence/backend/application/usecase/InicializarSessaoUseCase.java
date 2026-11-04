@@ -1,6 +1,6 @@
 package br.com.jence.backend.application.usecase;
 
-import br.com.jence.backend.application.dto.SessaoResponse;
+import br.com.jence.backend.dto.SessaoResponse;
 import br.com.jence.backend.model.ListaRoteiro;
 import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Sessao;

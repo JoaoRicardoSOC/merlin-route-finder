@@ -1,4 +1,4 @@
-package br.com.jence.backend.application.dto;
+package br.com.jence.backend.dto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;

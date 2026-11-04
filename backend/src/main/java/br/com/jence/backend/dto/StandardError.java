@@ -1,4 +1,4 @@
-package br.com.jence.backend.presentation.response;
+package br.com.jence.backend.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;

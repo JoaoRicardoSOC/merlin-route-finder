@@ -1,4 +1,4 @@
-package br.com.jence.backend.application.dto;
+package br.com.jence.backend.dto;
 
 import br.com.jence.backend.model.ListaRoteiro;
 import br.com.jence.backend.model.Sessao;

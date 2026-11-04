@@ -1,6 +1,6 @@
 package br.com.jence.backend.application.usecase;
 
-import br.com.jence.backend.application.dto.ProdutoDetalhadoResponse;
+import br.com.jence.backend.dto.ProdutoDetalhadoResponse;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ProdutoRepository;

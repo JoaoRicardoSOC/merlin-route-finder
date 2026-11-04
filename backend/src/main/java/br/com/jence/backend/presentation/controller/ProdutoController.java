@@ -1,11 +1,11 @@
 package br.com.jence.backend.presentation.controller;
 
-import br.com.jence.backend.application.dto.CatalogoResponse;
-import br.com.jence.backend.application.dto.EstoqueUpdateRequest;
-import br.com.jence.backend.application.dto.PaginaResponse;
-import br.com.jence.backend.application.dto.ProdutoDetalhadoResponse;
-import br.com.jence.backend.application.dto.ProdutoResponse;
-import br.com.jence.backend.application.dto.SecaoResponse;
+import br.com.jence.backend.dto.CatalogoResponse;
+import br.com.jence.backend.dto.EstoqueUpdateRequest;
+import br.com.jence.backend.dto.PaginaResponse;
+import br.com.jence.backend.dto.ProdutoDetalhadoResponse;
+import br.com.jence.backend.dto.ProdutoResponse;
+import br.com.jence.backend.dto.SecaoResponse;
 import br.com.jence.backend.application.usecase.BuscarProdutosUseCase;
 import br.com.jence.backend.application.usecase.ConsultarProdutoUseCase;
 import br.com.jence.backend.application.usecase.ListarSecoesUseCase;

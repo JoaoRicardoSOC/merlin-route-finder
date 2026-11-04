@@ -1,6 +1,6 @@
 package br.com.jence.backend.application.usecase;
 
-import br.com.jence.backend.application.dto.SecaoResponse;
+import br.com.jence.backend.dto.SecaoResponse;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import org.springframework.stereotype.Service;
 

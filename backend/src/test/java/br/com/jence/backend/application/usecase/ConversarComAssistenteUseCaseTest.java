@@ -1,6 +1,6 @@
 package br.com.jence.backend.application.usecase;
 
-import br.com.jence.backend.application.dto.ChatMensagemResponse;
+import br.com.jence.backend.dto.ChatMensagemResponse;
 import br.com.jence.backend.model.*;
 import br.com.jence.backend.exception.AssistenteIAIndisponivelException;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;

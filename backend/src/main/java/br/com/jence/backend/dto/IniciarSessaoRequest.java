@@ -1,4 +1,4 @@
-package br.com.jence.backend.application.dto;
+package br.com.jence.backend.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

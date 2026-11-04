@@ -1,8 +1,8 @@
 package br.com.jence.backend.application.usecase;
 
-import br.com.jence.backend.application.dto.BlocoMapaResponse;
-import br.com.jence.backend.application.dto.MapaResponse;
-import br.com.jence.backend.application.dto.PontoMapaResponse;
+import br.com.jence.backend.dto.BlocoMapaResponse;
+import br.com.jence.backend.dto.MapaResponse;
+import br.com.jence.backend.dto.PontoMapaResponse;
 import br.com.jence.backend.model.PlantaDaLoja;
 import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.domain.repository.PontoMapaRepository;

@@ -1,6 +1,6 @@
 package br.com.jence.backend.presentation.controller;
 
-import br.com.jence.backend.application.dto.SessaoResponse;
+import br.com.jence.backend.dto.SessaoResponse;
 import br.com.jence.backend.application.usecase.ConcluirRotaUseCase;
 import br.com.jence.backend.application.usecase.ConsultarSessaoUseCase;
 import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
