@@ -47,10 +47,10 @@
 
 ## Tempo de resposta (passo 0.6)
 
-Média de 5 chamadas seguidas, depois de uma chamada de aquecimento.
+Média de 5 chamadas seguidas, depois de uma chamada de aquecimento, feitas de uma máquina de desenvolvimento no Brasil contra a API publicada no Render (04/11/2026). O tempo inclui a ida até os EUA, onde o Render roda, e a volta até o Oracle da FIAP.
 
 | Endpoint | Antes (ms) | Depois (ms) |
 |---|---|---|
-| `GET /api/v1/produtos?query=tinta` | | |
-| `GET /api/v1/mapa` | | |
-| `GET /api/v1/sessoes/{id}/roteiro` | | |
+| `GET /api/v1/produtos?query=tinta` | 883 | |
+| `GET /api/v1/mapa` | 835 | |
+| `GET /api/v1/sessoes/{id}/roteiro` | 491 | |

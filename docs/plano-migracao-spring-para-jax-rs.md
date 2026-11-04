@@ -53,7 +53,7 @@ Objetivo: ter com o que comparar o antes e o depois, e ter o schema escrito ante
 - [ ] **0.3** 🔒 Rodar a coleção contra a versão atual e registrar status e corpo de cada pedido em `docs/insomnia/base-antes.md`.
 - [x] **0.4** Gerar o DDL a partir das entidades JPA com a exportação de schema do próprio Hibernate, em modo offline e com dialeto Oracle. Reescrever o resultado no formato do material (`CREATE SEQUENCE`/`CREATE TABLE`) em `database/migrations/V001__schema_inicial.sql`, incluindo chaves estrangeiras, `UNIQUE` (`sku`, `codigo_curto`, produto + atributo) e as restrições `CHECK` dos enums.
 - [ ] **0.5** 🔒 Comparar o script com o schema real no SQL Developer e corrigir as diferenças.
-- [ ] **0.6** Medir o tempo de resposta atual dos endpoints de busca de produtos, mapa e roteiro (RNF-06) e registrar em `docs/insomnia/base-antes.md`. *Perguntar antes, porque as medições chamam a API publicada.*
+- [x] **0.6** Medir o tempo de resposta atual dos endpoints de busca de produtos, mapa e roteiro (RNF-06) e registrar em `docs/insomnia/base-antes.md`. *Perguntar antes, porque as medições chamam a API publicada.*
 
 ### Fase 1 — CORS por rewrite na Vercel
 
