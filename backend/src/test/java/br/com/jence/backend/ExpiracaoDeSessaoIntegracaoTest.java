@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * A varredura de TTL contra o Oracle real: sessoes vencidas de verdade, gravadas de verdade.
@@ -85,13 +85,11 @@ class ExpiracaoDeSessaoIntegracaoTest {
         System.out.println(">>> com carrinho -> " + statusNoBanco(comCarrinho));
         System.out.println(">>> sem carrinho -> " + statusNoBanco(semCarrinho));
 
-        assertThat(statusNoBanco(comCarrinho))
-                .as("lista montada e uma venda que quase aconteceu")
-                .isEqualTo(StatusSessao.ABANDONED);
+        assertEquals(StatusSessao.ABANDONED, statusNoBanco(comCarrinho),
+                "lista montada e uma venda que quase aconteceu");
 
-        assertThat(statusNoBanco(semCarrinho))
-                .as("sem itens, nada estava em jogo")
-                .isEqualTo(StatusSessao.EXPIRED);
+        assertEquals(StatusSessao.EXPIRED, statusNoBanco(semCarrinho),
+                "sem itens, nada estava em jogo");
     }
 
     @Test
@@ -101,9 +99,8 @@ class ExpiracaoDeSessaoIntegracaoTest {
 
         expirar.executar();
 
-        assertThat(statusNoBanco(ativa))
-                .as("o TTL dela ainda nao venceu")
-                .isEqualTo(StatusSessao.ACTIVE);
+        assertEquals(StatusSessao.ACTIVE, statusNoBanco(ativa),
+                "o TTL dela ainda nao venceu");
     }
 
     @Test
@@ -114,8 +111,7 @@ class ExpiracaoDeSessaoIntegracaoTest {
         expirar.executar();
         var segunda = expirar.executar();
 
-        assertThat(segunda.total())
-                .as("a consulta filtra por ACTIVE, entao a varredura e naturalmente idempotente")
-                .isZero();
+        assertEquals(0, segunda.total(),
+                "a consulta filtra por ACTIVE, entao a varredura e naturalmente idempotente");
     }
 }
