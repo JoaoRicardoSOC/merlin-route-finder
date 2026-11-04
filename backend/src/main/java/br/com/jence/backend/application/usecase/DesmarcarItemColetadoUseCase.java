@@ -6,7 +6,6 @@ import br.com.jence.backend.domain.entity.ListaRoteiro;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,11 +22,16 @@ import java.util.UUID;
  * engano e atividade do cliente como qualquer outra.
  */
 @Service
-@RequiredArgsConstructor
 public class DesmarcarItemColetadoUseCase {
 
     private final ListaRoteiroRepository listaRoteiroRepository;
     private final SessaoRepository sessaoRepository;
+
+    public DesmarcarItemColetadoUseCase(ListaRoteiroRepository listaRoteiroRepository,
+                                        SessaoRepository sessaoRepository) {
+        this.listaRoteiroRepository = listaRoteiroRepository;
+        this.sessaoRepository = sessaoRepository;
+    }
 
     @Transactional
     public ItemRoteiroDetalhadoResponse executar(UUID itemId) {
