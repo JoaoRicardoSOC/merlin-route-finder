@@ -126,7 +126,8 @@ public class ProdutoResource {
     @GetMapping("/{produtoId}")
     @Operation(summary = "Detalhamento de produto (UC-003)",
             description = "Inclui o ponto de mapa onde o produto esta fisicamente na loja.")
-    public ResponseEntity<ProdutoDetalhadoResponse> consultar(@PathVariable UUID produtoId) {
+    public ResponseEntity<ProdutoDetalhadoResponse> consultar(@PathVariable UUID produtoId)
+            throws SQLException {
         return ResponseEntity.ok(consultarProdutoUseCase.executar(produtoId));
     }
 

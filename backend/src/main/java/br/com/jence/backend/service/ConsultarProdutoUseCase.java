@@ -3,9 +3,11 @@ package br.com.jence.backend.service;
 import br.com.jence.backend.dto.ProdutoDetalhadoResponse;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
+import br.com.jence.backend.dao.ProdutoDao;
+import br.com.jence.backend.factory.Transacao;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLException;
 import java.util.UUID;
 
 /**
@@ -21,14 +23,22 @@ import java.util.UUID;
 @Service
 public class ConsultarProdutoUseCase {
 
-    private final ProdutoRepository produtoRepository;
+    private final ProdutoDao produtoDao;
 
-    public ConsultarProdutoUseCase(ProdutoRepository produtoRepository) {
-        this.produtoRepository = produtoRepository;
+    public ConsultarProdutoUseCase(ProdutoDao produtoDao) {
+        this.produtoDao = produtoDao;
     }
 
-    public ProdutoDetalhadoResponse executar(UUID produtoId) {
-        Produto produto = produtoRepository.buscarPorId(produtoId)
+    public ProdutoDetalhadoResponse executar(UUID produtoId) throws SQLException {
+        try (Transacao transacao = Transacao.iniciarSomenteLeitura()) {
+            ProdutoDetalhadoResponse resposta = consultar(produtoId);
+            transacao.confirmar();
+            return resposta;
+        }
+    }
+
+    private ProdutoDetalhadoResponse consultar(UUID produtoId) throws SQLException {
+        Produto produto = produtoDao.buscarPorId(produtoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Produto", produtoId));
 
         /*
@@ -37,6 +47,6 @@ public class ConsultarProdutoUseCase {
          * produto, com a aplicacao a 5.000 km dele (D-45).
          */
         return ProdutoDetalhadoResponse.de(
-                produto, produtoRepository.buscarAtributosDe(produtoId));
+                produto, produtoDao.buscarAtributosDe(produtoId));
     }
 }
