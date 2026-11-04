@@ -4,7 +4,6 @@ import br.com.jence.backend.application.dto.ProdutoDetalhadoResponse;
 import br.com.jence.backend.domain.entity.Produto;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -20,10 +19,13 @@ import java.util.UUID;
  * o que o cliente compara antes de decidir.
  */
 @Service
-@RequiredArgsConstructor
 public class ConsultarProdutoUseCase {
 
     private final ProdutoRepository produtoRepository;
+
+    public ConsultarProdutoUseCase(ProdutoRepository produtoRepository) {
+        this.produtoRepository = produtoRepository;
+    }
 
     public ProdutoDetalhadoResponse executar(UUID produtoId) {
         Produto produto = produtoRepository.buscarPorId(produtoId)
