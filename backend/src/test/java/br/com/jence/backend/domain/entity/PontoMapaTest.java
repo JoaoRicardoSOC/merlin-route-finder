@@ -7,7 +7,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * A normalizacao do codigo curto, que e regra de negocio e nao conveniencia: o codigo existe
@@ -21,7 +22,7 @@ class PontoMapaTest {
     @ValueSource(strings = {"TIN-02", "tin-02", "TIN02", "tin02", "TIN 02", "tin_02", "Tin-02"})
     @DisplayName("qualquer grafia plausivel chega a mesma forma canonica")
     void grafiasEquivalentes(String digitado) {
-        assertThat(PontoMapa.normalizarCodigo(digitado)).isEqualTo("TIN02");
+        assertEquals("TIN02", PontoMapa.normalizarCodigo(digitado));
     }
 
     @Test
@@ -32,10 +33,10 @@ class PontoMapaTest {
          * nula em todo ponto que nao e QR Code, isso nao acharia nada - mas por acidente, nao
          * por decisao. Nulo diz explicitamente "nao ha o que procurar".
          */
-        assertThat(PontoMapa.normalizarCodigo(null)).isNull();
-        assertThat(PontoMapa.normalizarCodigo("")).isNull();
-        assertThat(PontoMapa.normalizarCodigo("   ")).isNull();
-        assertThat(PontoMapa.normalizarCodigo("---")).isNull();
+        assertNull(PontoMapa.normalizarCodigo(null));
+        assertNull(PontoMapa.normalizarCodigo(""));
+        assertNull(PontoMapa.normalizarCodigo("   "));
+        assertNull(PontoMapa.normalizarCodigo("---"));
     }
 
     // ---------------------------------------------------------------- a garantia na gravacao
@@ -50,7 +51,7 @@ class PontoMapaTest {
         PontoMapa ponto = new PontoMapa(
                 UUID.randomUUID(), TipoPonto.QR_CODE, "Corredor de Tintas", 32, 18, "tin-02");
 
-        assertThat(ponto.getCodigoCurto()).isEqualTo("TIN02");
+        assertEquals("TIN02", ponto.getCodigoCurto());
     }
 
     @Test
@@ -59,6 +60,6 @@ class PontoMapaTest {
         PontoMapa prateleira = new PontoMapa(
                 UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 32, 10);
 
-        assertThat(prateleira.getCodigoCurto()).isNull();
+        assertNull(prateleira.getCodigoCurto());
     }
 }
