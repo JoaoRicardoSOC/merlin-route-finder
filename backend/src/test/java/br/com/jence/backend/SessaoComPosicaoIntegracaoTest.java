@@ -210,7 +210,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     @Test
     @DisplayName("recentrar empurra o TTL: quem pede ajuda para se achar esta ativo")
-    void recentrarRenovaOTtl() {
+    void recentrarRenovaOTtl() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
 
         SessaoResponse depois = recentrar.executar(sessao.id(), "CEN-03");

@@ -5,12 +5,13 @@ import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
-import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
-import br.com.jence.backend.domain.repository.PontoMapaRepository;
-import br.com.jence.backend.domain.repository.SessaoRepository;
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.PontoMapaDao;
+import br.com.jence.backend.dao.SessaoDao;
+import br.com.jence.backend.factory.Transacao;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -23,21 +24,28 @@ import java.util.UUID;
 @Service
 public class RecentrarSessaoUseCase {
 
-    private final SessaoRepository sessaoRepository;
-    private final ListaRoteiroRepository listaRoteiroRepository;
-    private final PontoMapaRepository pontoMapaRepository;
+    private final SessaoDao sessaoDao;
+    private final ListaRoteiroDao listaRoteiroDao;
+    private final PontoMapaDao pontoMapaDao;
 
-    public RecentrarSessaoUseCase(SessaoRepository sessaoRepository,
-                                  ListaRoteiroRepository listaRoteiroRepository,
-                                  PontoMapaRepository pontoMapaRepository) {
-        this.sessaoRepository = sessaoRepository;
-        this.listaRoteiroRepository = listaRoteiroRepository;
-        this.pontoMapaRepository = pontoMapaRepository;
+    public RecentrarSessaoUseCase(SessaoDao sessaoDao,
+                                  ListaRoteiroDao listaRoteiroDao,
+                                  PontoMapaDao pontoMapaDao) {
+        this.sessaoDao = sessaoDao;
+        this.listaRoteiroDao = listaRoteiroDao;
+        this.pontoMapaDao = pontoMapaDao;
     }
 
-    @Transactional
-    public SessaoResponse executar(UUID sessaoId, String codigoPonto) {
-        Sessao sessao = sessaoRepository.buscarPorId(sessaoId)
+    public SessaoResponse executar(UUID sessaoId, String codigoPonto) throws SQLException {
+        try (Transacao transacao = Transacao.iniciar()) {
+            SessaoResponse resposta = recentrar(sessaoId, codigoPonto);
+            transacao.confirmar();
+            return resposta;
+        }
+    }
+
+    private SessaoResponse recentrar(UUID sessaoId, String codigoPonto) throws SQLException {
+        Sessao sessao = sessaoDao.buscarPorId(sessaoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao", sessaoId));
 
         if (!sessao.isValida()) {
@@ -52,7 +60,7 @@ public class RecentrarSessaoUseCase {
          * funcionando, e avisar que a placa nao foi encontrada e acionavel - ele tenta de
          * novo. Aceitar em silencio seria pior: ele acharia que funcionou. Ver D-57.
          */
-        PontoMapa ponto = pontoMapaRepository.buscarPorCodigoCurto(codigoPonto)
+        PontoMapa ponto = pontoMapaDao.buscarPorCodigoCurto(codigoPonto)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Placa de localizacao", codigoPonto));
 
         sessao.recentrarEm(ponto, LocalDateTime.now());
@@ -60,9 +68,9 @@ public class RecentrarSessaoUseCase {
         // Quem para para ler uma placa esta ativo na loja, e nao pode perder a sessao por
         // inatividade logo depois de pedir ajuda para se achar.
         sessao.renovarSessao();
-        sessaoRepository.salvar(sessao);
+        sessaoDao.salvar(sessao);
 
         return SessaoResponse.de(sessao,
-                listaRoteiroRepository.buscarPorSessao(sessaoId).orElse(null));
+                listaRoteiroDao.buscarPorSessao(sessaoId).orElse(null));
     }
 }

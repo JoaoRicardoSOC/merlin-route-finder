@@ -81,7 +81,7 @@ public class SessaoResource {
                     + "permanecem intactos, e nenhuma sessao nova e criada.")
     public ResponseEntity<SessaoResponse> recentrar(
             @PathVariable UUID sessaoId,
-            @Valid @RequestBody RecentrarSessaoRequest requisicao) {
+            @Valid @RequestBody RecentrarSessaoRequest requisicao) throws SQLException {
         return ResponseEntity.ok(
                 recentrarSessaoUseCase.executar(sessaoId, requisicao.codigoPonto()));
     }
