@@ -57,7 +57,7 @@ public class SessaoResource {
                     + "uma lista de roteiro vazia. O corpo e opcional: sem codigo, ou com um "
                     + "codigo desconhecido, a sessao nasce sem posicao e continua utilizavel.")
     public ResponseEntity<SessaoResponse> inicializar(
-            @RequestBody(required = false) IniciarSessaoRequest requisicao) {
+            @RequestBody(required = false) IniciarSessaoRequest requisicao) throws SQLException {
         SessaoResponse sessao = inicializarSessaoUseCase.executar(
                 requisicao == null ? null : requisicao.codigoPonto());
 

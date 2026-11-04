@@ -81,7 +81,7 @@ class SubstituicaoDeItemIntegracaoTest {
         criadas.clear();
     }
 
-    private UUID novaSessao() {
+    private UUID novaSessao() throws Exception {
         SessaoResponse sessao = inicializar.executar("ENT-01");
         criadas.add(sessao.id());
         return sessao.id();
@@ -103,7 +103,7 @@ class SubstituicaoDeItemIntegracaoTest {
 
     @Test
     @DisplayName("numa chamada so, o substituto entra e o item em falta sai")
-    void trocaNumaChamada() {
+    void trocaNumaChamada() throws Exception {
         UUID sessaoId = novaSessao();
         UUID lixaEmFalta = adicionar(sessaoId, EM_FALTA);
         adicionar(sessaoId, "SKU-ENC-001");
@@ -136,7 +136,7 @@ class SubstituicaoDeItemIntegracaoTest {
 
     @Test
     @DisplayName("o substituto que ja estava na lista nao vira duplicata")
-    void semDuplicata() {
+    void semDuplicata() throws Exception {
         UUID sessaoId = novaSessao();
         UUID lixaEmFalta = adicionar(sessaoId, EM_FALTA);
         adicionar(sessaoId, SUBSTITUTO);
@@ -164,7 +164,7 @@ class SubstituicaoDeItemIntegracaoTest {
 
     @Test
     @DisplayName("a ruptura continua registrada depois da troca")
-    void rupturaPermanece() {
+    void rupturaPermanece() throws Exception {
         /*
          * O registro e evidencia do que aconteceu na gondola, e vale tenha o cliente aceitado
          * a troca ou nao. Apaga-lo faria a loja perder exatamente o dado que o recurso existe
@@ -197,7 +197,7 @@ class SubstituicaoDeItemIntegracaoTest {
 
     @Test
     @DisplayName("trocar um produto por ele mesmo e recusado, e nao apaga o item")
-    void naoSubstituiPorSiMesmo() {
+    void naoSubstituiPorSiMesmo() throws Exception {
         /*
          * Sem a guarda isto apagaria o item em silencio: o adicionar devolveria o item
          * existente e o remover o apagaria em seguida. O cliente ficaria sem o produto sem ter
@@ -214,7 +214,7 @@ class SubstituicaoDeItemIntegracaoTest {
 
     @Test
     @DisplayName("produto substituto inexistente devolve 404 e a lista fica intacta")
-    void substitutoInexistente() {
+    void substitutoInexistente() throws Exception {
         UUID sessaoId = novaSessao();
         UUID lixaEmFalta = adicionar(sessaoId, EM_FALTA);
 

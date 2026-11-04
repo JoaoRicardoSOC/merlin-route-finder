@@ -59,7 +59,7 @@ class AmplitudeDeEscritaIntegracaoTest {
     private Statistics estatisticas;
 
     @BeforeEach
-    void montarRoteiro() {
+    void montarRoteiro() throws Exception {
         sessaoId = inicializar.executar(null).id();
         adicionarAoRoteiro("SKU-TIN-001");
         adicionarAoRoteiro("SKU-ENC-001");

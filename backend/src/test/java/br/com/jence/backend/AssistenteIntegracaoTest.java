@@ -43,7 +43,7 @@ class AssistenteIntegracaoTest {
      * evita que eles disputem cota entre si e midam a cota em vez do comportamento.
      */
     @BeforeEach
-    void criarSessao() throws InterruptedException {
+    void criarSessao() throws Exception {
         Thread.sleep(5_000);
         sessaoId = inicializar.executar(null).id();
     }

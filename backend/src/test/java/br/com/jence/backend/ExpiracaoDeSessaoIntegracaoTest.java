@@ -53,7 +53,7 @@ class ExpiracaoDeSessaoIntegracaoTest {
     }
 
     /** Sessao real, com o TTL empurrado para o passado como se o cliente tivesse sumido. */
-    private UUID sessaoAbandonadaHaUmaHora(boolean comItem) {
+    private UUID sessaoAbandonadaHaUmaHora(boolean comItem) throws Exception {
         UUID sessaoId = inicializar.executar(null).id();
         criadas.add(sessaoId);
 

@@ -4,12 +4,13 @@ import br.com.jence.backend.dto.SessaoResponse;
 import br.com.jence.backend.model.ListaRoteiro;
 import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Sessao;
-import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
-import br.com.jence.backend.domain.repository.PontoMapaRepository;
-import br.com.jence.backend.domain.repository.SessaoRepository;
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.PontoMapaDao;
+import br.com.jence.backend.dao.SessaoDao;
+import br.com.jence.backend.factory.Transacao;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.util.UUID;
 
 /**
@@ -21,16 +22,16 @@ import java.util.UUID;
 @Service
 public class InicializarSessaoUseCase {
 
-    private final SessaoRepository sessaoRepository;
-    private final ListaRoteiroRepository listaRoteiroRepository;
-    private final PontoMapaRepository pontoMapaRepository;
+    private final SessaoDao sessaoDao;
+    private final ListaRoteiroDao listaRoteiroDao;
+    private final PontoMapaDao pontoMapaDao;
 
-    public InicializarSessaoUseCase(SessaoRepository sessaoRepository,
-                                    ListaRoteiroRepository listaRoteiroRepository,
-                                    PontoMapaRepository pontoMapaRepository) {
-        this.sessaoRepository = sessaoRepository;
-        this.listaRoteiroRepository = listaRoteiroRepository;
-        this.pontoMapaRepository = pontoMapaRepository;
+    public InicializarSessaoUseCase(SessaoDao sessaoDao,
+                                    ListaRoteiroDao listaRoteiroDao,
+                                    PontoMapaDao pontoMapaDao) {
+        this.sessaoDao = sessaoDao;
+        this.listaRoteiroDao = listaRoteiroDao;
+        this.pontoMapaDao = pontoMapaDao;
     }
 
     /*
@@ -38,23 +39,30 @@ public class InicializarSessaoUseCase {
      * falhasse, restaria uma sessao sem lista e o proximo passo da jornada (adicionar
      * produto ao roteiro) quebraria com um erro dificil de diagnosticar.
      */
-    @Transactional
-    public SessaoResponse executar(String codigoPonto) {
+    public SessaoResponse executar(String codigoPonto) throws SQLException {
+        try (Transacao transacao = Transacao.iniciar()) {
+            SessaoResponse resposta = inicializar(codigoPonto);
+            transacao.confirmar();
+            return resposta;
+        }
+    }
+
+    private SessaoResponse inicializar(String codigoPonto) throws SQLException {
         /*
          * Codigo invalido nao recusa a sessao: placa velha, loja remanejada ou erro de
          * digitacao deixam o cliente sem "voce esta aqui", mas com o sistema inteiro
          * funcionando. Recusar aqui seria barrar a entrada por causa de um adesivo.
          */
-        PontoMapa ponto = pontoMapaRepository.buscarPorCodigoCurto(codigoPonto).orElse(null);
+        PontoMapa ponto = pontoMapaDao.buscarPorCodigoCurto(codigoPonto).orElse(null);
 
         if (ponto == null && codigoPonto != null && !codigoPonto.isBlank()) {
             System.out.println(String.format("Sessao iniciada com codigo de placa desconhecido: %s. "
                     + "Nasce sem posicao.", codigoPonto));
         }
 
-        Sessao sessao = sessaoRepository.salvar(Sessao.iniciar(UUID.randomUUID(), ponto));
+        Sessao sessao = sessaoDao.salvar(Sessao.iniciar(UUID.randomUUID(), ponto));
 
-        listaRoteiroRepository.salvar(ListaRoteiro.criarPara(UUID.randomUUID(), sessao.getId()));
+        listaRoteiroDao.salvar(ListaRoteiro.criarPara(UUID.randomUUID(), sessao.getId()));
 
         return SessaoResponse.de(sessao);
     }

@@ -59,7 +59,7 @@ class RupturaIntegracaoTest {
 
     /* O tier gratuito limita requisicoes por minuto: um respiro evita medir cota em vez de comportamento. */
     @BeforeEach
-    void criarSessao() throws InterruptedException {
+    void criarSessao() throws Exception {
         Thread.sleep(5_000);
         sessaoId = inicializar.executar(null).id();
     }

@@ -67,7 +67,7 @@ class SessaoComPosicaoIntegracaoTest {
         criadas.clear();
     }
 
-    private SessaoResponse iniciarEm(String codigo) {
+    private SessaoResponse iniciarEm(String codigo) throws Exception {
         SessaoResponse sessao = inicializar.executar(codigo);
         criadas.add(sessao.id());
         return sessao;
@@ -84,7 +84,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     @Test
     @DisplayName("codigo valido: a sessao ja nasce sabendo onde o cliente esta")
-    void nasceComPosicao() {
+    void nasceComPosicao() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
 
         assertNotNull(sessao.posicaoAtual());
@@ -94,7 +94,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     @Test
     @DisplayName("o plano B chega pelo mesmo caminho: codigo digitado em qualquer grafia")
-    void codigoDigitado() {
+    void codigoDigitado() throws Exception {
         // O cliente que nao conseguiu escanear digita o que le na placa, do jeito que le.
         assertEquals("ENT01", iniciarEm("ent 01").posicaoAtual().codigoCurto());
         assertEquals("TIN02", iniciarEm("Tin-02").posicaoAtual().codigoCurto());
@@ -102,7 +102,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     @Test
     @DisplayName("codigo desconhecido nao recusa a sessao: ela nasce sem posicao e funciona")
-    void codigoDesconhecidoNaoBarraAEntrada() {
+    void codigoDesconhecidoNaoBarraAEntrada() throws Exception {
         /*
          * Placa velha, loja remanejada ou erro de digitacao. Recusar aqui seria barrar a
          * entrada por causa de um adesivo - o cliente ficaria sem sistema nenhum.
@@ -119,7 +119,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     @Test
     @DisplayName("sem codigo algum a sessao tambem nasce, so que sem posicao")
-    void semCodigo() {
+    void semCodigo() throws Exception {
         assertNull(iniciarEm(null).posicaoAtual());
     }
 
