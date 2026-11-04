@@ -1,7 +1,5 @@
 package br.com.jence.backend.domain.entity;
 
-import lombok.Getter;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -15,7 +13,6 @@ import java.util.UUID;
  * <p>
  * O relato e <b>evidencia, nao verdade</b>: ele nao altera o saldo do produto. Ver D-38.
  */
-@Getter
 public class RegistroRuptura {
 
     private final UUID id;
@@ -64,5 +61,37 @@ public class RegistroRuptura {
 
     public boolean temSugestao() {
         return produtoSugeridoId != null;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public UUID getSessaoId() {
+        return sessaoId;
+    }
+
+    public UUID getItemRoteiroId() {
+        return itemRoteiroId;
+    }
+
+    public UUID getProdutoFaltanteId() {
+        return produtoFaltanteId;
+    }
+
+    public UUID getProdutoSugeridoId() {
+        return produtoSugeridoId;
+    }
+
+    public String getJustificativa() {
+        return justificativa;
+    }
+
+    public OrigemSugestao getOrigem() {
+        return origem;
+    }
+
+    public LocalDateTime getRegistradoEm() {
+        return registradoEm;
     }
 }
