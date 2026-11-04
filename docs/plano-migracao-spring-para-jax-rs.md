@@ -121,21 +121,21 @@ A fase mais longa. Os DAOs novos são escritos primeiro, ao lado do JPA; depois 
 **7.A Infraestrutura**
 - [x] **7.1** `factory/ConnectionFactory`: `getConnection()` como no material (`DriverManager`, credenciais de `Configuracao`). Guarda a conexão da transação em andamento na thread (`ThreadLocal`) e a devolve a quem pedir durante a transação.
 - [x] **7.2** `factory/Transacao`: executa um trabalho com `setAutoCommit(false)`, `commit` no sucesso, `rollback` em qualquer exceção, e sempre fecha a conexão. Modos: normal, somente leitura (`setReadOnly(true)`) e nova (conexão própria, para a ruptura).
-- [ ] **7.3** Testes de `Transacao` com tag `integracao`: commit, rollback e transação nova independente. 🔒
+- [x] **7.3** Testes de `Transacao` com tag `integracao`: commit, rollback e transação nova independente. 🔒
 
 **7.B DAOs (sem trocar quem usa ainda)**
 
 Um commit por DAO, com o seu teste de integração. Regras de todos: SQL com `?`, *try-with-resources*, `throws SQLException`, UUID como `varchar2(36)` (D-11), `setFetchSize(100)` nas listas (D-45), `JOIN` explícito onde hoje há `@EntityGraph`, paginação com `OFFSET ? ROWS FETCH NEXT ? ROWS ONLY`.
 
-- [ ] **7.4** `PontoMapaDao` (inclui as três consultas nativas de `PontoMapaJpaRepository`).
-- [ ] **7.5** `ProdutoDao`: busca por termo, busca com filtros opcionais (SQL montado com parâmetros), proximidade espacial, facetas, seções, atributos e estoque. É o maior: dividir em um commit por grupo de consultas.
-- [ ] **7.6** `SessaoDao`.
-- [ ] **7.7** `ListaRoteiroDao` (itens, produtos e pontos num só `JOIN`).
-- [ ] **7.8** `ItemRoteiroDao`.
-- [ ] **7.9** `ChatMensagemDao`.
-- [ ] **7.10** `RegistroRupturaDao`, gravando em `Transacao` nova (D-39).
-- [ ] **7.11** `RestricaoDeEnumDao`: a lógica de `RestricaoDeEnumNoBanco` com JDBC no lugar do `JdbcTemplate`.
-- [ ] **7.12** 🔒 Rodar os testes de integração dos DAOs.
+- [x] **7.4** `PontoMapaDao` (inclui as três consultas nativas de `PontoMapaJpaRepository`).
+- [x] **7.5** `ProdutoDao`: busca por termo, busca com filtros opcionais (SQL montado com parâmetros), proximidade espacial, facetas, seções, atributos e estoque. É o maior: dividir em um commit por grupo de consultas.
+- [x] **7.6** `SessaoDao`.
+- [x] **7.7** `ListaRoteiroDao` (itens, produtos e pontos num só `JOIN`).
+- [x] **7.8** `ItemRoteiroDao`.
+- [x] **7.9** `ChatMensagemDao`.
+- [x] **7.10** `RegistroRupturaDao`, gravando em `Transacao` nova (D-39).
+- [x] **7.11** `RestricaoDeEnumDao`: a lógica de `RestricaoDeEnumNoBanco` com JDBC no lugar do `JdbcTemplate`.
+- [x] **7.12** 🔒 Rodar os testes de integração dos DAOs.
 
 **7.C Troca dos services**
 
