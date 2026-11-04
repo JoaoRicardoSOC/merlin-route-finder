@@ -7,12 +7,13 @@ import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
-import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
-import br.com.jence.backend.domain.repository.SessaoRepository;
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.ProdutoDao;
+import br.com.jence.backend.dao.SessaoDao;
+import br.com.jence.backend.factory.Transacao;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.util.UUID;
 
 /**
@@ -36,21 +37,28 @@ import java.util.UUID;
 @Service
 public class SubstituirItemDoRoteiroUseCase {
 
-    private final ListaRoteiroRepository listaRoteiroRepository;
-    private final SessaoRepository sessaoRepository;
-    private final ProdutoRepository produtoRepository;
+    private final ListaRoteiroDao listaRoteiroDao;
+    private final SessaoDao sessaoDao;
+    private final ProdutoDao produtoDao;
 
-    public SubstituirItemDoRoteiroUseCase(ListaRoteiroRepository listaRoteiroRepository,
-                                          SessaoRepository sessaoRepository,
-                                          ProdutoRepository produtoRepository) {
-        this.listaRoteiroRepository = listaRoteiroRepository;
-        this.sessaoRepository = sessaoRepository;
-        this.produtoRepository = produtoRepository;
+    public SubstituirItemDoRoteiroUseCase(ListaRoteiroDao listaRoteiroDao,
+                                          SessaoDao sessaoDao,
+                                          ProdutoDao produtoDao) {
+        this.listaRoteiroDao = listaRoteiroDao;
+        this.sessaoDao = sessaoDao;
+        this.produtoDao = produtoDao;
     }
 
-    @Transactional
-    public ListaRoteiroResponse executar(UUID itemId, UUID produtoSubstitutoId) {
-        ListaRoteiro lista = listaRoteiroRepository.buscarPorItem(itemId)
+    public ListaRoteiroResponse executar(UUID itemId, UUID produtoSubstitutoId) throws SQLException {
+        try (Transacao transacao = Transacao.iniciar()) {
+            ListaRoteiroResponse resposta = substituir(itemId, produtoSubstitutoId);
+            transacao.confirmar();
+            return resposta;
+        }
+    }
+
+    private ListaRoteiroResponse substituir(UUID itemId, UUID produtoSubstitutoId) throws SQLException {
+        ListaRoteiro lista = listaRoteiroDao.buscarPorItem(itemId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Item do roteiro", itemId));
 
         ItemRoteiro emFalta = lista.getItens().stream()
@@ -58,7 +66,7 @@ public class SubstituirItemDoRoteiroUseCase {
                 .findFirst()
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Item do roteiro", itemId));
 
-        Sessao sessao = sessaoRepository.buscarPorId(lista.getSessaoId())
+        Sessao sessao = sessaoDao.buscarPorId(lista.getSessaoId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao", lista.getSessaoId()));
 
         if (!sessao.isValida()) {
@@ -67,7 +75,7 @@ public class SubstituirItemDoRoteiroUseCase {
                             .formatted(sessao.getId(), sessao.getStatus()));
         }
 
-        Produto substituto = produtoRepository.buscarPorId(produtoSubstitutoId)
+        Produto substituto = produtoDao.buscarPorId(produtoSubstitutoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Produto", produtoSubstitutoId));
 
         /*
@@ -85,10 +93,10 @@ public class SubstituirItemDoRoteiroUseCase {
         lista.adicionarProduto(substituto);
         lista.removerProduto(itemId);
 
-        listaRoteiroRepository.salvar(lista);
+        listaRoteiroDao.salvar(lista);
 
         sessao.renovarSessao();
-        sessaoRepository.salvar(sessao);
+        sessaoDao.salvar(sessao);
 
         return ListaRoteiroResponse.de(lista);
     }

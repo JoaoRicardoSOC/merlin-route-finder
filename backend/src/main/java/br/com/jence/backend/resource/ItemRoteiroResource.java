@@ -86,7 +86,7 @@ public class ItemRoteiroResource {
     })
     public ResponseEntity<ListaRoteiroResponse> substituir(
             @PathVariable UUID itemId,
-            @Valid @RequestBody SubstituirItemRequest requisicao) {
+            @Valid @RequestBody SubstituirItemRequest requisicao) throws SQLException {
 
         return ResponseEntity.ok(substituirItemDoRoteiroUseCase.executar(
                 itemId, requisicao.produtoSubstitutoId()));

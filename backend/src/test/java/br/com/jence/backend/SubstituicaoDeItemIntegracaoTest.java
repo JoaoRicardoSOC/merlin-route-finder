@@ -237,7 +237,7 @@ class SubstituicaoDeItemIntegracaoTest {
 
     @Test
     @DisplayName("item inexistente devolve 404")
-    void itemInexistente() {
+    void itemInexistente() throws Exception {
         assertThrows(RecursoNaoEncontradoException.class,
                 () -> substituir.executar(UUID.randomUUID(), idDe(SUBSTITUTO)));
     }
