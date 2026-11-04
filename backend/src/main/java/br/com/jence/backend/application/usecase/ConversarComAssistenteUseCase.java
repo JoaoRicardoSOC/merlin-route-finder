@@ -13,7 +13,6 @@ import br.com.jence.backend.domain.repository.SessaoRepository;
 import br.com.jence.backend.domain.service.AssistenteIA;
 import br.com.jence.backend.domain.service.MensagemIA;
 import br.com.jence.backend.infrastructure.ia.factory.InstrucaoDoAssistente;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +28,6 @@ import java.util.UUID;
  * so com o vendedor.
  */
 @Service
-@Slf4j
 public class ConversarComAssistenteUseCase {
 
     /** Quantas buscas o assistente recebe por consulta, para a resposta nao virar catalogo. */
@@ -83,7 +81,7 @@ public class ConversarComAssistenteUseCase {
              * ao montar o contexto das proximas perguntas - a pergunta do cliente fica no
              * historico sem resposta, que e o que de fato aconteceu.
              */
-            log.warn("Assistente indisponivel na sessao {}: {}", sessaoId, e.getMessage());
+            System.out.println(String.format("AVISO: Assistente indisponivel na sessao %s: %s", sessaoId, e.getMessage()));
             return respostaNaoPersistida(sessaoId, InstrucaoDoAssistente.mensagemDeIndisponibilidade());
         }
 
@@ -130,7 +128,6 @@ public class ConversarComAssistenteUseCase {
                     .forEach(encontrados::add);
         }
 
-        log.debug("Assistente buscou '{}' e recebeu {} produto(s)", entrada, encontrados.size());
         return Map.of("produtos", encontrados);
     }
 
