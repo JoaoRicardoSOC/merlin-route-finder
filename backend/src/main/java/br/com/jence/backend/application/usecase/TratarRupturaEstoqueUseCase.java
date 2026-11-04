@@ -21,7 +21,6 @@ import br.com.jence.backend.domain.repository.SessaoRepository;
 import br.com.jence.backend.domain.service.AssistenteIA;
 import br.com.jence.backend.domain.service.MensagemIA;
 import br.com.jence.backend.infrastructure.ia.factory.InstrucaoDeRuptura;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +41,6 @@ import java.util.stream.Collectors;
  * eleger, entre esses candidatos e somente eles, o que cumpre a mesma funcao.
  */
 @Service
-@Slf4j
 public class TratarRupturaEstoqueUseCase {
 
     /*
@@ -126,8 +124,8 @@ public class TratarRupturaEstoqueUseCase {
                 sessao.getId(), item.getId(), emFalta.getId(),
                 sugestao.produto().getId(), sugestao.justificativa(), sugestao.origem()));
 
-        log.info("Ruptura na sessao {}: '{}' em falta, sugerido '{}' (origem {})",
-                sessao.getId(), emFalta.getNome(), sugestao.produto().getNome(), sugestao.origem());
+        System.out.println(String.format("Ruptura na sessao %s: '%s' em falta, sugerido '%s' (origem %s)",
+                sessao.getId(), emFalta.getNome(), sugestao.produto().getNome(), sugestao.origem()));
 
         return RupturaEstoqueResponse.de(
                 emFalta.getId(), sugestao.produto(), sugestao.justificativa(), sugestao.origem());
@@ -153,7 +151,7 @@ public class TratarRupturaEstoqueUseCase {
         PontoMapa origem = emFalta.getPontoMapa();
         if (origem == null) {
             // Sem posicao conhecida nao existe "perto": nao ha como filtrar espacialmente.
-            log.warn("Produto {} nao tem ponto no mapa; ruptura sem candidatos", emFalta.getSku());
+            System.out.println(String.format("AVISO: Produto %s nao tem ponto no mapa; ruptura sem candidatos", emFalta.getSku()));
             return List.of();
         }
 
@@ -197,7 +195,7 @@ public class TratarRupturaEstoqueUseCase {
              * uma resposta, e a cota do tier gratuito estoura com facilidade. Cair para o
              * disponivel mais proximo entrega algo util sem fingir que houve analise.
              */
-            log.warn("Assistente indisponivel na ruptura de '{}': {}", emFalta.getSku(), e.getMessage());
+            System.out.println(String.format("AVISO: Assistente indisponivel na ruptura de '%s': %s", emFalta.getSku(), e.getMessage()));
 
             /*
              * O primeiro candidato ja e o mais semelhante disponivel, e nao apenas o mais
@@ -232,8 +230,8 @@ public class TratarRupturaEstoqueUseCase {
                 .findFirst();
 
         if (escolhido.isEmpty() || justificativa.isBlank()) {
-            log.warn("Assistente respondeu fora do combinado ('{}'); usando o disponivel mais proximo",
-                    resposta.strip());
+            System.out.println(String.format("AVISO: Assistente respondeu fora do combinado ('%s'); usando o disponivel mais proximo",
+                    resposta.strip()));
             return Sugestao.porProximidade(candidatos.getFirst());
         }
 
