@@ -20,7 +20,7 @@ import br.com.jence.backend.domain.repository.RegistroRupturaRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;
 import br.com.jence.backend.domain.service.AssistenteIA;
 import br.com.jence.backend.model.MensagemIA;
-import br.com.jence.backend.infrastructure.ia.factory.InstrucaoDeRuptura;
+import br.com.jence.backend.ia.InstrucaoDeRuptura;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

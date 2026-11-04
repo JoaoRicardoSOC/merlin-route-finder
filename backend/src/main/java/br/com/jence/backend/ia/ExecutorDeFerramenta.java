@@ -1,4 +1,4 @@
-package br.com.jence.backend.domain.service;
+package br.com.jence.backend.ia;
 
 import java.util.Map;
 

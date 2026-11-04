@@ -3,7 +3,7 @@ package br.com.jence.backend;
 import br.com.jence.backend.domain.service.AssistenteIA;
 import br.com.jence.backend.model.FerramentaIA;
 import br.com.jence.backend.model.MensagemIA;
-import br.com.jence.backend.infrastructure.ia.client.GeminiClient;
+import br.com.jence.backend.ia.GeminiClient;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;

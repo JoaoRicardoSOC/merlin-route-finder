@@ -10,7 +10,7 @@ import br.com.jence.backend.model.Pagina;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;
 import br.com.jence.backend.domain.service.AssistenteIA;
-import br.com.jence.backend.domain.service.ExecutorDeFerramenta;
+import br.com.jence.backend.ia.ExecutorDeFerramenta;
 import br.com.jence.backend.model.MensagemIA;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

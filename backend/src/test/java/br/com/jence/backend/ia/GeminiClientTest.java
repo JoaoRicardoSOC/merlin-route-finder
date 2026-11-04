@@ -1,4 +1,4 @@
-package br.com.jence.backend.infrastructure.ia.client;
+package br.com.jence.backend.ia;
 
 import br.com.jence.backend.exception.AssistenteIAIndisponivelException;
 import br.com.jence.backend.model.FerramentaIA;

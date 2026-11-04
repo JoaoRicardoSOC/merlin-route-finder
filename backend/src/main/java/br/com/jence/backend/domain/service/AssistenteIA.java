@@ -1,5 +1,6 @@
 package br.com.jence.backend.domain.service;
 
+import br.com.jence.backend.ia.ExecutorDeFerramenta;
 import br.com.jence.backend.model.FerramentaIA;
 import br.com.jence.backend.model.MensagemIA;
 import br.com.jence.backend.exception.AssistenteIAIndisponivelException;

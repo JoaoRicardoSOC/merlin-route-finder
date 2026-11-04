@@ -1,4 +1,4 @@
-package br.com.jence.backend.infrastructure.ia.factory;
+package br.com.jence.backend.ia;
 
 import br.com.jence.backend.model.FerramentaIA;
 import br.com.jence.backend.model.FerramentaIA.ParametroIA;

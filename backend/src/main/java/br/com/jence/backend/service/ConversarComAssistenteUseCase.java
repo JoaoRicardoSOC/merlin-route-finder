@@ -12,7 +12,7 @@ import br.com.jence.backend.domain.repository.ProdutoRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;
 import br.com.jence.backend.domain.service.AssistenteIA;
 import br.com.jence.backend.model.MensagemIA;
-import br.com.jence.backend.infrastructure.ia.factory.InstrucaoDoAssistente;
+import br.com.jence.backend.ia.InstrucaoDoAssistente;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
