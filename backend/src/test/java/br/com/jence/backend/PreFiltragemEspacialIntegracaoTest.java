@@ -12,10 +12,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * A consulta que escolhe os candidatos a substituto, contra o Oracle real.
@@ -80,15 +84,13 @@ class PreFiltragemEspacialIntegracaoTest {
                 emFalta.getPontoMapa().calcularDistanciaPara(p.getPontoMapa()),
                 tipoDe(p), p.getNome(), p.getPontoMapa().getCorredor()));
 
-        assertThat(proximos).isNotEmpty();
+        assertFalse(proximos.isEmpty());
 
-        assertThat(proximos)
-                .as("o produto em falta nao pode substituir a si mesmo")
-                .noneMatch(p -> p.getId().equals(emFalta.getId()));
+        assertTrue(proximos.stream().noneMatch(p -> p.getId().equals(emFalta.getId())),
+                "o produto em falta nao pode substituir a si mesmo");
 
-        assertThat(proximos)
-                .as("candidato sem estoque nao ajuda quem ja esta diante de uma prateleira vazia")
-                .allMatch(Produto::temDisponibilidade);
+        assertTrue(proximos.stream().allMatch(Produto::temDisponibilidade),
+                "candidato sem estoque nao ajuda quem ja esta diante de uma prateleira vazia");
     }
 
     @Test
@@ -96,18 +98,22 @@ class PreFiltragemEspacialIntegracaoTest {
     void oRaioExcluiOOutroExtremoDaLoja() {
         Produto emFalta = lixaEmFalta();
 
-        assertThat(candidatos())
-                .as("Tintas fica em (32,10) e Materiais de construção em (14,80): fora do raio")
-                .noneMatch(p -> p.getPontoMapa().getCorredor().equals("Materiais de construção"))
-                .allSatisfy(p -> assertThat(
-                        emFalta.getPontoMapa().calcularDistanciaPara(p.getPontoMapa()))
-                        .isLessThanOrEqualTo(TratarRupturaEstoqueUseCase.RAIO_DE_BUSCA));
+        List<Produto> candidatos = candidatos();
+        String mensagem = "Tintas fica em (32,10) e Materiais de construção em (14,80): fora do raio";
+
+        assertTrue(candidatos.stream()
+                .noneMatch(p -> p.getPontoMapa().getCorredor().equals("Materiais de construção")),
+                mensagem);
+        for (Produto p : candidatos) {
+            assertTrue(emFalta.getPontoMapa().calcularDistanciaPara(p.getPontoMapa())
+                    <= TratarRupturaEstoqueUseCase.RAIO_DE_BUSCA, mensagem);
+        }
     }
 
     @Test
     @DisplayName("respeita o teto de candidatos")
     void respeitaOTetoDeCandidatos() {
-        assertThat(candidatosPara(lixaEmFalta(), 2)).hasSize(2);
+        assertEquals(2, candidatosPara(lixaEmFalta(), 2).size());
     }
 
     @Test
@@ -128,9 +134,8 @@ class PreFiltragemEspacialIntegracaoTest {
 
         System.out.println(">>> corredores alcancados: " + corredores);
 
-        assertThat(corredores)
-                .as("com o teto atual, os candidatos ficaram presos a uma unica secao")
-                .hasSizeGreaterThan(1);
+        assertTrue(corredores.size() > 1,
+                "com o teto atual, os candidatos ficaram presos a uma unica secao");
     }
 
     // ---------------------------------------------------------------- afinidade antes de distancia
@@ -158,9 +163,9 @@ class PreFiltragemEspacialIntegracaoTest {
             System.out.printf(">>> %-14s %-34s -> %s%n",
                     skuEmFalta, emFalta.getNome(), primeiro.getNome());
 
-            assertThat(primeiro.getSku())
-                    .as("substituto oferecido para '%s' quando a IA esta fora do ar", emFalta.getNome())
-                    .isEqualTo(skuEsperado);
+            assertEquals(skuEsperado, primeiro.getSku(),
+                    String.format("substituto oferecido para '%s' quando a IA esta fora do ar",
+                            emFalta.getNome()));
         });
     }
 
@@ -170,7 +175,7 @@ class PreFiltragemEspacialIntegracaoTest {
         Produto emFalta = lixaEmFalta();
         String tipoEmFalta = tipoDe(emFalta);
 
-        assertThat(tipoEmFalta).isNotNull();
+        assertNotNull(tipoEmFalta);
 
         List<Produto> proximos = candidatos();
         int ultimoDoMesmoTipo = -1;
@@ -184,9 +189,8 @@ class PreFiltragemEspacialIntegracaoTest {
             }
         }
 
-        assertThat(ultimoDoMesmoTipo)
-                .as("um produto de outro tipo apareceu antes de um do mesmo tipo")
-                .isLessThan(primeiroDeOutroTipo);
+        assertTrue(ultimoDoMesmoTipo < primeiroDeOutroTipo,
+                "um produto de outro tipo apareceu antes de um do mesmo tipo");
     }
 
     @Test
@@ -204,10 +208,11 @@ class PreFiltragemEspacialIntegracaoTest {
                 TratarRupturaEstoqueUseCase.RAIO_DE_BUSCA,
                 TratarRupturaEstoqueUseCase.LIMITE_DE_CANDIDATOS);
 
-        assertThat(semAfinidade).isNotEmpty();
-        assertThat(semAfinidade)
-                .isSortedAccordingTo((a, b) -> Double.compare(
-                        emFalta.getPontoMapa().calcularDistanciaPara(a.getPontoMapa()),
-                        emFalta.getPontoMapa().calcularDistanciaPara(b.getPontoMapa())));
+        assertFalse(semAfinidade.isEmpty());
+        // ordenada pela distancia: igual a uma copia ordenada (o sort e estavel)
+        Comparator<Produto> porDistancia = (a, b) -> Double.compare(
+                emFalta.getPontoMapa().calcularDistanciaPara(a.getPontoMapa()),
+                emFalta.getPontoMapa().calcularDistanciaPara(b.getPontoMapa()));
+        assertEquals(semAfinidade.stream().sorted(porDistancia).toList(), semAfinidade);
     }
 }
