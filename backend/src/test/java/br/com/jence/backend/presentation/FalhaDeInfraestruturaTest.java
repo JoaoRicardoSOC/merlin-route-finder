@@ -17,7 +17,9 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -50,24 +52,22 @@ class FalhaDeInfraestruturaTest {
 
         System.out.printf(">>> %-34s -> HTTP %d%n", cenario, resultado.getResponse().getStatus());
 
-        assertThat(resultado.getResponse().getStatus())
-                .as("%s: falha de infraestrutura e responsabilidade do servidor", cenario)
-                .isEqualTo(500);
+        assertEquals(500, resultado.getResponse().getStatus(),
+                cenario + ": falha de infraestrutura e responsabilidade do servidor");
 
-        assertThat(corpo)
-                .as("%s: a resposta precisa continuar sendo o JSON de erro de sempre", cenario)
-                .contains("\"status\":500")
-                .contains("\"error\":\"Erro Interno do Servidor\"")
-                .contains("\"path\":\"/api/v1/produtos\"");
+        String formato = cenario + ": a resposta precisa continuar sendo o JSON de erro de sempre";
+        assertTrue(corpo.contains("\"status\":500"), formato);
+        assertTrue(corpo.contains("\"error\":\"Erro Interno do Servidor\""), formato);
+        assertTrue(corpo.contains("\"path\":\"/api/v1/produtos\""), formato);
 
-        assertThat(corpo.toLowerCase())
-                .as("%s: detalhe interno nao pode vazar para o cliente", cenario)
-                .doesNotContain("oracle")
-                .doesNotContain("jdbc")
-                .doesNotContain("sql")
-                .doesNotContain("hikari")
-                .doesNotContain("exception")
-                .doesNotContain("br.com.jence");
+        String vazamento = cenario + ": detalhe interno nao pode vazar para o cliente";
+        String corpoMinusculo = corpo.toLowerCase();
+        assertFalse(corpoMinusculo.contains("oracle"), vazamento);
+        assertFalse(corpoMinusculo.contains("jdbc"), vazamento);
+        assertFalse(corpoMinusculo.contains("sql"), vazamento);
+        assertFalse(corpoMinusculo.contains("hikari"), vazamento);
+        assertFalse(corpoMinusculo.contains("exception"), vazamento);
+        assertFalse(corpoMinusculo.contains("br.com.jence"), vazamento);
     }
 
     @Test
