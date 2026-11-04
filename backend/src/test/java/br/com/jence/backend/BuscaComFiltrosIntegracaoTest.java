@@ -1,9 +1,9 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.FiltroDeProdutos;
 import br.com.jence.backend.model.Pagina;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
 import br.com.jence.backend.model.SecaoDoCatalogo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -30,12 +30,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 class BuscaComFiltrosIntegracaoTest {
 
-    @Autowired ProdutoRepository produtoRepository;
+    private final ProdutoDao produtoDao = BancoDeTeste.produtos();
 
     private static final int TAMANHO = 100;
 
-    private List<Produto> buscar(FiltroDeProdutos filtro) {
-        return produtoRepository.buscar(filtro, 0, TAMANHO).conteudo();
+    private List<Produto> buscar(FiltroDeProdutos filtro) throws Exception {
+        return produtoDao.buscar(filtro, 0, TAMANHO).conteudo();
     }
 
     private List<String> nomes(List<Produto> produtos) {
@@ -46,7 +46,7 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("sem filtro nenhum, navega o catalogo em ordem alfabetica e estavel")
-    void semFiltro() {
+    void semFiltro() throws Exception {
         // O caso que a consulta montada mais arrisca errar: nenhum predicado e acrescentado,
         // e nenhum parametro e vinculado.
         List<Produto> todos = buscar(FiltroDeProdutos.nenhum());
@@ -74,7 +74,7 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("a ordem do catalogo e a mesma entre chamadas")
-    void ordemEstavel() {
+    void ordemEstavel() throws Exception {
         /*
          * E a propriedade que de fato importa para o cliente: a lista nao pode se rearranjar
          * entre uma consulta e outra. Sem ordenacao explicita, o SQL nao garante isso.
@@ -85,9 +85,9 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("a paginacao continua correta com a consulta montada")
-    void paginacao() {
-        Pagina<Produto> primeira = produtoRepository.buscar(FiltroDeProdutos.nenhum(), 0, 3);
-        Pagina<Produto> segunda = produtoRepository.buscar(FiltroDeProdutos.nenhum(), 1, 3);
+    void paginacao() throws Exception {
+        Pagina<Produto> primeira = produtoDao.buscar(FiltroDeProdutos.nenhum(), 0, 3);
+        Pagina<Produto> segunda = produtoDao.buscar(FiltroDeProdutos.nenhum(), 1, 3);
 
         assertEquals(3, primeira.conteudo().size());
         assertTrue(primeira.totalElementos() > 3);
@@ -100,7 +100,7 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("filtrar por secao devolve so produtos dela")
-    void porSecao() {
+    void porSecao() throws Exception {
         List<Produto> tintas = buscar(new FiltroDeProdutos(null, "Tintas", false));
 
         assertFalse(tintas.isEmpty());
@@ -111,7 +111,7 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("a secao nao depende de maiuscula ou minuscula")
-    void secaoSemCaixa() {
+    void secaoSemCaixa() throws Exception {
         // O nome chega de um menu, mas tambem pode chegar de uma URL colada ou digitada.
         List<Produto> minusculas = buscar(new FiltroDeProdutos(null, "tintas", false));
         assertEquals(buscar(new FiltroDeProdutos(null, "Tintas", false)).size(), minusculas.size());
@@ -119,7 +119,7 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("secao inexistente devolve vazio, e nao o catalogo inteiro")
-    void secaoInexistente() {
+    void secaoInexistente() throws Exception {
         // O erro classico de predicado opcional: montar a condicao e nunca aplica-la.
         assertTrue(buscar(new FiltroDeProdutos(null, "Secao Que Nao Existe", false)).isEmpty());
     }
@@ -128,7 +128,7 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("sem o filtro, o produto zerado aparece")
-    void zeradoApareceporPadrao() {
+    void zeradoApareceporPadrao() throws Exception {
         /*
          * De proposito: o cliente precisa ver que o produto existe na loja para entender que
          * ele esta esgotado. Esconder do catalogo transformaria "acabou" em "nao vendemos".
@@ -139,7 +139,7 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("com o filtro, os zerados somem")
-    void apenasDisponiveis() {
+    void apenasDisponiveis() throws Exception {
         List<Produto> disponiveis = buscar(new FiltroDeProdutos(null, null, true));
 
         assertFalse(disponiveis.isEmpty());
@@ -153,7 +153,7 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("a busca tolerante a erro de digitacao continua funcionando")
-    void erroDeDigitacao() {
+    void erroDeDigitacao() throws Exception {
         // A garantia que a unificacao das consultas mais arriscava perder.
         assertTrue(nomes(buscar(FiltroDeProdutos.porTermo("tnta"))).stream()
                 .anyMatch(nome -> nome.startsWith("Tinta")));
@@ -163,7 +163,7 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("quem digita sem acento acha o produto acentuado")
-    void semAcentoAchaComAcento() {
+    void semAcentoAchaComAcento() throws Exception {
         /*
          * O caso que motivou a mudanca, e ele estava na tela inicial: o primeiro chip de
          * sugestao do app e "Lâmpada LED". Antes de dobrar os dois lados, digitar "lampada"
@@ -186,7 +186,7 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("quem digita com acento acha do mesmo jeito")
-    void comAcentoTambemAcha() {
+    void comAcentoTambemAcha() throws Exception {
         List<String> comAcento = new ArrayList<>(nomes(buscar(FiltroDeProdutos.porTermo("lâmpada"))));
         List<String> semAcento = new ArrayList<>(nomes(buscar(FiltroDeProdutos.porTermo("lampada"))));
         Collections.sort(comAcento);
@@ -196,7 +196,7 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("acento no meio da palavra tambem dobra, inclusive til e cedilha")
-    void tilECedilhaTambemDobram() {
+    void tilECedilhaTambemDobram() throws Exception {
         /*
          * Til e o motivo de nao usarmos convert(x,'US7ASCII'): ele dobra cedilha mas
          * transforma ã e õ em '?'. Estas buscas so passam com TRANSLATE.
@@ -226,7 +226,7 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("a secao tambem casa sem acento")
-    void secaoSemAcento() {
+    void secaoSemAcento() throws Exception {
         // Um link digitado a mao com "Decoracao" nao pode devolver vazio por falta de cedilha.
         List<Produto> decoracao = buscar(new FiltroDeProdutos(null, "Decoracao", false));
         assertFalse(decoracao.isEmpty());
@@ -237,7 +237,7 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("termo e secao trabalham juntos")
-    void termoComSecao() {
+    void termoComSecao() throws Exception {
         List<Produto> lixasEmTintas = buscar(new FiltroDeProdutos("lixa", "Tintas", false));
 
         System.out.println(">>> lixa em Tintas: " + nomes(lixasEmTintas));
@@ -251,7 +251,7 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("os tres filtros combinam de uma vez")
-    void tresFiltrosJuntos() {
+    void tresFiltrosJuntos() throws Exception {
         /*
          * Iluminacao, e nao Tintas, porque o teste precisa de um termo que case com VARIOS
          * produtos da secao sendo que so um esta zerado - senao o filtro de disponibilidade
@@ -271,7 +271,7 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("combinacao sem resultado devolve pagina vazia, nao erro")
-    void combinacaoSemResultado() {
+    void combinacaoSemResultado() throws Exception {
         /*
          * O cliente filtrou demais; ele nao pediu um recurso que nao existe.
          *
@@ -279,7 +279,7 @@ class BuscaComFiltrosIntegracaoTest {
          * encontrar a "Lixeira de Embutir" de Cozinhas pela similaridade, o que e a busca
          * tolerante funcionando - e nao um resultado errado.
          */
-        Pagina<Produto> vazia = produtoRepository.buscar(
+        Pagina<Produto> vazia = produtoDao.buscar(
                 new FiltroDeProdutos("disjuntor", "Cozinhas", false), 0, TAMANHO);
 
         assertTrue(vazia.conteudo().isEmpty());
@@ -291,8 +291,8 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("as secoes vem com a contagem certa de produtos")
-    void listarSecoes() {
-        List<SecaoDoCatalogo> secoes = produtoRepository.listarSecoes();
+    void listarSecoes() throws Exception {
+        List<SecaoDoCatalogo> secoes = produtoDao.listarSecoes();
 
         System.out.println(">>> secoes: " + secoes);
 
@@ -313,13 +313,13 @@ class BuscaComFiltrosIntegracaoTest {
 
     @Test
     @DisplayName("a soma das secoes cobre o catalogo inteiro")
-    void secoesCobremTudo() {
+    void secoesCobremTudo() throws Exception {
         // Se um produto ficasse fora de toda secao, ele seria inalcancavel pela navegacao.
-        long soma = produtoRepository.listarSecoes().stream()
+        long soma = produtoDao.listarSecoes().stream()
                 .mapToLong(SecaoDoCatalogo::quantidadeProdutos)
                 .sum();
 
         assertEquals(
-                produtoRepository.buscar(FiltroDeProdutos.nenhum(), 0, 1).totalElementos(), soma);
+                produtoDao.buscar(FiltroDeProdutos.nenhum(), 0, 1).totalElementos(), soma);
     }
 }

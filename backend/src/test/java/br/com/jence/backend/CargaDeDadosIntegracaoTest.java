@@ -1,12 +1,12 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.dao.PontoMapaDao;
+import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.service.TratarRupturaEstoqueUseCase;
 import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.model.AfinidadeDeProduto;
-import br.com.jence.backend.domain.repository.PontoMapaRepository;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
 import br.com.jence.backend.seed.CarregadorDadosIniciais;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -14,9 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,8 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 class CargaDeDadosIntegracaoTest {
 
-    @Autowired ProdutoRepository produtoRepository;
-    @Autowired PontoMapaRepository pontoMapaRepository;
+    private final ProdutoDao produtoDao = BancoDeTeste.produtos();
+    private final PontoMapaDao pontoMapaDao = BancoDeTeste.pontos();
     @Autowired CarregadorDadosIniciais carregador;
 
     /** Cada produto e o substituto que a demonstracao espera encontrar quando ele zerar. */
@@ -46,19 +47,21 @@ class CargaDeDadosIntegracaoTest {
             "SKU-FER-002", "SKU-FER-003",   // trena 5m       -> trena 7,5m
             "SKU-MAT-001", "SKU-MAT-003");  // argamassa AC-II -> argamassa AC-III
 
-    private Produto porSku(String sku) {
-        return produtoRepository.buscarPorSku(sku).orElseThrow(
+    private Produto porSku(String sku) throws Exception {
+        return produtoDao.buscarPorSku(sku).orElseThrow(
                 () -> new AssertionError("produto ausente na massa: " + sku));
     }
 
     @Test
-    void todoParDeSubstituicaoEstaAoAlcanceDaBuscaEspacial() {
-        PARES_DE_SUBSTITUICAO.forEach((skuEmFalta, skuEsperado) -> {
+    void todoParDeSubstituicaoEstaAoAlcanceDaBuscaEspacial() throws Exception {
+        for (Map.Entry<String, String> par : PARES_DE_SUBSTITUICAO.entrySet()) {
+            String skuEmFalta = par.getKey();
+            String skuEsperado = par.getValue();
             Produto emFalta = porSku(skuEmFalta);
 
-            List<String> candidatos = produtoRepository.buscarDisponiveisProximosDe(
+            List<String> candidatos = produtoDao.buscarDisponiveisProximosDe(
                             emFalta.getPontoMapa(), emFalta.getId(),
-                            AfinidadeDeProduto.de(produtoRepository.buscarAtributosDe(emFalta.getId())),
+                            AfinidadeDeProduto.de(produtoDao.buscarAtributosDe(emFalta.getId())),
                             TratarRupturaEstoqueUseCase.RAIO_DE_BUSCA,
                             TratarRupturaEstoqueUseCase.LIMITE_DE_CANDIDATOS)
                     .stream().map(Produto::getSku).toList();
@@ -74,18 +77,18 @@ class CargaDeDadosIntegracaoTest {
             assertTrue(candidatos.size() > 1,
                     String.format("com um candidato so nao ha escolha semantica a demonstrar em %s",
                             skuEmFalta));
-        });
+        }
     }
 
     @Test
     void aCargaIncrementalNaoDuplicaNada() throws Exception {
-        long produtosAntes = produtoRepository.buscarPaginado(0, 1).totalElementos();
+        long produtosAntes = produtoDao.buscarPaginado(0, 1).totalElementos();
         int pontosAntes = todosOsPontos().size();
 
         // Rodar a carga de novo e exatamente o que acontece a cada reinicio da aplicacao.
         carregador.run(null);
 
-        assertEquals(produtosAntes, produtoRepository.buscarPaginado(0, 1).totalElementos(),
+        assertEquals(produtosAntes, produtoDao.buscarPaginado(0, 1).totalElementos(),
                 "um produto que ja existe nao pode ser inserido outra vez");
 
         assertEquals(pontosAntes, todosOsPontos().size(),
@@ -93,8 +96,8 @@ class CargaDeDadosIntegracaoTest {
     }
 
     @Test
-    void naoHaCorredorRepetidoNemPontoDeServicoDuplicado() {
-        Map<String, Long> porCorredor = pontoMapaRepository.buscarPorTipo(TipoPonto.PRATELEIRA)
+    void naoHaCorredorRepetidoNemPontoDeServicoDuplicado() throws Exception {
+        Map<String, Long> porCorredor = pontoMapaDao.buscarPorTipo(TipoPonto.PRATELEIRA)
                 .stream()
                 .collect(Collectors.groupingBy(PontoMapa::getCorredor, Collectors.counting()));
 
@@ -104,7 +107,7 @@ class CargaDeDadosIntegracaoTest {
                 "secao repetida dividiria os produtos de um corredor em dois pontos do mapa");
 
         for (TipoPonto tipo : List.of(TipoPonto.CAIXA, TipoPonto.BANHEIRO)) {
-            assertEquals(1, pontoMapaRepository.buscarPorTipo(tipo).size(),
+            assertEquals(1, pontoMapaDao.buscarPorTipo(tipo).size(),
                     String.format("ponto de servico %s duplicado apareceria duas vezes no mapa", tipo));
         }
     }
@@ -112,7 +115,7 @@ class CargaDeDadosIntegracaoTest {
     // ---------------------------------------------------------------- apresentacao
 
     @Test
-    void todoProdutoDaMassaTemDescricao() {
+    void todoProdutoDaMassaTemDescricao() throws Exception {
         /*
          * A carga e incremental e nunca reescreve um SKU que ja existe, entao os 29 produtos
          * criados antes destes campos ficariam sem descricao para sempre se o passo de
@@ -129,7 +132,7 @@ class CargaDeDadosIntegracaoTest {
     }
 
     @Test
-    void aDescricaoCabeNaColuna() {
+    void aDescricaoCabeNaColuna() throws Exception {
         // A coluna aceita 1000 caracteres; um texto maior nao falha em teste, falha na carga.
         for (Produto produto : todosOsProdutos()) {
             assertTrue(produto.getDescricao().length() <= 1000,
@@ -138,7 +141,7 @@ class CargaDeDadosIntegracaoTest {
     }
 
     @Test
-    void produtoSemImagemContinuaUtilizavel() {
+    void produtoSemImagemContinuaUtilizavel() throws Exception {
         /*
          * A coleta de URLs e incremental e feita pelo time (O-18): imagem nula e estado normal,
          * nao defeito. O que nao pode e o produto deixar de responder por causa disso.
@@ -158,7 +161,7 @@ class CargaDeDadosIntegracaoTest {
     }
 
     @Test
-    void oCenarioPlantadoContinuaEncenavel() {
+    void oCenarioPlantadoContinuaEncenavel() throws Exception {
         /*
          * A lixa precisa ter estoque, e isso e o oposto do que este teste exigia antes.
          *
@@ -170,13 +173,14 @@ class CargaDeDadosIntegracaoTest {
         assertTrue(porSku("SKU-TIN-003").temDisponibilidade(),
                 "zerada, a lixa nao entra no roteiro e a ruptura nao tem como ser encenada");
 
-        PARES_DE_SUBSTITUICAO.values().forEach(sku ->
-                assertTrue(porSku(sku).temDisponibilidade(),
-                        String.format("o substituto %s precisa ter estoque", sku)));
+        for (String sku : PARES_DE_SUBSTITUICAO.values()) {
+            assertTrue(porSku(sku).temDisponibilidade(),
+                    String.format("o substituto %s precisa ter estoque", sku));
+        }
     }
 
     @Test
-    void aindaExisteProdutoZeradoParaOFiltroFazerSentido() {
+    void aindaExisteProdutoZeradoParaOFiltroFazerSentido() throws Exception {
         /*
          * Com a lixa de volta ao estoque, o catalogo ficaria sem nenhum produto zerado - e o
          * botao "apenas disponiveis" deixaria de mudar qualquer coisa na tela, alem de nao
@@ -196,15 +200,17 @@ class CargaDeDadosIntegracaoTest {
         assertTrue(Collections.disjoint(skusZerados, PARES_DE_SUBSTITUICAO.values()), mensagem);
     }
 
-    private List<Produto> todosOsProdutos() {
-        return produtoRepository.buscarPaginado(0, 1000).conteudo();
+    private List<Produto> todosOsProdutos() throws Exception {
+        return produtoDao.buscarPaginado(0, 1000).conteudo();
     }
 
-    private List<PontoMapa> todosOsPontos() {
-        return List.of(TipoPonto.PRATELEIRA, TipoPonto.CAIXA, TipoPonto.BANHEIRO)
-                .stream()
-                .flatMap(tipo -> pontoMapaRepository.buscarPorTipo(tipo).stream())
-                .collect(Collectors.collectingAndThen(Collectors.toMap(
-                        PontoMapa::getId, Function.identity(), (a, b) -> a), m -> List.copyOf(m.values())));
+    private List<PontoMapa> todosOsPontos() throws Exception {
+        Map<UUID, PontoMapa> porId = new LinkedHashMap<>();
+        for (TipoPonto tipo : List.of(TipoPonto.PRATELEIRA, TipoPonto.CAIXA, TipoPonto.BANHEIRO)) {
+            for (PontoMapa ponto : pontoMapaDao.buscarPorTipo(tipo)) {
+                porId.putIfAbsent(ponto.getId(), ponto);
+            }
+        }
+        return List.copyOf(porId.values());
     }
 }

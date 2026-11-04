@@ -1,15 +1,13 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.dao.SessaoDao;
+import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.service.ExpirarSessoesInativasUseCase;
 import br.com.jence.backend.service.InicializarSessaoUseCase;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.model.StatusSessao;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
-import br.com.jence.backend.domain.repository.SessaoRepository;
-import br.com.jence.backend.infrastructure.database.repository.ListaRoteiroJpaRepository;
-import br.com.jence.backend.infrastructure.database.repository.SessaoJpaRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -35,20 +33,17 @@ class ExpiracaoDeSessaoIntegracaoTest {
     @Autowired InicializarSessaoUseCase inicializar;
     @Autowired AdicionarProdutoAoRoteiroUseCase adicionar;
     @Autowired ExpirarSessoesInativasUseCase expirar;
-    @Autowired SessaoRepository sessaoRepository;
-    @Autowired ProdutoRepository produtoRepository;
+    private final SessaoDao sessaoDao = BancoDeTeste.sessoes();
+    private final ProdutoDao produtoDao = BancoDeTeste.produtos();
 
-    @Autowired SessaoJpaRepository sessaoJpa;
-    @Autowired ListaRoteiroJpaRepository listaJpa;
 
     private final List<UUID> criadas = new ArrayList<>();
 
     @AfterEach
-    void limpar() {
-        criadas.forEach(id -> {
-            listaJpa.findBySessaoId(id).ifPresent(listaJpa::delete);
-            sessaoJpa.deleteById(id);
-        });
+    void limpar() throws Exception {
+        for (UUID id : criadas) {
+            BancoDeTeste.apagarSessao(id);
+        }
         criadas.clear();
     }
 
@@ -58,20 +53,20 @@ class ExpiracaoDeSessaoIntegracaoTest {
         criadas.add(sessaoId);
 
         if (comItem) {
-            Produto produto = produtoRepository.buscarPorSku("SKU-TIN-001").orElseThrow();
+            Produto produto = produtoDao.buscarPorSku("SKU-TIN-001").orElseThrow();
             adicionar.executar(sessaoId, produto.getId());
         }
 
         // Depois de adicionar, porque adicionar renova o TTL (D-24).
         LocalDateTime passado = LocalDateTime.now().minusHours(1);
-        sessaoRepository.salvar(Sessao.reconstituir(
+        sessaoDao.salvar(Sessao.reconstituir(
                 sessaoId, StatusSessao.ACTIVE, passado.minusHours(1), passado, null, null));
 
         return sessaoId;
     }
 
-    private StatusSessao statusNoBanco(UUID sessaoId) {
-        return sessaoRepository.buscarPorId(sessaoId).orElseThrow().getStatus();
+    private StatusSessao statusNoBanco(UUID sessaoId) throws Exception {
+        return sessaoDao.buscarPorId(sessaoId).orElseThrow().getStatus();
     }
 
     @Test

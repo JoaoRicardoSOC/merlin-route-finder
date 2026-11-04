@@ -1,9 +1,5 @@
 package br.com.jence.backend;
 
-import br.com.jence.backend.infrastructure.database.repository.ChatMensagemJpaRepository;
-import br.com.jence.backend.infrastructure.database.repository.ListaRoteiroJpaRepository;
-import br.com.jence.backend.infrastructure.database.repository.RegistroRupturaJpaRepository;
-import br.com.jence.backend.infrastructure.database.repository.SessaoJpaRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
@@ -57,10 +53,6 @@ class JornadaCompletaIntegracaoTest {
      * ele existe para verificar. */
     private final ObjectMapper json = new ObjectMapper();
 
-    @Autowired SessaoJpaRepository sessaoJpa;
-    @Autowired ListaRoteiroJpaRepository listaJpa;
-    @Autowired ChatMensagemJpaRepository chatJpa;
-    @Autowired RegistroRupturaJpaRepository rupturaJpa;
 
     private final List<UUID> sessoesCriadas = new ArrayList<>();
 
@@ -71,13 +63,10 @@ class JornadaCompletaIntegracaoTest {
     private static final String EM_FALTA = "SKU-TIN-003";
 
     @AfterEach
-    void limpar() {
-        sessoesCriadas.forEach(id -> {
-            rupturaJpa.findBySessaoIdOrderByRegistradoEmDesc(id).forEach(rupturaJpa::delete);
-            chatJpa.findBySessaoIdOrderByEnviadoEmAsc(id).forEach(chatJpa::delete);
-            listaJpa.findBySessaoId(id).ifPresent(listaJpa::delete);
-            sessaoJpa.deleteById(id);
-        });
+    void limpar() throws Exception {
+        for (UUID id : sessoesCriadas) {
+            BancoDeTeste.apagarSessao(id);
+        }
         sessoesCriadas.clear();
     }
 

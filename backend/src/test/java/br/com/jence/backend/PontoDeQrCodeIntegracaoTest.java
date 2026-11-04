@@ -1,8 +1,8 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.dao.PontoMapaDao;
 import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.TipoPonto;
-import br.com.jence.backend.domain.repository.PontoMapaRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -29,15 +29,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 class PontoDeQrCodeIntegracaoTest {
 
-    @Autowired PontoMapaRepository pontoMapaRepository;
+    private final PontoMapaDao pontoMapaDao = BancoDeTeste.pontos();
 
-    private List<PontoMapa> qrCodes() {
-        return pontoMapaRepository.buscarPorTipo(TipoPonto.QR_CODE);
+    private List<PontoMapa> qrCodes() throws Exception {
+        return pontoMapaDao.buscarPorTipo(TipoPonto.QR_CODE);
     }
 
     @Test
     @DisplayName("a massa tem pontos de QR Code, e todo um deles tem codigo curto")
-    void todoQrCodeTemCodigo() {
+    void todoQrCodeTemCodigo() throws Exception {
         List<PontoMapa> pontos = qrCodes();
 
         System.out.println(">>> QR Codes: " + pontos.stream()
@@ -52,7 +52,7 @@ class PontoDeQrCodeIntegracaoTest {
 
     @Test
     @DisplayName("nenhum codigo curto se repete")
-    void codigosSaoUnicos() {
+    void codigosSaoUnicos() throws Exception {
         /*
          * A coluna e unique, entao um codigo repetido nem chegaria a ser gravado. O teste
          * existe para o caso oposto: se alguem duplicar um codigo na massa, a carga falha no
@@ -66,8 +66,8 @@ class PontoDeQrCodeIntegracaoTest {
     @ParameterizedTest(name = "digitar \"{0}\" encontra o ponto")
     @ValueSource(strings = {"ENT-01", "ent-01", "ENT01", "ent 01"})
     @DisplayName("a busca aceita a grafia que o cliente digitar")
-    void buscaTolerante(String digitado) {
-        Optional<PontoMapa> encontrado = pontoMapaRepository.buscarPorCodigoCurto(digitado);
+    void buscaTolerante(String digitado) throws Exception {
+        Optional<PontoMapa> encontrado = pontoMapaDao.buscarPorCodigoCurto(digitado);
 
         assertTrue(encontrado.isPresent());
         PontoMapa ponto = encontrado.get();
@@ -77,15 +77,15 @@ class PontoDeQrCodeIntegracaoTest {
 
     @Test
     @DisplayName("codigo inexistente devolve vazio, sem estourar")
-    void codigoInexistente() {
-        assertTrue(pontoMapaRepository.buscarPorCodigoCurto("ZZZ-99").isEmpty());
-        assertTrue(pontoMapaRepository.buscarPorCodigoCurto("").isEmpty());
-        assertTrue(pontoMapaRepository.buscarPorCodigoCurto(null).isEmpty());
+    void codigoInexistente() throws Exception {
+        assertTrue(pontoMapaDao.buscarPorCodigoCurto("ZZZ-99").isEmpty());
+        assertTrue(pontoMapaDao.buscarPorCodigoCurto("").isEmpty());
+        assertTrue(pontoMapaDao.buscarPorCodigoCurto(null).isEmpty());
     }
 
     @Test
     @DisplayName("cada QR Code cai dentro do grid do mapa")
-    void dentroDoGrid() {
+    void dentroDoGrid() throws Exception {
         // As coordenadas alimentam o desenho do mapa: um ponto fora do grid apareceria
         // encostado na borda da tela, ou fora dela.
         for (PontoMapa ponto : qrCodes()) {

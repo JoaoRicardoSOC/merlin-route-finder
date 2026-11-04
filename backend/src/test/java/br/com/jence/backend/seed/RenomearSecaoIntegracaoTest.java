@@ -1,13 +1,13 @@
 package br.com.jence.backend.seed;
 
+import br.com.jence.backend.BancoDeTeste;
+import br.com.jence.backend.dao.PontoMapaDao;
+import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.model.BlocoMapa;
 import br.com.jence.backend.model.PlantaDaLoja;
 import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.TipoPonto;
-import br.com.jence.backend.domain.repository.PontoMapaRepository;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
-import br.com.jence.backend.infrastructure.database.repository.PontoMapaJpaRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -37,16 +37,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 class RenomearSecaoIntegracaoTest {
 
-    @Autowired ProdutoRepository produtoRepository;
-    @Autowired PontoMapaRepository pontoMapaRepository;
-    @Autowired PontoMapaJpaRepository pontoMapaJpaRepository;
+    private final ProdutoDao produtoDao = BancoDeTeste.produtos();
+    private final PontoMapaDao pontoMapaDao = BancoDeTeste.pontos();
     @Autowired CarregadorDadosIniciais carregador;
 
-    private List<PontoMapa> prateleiras() {
-        return pontoMapaRepository.buscarPorTipo(TipoPonto.PRATELEIRA);
+    private List<PontoMapa> prateleiras() throws Exception {
+        return pontoMapaDao.buscarPorTipo(TipoPonto.PRATELEIRA);
     }
 
-    private PontoMapa porCorredor(String corredor) {
+    private PontoMapa porCorredor(String corredor) throws Exception {
         return prateleiras().stream()
                 .filter(ponto -> ponto.getCorredor().equals(corredor))
                 .findFirst()
@@ -55,7 +54,7 @@ class RenomearSecaoIntegracaoTest {
 
     @Test
     @DisplayName("cada secao da planta aparece uma vez so, com o nome acentuado")
-    void cadaSecaoUmaVezSo() {
+    void cadaSecaoUmaVezSo() throws Exception {
         Map<String, Long> porNome = prateleiras().stream()
                 .collect(Collectors.groupingBy(PontoMapa::getCorredor, Collectors.counting()));
 
@@ -91,7 +90,7 @@ class RenomearSecaoIntegracaoTest {
 
         assertTrue(produtosAntes > 0, "a secao precisa ter produtos para o teste valer");
 
-        pontoMapaJpaRepository.renomearCorredor("Decoração", "Decoracao");
+        pontoMapaDao.renomearCorredor("Decoração", "Decoracao");
         assertEquals(idOriginal, porCorredor("Decoracao").getId());
 
         carregador.run(null);
@@ -107,8 +106,8 @@ class RenomearSecaoIntegracaoTest {
                 "o nome antigo nao pode ter sobrado como ponto orfao");
     }
 
-    private long produtosEm(String corredor) {
-        return produtoRepository.buscarPaginado(0, 1000).conteudo().stream()
+    private long produtosEm(String corredor) throws Exception {
+        return produtoDao.buscarPaginado(0, 1000).conteudo().stream()
                 .map(Produto::getPontoMapa)
                 .filter(ponto -> ponto != null && corredor.equals(ponto.getCorredor()))
                 .count();

@@ -1,5 +1,7 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.dao.RegistroRupturaDao;
+import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.dto.RupturaEstoqueResponse;
 import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
@@ -9,11 +11,6 @@ import br.com.jence.backend.model.OrigemSugestao;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.RegistroRuptura;
 import br.com.jence.backend.exception.SubstitutoIndisponivelException;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
-import br.com.jence.backend.domain.repository.RegistroRupturaRepository;
-import br.com.jence.backend.infrastructure.database.repository.ListaRoteiroJpaRepository;
-import br.com.jence.backend.infrastructure.database.repository.RegistroRupturaJpaRepository;
-import br.com.jence.backend.infrastructure.database.repository.SessaoJpaRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -48,12 +45,9 @@ class RupturaIntegracaoTest {
     @Autowired InicializarSessaoUseCase inicializar;
     @Autowired AdicionarProdutoAoRoteiroUseCase adicionar;
     @Autowired TratarRupturaEstoqueUseCase tratarRuptura;
-    @Autowired ProdutoRepository produtoRepository;
-    @Autowired RegistroRupturaRepository registroRupturaRepository;
+    private final ProdutoDao produtoDao = BancoDeTeste.produtos();
+    private final RegistroRupturaDao registroRupturaDao = BancoDeTeste.rupturas();
 
-    @Autowired RegistroRupturaJpaRepository registroJpa;
-    @Autowired ListaRoteiroJpaRepository listaJpa;
-    @Autowired SessaoJpaRepository sessaoJpa;
 
     private UUID sessaoId;
 
@@ -65,14 +59,12 @@ class RupturaIntegracaoTest {
     }
 
     @AfterEach
-    void limpar() {
-        registroJpa.findBySessaoIdOrderByRegistradoEmDesc(sessaoId).forEach(registroJpa::delete);
-        listaJpa.findBySessaoId(sessaoId).ifPresent(listaJpa::delete);
-        sessaoJpa.deleteById(sessaoId);
+    void limpar() throws Exception {
+        BancoDeTeste.apagarSessao(sessaoId);
     }
 
     private ItemRoteiroDetalhadoResponse adicionarAoRoteiro(String sku) throws Exception {
-        Produto produto = produtoRepository.buscarPorSku(sku).orElseThrow();
+        Produto produto = produtoDao.buscarPorSku(sku).orElseThrow();
         return adicionar.executar(sessaoId, produto.getId());
     }
 
@@ -105,7 +97,7 @@ class RupturaIntegracaoTest {
 
         tratarRuptura.executar(item.id());
 
-        List<RegistroRuptura> registros = registroRupturaRepository.buscarPorSessao(sessaoId);
+        List<RegistroRuptura> registros = registroRupturaDao.buscarPorSessao(sessaoId);
 
         assertEquals(1, registros.size());
         assertEquals(item.id(), registros.getFirst().getItemRoteiroId());
@@ -125,7 +117,7 @@ class RupturaIntegracaoTest {
 
         assertThrows(SubstitutoIndisponivelException.class, () -> tratarRuptura.executar(item.id()));
 
-        List<RegistroRuptura> registros = registroRupturaRepository.buscarPorSessao(sessaoId);
+        List<RegistroRuptura> registros = registroRupturaDao.buscarPorSessao(sessaoId);
 
         assertEquals(1, registros.size());
         assertFalse(registros.getFirst().temSugestao());

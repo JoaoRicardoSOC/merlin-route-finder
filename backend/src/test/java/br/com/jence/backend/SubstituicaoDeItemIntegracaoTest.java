@@ -1,5 +1,7 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.dao.RegistroRupturaDao;
+import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.dto.ListaRoteiroResponse;
 import br.com.jence.backend.dto.SessaoResponse;
@@ -13,11 +15,6 @@ import br.com.jence.backend.model.OrigemSugestao;
 import br.com.jence.backend.model.RegistroRuptura;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
-import br.com.jence.backend.domain.repository.RegistroRupturaRepository;
-import br.com.jence.backend.infrastructure.database.repository.ListaRoteiroJpaRepository;
-import br.com.jence.backend.infrastructure.database.repository.RegistroRupturaJpaRepository;
-import br.com.jence.backend.infrastructure.database.repository.SessaoJpaRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -52,12 +49,9 @@ class SubstituicaoDeItemIntegracaoTest {
     @Autowired SubstituirItemDoRoteiroUseCase substituir;
     @Autowired ConsultarSessaoUseCase consultar;
     @Autowired ConcluirRotaUseCase concluir;
-    @Autowired ProdutoRepository produtoRepository;
-    @Autowired RegistroRupturaRepository registroRupturaRepository;
+    private final ProdutoDao produtoDao = BancoDeTeste.produtos();
+    private final RegistroRupturaDao registroRupturaDao = BancoDeTeste.rupturas();
 
-    @Autowired ListaRoteiroJpaRepository listaJpa;
-    @Autowired SessaoJpaRepository sessaoJpa;
-    @Autowired RegistroRupturaJpaRepository rupturaJpa;
 
     /** A lixa grao 120 e o item que some da prateleira; a lixa d'agua e o substituto. */
     private static final String EM_FALTA = "SKU-TIN-003";
@@ -66,18 +60,16 @@ class SubstituicaoDeItemIntegracaoTest {
     private final List<UUID> criadas = new ArrayList<>();
 
     @AfterEach
-    void limpar() {
-        criadas.forEach(id -> {
+    void limpar() throws Exception {
+        for (UUID id : criadas) {
             /*
              * O registro de ruptura aponta para a sessao por chave estrangeira, entao apagar a
              * sessao antes dele e recusado com ORA-02292. E o mesmo motivo pelo qual a limpeza
              * de outros testes de integracao falha em silencio quando uma ruptura acontece
-             * neles - ver O-20.
+             * neles - ver O-20. Por isso o BancoDeTeste.apagarSessao apaga os relatos antes.
              */
-            rupturaJpa.deleteAll(rupturaJpa.findBySessaoIdOrderByRegistradoEmDesc(id));
-            listaJpa.findBySessaoId(id).ifPresent(listaJpa::delete);
-            sessaoJpa.deleteById(id);
-        });
+            BancoDeTeste.apagarSessao(id);
+        }
         criadas.clear();
     }
 
@@ -87,8 +79,8 @@ class SubstituicaoDeItemIntegracaoTest {
         return sessao.id();
     }
 
-    private UUID idDe(String sku) {
-        return produtoRepository.buscarPorSku(sku).orElseThrow().getId();
+    private UUID idDe(String sku) throws Exception {
+        return produtoDao.buscarPorSku(sku).orElseThrow().getId();
     }
 
     private UUID adicionar(UUID sessaoId, String sku) throws Exception {
@@ -178,13 +170,13 @@ class SubstituicaoDeItemIntegracaoTest {
         UUID sessaoId = novaSessao();
         UUID lixaEmFalta = adicionar(sessaoId, EM_FALTA);
 
-        registroRupturaRepository.salvar(RegistroRuptura.comSugestao(
+        registroRupturaDao.salvar(RegistroRuptura.comSugestao(
                 sessaoId, lixaEmFalta, idDe(EM_FALTA), idDe(SUBSTITUTO),
                 "A lixa d'agua grao 150 da o mesmo acabamento.", OrigemSugestao.ASSISTENTE_IA));
 
         substituir.executar(lixaEmFalta, idDe(SUBSTITUTO));
 
-        List<RegistroRuptura> registros = registroRupturaRepository.buscarPorSessao(sessaoId);
+        List<RegistroRuptura> registros = registroRupturaDao.buscarPorSessao(sessaoId);
         assertEquals(1, registros.size(), "trocar o item nao pode apagar o relato da prateleira vazia");
         RegistroRuptura registro = registros.get(0);
         assertEquals(idDe(EM_FALTA), registro.getProdutoFaltanteId());
@@ -209,7 +201,7 @@ class SubstituicaoDeItemIntegracaoTest {
         assertThrows(OperacaoNaoPermitidaException.class,
                 () -> substituir.executar(lixaEmFalta, idDe(EM_FALTA)));
 
-        assertEquals(1, listaJpa.findBySessaoId(sessaoId).orElseThrow().getItens().size());
+        assertEquals(1, BancoDeTeste.listas().buscarPorSessao(sessaoId).orElseThrow().getItens().size());
     }
 
     @Test
@@ -221,7 +213,7 @@ class SubstituicaoDeItemIntegracaoTest {
         assertThrows(RecursoNaoEncontradoException.class,
                 () -> substituir.executar(lixaEmFalta, UUID.randomUUID()));
 
-        assertEquals(1, listaJpa.findBySessaoId(sessaoId).orElseThrow().getItens().size());
+        assertEquals(1, BancoDeTeste.listas().buscarPorSessao(sessaoId).orElseThrow().getItens().size());
     }
 
     @Test

@@ -1,5 +1,7 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.dao.PontoMapaDao;
+import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.dto.MapaResponse;
 import br.com.jence.backend.dto.PontoMapaResponse;
 import br.com.jence.backend.service.ConsultarMapaUseCase;
@@ -9,8 +11,6 @@ import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.model.Pagina;
-import br.com.jence.backend.domain.repository.PontoMapaRepository;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -35,8 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class MapaIntegracaoTest {
 
     @Autowired ConsultarMapaUseCase consultarMapa;
-    @Autowired ProdutoRepository produtoRepository;
-    @Autowired PontoMapaRepository pontoMapaRepository;
+    private final ProdutoDao produtoDao = BancoDeTeste.produtos();
+    private final PontoMapaDao pontoMapaDao = BancoDeTeste.pontos();
 
     private Optional<BlocoMapa> blocoDe(String rotulo) {
         return PlantaDaLoja.blocos().stream()
@@ -44,8 +44,8 @@ class MapaIntegracaoTest {
                 .findFirst();
     }
 
-    private List<Produto> catalogo() {
-        Pagina<Produto> pagina = produtoRepository.buscarPaginado(0, 1000);
+    private List<Produto> catalogo() throws Exception {
+        Pagina<Produto> pagina = produtoDao.buscarPaginado(0, 1000);
         assertTrue(pagina.totalElementos() <= pagina.conteudo().size(),
                 "catalogo maior que a leitura do teste invalidaria a verificacao");
         return pagina.conteudo();
@@ -55,8 +55,8 @@ class MapaIntegracaoTest {
 
     @Test
     @DisplayName("toda secao da massa tem bloco, e todo bloco tem secao")
-    void plantaEMassaCobremAsMesmasSecoes() {
-        List<String> naMassa = pontoMapaRepository.buscarPorTipo(TipoPonto.PRATELEIRA).stream()
+    void plantaEMassaCobremAsMesmasSecoes() throws Exception {
+        List<String> naMassa = pontoMapaDao.buscarPorTipo(TipoPonto.PRATELEIRA).stream()
                 .map(PontoMapa::getCorredor)
                 .sorted()
                 .toList();
@@ -74,7 +74,7 @@ class MapaIntegracaoTest {
 
     @Test
     @DisplayName("nenhum produto cai fora do proprio corredor")
-    void produtoDentroDoBloco() {
+    void produtoDentroDoBloco() throws Exception {
         for (Produto produto : catalogo()) {
             PontoMapa ponto = produto.getPontoMapa();
             BlocoMapa bloco = blocoDe(ponto.getCorredor()).orElseThrow(
@@ -89,13 +89,13 @@ class MapaIntegracaoTest {
 
     @Test
     @DisplayName("nenhuma placa de QR fica dentro de um bloco")
-    void placasEmCorredorDePassagem() {
+    void placasEmCorredorDePassagem() throws Exception {
         /*
          * A decisao do card dos QR Codes: os adesivos ficam em corredores de passagem e
          * cruzamentos, nao dentro das secoes - o cliente escaneia enquanto anda. Uma placa
          * desenhada em cima de um corredor contradiz isso na tela.
          */
-        for (PontoMapa placa : pontoMapaRepository.buscarPorTipo(TipoPonto.QR_CODE)) {
+        for (PontoMapa placa : pontoMapaDao.buscarPorTipo(TipoPonto.QR_CODE)) {
             Optional<BlocoMapa> dentroDe = PlantaDaLoja.blocos().stream()
                     .filter(b -> b.contem(placa.getCoordenadaX(), placa.getCoordenadaY()))
                     .findFirst();

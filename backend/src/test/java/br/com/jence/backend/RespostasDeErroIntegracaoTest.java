@@ -1,8 +1,5 @@
 package br.com.jence.backend;
 
-import br.com.jence.backend.infrastructure.database.repository.ListaRoteiroJpaRepository;
-import br.com.jence.backend.infrastructure.database.repository.RegistroRupturaJpaRepository;
-import br.com.jence.backend.infrastructure.database.repository.SessaoJpaRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
@@ -49,20 +46,15 @@ class RespostasDeErroIntegracaoTest {
     // Criado aqui: o RestClientConfig saiu junto com o RestClient do cliente do Gemini.
     private final RestClient.Builder builder = RestClient.builder();
 
-    @Autowired SessaoJpaRepository sessaoJpa;
-    @Autowired ListaRoteiroJpaRepository listaJpa;
-    @Autowired RegistroRupturaJpaRepository rupturaJpa;
 
     private final ObjectMapper json = new ObjectMapper();
     private final List<UUID> sessoesCriadas = new ArrayList<>();
 
     @AfterEach
-    void limpar() {
-        sessoesCriadas.forEach(id -> {
-            rupturaJpa.findBySessaoIdOrderByRegistradoEmDesc(id).forEach(rupturaJpa::delete);
-            listaJpa.findBySessaoId(id).ifPresent(listaJpa::delete);
-            sessaoJpa.deleteById(id);
-        });
+    void limpar() throws Exception {
+        for (UUID id : sessoesCriadas) {
+            BancoDeTeste.apagarSessao(id);
+        }
         sessoesCriadas.clear();
     }
 
@@ -301,7 +293,7 @@ class RespostasDeErroIntegracaoTest {
 
     @Test
     @DisplayName("422 quando nao ha substituto possivel, e a ruptura fica registrada mesmo assim")
-    void semSubstitutoPossivel() {
+    void semSubstitutoPossivel() throws Exception {
         /*
          * Decoracao nao tem vizinho dentro do raio (medido na O-12), entao os unicos candidatos
          * sao os proprios produtos da secao. Colocando todos no roteiro, nao sobra ninguem para
@@ -337,7 +329,7 @@ class RespostasDeErroIntegracaoTest {
             assertFalse(mensagem == null || mensagem.isBlank(),
                     "o cliente precisa entender que nao ha alternativa, nao que o sistema falhou");
 
-            assertFalse(rupturaJpa.findBySessaoIdOrderByRegistradoEmDesc(sessao).isEmpty(),
+            assertFalse(BancoDeTeste.rupturas().buscarPorSessao(sessao).isEmpty(),
                     "sem substituto e o relato mais grave: nao pode se perder");
 
         } finally {

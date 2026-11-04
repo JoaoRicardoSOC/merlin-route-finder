@@ -1,11 +1,11 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.model.AtributoProduto;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.ValorDeAtributo;
 import br.com.jence.backend.model.FacetaDeProdutos;
 import br.com.jence.backend.model.FiltroDeProdutos;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -34,12 +34,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 class AtributosEFacetasIntegracaoTest {
 
-    @Autowired ProdutoRepository produtoRepository;
+    private final ProdutoDao produtoDao = BancoDeTeste.produtos();
 
     private static final int TAMANHO = 100;
 
-    private List<String> skus(FiltroDeProdutos filtro) {
-        return produtoRepository.buscar(filtro, 0, TAMANHO).conteudo().stream()
+    private List<String> skus(FiltroDeProdutos filtro) throws Exception {
+        return produtoDao.buscar(filtro, 0, TAMANHO).conteudo().stream()
                 .map(Produto::getSku)
                 .sorted()
                 .toList();
@@ -57,13 +57,13 @@ class AtributosEFacetasIntegracaoTest {
 
     @Test
     @DisplayName("todo produto da massa tem ao menos marca e tipo")
-    void massaCompleta() {
+    void massaCompleta() throws Exception {
         /*
          * Sem marca, o filtro mais usado de uma loja de construcao fica furado: o produto
          * simplesmente desaparece quando o cliente escolhe qualquer marca.
          */
-        for (Produto produto : produtoRepository.buscar(FiltroDeProdutos.nenhum(), 0, TAMANHO).conteudo()) {
-            List<AtributoProduto> chaves = produtoRepository.buscarAtributosDe(produto.getId())
+        for (Produto produto : produtoDao.buscar(FiltroDeProdutos.nenhum(), 0, TAMANHO).conteudo()) {
+            List<AtributoProduto> chaves = produtoDao.buscarAtributosDe(produto.getId())
                     .stream().map(ValorDeAtributo::atributo).toList();
 
             String mensagem = String.format("caracteristicas de %s", produto.getSku());
@@ -74,15 +74,15 @@ class AtributosEFacetasIntegracaoTest {
 
     @Test
     @DisplayName("as caracteristicas vem na ordem de exibicao, nao alfabetica")
-    void ordemDeExibicao() {
+    void ordemDeExibicao() throws Exception {
         // Marca antes de medida: e a ordem em que o cliente pensa sobre o produto.
-        Produto cano = produtoRepository.buscarPorSku("SKU-ENC-001").orElseThrow();
+        Produto cano = produtoDao.buscarPorSku("SKU-ENC-001").orElseThrow();
 
-        List<AtributoProduto> chaves = produtoRepository.buscarAtributosDe(cano.getId())
+        List<AtributoProduto> chaves = produtoDao.buscarAtributosDe(cano.getId())
                 .stream().map(ValorDeAtributo::atributo).toList();
 
         System.out.println(">>> caracteristicas do cano: "
-                + produtoRepository.buscarAtributosDe(cano.getId()));
+                + produtoDao.buscarAtributosDe(cano.getId()));
 
         assertEquals(chaves.stream().sorted().toList(), chaves);
         assertEquals(AtributoProduto.MARCA, chaves.get(0));
@@ -92,7 +92,7 @@ class AtributosEFacetasIntegracaoTest {
 
     @Test
     @DisplayName("um valor filtra para os produtos que o tem, e so para eles")
-    void umValor() {
+    void umValor() throws Exception {
         /*
          * A verificacao e da propriedade, e nao de uma lista fixa de SKUs: uma lista fixa
          * quebra a cada produto acrescentado a massa, sem que nada de errado tenha acontecido
@@ -109,7 +109,7 @@ class AtributosEFacetasIntegracaoTest {
 
     @Test
     @DisplayName("dois valores da mesma chave sao OU: o resultado e a uniao dos dois")
-    void doisValoresDaMesmaChave() {
+    void doisValoresDaMesmaChave() throws Exception {
         /*
          * Duas marcas que existem de fato no catalogo. Antes eram Tigre e Docol; com os nomes
          * reais da loja (D-85) a Docol saiu da massa, e um teste de UNIAO sobre uma marca sem
@@ -131,7 +131,7 @@ class AtributosEFacetasIntegracaoTest {
 
     @Test
     @DisplayName("chaves diferentes sao E: o resultado e a intersecao")
-    void chavesDiferentes() {
+    void chavesDiferentes() throws Exception {
         /*
          * O erro que um JOIN unico com todos os valores num IN cometeria: devolver tudo que
          * fosse Tigre OU 25 mm, quando o cliente pediu o cano da Tigre de 25 mm.
@@ -152,9 +152,9 @@ class AtributosEFacetasIntegracaoTest {
         assertTrue(tigreDe25mm.size() < de25mm.size(), mensagem);
     }
 
-    private List<String> marcasDe(String sku) {
-        return produtoRepository.buscarAtributosDe(
-                        produtoRepository.buscarPorSku(sku).orElseThrow().getId()).stream()
+    private List<String> marcasDe(String sku) throws Exception {
+        return produtoDao.buscarAtributosDe(
+                        produtoDao.buscarPorSku(sku).orElseThrow().getId()).stream()
                 .filter(atributo -> atributo.atributo() == AtributoProduto.MARCA)
                 .map(ValorDeAtributo::valor)
                 .toList();
@@ -162,7 +162,7 @@ class AtributosEFacetasIntegracaoTest {
 
     @Test
     @DisplayName("caracteristica combina com secao, termo e disponibilidade")
-    void combinaComOsOutrosFiltros() {
+    void combinaComOsOutrosFiltros() throws Exception {
         /*
          * Era Philips, e a Kian herdou o cenario inteiro quando os nomes reais entraram: a
          * ILU-001 tem estoque e a ILU-004 - a lampada amarela - esta zerada, as duas Kian.
@@ -179,7 +179,7 @@ class AtributosEFacetasIntegracaoTest {
 
     @Test
     @DisplayName("combinacao impossivel devolve vazio, nao erro")
-    void combinacaoImpossivel() {
+    void combinacaoImpossivel() throws Exception {
         assertTrue(skus(comAtributos(Map.of(
                 AtributoProduto.MARCA, List.of("Tigre"),
                 AtributoProduto.GRAO, List.of("120")))).isEmpty());
@@ -187,7 +187,7 @@ class AtributosEFacetasIntegracaoTest {
 
     @Test
     @DisplayName("valor inexistente nao devolve o catalogo inteiro")
-    void valorInexistente() {
+    void valorInexistente() throws Exception {
         // O erro classico de predicado montado: construir a condicao e nunca aplica-la.
         assertTrue(skus(comAtributos(
                 Map.of(AtributoProduto.MARCA, List.of("Marca Que Nao Existe")))).isEmpty());
@@ -197,8 +197,8 @@ class AtributosEFacetasIntegracaoTest {
 
     @Test
     @DisplayName("as facetas descrevem o recorte, e nao o catalogo inteiro")
-    void facetasDoRecorte() {
-        List<FacetaDeProdutos> emTintas = produtoRepository.calcularFacetas(
+    void facetasDoRecorte() throws Exception {
+        List<FacetaDeProdutos> emTintas = produtoDao.calcularFacetas(
                 new FiltroDeProdutos(null, "Tintas", false));
 
         System.out.println(">>> facetas em Tintas: " + emTintas.stream()
@@ -221,8 +221,8 @@ class AtributosEFacetasIntegracaoTest {
 
     @Test
     @DisplayName("Amperagem aparece em Elétrica, e Grão não")
-    void facetasMudamComASecao() {
-        List<FacetaDeProdutos> emEletrica = produtoRepository.calcularFacetas(
+    void facetasMudamComASecao() throws Exception {
+        List<FacetaDeProdutos> emEletrica = produtoDao.calcularFacetas(
                 new FiltroDeProdutos(null, "Elétrica", false));
 
         assertTrue(faceta(emEletrica, AtributoProduto.AMPERAGEM).isPresent());
@@ -231,8 +231,8 @@ class AtributosEFacetasIntegracaoTest {
 
     @Test
     @DisplayName("a contagem de cada valor bate com a busca correspondente")
-    void contagemConfere() {
-        List<FacetaDeProdutos> todas = produtoRepository.calcularFacetas(FiltroDeProdutos.nenhum());
+    void contagemConfere() throws Exception {
+        List<FacetaDeProdutos> todas = produtoDao.calcularFacetas(FiltroDeProdutos.nenhum());
 
         for (FacetaDeProdutos faceta : todas) {
             for (FacetaDeProdutos.Valor valor : faceta.valores()) {
@@ -245,8 +245,8 @@ class AtributosEFacetasIntegracaoTest {
 
     @Test
     @DisplayName("marca vem primeiro, e o valor mais comum vem antes dentro dela")
-    void ordenacaoDasFacetas() {
-        List<FacetaDeProdutos> todas = produtoRepository.calcularFacetas(FiltroDeProdutos.nenhum());
+    void ordenacaoDasFacetas() throws Exception {
+        List<FacetaDeProdutos> todas = produtoDao.calcularFacetas(FiltroDeProdutos.nenhum());
 
         assertEquals(AtributoProduto.MARCA, todas.get(0).atributo(),
                 "marca e o filtro mais usado numa loja de construcao");
@@ -262,7 +262,7 @@ class AtributosEFacetasIntegracaoTest {
 
     @Test
     @DisplayName("a faceta ignora a propria escolha do cliente, para ele poder trocar de ideia")
-    void facetaIgnoraEscolhaDoCliente() {
+    void facetaIgnoraEscolhaDoCliente() throws Exception {
         /*
          * Se as facetas fossem calculadas sobre o resultado final, escolher Tigre faria as
          * outras marcas sumirem - e para trocar para Docol o cliente teria que limpar o filtro
@@ -271,7 +271,7 @@ class AtributosEFacetasIntegracaoTest {
         FiltroDeProdutos comTigre = comAtributos(Map.of(AtributoProduto.MARCA, List.of("Tigre")));
 
         List<String> marcasVisiveis = faceta(
-                produtoRepository.calcularFacetas(comTigre.semAtributos()), AtributoProduto.MARCA)
+                produtoDao.calcularFacetas(comTigre.semAtributos()), AtributoProduto.MARCA)
                 .orElseThrow().valores().stream()
                 .map(FacetaDeProdutos.Valor::valor)
                 .toList();

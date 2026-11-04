@@ -1,15 +1,13 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.service.InicializarSessaoUseCase;
 import br.com.jence.backend.service.MarcarItemColetadoUseCase;
 import br.com.jence.backend.service.RemoverProdutoDoRoteiroUseCase;
 import br.com.jence.backend.model.ItemRoteiro;
 import br.com.jence.backend.model.ListaRoteiro;
-import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
-import br.com.jence.backend.infrastructure.database.repository.ListaRoteiroJpaRepository;
-import br.com.jence.backend.infrastructure.database.repository.SessaoJpaRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -54,11 +52,9 @@ class ConcorrenciaNoRoteiroIntegracaoTest {
     @Autowired AdicionarProdutoAoRoteiroUseCase adicionar;
     @Autowired MarcarItemColetadoUseCase marcarColetado;
     @Autowired RemoverProdutoDoRoteiroUseCase remover;
-    @Autowired ListaRoteiroRepository listaRoteiroRepository;
-    @Autowired ProdutoRepository produtoRepository;
+    private final ListaRoteiroDao listaRoteiroDao = BancoDeTeste.listas();
+    private final ProdutoDao produtoDao = BancoDeTeste.produtos();
 
-    @Autowired ListaRoteiroJpaRepository listaJpa;
-    @Autowired SessaoJpaRepository sessaoJpa;
 
     private UUID sessaoId;
 
@@ -71,17 +67,16 @@ class ConcorrenciaNoRoteiroIntegracaoTest {
     }
 
     @AfterEach
-    void limpar() {
-        listaJpa.findBySessaoId(sessaoId).ifPresent(listaJpa::delete);
-        sessaoJpa.deleteById(sessaoId);
+    void limpar() throws Exception {
+        BancoDeTeste.apagarSessao(sessaoId);
     }
 
     private void adicionarAoRoteiro(String sku) throws Exception {
-        adicionar.executar(sessaoId, produtoRepository.buscarPorSku(sku).orElseThrow().getId());
+        adicionar.executar(sessaoId, produtoDao.buscarPorSku(sku).orElseThrow().getId());
     }
 
-    private ListaRoteiro carregar() {
-        return listaRoteiroRepository.buscarPorSessao(sessaoId).orElseThrow();
+    private ListaRoteiro carregar() throws Exception {
+        return listaRoteiroDao.buscarPorSessao(sessaoId).orElseThrow();
     }
 
     private List<ItemRoteiro> itensEmOrdemEstavel(ListaRoteiro lista) {
@@ -156,7 +151,7 @@ class ConcorrenciaNoRoteiroIntegracaoTest {
     @DisplayName("item adicionado no totem sobrevive a uma marcacao vinda do celular")
     void itemAdicionadoNaoDesaparece() throws Exception {
         UUID paraColetar = itensEmOrdemEstavel(carregar()).getFirst().getId();
-        UUID furadeira = produtoRepository.buscarPorSku("SKU-FER-001").orElseThrow().getId();
+        UUID furadeira = produtoDao.buscarPorSku("SKU-FER-001").orElseThrow().getId();
 
         emParalelo(
                 () -> adicionar.executar(sessaoId, furadeira),

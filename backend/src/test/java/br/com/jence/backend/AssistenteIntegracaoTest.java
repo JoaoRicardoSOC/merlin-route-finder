@@ -1,13 +1,10 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.dao.ChatMensagemDao;
 import br.com.jence.backend.dto.ChatMensagemResponse;
 import br.com.jence.backend.service.ConversarComAssistenteUseCase;
 import br.com.jence.backend.service.InicializarSessaoUseCase;
 import br.com.jence.backend.model.ChatMensagem;
-import br.com.jence.backend.domain.repository.ChatMensagemRepository;
-import br.com.jence.backend.infrastructure.database.repository.ChatMensagemJpaRepository;
-import br.com.jence.backend.infrastructure.database.repository.ListaRoteiroJpaRepository;
-import br.com.jence.backend.infrastructure.database.repository.SessaoJpaRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -31,10 +28,7 @@ class AssistenteIntegracaoTest {
 
     @Autowired InicializarSessaoUseCase inicializar;
     @Autowired ConversarComAssistenteUseCase conversar;
-    @Autowired ChatMensagemRepository chatRepository;
-    @Autowired ChatMensagemJpaRepository chatJpa;
-    @Autowired ListaRoteiroJpaRepository listaJpa;
-    @Autowired SessaoJpaRepository sessaoJpa;
+    private final ChatMensagemDao chatMensagemDao = BancoDeTeste.mensagens();
 
     private UUID sessaoId;
 
@@ -49,10 +43,8 @@ class AssistenteIntegracaoTest {
     }
 
     @AfterEach
-    void limpar() {
-        chatJpa.findBySessaoIdOrderByEnviadoEmAsc(sessaoId).forEach(chatJpa::delete);
-        listaJpa.findBySessaoId(sessaoId).ifPresent(listaJpa::delete);
-        sessaoJpa.deleteById(sessaoId);
+    void limpar() throws Exception {
+        BancoDeTeste.apagarSessao(sessaoId);
     }
 
     @Test
@@ -89,7 +81,7 @@ class AssistenteIntegracaoTest {
         Thread.sleep(5_000);
         conversar.executar(sessaoId, "E para a parte hidraulica?");
 
-        List<ChatMensagem> historico = chatRepository.buscarHistorico(sessaoId);
+        List<ChatMensagem> historico = chatMensagemDao.buscarHistorico(sessaoId);
 
         System.out.println(">>> historico com " + historico.size() + " mensagens:");
         historico.forEach(m -> System.out.printf("    [%s] %s%n",

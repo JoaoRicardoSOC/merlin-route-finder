@@ -1,11 +1,11 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.service.TratarRupturaEstoqueUseCase;
 import br.com.jence.backend.model.AtributoProduto;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.ValorDeAtributo;
 import br.com.jence.backend.model.AfinidadeDeProduto;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 class PreFiltragemEspacialIntegracaoTest {
 
-    @Autowired ProdutoRepository produtoRepository;
+    private final ProdutoDao produtoDao = BancoDeTeste.produtos();
 
     /** Os pares plantados na massa: produto em falta e o substituto que faz sentido. */
     private static final Map<String, String> PARES = Map.of(
@@ -41,29 +41,29 @@ class PreFiltragemEspacialIntegracaoTest {
             "SKU-FER-002", "SKU-FER-003",   // trena 5m        -> trena 7,5m
             "SKU-MAT-001", "SKU-MAT-003");  // argamassa AC-II -> argamassa AC-III
 
-    private Produto porSku(String sku) {
-        return produtoRepository.buscarPorSku(sku).orElseThrow();
+    private Produto porSku(String sku) throws Exception {
+        return produtoDao.buscarPorSku(sku).orElseThrow();
     }
 
-    private Produto lixaEmFalta() {
+    private Produto lixaEmFalta() throws Exception {
         return porSku("SKU-TIN-003");
     }
 
-    private List<Produto> candidatosPara(Produto emFalta, int limite) {
-        return produtoRepository.buscarDisponiveisProximosDe(
+    private List<Produto> candidatosPara(Produto emFalta, int limite) throws Exception {
+        return produtoDao.buscarDisponiveisProximosDe(
                 emFalta.getPontoMapa(),
                 emFalta.getId(),
-                AfinidadeDeProduto.de(produtoRepository.buscarAtributosDe(emFalta.getId())),
+                AfinidadeDeProduto.de(produtoDao.buscarAtributosDe(emFalta.getId())),
                 TratarRupturaEstoqueUseCase.RAIO_DE_BUSCA,
                 limite);
     }
 
-    private List<Produto> candidatos() {
+    private List<Produto> candidatos() throws Exception {
         return candidatosPara(lixaEmFalta(), TratarRupturaEstoqueUseCase.LIMITE_DE_CANDIDATOS);
     }
 
-    private String tipoDe(Produto produto) {
-        return produtoRepository.buscarAtributosDe(produto.getId()).stream()
+    private String tipoDe(Produto produto) throws Exception {
+        return produtoDao.buscarAtributosDe(produto.getId()).stream()
                 .filter(atributo -> atributo.atributo() == AtributoProduto.TIPO)
                 .map(ValorDeAtributo::valor)
                 .findFirst()
@@ -74,15 +74,17 @@ class PreFiltragemEspacialIntegracaoTest {
 
     @Test
     @DisplayName("devolve vizinhos disponiveis, sem o proprio produto em falta")
-    void devolveVizinhosDisponiveis() {
+    void devolveVizinhosDisponiveis() throws Exception {
         Produto emFalta = lixaEmFalta();
         List<Produto> proximos = candidatos();
 
         System.out.println(">>> em falta: " + emFalta.getNome()
                 + " (" + emFalta.getPontoMapa().getCorredor() + ")");
-        proximos.forEach(p -> System.out.printf("    %5.1f  %-22s %-40s %s%n",
-                emFalta.getPontoMapa().calcularDistanciaPara(p.getPontoMapa()),
-                tipoDe(p), p.getNome(), p.getPontoMapa().getCorredor()));
+        for (Produto p : proximos) {
+            System.out.printf("    %5.1f  %-22s %-40s %s%n",
+                    emFalta.getPontoMapa().calcularDistanciaPara(p.getPontoMapa()),
+                    tipoDe(p), p.getNome(), p.getPontoMapa().getCorredor());
+        }
 
         assertFalse(proximos.isEmpty());
 
@@ -95,7 +97,7 @@ class PreFiltragemEspacialIntegracaoTest {
 
     @Test
     @DisplayName("o raio exclui o outro extremo da loja")
-    void oRaioExcluiOOutroExtremoDaLoja() {
+    void oRaioExcluiOOutroExtremoDaLoja() throws Exception {
         Produto emFalta = lixaEmFalta();
 
         List<Produto> candidatos = candidatos();
@@ -112,13 +114,13 @@ class PreFiltragemEspacialIntegracaoTest {
 
     @Test
     @DisplayName("respeita o teto de candidatos")
-    void respeitaOTetoDeCandidatos() {
+    void respeitaOTetoDeCandidatos() throws Exception {
         assertEquals(2, candidatosPara(lixaEmFalta(), 2).size());
     }
 
     @Test
     @DisplayName("o teto precisa alcancar outro corredor, e nao so a propria secao")
-    void oTetoAlcancaOutroCorredor() {
+    void oTetoAlcancaOutroCorredor() throws Exception {
         /*
          * A regressao que o catalogo maior revelou, e a razao de o teto ter subido para 20.
          *
@@ -142,7 +144,7 @@ class PreFiltragemEspacialIntegracaoTest {
 
     @Test
     @DisplayName("o primeiro candidato e o substituto plantado, em todos os pares da massa")
-    void oPrimeiroCandidatoEOSubstitutoCerto() {
+    void oPrimeiroCandidatoEOSubstitutoCerto() throws Exception {
         /*
          * ESTE e o teste que importa, e ele nasceu de um defeito real.
          *
@@ -155,7 +157,9 @@ class PreFiltragemEspacialIntegracaoTest {
          * errados. Como todos os produtos de uma secao empatam em distancia, o desempate caia
          * no nome, e "o mais proximo" virou "o primeiro do corredor em ordem alfabetica".
          */
-        PARES.forEach((skuEmFalta, skuEsperado) -> {
+        for (Map.Entry<String, String> par : PARES.entrySet()) {
+            String skuEmFalta = par.getKey();
+            String skuEsperado = par.getValue();
             Produto emFalta = porSku(skuEmFalta);
             Produto primeiro = candidatosPara(
                     emFalta, TratarRupturaEstoqueUseCase.LIMITE_DE_CANDIDATOS).getFirst();
@@ -166,12 +170,12 @@ class PreFiltragemEspacialIntegracaoTest {
             assertEquals(skuEsperado, primeiro.getSku(),
                     String.format("substituto oferecido para '%s' quando a IA esta fora do ar",
                             emFalta.getNome()));
-        });
+        }
     }
 
     @Test
     @DisplayName("candidatos do mesmo tipo vem antes dos demais")
-    void mesmoTipoPrimeiro() {
+    void mesmoTipoPrimeiro() throws Exception {
         Produto emFalta = lixaEmFalta();
         String tipoEmFalta = tipoDe(emFalta);
 
@@ -195,7 +199,7 @@ class PreFiltragemEspacialIntegracaoTest {
 
     @Test
     @DisplayName("sem afinidade conhecida, a ordem cai de volta para a distancia")
-    void semAfinidadeOrdenaPorDistancia() {
+    void semAfinidadeOrdenaPorDistancia() throws Exception {
         /*
          * Um produto sem TIPO nem MARCA nao deve quebrar a consulta: os dois CASE devolvem 1
          * para todo mundo e a ordenacao volta a ser a de antes. E o que garante que a massa
@@ -203,7 +207,7 @@ class PreFiltragemEspacialIntegracaoTest {
          */
         Produto emFalta = lixaEmFalta();
 
-        List<Produto> semAfinidade = produtoRepository.buscarDisponiveisProximosDe(
+        List<Produto> semAfinidade = produtoDao.buscarDisponiveisProximosDe(
                 emFalta.getPontoMapa(), emFalta.getId(), AfinidadeDeProduto.nenhuma(),
                 TratarRupturaEstoqueUseCase.RAIO_DE_BUSCA,
                 TratarRupturaEstoqueUseCase.LIMITE_DE_CANDIDATOS);

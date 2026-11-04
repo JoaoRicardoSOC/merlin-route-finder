@@ -1,13 +1,11 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.service.InicializarSessaoUseCase;
 import br.com.jence.backend.service.MarcarItemColetadoUseCase;
 import br.com.jence.backend.model.ItemRoteiro;
-import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
-import br.com.jence.backend.infrastructure.database.repository.ListaRoteiroJpaRepository;
-import br.com.jence.backend.infrastructure.database.repository.SessaoJpaRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -52,11 +50,9 @@ class EscritaObsoletaIntegracaoTest {
     @Autowired InicializarSessaoUseCase inicializar;
     @Autowired AdicionarProdutoAoRoteiroUseCase adicionar;
     @Autowired MarcarItemColetadoUseCase marcarColetado;
-    @Autowired ListaRoteiroRepository listaRoteiroRepository;
-    @Autowired ProdutoRepository produtoRepository;
+    private final ListaRoteiroDao listaRoteiroDao = BancoDeTeste.listas();
+    private final ProdutoDao produtoDao = BancoDeTeste.produtos();
 
-    @Autowired ListaRoteiroJpaRepository listaJpa;
-    @Autowired SessaoJpaRepository sessaoJpa;
 
     private UUID sessaoId;
 
@@ -69,22 +65,21 @@ class EscritaObsoletaIntegracaoTest {
     }
 
     @AfterEach
-    void limpar() {
-        listaJpa.findBySessaoId(sessaoId).ifPresent(listaJpa::delete);
-        sessaoJpa.deleteById(sessaoId);
+    void limpar() throws Exception {
+        BancoDeTeste.apagarSessao(sessaoId);
     }
 
     private void adicionarAoRoteiro(String sku) throws Exception {
-        adicionar.executar(sessaoId, produtoRepository.buscarPorSku(sku).orElseThrow().getId());
+        adicionar.executar(sessaoId, produtoDao.buscarPorSku(sku).orElseThrow().getId());
     }
 
-    private List<ItemRoteiro> itens() {
-        return listaRoteiroRepository.buscarPorSessao(sessaoId).orElseThrow().getItens().stream()
+    private List<ItemRoteiro> itens() throws Exception {
+        return listaRoteiroDao.buscarPorSessao(sessaoId).orElseThrow().getItens().stream()
                 .sorted(Comparator.comparing(i -> i.getProduto().getSku()))
                 .toList();
     }
 
-    private void imprimir(String titulo) {
+    private void imprimir(String titulo) throws Exception {
         System.out.println(">>> " + titulo);
         itens().forEach(i -> System.out.printf("    %-12s coletado=%s%n",
                 i.getProduto().getSku(), i.isColetado()));
@@ -155,7 +150,7 @@ class EscritaObsoletaIntegracaoTest {
     @DisplayName("uma marcacao que demora a confirmar nao apaga item adicionado nesse intervalo")
     void marcacaoLentaNaoApagaItemNovo() throws Exception {
         UUID lento = itens().getFirst().getId();
-        UUID furadeira = produtoRepository.buscarPorSku("SKU-FER-001").orElseThrow().getId();
+        UUID furadeira = produtoDao.buscarPorSku("SKU-FER-001").orElseThrow().getId();
 
         try (Transacao deFora = Transacao.iniciar()) {
             marcarColetado.executar(lento);

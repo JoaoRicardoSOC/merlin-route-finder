@@ -1,7 +1,8 @@
 package br.com.jence.backend.seed;
 
+import br.com.jence.backend.BancoDeTeste;
+import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.model.Produto;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -30,21 +31,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 class ApresentacaoSincronizadaIntegracaoTest {
 
-    @Autowired ProdutoRepository produtoRepository;
+    private final ProdutoDao produtoDao = BancoDeTeste.produtos();
     @Autowired CarregadorDadosIniciais carregador;
 
-    private List<Produto> todos() {
-        return produtoRepository.buscarPaginado(0, 1000).conteudo();
+    private List<Produto> todos() throws Exception {
+        return produtoDao.buscarPaginado(0, 1000).conteudo();
     }
 
-    private Produto porSku(String sku) {
-        return produtoRepository.buscarPorSku(sku).orElseThrow(
+    private Produto porSku(String sku) throws Exception {
+        return produtoDao.buscarPorSku(sku).orElseThrow(
                 () -> new AssertionError("produto ausente na massa: " + sku));
     }
 
     @Test
     @DisplayName("nome e descricao gravados sao os que a massa declara, em todos os produtos")
-    void oGravadoBateComAMassa() {
+    void oGravadoBateComAMassa() throws Exception {
         /*
          * Este teste existe porque a regra mudou.
          *
@@ -72,7 +73,7 @@ class ApresentacaoSincronizadaIntegracaoTest {
     void aCargaDesfazUmaAlteracaoFeitaAMao() throws Exception {
         Produto antes = porSku("SKU-DEC-001");
 
-        produtoRepository.salvar(antes.comApresentacao(
+        produtoDao.salvar(antes.comApresentacao(
                 "Nome trocado a mao", "Descricao trocada a mao", null));
         assertEquals("Nome trocado a mao", porSku("SKU-DEC-001").getNome());
 
@@ -96,7 +97,7 @@ class ApresentacaoSincronizadaIntegracaoTest {
         Produto antes = porSku("SKU-TIN-003");
         int declarado = antes.getSaldoEstoque();
 
-        produtoRepository.salvar(antes.comSaldoEstoque(declarado + 7));
+        produtoDao.salvar(antes.comSaldoEstoque(declarado + 7));
         assertEquals(declarado + 7, porSku("SKU-TIN-003").getSaldoEstoque());
 
         carregador.run(null);
@@ -107,7 +108,7 @@ class ApresentacaoSincronizadaIntegracaoTest {
 
     @Test
     @DisplayName("nome e imagem cabem nas colunas")
-    void cabemNasColunas() {
+    void cabemNasColunas() throws Exception {
         // Um estouro aqui nao falha em teste: falha na carga, e so no banco de quem rodar.
         for (Produto produto : todos()) {
             assertTrue(produto.getNome().length() <= 200, "nome de " + produto.getSku());
@@ -120,7 +121,7 @@ class ApresentacaoSincronizadaIntegracaoTest {
 
     @Test
     @DisplayName("as fotos coletadas chegaram aos produtos")
-    void asFotosColetadasChegaram() {
+    void asFotosColetadasChegaram() throws Exception {
         List<Produto> comFoto = todos().stream()
                 .filter(produto -> produto.getImagemUrl() != null)
                 .toList();

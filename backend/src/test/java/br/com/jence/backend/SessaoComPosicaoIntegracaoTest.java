@@ -1,5 +1,7 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.dto.SessaoResponse;
 import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.service.ConsultarSessaoUseCase;
@@ -12,10 +14,6 @@ import br.com.jence.backend.model.ItemRoteiro;
 import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
-import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
-import br.com.jence.backend.infrastructure.database.repository.ListaRoteiroJpaRepository;
-import br.com.jence.backend.infrastructure.database.repository.SessaoJpaRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -50,20 +48,17 @@ class SessaoComPosicaoIntegracaoTest {
     @Autowired RecentrarSessaoUseCase recentrar;
     @Autowired DesmarcarItemColetadoUseCase desmarcar;
     @Autowired ConcluirRotaUseCase concluir;
-    @Autowired ProdutoRepository produtoRepository;
-    @Autowired ListaRoteiroRepository listaRoteiroRepository;
+    private final ProdutoDao produtoDao = BancoDeTeste.produtos();
+    private final ListaRoteiroDao listaRoteiroDao = BancoDeTeste.listas();
 
-    @Autowired ListaRoteiroJpaRepository listaJpa;
-    @Autowired SessaoJpaRepository sessaoJpa;
 
     private final List<UUID> criadas = new ArrayList<>();
 
     @AfterEach
-    void limpar() {
-        criadas.forEach(id -> {
-            listaJpa.findBySessaoId(id).ifPresent(listaJpa::delete);
-            sessaoJpa.deleteById(id);
-        });
+    void limpar() throws Exception {
+        for (UUID id : criadas) {
+            BancoDeTeste.apagarSessao(id);
+        }
         criadas.clear();
     }
 
@@ -74,7 +69,7 @@ class SessaoComPosicaoIntegracaoTest {
     }
 
     private UUID coletar(UUID sessaoId, String sku) throws Exception {
-        UUID produtoId = produtoRepository.buscarPorSku(sku).orElseThrow().getId();
+        UUID produtoId = produtoDao.buscarPorSku(sku).orElseThrow().getId();
         UUID itemId = adicionar.executar(sessaoId, produtoId).id();
         marcarColetado.executar(itemId);
         return itemId;
@@ -112,9 +107,9 @@ class SessaoComPosicaoIntegracaoTest {
         assertNull(sessao.posicaoAtual());
         assertNotNull(sessao.id());
 
-        UUID produtoId = produtoRepository.buscarPorSku("SKU-TIN-001").orElseThrow().getId();
+        UUID produtoId = produtoDao.buscarPorSku("SKU-TIN-001").orElseThrow().getId();
         assertNotNull(adicionar.executar(sessao.id(), produtoId));
-        assertTrue(listaRoteiroRepository.buscarPorSessao(sessao.id()).isPresent());
+        assertTrue(listaRoteiroDao.buscarPorSessao(sessao.id()).isPresent());
     }
 
     @Test
@@ -174,11 +169,11 @@ class SessaoComPosicaoIntegracaoTest {
         SessaoResponse sessao = iniciarEm("ENT-01");
         coletar(sessao.id(), "SKU-TIN-001");
         UUID naoColetado = adicionar.executar(sessao.id(),
-                produtoRepository.buscarPorSku("SKU-JAR-001").orElseThrow().getId()).id();
+                produtoDao.buscarPorSku("SKU-JAR-001").orElseThrow().getId()).id();
 
         recentrar.executar(sessao.id(), "CEN-03");
 
-        List<ItemRoteiro> itens = listaRoteiroRepository.buscarPorSessao(sessao.id())
+        List<ItemRoteiro> itens = listaRoteiroDao.buscarPorSessao(sessao.id())
                 .orElseThrow().getItens();
 
         assertEquals(2, itens.size());
@@ -255,7 +250,7 @@ class SessaoComPosicaoIntegracaoTest {
 
         assertFalse(desmarcar.executar(tinta).coletado());
 
-        List<ItemRoteiro> itens = listaRoteiroRepository.buscarPorSessao(sessao.id())
+        List<ItemRoteiro> itens = listaRoteiroDao.buscarPorSessao(sessao.id())
                 .orElseThrow().getItens();
         assertEquals(1, itens.size(), "o item continua na lista, apenas nao coletado");
         assertTrue(itens.stream().noneMatch(ItemRoteiro::isColetado),
