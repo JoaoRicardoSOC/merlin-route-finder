@@ -12,7 +12,6 @@ import br.com.jence.backend.domain.repository.ProdutoRepository;
 import br.com.jence.backend.infrastructure.database.repository.PontoMapaJpaRepository;
 import br.com.jence.backend.infrastructure.database.repository.ProdutoAtributoJpaRepository;
 import br.com.jence.backend.infrastructure.database.schema.RestricaoDeEnumNoBanco;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -45,7 +44,6 @@ import static java.util.Map.entry;
  * Pode ser desligado com {@code merlin.seed.enabled=false}.
  */
 @Component
-@RequiredArgsConstructor
 @Slf4j
 @ConditionalOnProperty(name = "merlin.seed.enabled", havingValue = "true", matchIfMissing = true)
 public class CarregadorDadosIniciais implements ApplicationRunner {
@@ -356,6 +354,18 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
      * componente e um singleton do Spring.
      */
     private final Map<String, Apresentacao> apresentacoes = new LinkedHashMap<>();
+
+    public CarregadorDadosIniciais(ProdutoRepository produtoRepository,
+                                   PontoMapaRepository pontoMapaRepository,
+                                   PontoMapaJpaRepository pontoMapaJpaRepository,
+                                   ProdutoAtributoJpaRepository atributoJpaRepository,
+                                   RestricaoDeEnumNoBanco restricaoDeEnum) {
+        this.produtoRepository = produtoRepository;
+        this.pontoMapaRepository = pontoMapaRepository;
+        this.pontoMapaJpaRepository = pontoMapaJpaRepository;
+        this.atributoJpaRepository = atributoJpaRepository;
+        this.restricaoDeEnum = restricaoDeEnum;
+    }
 
     @Override
     public void run(ApplicationArguments args) {
