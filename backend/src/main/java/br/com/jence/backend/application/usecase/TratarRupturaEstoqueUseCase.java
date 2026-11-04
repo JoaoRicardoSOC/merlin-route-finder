@@ -21,7 +21,6 @@ import br.com.jence.backend.domain.repository.SessaoRepository;
 import br.com.jence.backend.domain.service.AssistenteIA;
 import br.com.jence.backend.domain.service.MensagemIA;
 import br.com.jence.backend.infrastructure.ia.factory.InstrucaoDeRuptura;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,7 +42,6 @@ import java.util.stream.Collectors;
  * eleger, entre esses candidatos e somente eles, o que cumpre a mesma funcao.
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class TratarRupturaEstoqueUseCase {
 
@@ -75,6 +73,20 @@ public class TratarRupturaEstoqueUseCase {
     private final ProdutoRepository produtoRepository;
     private final RegistroRupturaRepository registroRupturaRepository;
     private final AssistenteIA assistenteIA;
+
+    public TratarRupturaEstoqueUseCase(ItemRoteiroRepository itemRoteiroRepository,
+                                       ListaRoteiroRepository listaRoteiroRepository,
+                                       SessaoRepository sessaoRepository,
+                                       ProdutoRepository produtoRepository,
+                                       RegistroRupturaRepository registroRupturaRepository,
+                                       AssistenteIA assistenteIA) {
+        this.itemRoteiroRepository = itemRoteiroRepository;
+        this.listaRoteiroRepository = listaRoteiroRepository;
+        this.sessaoRepository = sessaoRepository;
+        this.produtoRepository = produtoRepository;
+        this.registroRupturaRepository = registroRupturaRepository;
+        this.assistenteIA = assistenteIA;
+    }
 
     @Transactional
     public RupturaEstoqueResponse executar(UUID itemId) {
