@@ -70,8 +70,8 @@ Objetivo: o frontend publicado chamar a API no mesmo domínio, para o backend n�
 
 ### Fase 2 — Asserções só com JUnit
 
-- [ ] **2.1** Trocar AssertJ (`assertThat`) pelos métodos de `org.junit.jupiter.api.Assertions`, **um commit por classe de teste**. Começar pelos testes de domínio, que não usam Spring.
-- [ ] **2.2** Confirmar que nenhum arquivo importa `org.assertj`. A dependência sai na fase 10, porque vem junto com o starter de testes do Spring.
+- [x] **2.1** Trocar AssertJ (`assertThat`) pelos métodos de `org.junit.jupiter.api.Assertions`, **um commit por classe de teste**. Começar pelos testes de domínio, que não usam Spring.
+- [x] **2.2** Confirmar que nenhum arquivo importa `org.assertj`. A dependência sai na fase 10, porque vem junto com o starter de testes do Spring.
 
 ### Fase 3 — Lombok fora
 
