@@ -14,7 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Conversa de verdade com a API do Gemini. Exige GEMINI_API_KEY. */
 @Tag("integracao")
@@ -27,7 +29,7 @@ class GeminiIntegracaoTest {
 
     @Test
     void respondeEmPortugues() {
-        assertThat(cliente.estaConfigurado()).isTrue();
+        assertTrue(cliente.estaConfigurado());
 
         String resposta = assistente.conversar(
                 "Voce atende clientes de uma loja de material de construcao. Responda em portugues, "
@@ -35,7 +37,7 @@ class GeminiIntegracaoTest {
                 List.of(MensagemIA.doCliente("Para que serve uma lixa grao 120?")));
 
         System.out.println(">>> resposta do Gemini: " + resposta);
-        assertThat(resposta).isNotBlank();
+        assertFalse(resposta == null || resposta.isBlank());
     }
 
     /** A prova de que a fundacao do tratamento de ruptura funciona. */
@@ -67,13 +69,11 @@ class GeminiIntegracaoTest {
 
         System.out.println(">>> resposta final: " + resposta);
 
-        assertThat(argumentos.get())
-                .as("o modelo precisa ter chamado a ferramenta")
-                .isNotNull()
-                .containsKey("corredor");
+        assertNotNull(argumentos.get(), "o modelo precisa ter chamado a ferramenta");
+        assertTrue(argumentos.get().containsKey("corredor"),
+                "o modelo precisa ter chamado a ferramenta");
 
-        assertThat(resposta)
-                .as("a sugestao tem que vir dos produtos que nos fornecemos, nao da imaginacao do modelo")
-                .containsIgnoringCase("lixa");
+        assertTrue(resposta.toLowerCase().contains("lixa"),
+                "a sugestao tem que vir dos produtos que nos fornecemos, nao da imaginacao do modelo");
     }
 }
