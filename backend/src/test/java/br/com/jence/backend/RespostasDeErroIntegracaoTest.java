@@ -19,10 +19,14 @@ import org.springframework.web.client.RestClient;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Todo erro da API, visto como o frontend vai ve-lo.
@@ -92,42 +96,42 @@ class RespostasDeErroIntegracaoTest {
      */
     private JsonNode erroBemFormado(ResponseEntity<String> resposta, int statusEsperado,
                                     String caminhoChamado) {
-        assertThat(resposta.getStatusCode().value())
-                .as("codigo HTTP de %s", caminhoChamado)
-                .isEqualTo(statusEsperado);
+        assertEquals(statusEsperado, resposta.getStatusCode().value(),
+                "codigo HTTP de " + caminhoChamado);
 
-        assertThat(resposta.getHeaders().getContentType())
-                .as("erro precisa ser JSON, senao o frontend nem consegue ler a mensagem")
-                .isNotNull()
-                .satisfies(tipo -> assertThat(tipo.includes(MediaType.APPLICATION_JSON)).isTrue());
+        MediaType tipo = resposta.getHeaders().getContentType();
+        assertNotNull(tipo,
+                "erro precisa ser JSON, senao o frontend nem consegue ler a mensagem");
+        assertTrue(tipo.includes(MediaType.APPLICATION_JSON),
+                "erro precisa ser JSON, senao o frontend nem consegue ler a mensagem");
 
         JsonNode corpo = corpoDe(resposta);
 
-        assertThat(corpo.has("timestamp")).as("campo timestamp em %s", caminhoChamado).isTrue();
-        assertThat(corpo.has("status")).as("campo status em %s", caminhoChamado).isTrue();
-        assertThat(corpo.has("error")).as("campo error em %s", caminhoChamado).isTrue();
-        assertThat(corpo.has("message")).as("campo message em %s", caminhoChamado).isTrue();
-        assertThat(corpo.has("path")).as("campo path em %s", caminhoChamado).isTrue();
+        assertTrue(corpo.has("timestamp"), "campo timestamp em " + caminhoChamado);
+        assertTrue(corpo.has("status"), "campo status em " + caminhoChamado);
+        assertTrue(corpo.has("error"), "campo error em " + caminhoChamado);
+        assertTrue(corpo.has("message"), "campo message em " + caminhoChamado);
+        assertTrue(corpo.has("path"), "campo path em " + caminhoChamado);
 
-        assertThat(corpo.get("status").asInt())
-                .as("o status do corpo tem que bater com o codigo HTTP em %s", caminhoChamado)
-                .isEqualTo(statusEsperado);
+        assertEquals(statusEsperado, corpo.get("status").asInt(),
+                "o status do corpo tem que bater com o codigo HTTP em " + caminhoChamado);
 
-        assertThat(corpo.get("error").asText()).as("error em %s", caminhoChamado).isNotBlank();
-        assertThat(corpo.get("message").asText()).as("message em %s", caminhoChamado).isNotBlank();
+        String error = corpo.get("error").asText();
+        assertFalse(error == null || error.isBlank(), "error em " + caminhoChamado);
+        String message = corpo.get("message").asText();
+        assertFalse(message == null || message.isBlank(), "message em " + caminhoChamado);
 
-        assertThat(corpo.get("path").asText())
-                .as("o path precisa dizer qual chamada falhou, ou o log do frontend fica cego")
-                .isEqualTo(caminhoChamado);
+        assertEquals(caminhoChamado, corpo.get("path").asText(),
+                "o path precisa dizer qual chamada falhou, ou o log do frontend fica cego");
 
         String tudo = resposta.getBody();
-        assertThat(tudo)
-                .as("erro nao pode vazar detalhe interno em %s", caminhoChamado)
-                .doesNotContain("br.com.jence")
-                .doesNotContain("org.springframework")
-                .doesNotContain("java.lang")
-                .doesNotContain("Exception")
-                .doesNotContain("at ");
+        String semVazamento = "erro nao pode vazar detalhe interno em " + caminhoChamado;
+        assertNotNull(tudo, semVazamento);
+        assertFalse(tudo.contains("br.com.jence"), semVazamento);
+        assertFalse(tudo.contains("org.springframework"), semVazamento);
+        assertFalse(tudo.contains("java.lang"), semVazamento);
+        assertFalse(tudo.contains("Exception"), semVazamento);
+        assertFalse(tudo.contains("at "), semVazamento);
 
         return corpo;
     }
@@ -155,10 +159,10 @@ class RespostasDeErroIntegracaoTest {
 
         JsonNode erro = erroBemFormado(chamar(HttpMethod.POST, caminho, "{}"), 400, caminho);
 
-        assertThat(erro.get("validationErrors").isArray()).isTrue();
-        assertThat(erro.get("validationErrors")).isNotEmpty();
-        assertThat(erro.get("validationErrors").get(0).has("field")).isTrue();
-        assertThat(erro.get("validationErrors").get(0).has("message")).isTrue();
+        assertTrue(erro.get("validationErrors").isArray());
+        assertFalse(erro.get("validationErrors").isEmpty());
+        assertTrue(erro.get("validationErrors").get(0).has("field"));
+        assertTrue(erro.get("validationErrors").get(0).has("message"));
     }
 
     @Test
@@ -170,9 +174,8 @@ class RespostasDeErroIntegracaoTest {
         JsonNode erro = erroBemFormado(
                 chamar(HttpMethod.POST, caminho, "{\"produtoId\": "), 400, caminho);
 
-        assertThat(erro.get("validationErrors") == null || erro.get("validationErrors").isNull())
-                .as("lista de campos so faz sentido quando o corpo pode ser lido")
-                .isTrue();
+        assertTrue(erro.get("validationErrors") == null || erro.get("validationErrors").isNull(),
+                "lista de campos so faz sentido quando o corpo pode ser lido");
     }
 
     @Test
@@ -181,9 +184,8 @@ class RespostasDeErroIntegracaoTest {
         String caminho = "/api/v1/produtos/nao-e-um-uuid";
         JsonNode erro = erroBemFormado(chamar(HttpMethod.GET, caminho, null), 400, caminho);
 
-        assertThat(erro.get("message").asText())
-                .as("a mensagem precisa dizer qual valor foi recusado")
-                .contains("nao-e-um-uuid");
+        assertTrue(erro.get("message").asText().contains("nao-e-um-uuid"),
+                "a mensagem precisa dizer qual valor foi recusado");
     }
 
     @Test
@@ -209,16 +211,14 @@ class RespostasDeErroIntegracaoTest {
                 .retrieve().onStatus(status -> true, (req, res) -> { })
                 .toEntity(String.class);
 
-        assertThat(resposta.getStatusCode().value())
-                .as("parametro mal codificado e erro do cliente, nao do servidor")
-                .isEqualTo(400);
+        assertEquals(400, resposta.getStatusCode().value(),
+                "parametro mal codificado e erro do cliente, nao do servidor");
 
         JsonNode erro = corpoDe(resposta);
-        assertThat(erro.get("status").asInt()).isEqualTo(400);
-        assertThat(erro.get("path").asText()).isEqualTo("/api/v1/produtos");
-        assertThat(erro.get("message").asText())
-                .as("a mensagem precisa apontar a codificacao, que e onde esta o problema")
-                .containsIgnoringCase("UTF-8");
+        assertEquals(400, erro.get("status").asInt());
+        assertEquals("/api/v1/produtos", erro.get("path").asText());
+        assertTrue(erro.get("message").asText().toLowerCase().contains("utf-8"),
+                "a mensagem precisa apontar a codificacao, que e onde esta o problema");
     }
 
     // ---------------------------------------------------------------- 404
@@ -278,9 +278,8 @@ class RespostasDeErroIntegracaoTest {
         JsonNode erro = erroBemFormado(chamar(HttpMethod.POST, caminho,
                 "{\"produtoId\":\"" + algumProdutoDe("Tintas") + "\"}"), 409, caminho);
 
-        assertThat(erro.get("message").asText())
-                .as("a mensagem precisa deixar claro que o problema e o estado, nao o pedido")
-                .containsIgnoringCase("ativa");
+        assertTrue(erro.get("message").asText().toLowerCase().contains("ativa"),
+                "a mensagem precisa deixar claro que o problema e o estado, nao o pedido");
     }
 
     @Test
@@ -333,13 +332,12 @@ class RespostasDeErroIntegracaoTest {
             String caminho = "/api/v1/roteiro/itens/" + itemEmFalta + "/ruptura";
             JsonNode erro = erroBemFormado(chamar(HttpMethod.POST, caminho, null), 422, caminho);
 
-            assertThat(erro.get("message").asText())
-                    .as("o cliente precisa entender que nao ha alternativa, nao que o sistema falhou")
-                    .isNotBlank();
+            String mensagem = erro.get("message").asText();
+            assertFalse(mensagem == null || mensagem.isBlank(),
+                    "o cliente precisa entender que nao ha alternativa, nao que o sistema falhou");
 
-            assertThat(rupturaJpa.findBySessaoIdOrderByRegistradoEmDesc(sessao))
-                    .as("sem substituto e o relato mais grave: nao pode se perder")
-                    .isNotEmpty();
+            assertFalse(rupturaJpa.findBySessaoIdOrderByRegistradoEmDesc(sessao).isEmpty(),
+                    "sem substituto e o relato mais grave: nao pode se perder");
 
         } finally {
             String primeiro = decoracao.get(0).get("id").asText();
@@ -372,10 +370,12 @@ class RespostasDeErroIntegracaoTest {
             List<String> campos = new ArrayList<>();
             erro.fieldNames().forEachRemaining(campos::add);
 
-            assertThat(campos)
-                    .as("campos de %s", erro.get("path").asText())
-                    .containsExactlyInAnyOrder(
-                            "timestamp", "status", "error", "message", "path", "validationErrors");
+            List<String> esperados = new ArrayList<>(List.of(
+                    "timestamp", "status", "error", "message", "path", "validationErrors"));
+            List<String> obtidos = new ArrayList<>(campos);
+            Collections.sort(esperados);
+            Collections.sort(obtidos);
+            assertEquals(esperados, obtidos, "campos de " + erro.get("path").asText());
         }
     }
 }
