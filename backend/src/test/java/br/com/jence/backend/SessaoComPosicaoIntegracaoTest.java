@@ -27,8 +27,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * A sessao sabendo onde o cliente esta, do codigo da placa ate a posicao devolvida.
@@ -83,17 +87,17 @@ class SessaoComPosicaoIntegracaoTest {
     void nasceComPosicao() {
         SessaoResponse sessao = iniciarEm("ENT-01");
 
-        assertThat(sessao.posicaoAtual()).isNotNull();
-        assertThat(sessao.posicaoAtual().codigoCurto()).isEqualTo("ENT01");
-        assertThat(sessao.posicaoAtual().tipo()).isEqualTo(TipoPonto.QR_CODE);
+        assertNotNull(sessao.posicaoAtual());
+        assertEquals("ENT01", sessao.posicaoAtual().codigoCurto());
+        assertEquals(TipoPonto.QR_CODE, sessao.posicaoAtual().tipo());
     }
 
     @Test
     @DisplayName("o plano B chega pelo mesmo caminho: codigo digitado em qualquer grafia")
     void codigoDigitado() {
         // O cliente que nao conseguiu escanear digita o que le na placa, do jeito que le.
-        assertThat(iniciarEm("ent 01").posicaoAtual().codigoCurto()).isEqualTo("ENT01");
-        assertThat(iniciarEm("Tin-02").posicaoAtual().codigoCurto()).isEqualTo("TIN02");
+        assertEquals("ENT01", iniciarEm("ent 01").posicaoAtual().codigoCurto());
+        assertEquals("TIN02", iniciarEm("Tin-02").posicaoAtual().codigoCurto());
     }
 
     @Test
@@ -105,18 +109,18 @@ class SessaoComPosicaoIntegracaoTest {
          */
         SessaoResponse sessao = iniciarEm("ZZZ-99");
 
-        assertThat(sessao.posicaoAtual()).isNull();
-        assertThat(sessao.id()).isNotNull();
+        assertNull(sessao.posicaoAtual());
+        assertNotNull(sessao.id());
 
         UUID produtoId = produtoRepository.buscarPorSku("SKU-TIN-001").orElseThrow().getId();
-        assertThat(adicionar.executar(sessao.id(), produtoId)).isNotNull();
-        assertThat(listaRoteiroRepository.buscarPorSessao(sessao.id())).isPresent();
+        assertNotNull(adicionar.executar(sessao.id(), produtoId));
+        assertTrue(listaRoteiroRepository.buscarPorSessao(sessao.id()).isPresent());
     }
 
     @Test
     @DisplayName("sem codigo algum a sessao tambem nasce, so que sem posicao")
     void semCodigo() {
-        assertThat(iniciarEm(null).posicaoAtual()).isNull();
+        assertNull(iniciarEm(null).posicaoAtual());
     }
 
     // ---------------------------------------------------------------- a posicao acompanha a coleta
@@ -127,9 +131,8 @@ class SessaoComPosicaoIntegracaoTest {
         SessaoResponse sessao = iniciarEm("ENT-01");
         coletar(sessao.id(), "SKU-TIN-001");
 
-        assertThat(consultar.executar(sessao.id()).posicaoAtual().corredor())
-                .as("depois de pegar a tinta, o cliente esta em Tintas, nao na entrada")
-                .isEqualTo("Tintas");
+        assertEquals("Tintas", consultar.executar(sessao.id()).posicaoAtual().corredor(),
+                "depois de pegar a tinta, o cliente esta em Tintas, nao na entrada");
     }
 
     @Test
@@ -143,7 +146,7 @@ class SessaoComPosicaoIntegracaoTest {
         String corredor = consultar.executar(sessao.id()).posicaoAtual().corredor();
 
         System.out.println(">>> posicao apos duas coletas: " + corredor);
-        assertThat(corredor).isEqualTo("Jardim");
+        assertEquals("Jardim", corredor);
     }
 
     // ---------------------------------------------------------------- recentrar
@@ -156,10 +159,9 @@ class SessaoComPosicaoIntegracaoTest {
 
         SessaoResponse depois = recentrar.executar(sessao.id(), "CEN-03");
 
-        assertThat(depois.posicaoAtual().codigoCurto())
-                .as("quem leu uma placa agora nao esta mais na prateleira de antes")
-                .isEqualTo("CEN03");
-        assertThat(consultar.executar(sessao.id()).posicaoAtual().codigoCurto()).isEqualTo("CEN03");
+        assertEquals("CEN03", depois.posicaoAtual().codigoCurto(),
+                "quem leu uma placa agora nao esta mais na prateleira de antes");
+        assertEquals("CEN03", consultar.executar(sessao.id()).posicaoAtual().codigoCurto());
     }
 
     @Test
@@ -179,9 +181,9 @@ class SessaoComPosicaoIntegracaoTest {
         List<ItemRoteiro> itens = listaRoteiroRepository.buscarPorSessao(sessao.id())
                 .orElseThrow().getItens();
 
-        assertThat(itens).hasSize(2);
-        assertThat(itens).filteredOn(ItemRoteiro::isColetado).hasSize(1);
-        assertThat(itens).anyMatch(i -> i.getId().equals(naoColetado) && !i.isColetado());
+        assertEquals(2, itens.size());
+        assertEquals(1L, itens.stream().filter(ItemRoteiro::isColetado).count());
+        assertTrue(itens.stream().anyMatch(i -> i.getId().equals(naoColetado) && !i.isColetado()));
     }
 
     @Test
@@ -189,12 +191,11 @@ class SessaoComPosicaoIntegracaoTest {
     void placaDesconhecidaNaoZeraAPosicao() {
         SessaoResponse sessao = iniciarEm("ENT-01");
 
-        assertThatThrownBy(() -> recentrar.executar(sessao.id(), "ZZZ-99"))
-                .isInstanceOf(RecursoNaoEncontradoException.class);
+        assertThrows(RecursoNaoEncontradoException.class,
+                () -> recentrar.executar(sessao.id(), "ZZZ-99"));
 
-        assertThat(consultar.executar(sessao.id()).posicaoAtual().codigoCurto())
-                .as("errar a digitacao nao pode apagar o que o sistema ja sabia")
-                .isEqualTo("ENT01");
+        assertEquals("ENT01", consultar.executar(sessao.id()).posicaoAtual().codigoCurto(),
+                "errar a digitacao nao pode apagar o que o sistema ja sabia");
     }
 
     @Test
@@ -203,8 +204,8 @@ class SessaoComPosicaoIntegracaoTest {
         SessaoResponse sessao = iniciarEm("ENT-01");
         concluir.executar(sessao.id());
 
-        assertThatThrownBy(() -> recentrar.executar(sessao.id(), "CEN-03"))
-                .isInstanceOf(OperacaoNaoPermitidaException.class);
+        assertThrows(OperacaoNaoPermitidaException.class,
+                () -> recentrar.executar(sessao.id(), "CEN-03"));
     }
 
     @Test
@@ -214,7 +215,8 @@ class SessaoComPosicaoIntegracaoTest {
 
         SessaoResponse depois = recentrar.executar(sessao.id(), "CEN-03");
 
-        assertThat(depois.expiracaoTtl()).isAfterOrEqualTo(sessao.expiracaoTtl());
+        assertTrue(depois.expiracaoTtl().isAfter(sessao.expiracaoTtl())
+                || depois.expiracaoTtl().isEqual(sessao.expiracaoTtl()));
     }
 
     // ---------------------------------------------------------------- desfazer uma coleta
@@ -226,13 +228,12 @@ class SessaoComPosicaoIntegracaoTest {
         coletar(sessao.id(), "SKU-TIN-001");
         UUID jardim = coletar(sessao.id(), "SKU-JAR-001");
 
-        assertThat(consultar.executar(sessao.id()).posicaoAtual().corredor()).isEqualTo("Jardim");
+        assertEquals("Jardim", consultar.executar(sessao.id()).posicaoAtual().corredor());
 
         desmarcar.executar(jardim);
 
-        assertThat(consultar.executar(sessao.id()).posicaoAtual().corredor())
-                .as("desfazer a coleta em Jardim devolve o cliente a Tintas")
-                .isEqualTo("Tintas");
+        assertEquals("Tintas", consultar.executar(sessao.id()).posicaoAtual().corredor(),
+                "desfazer a coleta em Jardim devolve o cliente a Tintas");
     }
 
     @Test
@@ -243,8 +244,7 @@ class SessaoComPosicaoIntegracaoTest {
 
         desmarcar.executar(tinta);
 
-        assertThat(consultar.executar(sessao.id()).posicaoAtual().codigoCurto())
-                .isEqualTo("ENT01");
+        assertEquals("ENT01", consultar.executar(sessao.id()).posicaoAtual().codigoCurto());
     }
 
     @Test
@@ -253,12 +253,13 @@ class SessaoComPosicaoIntegracaoTest {
         SessaoResponse sessao = iniciarEm("ENT-01");
         UUID tinta = coletar(sessao.id(), "SKU-TIN-001");
 
-        assertThat(desmarcar.executar(tinta).coletado()).isFalse();
+        assertFalse(desmarcar.executar(tinta).coletado());
 
-        assertThat(listaRoteiroRepository.buscarPorSessao(sessao.id()).orElseThrow().getItens())
-                .as("o item continua na lista, apenas nao coletado")
-                .hasSize(1)
-                .noneMatch(ItemRoteiro::isColetado);
+        List<ItemRoteiro> itens = listaRoteiroRepository.buscarPorSessao(sessao.id())
+                .orElseThrow().getItens();
+        assertEquals(1, itens.size(), "o item continua na lista, apenas nao coletado");
+        assertTrue(itens.stream().noneMatch(ItemRoteiro::isColetado),
+                "o item continua na lista, apenas nao coletado");
     }
 
     @Test
@@ -270,8 +271,8 @@ class SessaoComPosicaoIntegracaoTest {
 
         desmarcar.executar(tinta);
 
-        assertThat(desmarcar.executar(tinta).coletado()).isFalse();
-        assertThat(consultar.executar(sessao.id()).posicaoAtual().codigoCurto()).isEqualTo("ENT01");
+        assertFalse(desmarcar.executar(tinta).coletado());
+        assertEquals("ENT01", consultar.executar(sessao.id()).posicaoAtual().codigoCurto());
     }
 
     @Test
@@ -287,7 +288,7 @@ class SessaoComPosicaoIntegracaoTest {
         desmarcar.executar(tinta);
         marcarColetado.executar(tinta);
 
-        assertThat(consultar.executar(sessao.id()).posicaoAtual().corredor()).isEqualTo("Tintas");
+        assertEquals("Tintas", consultar.executar(sessao.id()).posicaoAtual().corredor());
     }
 
     // ---------------------------------------------------------------- persistencia
@@ -298,7 +299,6 @@ class SessaoComPosicaoIntegracaoTest {
         // O celular guarda so o id da sessao no localStorage; tudo o mais volta do banco.
         SessaoResponse sessao = iniciarEm("TIN-02");
 
-        assertThat(consultar.executar(sessao.id()).posicaoAtual().codigoCurto())
-                .isEqualTo("TIN02");
+        assertEquals("TIN02", consultar.executar(sessao.id()).posicaoAtual().codigoCurto());
     }
 }
