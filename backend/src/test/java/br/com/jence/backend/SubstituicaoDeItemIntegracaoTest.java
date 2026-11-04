@@ -1,5 +1,6 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.application.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.application.dto.ListaRoteiroResponse;
 import br.com.jence.backend.application.dto.SessaoResponse;
 import br.com.jence.backend.application.usecase.AdicionarProdutoAoRoteiroUseCase;
@@ -28,8 +29,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * A troca do produto que faltou pelo substituto, que e o que fecha o ciclo da ruptura.
@@ -108,10 +110,8 @@ class SubstituicaoDeItemIntegracaoTest {
 
         ListaRoteiroResponse depois = substituir.executar(lixaEmFalta, idDe(SUBSTITUTO));
 
-        assertThat(skusDaLista(depois)).containsExactly("SKU-ENC-001", SUBSTITUTO);
-        assertThat(depois.quantidadeItens())
-                .as("trocar nao pode mudar o tamanho da lista")
-                .isEqualTo(2);
+        assertEquals(List.of("SKU-ENC-001", SUBSTITUTO), skusDaLista(depois));
+        assertEquals(2, depois.quantidadeItens(), "trocar nao pode mudar o tamanho da lista");
     }
 
     @Test
@@ -128,11 +128,10 @@ class SubstituicaoDeItemIntegracaoTest {
 
         ListaRoteiroResponse depois = substituir.executar(lixaEmFalta, idDe(SUBSTITUTO));
 
-        assertThat(depois.itens()).singleElement()
-                .satisfies(item -> {
-                    assertThat(item.produto().sku()).isEqualTo(SUBSTITUTO);
-                    assertThat(item.coletado()).isFalse();
-                });
+        assertEquals(1, depois.itens().size());
+        ItemRoteiroDetalhadoResponse item = depois.itens().get(0);
+        assertEquals(SUBSTITUTO, item.produto().sku());
+        assertFalse(item.coletado());
     }
 
     @Test
@@ -144,9 +143,8 @@ class SubstituicaoDeItemIntegracaoTest {
 
         ListaRoteiroResponse depois = substituir.executar(lixaEmFalta, idDe(SUBSTITUTO));
 
-        assertThat(skusDaLista(depois))
-                .as("o cliente ja tinha a lixa d'agua na lista; ela nao pode aparecer duas vezes")
-                .containsExactly(SUBSTITUTO);
+        assertEquals(List.of(SUBSTITUTO), skusDaLista(depois),
+                "o cliente ja tinha a lixa d'agua na lista; ela nao pode aparecer duas vezes");
     }
 
     @Test
@@ -159,7 +157,7 @@ class SubstituicaoDeItemIntegracaoTest {
 
         substituir.executar(lixaEmFalta, idDe(SUBSTITUTO));
 
-        assertThat(consultar.executar(sessaoId).posicaoAtual().codigoCurto()).isEqualTo("ENT01");
+        assertEquals("ENT01", consultar.executar(sessaoId).posicaoAtual().codigoCurto());
     }
 
     // ---------------------------------------------------------------- o que a troca nao apaga
@@ -186,16 +184,13 @@ class SubstituicaoDeItemIntegracaoTest {
 
         substituir.executar(lixaEmFalta, idDe(SUBSTITUTO));
 
-        assertThat(registroRupturaRepository.buscarPorSessao(sessaoId))
-                .as("trocar o item nao pode apagar o relato da prateleira vazia")
-                .singleElement()
-                .satisfies(registro -> {
-                    assertThat(registro.getProdutoFaltanteId()).isEqualTo(idDe(EM_FALTA));
-                    assertThat(registro.getItemRoteiroId())
-                            .as("o registro aponta para um item que ja nao existe, e tudo bem: "
-                                    + "ele descreve o que aconteceu, nao o estado de agora")
-                            .isEqualTo(lixaEmFalta);
-                });
+        List<RegistroRuptura> registros = registroRupturaRepository.buscarPorSessao(sessaoId);
+        assertEquals(1, registros.size(), "trocar o item nao pode apagar o relato da prateleira vazia");
+        RegistroRuptura registro = registros.get(0);
+        assertEquals(idDe(EM_FALTA), registro.getProdutoFaltanteId());
+        assertEquals(lixaEmFalta, registro.getItemRoteiroId(),
+                "o registro aponta para um item que ja nao existe, e tudo bem: "
+                        + "ele descreve o que aconteceu, nao o estado de agora");
     }
 
     // ---------------------------------------------------------------- recusas
@@ -211,10 +206,10 @@ class SubstituicaoDeItemIntegracaoTest {
         UUID sessaoId = novaSessao();
         UUID lixaEmFalta = adicionar(sessaoId, EM_FALTA);
 
-        assertThatThrownBy(() -> substituir.executar(lixaEmFalta, idDe(EM_FALTA)))
-                .isInstanceOf(OperacaoNaoPermitidaException.class);
+        assertThrows(OperacaoNaoPermitidaException.class,
+                () -> substituir.executar(lixaEmFalta, idDe(EM_FALTA)));
 
-        assertThat(listaJpa.findBySessaoId(sessaoId).orElseThrow().getItens()).hasSize(1);
+        assertEquals(1, listaJpa.findBySessaoId(sessaoId).orElseThrow().getItens().size());
     }
 
     @Test
@@ -223,10 +218,10 @@ class SubstituicaoDeItemIntegracaoTest {
         UUID sessaoId = novaSessao();
         UUID lixaEmFalta = adicionar(sessaoId, EM_FALTA);
 
-        assertThatThrownBy(() -> substituir.executar(lixaEmFalta, UUID.randomUUID()))
-                .isInstanceOf(RecursoNaoEncontradoException.class);
+        assertThrows(RecursoNaoEncontradoException.class,
+                () -> substituir.executar(lixaEmFalta, UUID.randomUUID()));
 
-        assertThat(listaJpa.findBySessaoId(sessaoId).orElseThrow().getItens()).hasSize(1);
+        assertEquals(1, listaJpa.findBySessaoId(sessaoId).orElseThrow().getItens().size());
     }
 
     @Test
@@ -236,14 +231,14 @@ class SubstituicaoDeItemIntegracaoTest {
         UUID lixaEmFalta = adicionar(sessaoId, EM_FALTA);
         concluir.executar(sessaoId);
 
-        assertThatThrownBy(() -> substituir.executar(lixaEmFalta, idDe(SUBSTITUTO)))
-                .isInstanceOf(OperacaoNaoPermitidaException.class);
+        assertThrows(OperacaoNaoPermitidaException.class,
+                () -> substituir.executar(lixaEmFalta, idDe(SUBSTITUTO)));
     }
 
     @Test
     @DisplayName("item inexistente devolve 404")
     void itemInexistente() {
-        assertThatThrownBy(() -> substituir.executar(UUID.randomUUID(), idDe(SUBSTITUTO)))
-                .isInstanceOf(RecursoNaoEncontradoException.class);
+        assertThrows(RecursoNaoEncontradoException.class,
+                () -> substituir.executar(UUID.randomUUID(), idDe(SUBSTITUTO)));
     }
 }
