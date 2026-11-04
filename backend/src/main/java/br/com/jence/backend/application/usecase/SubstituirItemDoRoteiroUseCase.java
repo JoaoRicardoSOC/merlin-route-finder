@@ -10,7 +10,6 @@ import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,12 +34,19 @@ import java.util.UUID;
  * duas coisas e o que diz a loja se as sugestoes estao boas.
  */
 @Service
-@RequiredArgsConstructor
 public class SubstituirItemDoRoteiroUseCase {
 
     private final ListaRoteiroRepository listaRoteiroRepository;
     private final SessaoRepository sessaoRepository;
     private final ProdutoRepository produtoRepository;
+
+    public SubstituirItemDoRoteiroUseCase(ListaRoteiroRepository listaRoteiroRepository,
+                                          SessaoRepository sessaoRepository,
+                                          ProdutoRepository produtoRepository) {
+        this.listaRoteiroRepository = listaRoteiroRepository;
+        this.sessaoRepository = sessaoRepository;
+        this.produtoRepository = produtoRepository;
+    }
 
     @Transactional
     public ListaRoteiroResponse executar(UUID itemId, UUID produtoSubstitutoId) {
