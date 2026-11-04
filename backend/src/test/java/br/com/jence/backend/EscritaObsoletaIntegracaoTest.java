@@ -19,11 +19,12 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Uma requisicao que grava depois de outra ter mexido no mesmo roteiro.
@@ -119,9 +120,13 @@ class EscritaObsoletaIntegracaoTest {
                 .map(ItemRoteiro::getId)
                 .toList();
 
-        assertThat(coletados)
-                .as("a requisicao lenta nao pode apagar o que a rapida ja tinha gravado")
-                .containsExactlyInAnyOrder(lento, rapido);
+        // Comparacao sem ordem: as duas listas ordenadas precisam ser identicas.
+        List<UUID> esperados = new ArrayList<>(List.of(lento, rapido));
+        List<UUID> obtidos = new ArrayList<>(coletados);
+        esperados.sort(Comparator.naturalOrder());
+        obtidos.sort(Comparator.naturalOrder());
+        assertEquals(esperados, obtidos,
+                "a requisicao lenta nao pode apagar o que a rapida ja tinha gravado");
     }
 
     @Test
@@ -139,8 +144,7 @@ class EscritaObsoletaIntegracaoTest {
 
         imprimir("estado final no banco");
 
-        assertThat(itens())
-                .as("marcar um item nao pode APAGAR o que o totem somou nesse intervalo")
-                .hasSize(4);
+        assertEquals(4, itens().size(),
+                "marcar um item nao pode APAGAR o que o totem somou nesse intervalo");
     }
 }
