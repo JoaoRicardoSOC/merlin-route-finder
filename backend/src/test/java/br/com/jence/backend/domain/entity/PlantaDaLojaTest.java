@@ -3,10 +3,13 @@ package br.com.jence.backend.domain.entity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashSet;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Os invariantes da planta: o que, se quebrar, deixa a tela de mapa errada de um jeito que
@@ -22,12 +25,12 @@ class PlantaDaLojaTest {
     @DisplayName("todo bloco cabe dentro do grid")
     void dentroDoGrid() {
         // Um bloco que passa de 100 aparece cortado na borda da tela, ou fora dela.
-        assertThat(blocos).allSatisfy(bloco -> {
-            assertThat(bloco.x()).isBetween(0, LADO_DO_GRID);
-            assertThat(bloco.y()).isBetween(0, LADO_DO_GRID);
-            assertThat(bloco.x() + bloco.largura()).isLessThanOrEqualTo(LADO_DO_GRID);
-            assertThat(bloco.y() + bloco.altura()).isLessThanOrEqualTo(LADO_DO_GRID);
-        });
+        for (BlocoMapa bloco : blocos) {
+            assertTrue(bloco.x() >= 0 && bloco.x() <= LADO_DO_GRID);
+            assertTrue(bloco.y() >= 0 && bloco.y() <= LADO_DO_GRID);
+            assertTrue(bloco.x() + bloco.largura() <= LADO_DO_GRID);
+            assertTrue(bloco.y() + bloco.altura() <= LADO_DO_GRID);
+        }
     }
 
     @Test
@@ -43,11 +46,10 @@ class PlantaDaLojaTest {
                 BlocoMapa a = blocos.get(i);
                 BlocoMapa b = blocos.get(j);
 
-                assertThat(a.sobrepoe(b))
-                        .as("%s (%d,%d %dx%d) e %s (%d,%d %dx%d) se sobrepoem",
+                assertFalse(a.sobrepoe(b),
+                        String.format("%s (%d,%d %dx%d) e %s (%d,%d %dx%d) se sobrepoem",
                                 a.rotulo(), a.x(), a.y(), a.largura(), a.altura(),
-                                b.rotulo(), b.x(), b.y(), b.largura(), b.altura())
-                        .isFalse();
+                                b.rotulo(), b.x(), b.y(), b.largura(), b.altura()));
             }
         }
     }
@@ -57,26 +59,25 @@ class PlantaDaLojaTest {
     void centroDentro() {
         // O centro e onde a carga coloca os produtos da secao: se cair fora, a garantia que
         // motivou derivar as coordenadas da planta deixa de existir.
-        assertThat(blocos).allSatisfy(bloco ->
-                assertThat(bloco.contem(bloco.centroX(), bloco.centroY()))
-                        .as("centro de %s", bloco.rotulo())
-                        .isTrue());
+        for (BlocoMapa bloco : blocos) {
+            assertTrue(bloco.contem(bloco.centroX(), bloco.centroY()),
+                    String.format("centro de %s", bloco.rotulo()));
+        }
     }
 
     @Test
     @DisplayName("nenhum rotulo se repete")
     void rotulosUnicos() {
         // O rotulo e o que liga o bloco aos pontos de prateleira daquele corredor.
-        assertThat(blocos.stream().map(BlocoMapa::rotulo).toList()).doesNotHaveDuplicates();
+        List<String> rotulos = blocos.stream().map(BlocoMapa::rotulo).toList();
+        assertEquals(rotulos.size(), new HashSet<>(rotulos).size());
     }
 
     @Test
     @DisplayName("bloco sem area e recusado na construcao")
     void dimensaoInvalida() {
-        assertThatThrownBy(() -> new BlocoMapa("Vazio", 10, 10, 0, 5))
-                .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new BlocoMapa("Negativo", 10, 10, 5, -3))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThrows(IllegalArgumentException.class, () -> new BlocoMapa("Vazio", 10, 10, 0, 5));
+        assertThrows(IllegalArgumentException.class, () -> new BlocoMapa("Negativo", 10, 10, 5, -3));
     }
 
     @Test
@@ -86,7 +87,7 @@ class PlantaDaLojaTest {
         BlocoMapa esquerda = new BlocoMapa("Esquerda", 0, 0, 10, 10);
         BlocoMapa direita = new BlocoMapa("Direita", 10, 0, 10, 10);
 
-        assertThat(esquerda.sobrepoe(direita)).isFalse();
-        assertThat(direita.sobrepoe(esquerda)).isFalse();
+        assertFalse(esquerda.sobrepoe(direita));
+        assertFalse(direita.sobrepoe(esquerda));
     }
 }
