@@ -1,11 +1,8 @@
 package br.com.jence.backend.domain.entity;
 
-import lombok.Getter;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Getter
 public class ChatMensagem {
 
     private final UUID id;
@@ -37,5 +34,25 @@ public class ChatMensagem {
 
     public boolean isDoCliente() {
         return remetente == Remetente.USER;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public UUID getSessaoId() {
+        return sessaoId;
+    }
+
+    public Remetente getRemetente() {
+        return remetente;
+    }
+
+    public String getConteudo() {
+        return conteudo;
+    }
+
+    public LocalDateTime getEnviadoEm() {
+        return enviadoEm;
     }
 }
