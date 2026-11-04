@@ -4,6 +4,8 @@ import br.com.jence.backend.factory.ConnectionFactory;
 import br.com.jence.backend.model.ChatMensagem;
 import br.com.jence.backend.model.Remetente;
 
+import org.springframework.stereotype.Component;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,6 +16,8 @@ import java.util.List;
 import java.util.UUID;
 
 /** Acesso a tabela {@code tb_chat_mensagem}: o historico da conversa com o assistente. */
+// Provisorio: so enquanto o Spring injeta as dependencias. Sai na fase 10 do plano.
+@Component
 public class ChatMensagemDao {
 
     /** As mensagens da sessao, da mais antiga para a mais recente. */

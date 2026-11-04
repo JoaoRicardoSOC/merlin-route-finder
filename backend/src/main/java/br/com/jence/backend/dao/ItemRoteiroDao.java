@@ -3,6 +3,8 @@ package br.com.jence.backend.dao;
 import br.com.jence.backend.factory.ConnectionFactory;
 import br.com.jence.backend.model.ItemRoteiro;
 
+import org.springframework.stereotype.Component;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -17,6 +19,8 @@ import java.util.UUID;
  * Itens novos e removidos sao gravados pelo {@link ListaRoteiroDao}: o item pertence a lista e
  * nao conhece a lista dona. Aqui so se le um item e se grava a coleta de um item que ja existe.
  */
+// Provisorio: so enquanto o Spring injeta as dependencias. Sai na fase 10 do plano.
+@Component
 public class ItemRoteiroDao {
 
     public Optional<ItemRoteiro> buscarPorId(UUID id) throws SQLException {

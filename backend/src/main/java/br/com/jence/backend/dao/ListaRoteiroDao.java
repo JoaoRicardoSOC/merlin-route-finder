@@ -5,6 +5,8 @@ import br.com.jence.backend.factory.Transacao;
 import br.com.jence.backend.model.ItemRoteiro;
 import br.com.jence.backend.model.ListaRoteiro;
 
+import org.springframework.stereotype.Component;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -39,6 +41,8 @@ import java.util.UUID;
  * Lista gravada sem ter sido lida nesta transacao (a lista nova de uma sessao, por exemplo) e
  * comparada com o que o banco tem, como o Hibernate fazia nesse caso.
  */
+// Provisorio: so enquanto o Spring injeta as dependencias. Sai na fase 10 do plano.
+@Component
 public class ListaRoteiroDao {
 
     /** Chave da foto nos recursos da transacao. */

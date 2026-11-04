@@ -4,6 +4,8 @@ import br.com.jence.backend.factory.ConnectionFactory;
 import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.model.StatusSessao;
 
+import org.springframework.stereotype.Component;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -19,6 +21,8 @@ import java.util.UUID;
  * Acesso a tabela {@code tb_sessao}. A placa em que o cliente entrou vem junto, num
  * {@code left join}: ela pode nao existir.
  */
+// Provisorio: so enquanto o Spring injeta as dependencias. Sai na fase 10 do plano.
+@Component
 public class SessaoDao {
 
     private static final String SELECT = "select s.id, s.status, s.criado_em, s.expiracao_ttl, s.escaneado_em, "
