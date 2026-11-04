@@ -37,8 +37,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -128,12 +131,12 @@ class TratarRupturaEstoqueUseCaseTest {
 
         RupturaEstoqueResponse resposta = useCase.executar(itemId);
 
-        assertThat(resposta.produtoOriginalId()).isEqualTo(lixaEmFalta.getId());
-        assertThat(resposta.produtoSugeridoId()).isEqualTo(lixaDagua.getId());
-        assertThat(resposta.produtoSugerido().sku()).isEqualTo("SKU-TIN-004");
-        assertThat(resposta.produtoSugerido().preco()).isEqualByComparingTo("4.20");
-        assertThat(resposta.justificativa()).startsWith("A lixa d'agua");
-        assertThat(resposta.origemSugestao()).isEqualTo(OrigemSugestao.ASSISTENTE_IA);
+        assertEquals(lixaEmFalta.getId(), resposta.produtoOriginalId());
+        assertEquals(lixaDagua.getId(), resposta.produtoSugeridoId());
+        assertEquals("SKU-TIN-004", resposta.produtoSugerido().sku());
+        assertEquals(0, resposta.produtoSugerido().preco().compareTo(new BigDecimal("4.20")));
+        assertTrue(resposta.justificativa().startsWith("A lixa d'agua"));
+        assertEquals(OrigemSugestao.ASSISTENTE_IA, resposta.origemSugestao());
     }
 
     @Test
@@ -150,15 +153,16 @@ class TratarRupturaEstoqueUseCaseTest {
 
         Object candidatos = captor.getValue().executar("buscar_substitutos_proximos", Map.of()).get("candidatos");
 
-        assertThat(candidatos).asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.LIST)
-                .as("a ferramenta nao pode devolver nada alem do que a consulta espacial trouxe")
-                .hasSize(2)
-                .allSatisfy(c -> assertThat(((Map<?, ?>) c).get("sku"))
-                        .isIn("SKU-TIN-004", "SKU-ELE-003"));
+        String mensagem = "a ferramenta nao pode devolver nada alem do que a consulta espacial trouxe";
+        List<?> lista = assertInstanceOf(List.class, candidatos);
+        assertEquals(2, lista.size(), mensagem);
+        for (Object c : lista) {
+            assertTrue(List.of("SKU-TIN-004", "SKU-ELE-003").contains(((Map<?, ?>) c).get("sku")), mensagem);
+        }
 
         // A distancia informada ao modelo e a real: mesma secao = 0, Tintas -> Eletrica = 20.
-        assertThat(((Map<?, ?>) ((List<?>) candidatos).get(0)).get("distancia")).isEqualTo(0L);
-        assertThat(((Map<?, ?>) ((List<?>) candidatos).get(1)).get("distancia")).isEqualTo(20L);
+        assertEquals(0L, ((Map<?, ?>) ((List<?>) candidatos).get(0)).get("distancia"));
+        assertEquals(20L, ((Map<?, ?>) ((List<?>) candidatos).get(1)).get("distancia"));
     }
 
     @Test
@@ -171,12 +175,12 @@ class TratarRupturaEstoqueUseCaseTest {
         useCase.executar(itemId);
 
         RegistroRuptura registro = registroSalvo();
-        assertThat(registro.getSessaoId()).isEqualTo(sessaoId);
-        assertThat(registro.getItemRoteiroId()).isEqualTo(itemId);
-        assertThat(registro.getProdutoFaltanteId()).isEqualTo(lixaEmFalta.getId());
-        assertThat(registro.getProdutoSugeridoId()).isEqualTo(lixaDagua.getId());
-        assertThat(registro.getOrigem()).isEqualTo(OrigemSugestao.ASSISTENTE_IA);
-        assertThat(registro.temSugestao()).isTrue();
+        assertEquals(sessaoId, registro.getSessaoId());
+        assertEquals(itemId, registro.getItemRoteiroId());
+        assertEquals(lixaEmFalta.getId(), registro.getProdutoFaltanteId());
+        assertEquals(lixaDagua.getId(), registro.getProdutoSugeridoId());
+        assertEquals(OrigemSugestao.ASSISTENTE_IA, registro.getOrigem());
+        assertTrue(registro.temSugestao());
     }
 
     @Test
@@ -190,7 +194,7 @@ class TratarRupturaEstoqueUseCaseTest {
 
         useCase.executar(itemId);
 
-        assertThat(sessao.getExpiracaoTtl()).isAfter(LocalDateTime.now().plusMinutes(25));
+        assertTrue(sessao.getExpiracaoTtl().isAfter(LocalDateTime.now().plusMinutes(25)));
         verify(sessaoRepository).salvar(sessao);
     }
 
@@ -206,13 +210,11 @@ class TratarRupturaEstoqueUseCaseTest {
 
         RupturaEstoqueResponse resposta = useCase.executar(itemId);
 
-        assertThat(resposta.produtoSugeridoId())
-                .as("nenhum produto pode sair daqui sem ter vindo da nossa pre-filtragem")
-                .isEqualTo(lixaDagua.getId());
-        assertThat(resposta.origemSugestao()).isEqualTo(OrigemSugestao.PROXIMIDADE);
-        assertThat(resposta.justificativa())
-                .as("a justificativa inventada pelo modelo nao pode chegar ao cliente")
-                .doesNotContain("massa corrida");
+        assertEquals(lixaDagua.getId(), resposta.produtoSugeridoId(),
+                "nenhum produto pode sair daqui sem ter vindo da nossa pre-filtragem");
+        assertEquals(OrigemSugestao.PROXIMIDADE, resposta.origemSugestao());
+        assertFalse(resposta.justificativa().contains("massa corrida"),
+                "a justificativa inventada pelo modelo nao pode chegar ao cliente");
     }
 
     @Test
@@ -224,8 +226,8 @@ class TratarRupturaEstoqueUseCaseTest {
 
         RupturaEstoqueResponse resposta = useCase.executar(itemId);
 
-        assertThat(resposta.produtoSugeridoId()).isEqualTo(lixaDagua.getId());
-        assertThat(resposta.origemSugestao()).isEqualTo(OrigemSugestao.PROXIMIDADE);
+        assertEquals(lixaDagua.getId(), resposta.produtoSugeridoId());
+        assertEquals(OrigemSugestao.PROXIMIDADE, resposta.origemSugestao());
     }
 
     @Test
@@ -237,8 +239,8 @@ class TratarRupturaEstoqueUseCaseTest {
 
         RupturaEstoqueResponse resposta = useCase.executar(itemId);
 
-        assertThat(resposta.produtoSugeridoId()).isEqualTo(lixaDagua.getId());
-        assertThat(resposta.origemSugestao()).isEqualTo(OrigemSugestao.ASSISTENTE_IA);
+        assertEquals(lixaDagua.getId(), resposta.produtoSugeridoId());
+        assertEquals(OrigemSugestao.ASSISTENTE_IA, resposta.origemSugestao());
     }
 
     // ---------------------------------------------------------------- degradacao
@@ -253,12 +255,11 @@ class TratarRupturaEstoqueUseCaseTest {
 
         RupturaEstoqueResponse resposta = useCase.executar(itemId);
 
-        assertThat(resposta.produtoSugeridoId()).isEqualTo(lixaDagua.getId());
-        assertThat(resposta.origemSugestao()).isEqualTo(OrigemSugestao.PROXIMIDADE);
-        assertThat(resposta.justificativa())
-                .as("a mensagem precisa ser honesta sobre nao ter havido analise")
-                .contains("mais próximo");
-        assertThat(registroSalvo().getOrigem()).isEqualTo(OrigemSugestao.PROXIMIDADE);
+        assertEquals(lixaDagua.getId(), resposta.produtoSugeridoId());
+        assertEquals(OrigemSugestao.PROXIMIDADE, resposta.origemSugestao());
+        assertTrue(resposta.justificativa().contains("mais próximo"),
+                "a mensagem precisa ser honesta sobre nao ter havido analise");
+        assertEquals(OrigemSugestao.PROXIMIDADE, registroSalvo().getOrigem());
     }
 
     // ---------------------------------------------------------------- sem substituto
@@ -269,14 +270,14 @@ class TratarRupturaEstoqueUseCaseTest {
         ItemRoteiro item = comSessaoAtiva();
         comCandidatosProximos();
 
-        assertThatThrownBy(() -> useCase.executar(itemId))
-                .isInstanceOf(SubstitutoIndisponivelException.class)
-                .hasMessageContaining("Lixa para Parede Grao 120");
+        SubstitutoIndisponivelException erro =
+                assertThrows(SubstitutoIndisponivelException.class, () -> useCase.executar(itemId));
+        assertTrue(erro.getMessage().contains("Lixa para Parede Grao 120"));
 
         RegistroRuptura registro = registroSalvo();
-        assertThat(registro.temSugestao()).isFalse();
-        assertThat(registro.getOrigem()).isEqualTo(OrigemSugestao.NENHUMA);
-        assertThat(registro.getProdutoFaltanteId()).isEqualTo(item.getProduto().getId());
+        assertFalse(registro.temSugestao());
+        assertEquals(OrigemSugestao.NENHUMA, registro.getOrigem());
+        assertEquals(item.getProduto().getId(), registro.getProdutoFaltanteId());
         verify(assistenteIA, never()).conversar(any(), any(), any(), any());
     }
 
@@ -287,13 +288,12 @@ class TratarRupturaEstoqueUseCaseTest {
         comCandidatosProximos(disjuntor);
         assistenteResponde("NENHUM | Nao ha por perto nenhum item de acabamento equivalente a lixa.");
 
-        assertThatThrownBy(() -> useCase.executar(itemId))
-                .as("sugerir algo inadequado e pior do que nao sugerir nada")
-                .isInstanceOf(SubstitutoIndisponivelException.class);
+        assertThrows(SubstitutoIndisponivelException.class, () -> useCase.executar(itemId),
+                "sugerir algo inadequado e pior do que nao sugerir nada");
 
         RegistroRuptura registro = registroSalvo();
-        assertThat(registro.temSugestao()).isFalse();
-        assertThat(registro.getJustificativa()).contains("item de acabamento equivalente");
+        assertFalse(registro.temSugestao());
+        assertTrue(registro.getJustificativa().contains("item de acabamento equivalente"));
     }
 
     @Test
@@ -312,9 +312,8 @@ class TratarRupturaEstoqueUseCaseTest {
 
         RupturaEstoqueResponse resposta = useCase.executar(itemId);
 
-        assertThat(resposta.produtoSugeridoId())
-                .as("a lixa d'agua ja esta no carrinho e nao pode ser oferecida de novo")
-                .isEqualTo(disjuntor.getId());
+        assertEquals(disjuntor.getId(), resposta.produtoSugeridoId(),
+                "a lixa d'agua ja esta no carrinho e nao pode ser oferecida de novo");
     }
 
     // ---------------------------------------------------------------- pre-condicoes
@@ -324,8 +323,7 @@ class TratarRupturaEstoqueUseCaseTest {
     void itemInexistente() {
         when(itemRoteiroRepository.buscarPorId(itemId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> useCase.executar(itemId))
-                .isInstanceOf(RecursoNaoEncontradoException.class);
+        assertThrows(RecursoNaoEncontradoException.class, () -> useCase.executar(itemId));
 
         verify(registroRupturaRepository, never()).salvar(any());
     }
@@ -337,9 +335,9 @@ class TratarRupturaEstoqueUseCaseTest {
         encerrada.encerrar();
         comItemNoRoteiro(encerrada);
 
-        assertThatThrownBy(() -> useCase.executar(itemId))
-                .isInstanceOf(OperacaoNaoPermitidaException.class)
-                .hasMessageContaining("COMPLETED");
+        OperacaoNaoPermitidaException erro =
+                assertThrows(OperacaoNaoPermitidaException.class, () -> useCase.executar(itemId));
+        assertTrue(erro.getMessage().contains("COMPLETED"));
 
         verify(assistenteIA, never()).conversar(any(), any(), any(), any());
         verify(registroRupturaRepository, never()).salvar(any());
