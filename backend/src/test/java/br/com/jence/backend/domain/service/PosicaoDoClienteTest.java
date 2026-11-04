@@ -13,9 +13,11 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Onde o cliente esta, deduzido das duas unicas pistas que existem sem GPS dentro da loja:
@@ -65,14 +67,14 @@ class PosicaoDoClienteTest {
          * Nao e erro: o cliente pode abrir a pagina sem ler placa nenhuma. O mapa aparece sem
          * "voce esta aqui", que e melhor do que recusar a sessao.
          */
-        assertThat(PosicaoDoCliente.estimar(sessaoSemPlaca(), listaCom())).isEmpty();
+        assertTrue(PosicaoDoCliente.estimar(sessaoSemPlaca(), listaCom()).isEmpty());
     }
 
     @Test
     @DisplayName("so a placa lida: e onde ele esta")
     void apenasAPlaca() {
-        assertThat(PosicaoDoCliente.estimar(sessaoQueLeu(PLACA_ENTRADA, AGORA), listaCom()))
-                .contains(PLACA_ENTRADA);
+        assertEquals(Optional.of(PLACA_ENTRADA),
+                PosicaoDoCliente.estimar(sessaoQueLeu(PLACA_ENTRADA, AGORA), listaCom()));
     }
 
     @Test
@@ -81,7 +83,7 @@ class PosicaoDoClienteTest {
         Sessao sessao = sessaoSemPlaca();
         ListaRoteiro lista = listaCom(item(PRATELEIRA_TINTAS, AGORA));
 
-        assertThat(PosicaoDoCliente.estimar(sessao, lista)).contains(PRATELEIRA_TINTAS);
+        assertEquals(Optional.of(PRATELEIRA_TINTAS), PosicaoDoCliente.estimar(sessao, lista));
     }
 
     @Test
@@ -90,9 +92,8 @@ class PosicaoDoClienteTest {
         Sessao sessao = sessaoQueLeu(PLACA_ENTRADA, AGORA);
         ListaRoteiro lista = listaCom(item(PRATELEIRA_TINTAS, null), item(PRATELEIRA_JARDIM, null));
 
-        assertThat(PosicaoDoCliente.estimar(sessao, lista))
-                .as("ter o produto na lista nao significa ter passado por ele")
-                .contains(PLACA_ENTRADA);
+        assertEquals(Optional.of(PLACA_ENTRADA), PosicaoDoCliente.estimar(sessao, lista),
+                "ter o produto na lista nao significa ter passado por ele");
     }
 
     // ---------------------------------------------------------------- a ordem entre coletas
@@ -109,7 +110,7 @@ class PosicaoDoClienteTest {
                 item(PRATELEIRA_TINTAS, AGORA.minusMinutes(20)),
                 item(PRATELEIRA_JARDIM, AGORA.minusMinutes(2)));
 
-        assertThat(PosicaoDoCliente.estimar(sessao, lista)).contains(PRATELEIRA_JARDIM);
+        assertEquals(Optional.of(PRATELEIRA_JARDIM), PosicaoDoCliente.estimar(sessao, lista));
     }
 
     @Test
@@ -120,7 +121,7 @@ class PosicaoDoClienteTest {
                 item(PRATELEIRA_JARDIM, AGORA.minusMinutes(2)),
                 item(PRATELEIRA_TINTAS, AGORA.minusMinutes(20)));
 
-        assertThat(PosicaoDoCliente.estimar(sessao, lista)).contains(PRATELEIRA_JARDIM);
+        assertEquals(Optional.of(PRATELEIRA_JARDIM), PosicaoDoCliente.estimar(sessao, lista));
     }
 
     // ---------------------------------------------------------------- placa contra coleta
@@ -136,7 +137,7 @@ class PosicaoDoClienteTest {
         Sessao sessao = sessaoQueLeu(PLACA_CENTRAL, AGORA.minusMinutes(1));
         ListaRoteiro lista = listaCom(item(PRATELEIRA_TINTAS, AGORA.minusMinutes(15)));
 
-        assertThat(PosicaoDoCliente.estimar(sessao, lista)).contains(PLACA_CENTRAL);
+        assertEquals(Optional.of(PLACA_CENTRAL), PosicaoDoCliente.estimar(sessao, lista));
     }
 
     @Test
@@ -145,7 +146,7 @@ class PosicaoDoClienteTest {
         Sessao sessao = sessaoQueLeu(PLACA_ENTRADA, AGORA.minusMinutes(30));
         ListaRoteiro lista = listaCom(item(PRATELEIRA_TINTAS, AGORA.minusMinutes(3)));
 
-        assertThat(PosicaoDoCliente.estimar(sessao, lista)).contains(PRATELEIRA_TINTAS);
+        assertEquals(Optional.of(PRATELEIRA_TINTAS), PosicaoDoCliente.estimar(sessao, lista));
     }
 
     // ---------------------------------------------------------------- desfazer uma coleta
@@ -162,11 +163,11 @@ class PosicaoDoClienteTest {
         Sessao sessao = sessaoQueLeu(PLACA_ENTRADA, AGORA.minusHours(1));
         ListaRoteiro lista = listaCom(tinta, jardim);
 
-        assertThat(PosicaoDoCliente.estimar(sessao, lista)).contains(PRATELEIRA_JARDIM);
+        assertEquals(Optional.of(PRATELEIRA_JARDIM), PosicaoDoCliente.estimar(sessao, lista));
 
         jardim.desmarcarComoColetado();
 
-        assertThat(PosicaoDoCliente.estimar(sessao, lista)).contains(PRATELEIRA_TINTAS);
+        assertEquals(Optional.of(PRATELEIRA_TINTAS), PosicaoDoCliente.estimar(sessao, lista));
     }
 
     @Test
@@ -178,7 +179,7 @@ class PosicaoDoClienteTest {
 
         tinta.desmarcarComoColetado();
 
-        assertThat(PosicaoDoCliente.estimar(sessao, lista)).contains(PLACA_ENTRADA);
+        assertEquals(Optional.of(PLACA_ENTRADA), PosicaoDoCliente.estimar(sessao, lista));
     }
 
     @Test
@@ -197,7 +198,7 @@ class PosicaoDoClienteTest {
 
         jardim.desmarcarComoColetado();
 
-        assertThat(PosicaoDoCliente.estimar(sessao, lista)).contains(PLACA_CENTRAL);
+        assertEquals(Optional.of(PLACA_CENTRAL), PosicaoDoCliente.estimar(sessao, lista));
     }
 
     // ---------------------------------------------------------------- bordas
@@ -206,7 +207,7 @@ class PosicaoDoClienteTest {
     @DisplayName("lista ausente nao quebra a estimativa")
     void semLista() {
         // Acontece na resposta de POST /sessoes, onde a lista acabou de nascer vazia.
-        assertThat(PosicaoDoCliente.estimar(sessaoQueLeu(PLACA_ENTRADA, AGORA), null))
-                .contains(PLACA_ENTRADA);
+        assertEquals(Optional.of(PLACA_ENTRADA),
+                PosicaoDoCliente.estimar(sessaoQueLeu(PLACA_ENTRADA, AGORA), null));
     }
 }
