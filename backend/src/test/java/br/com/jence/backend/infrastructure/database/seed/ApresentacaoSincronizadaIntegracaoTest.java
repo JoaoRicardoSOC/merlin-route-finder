@@ -13,7 +13,10 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * A massa e a fonte da apresentacao, e o que esta gravado tem que segui-la (D-69).
@@ -54,14 +57,14 @@ class ApresentacaoSincronizadaIntegracaoTest {
         Map<String, ProdutoDaMassa> declarados = CatalogoDaMassa.produtos().stream()
                 .collect(Collectors.toMap(ProdutoDaMassa::sku, Function.identity()));
 
-        assertThat(todos()).allSatisfy(produto -> {
+        for (Produto produto : todos()) {
             ProdutoDaMassa declarado = declarados.get(produto.getSku());
-            assertThat(declarado).as("SKU fora da massa: %s", produto.getSku()).isNotNull();
-            assertThat(produto.getNome())
-                    .as("nome gravado de %s", produto.getSku()).isEqualTo(declarado.nome());
-            assertThat(produto.getDescricao())
-                    .as("descricao gravada de %s", produto.getSku()).isEqualTo(declarado.descricao());
-        });
+            assertNotNull(declarado, "SKU fora da massa: " + produto.getSku());
+            assertEquals(declarado.nome(), produto.getNome(),
+                    "nome gravado de " + produto.getSku());
+            assertEquals(declarado.descricao(), produto.getDescricao(),
+                    "descricao gravada de " + produto.getSku());
+        }
     }
 
     @Test
@@ -71,16 +74,15 @@ class ApresentacaoSincronizadaIntegracaoTest {
 
         produtoRepository.salvar(antes.comApresentacao(
                 "Nome trocado a mao", "Descricao trocada a mao", null));
-        assertThat(porSku("SKU-DEC-001").getNome()).isEqualTo("Nome trocado a mao");
+        assertEquals("Nome trocado a mao", porSku("SKU-DEC-001").getNome());
 
         carregador.run(null);
 
         Produto depois = porSku("SKU-DEC-001");
-        assertThat(depois.getNome()).isEqualTo(antes.getNome());
-        assertThat(depois.getDescricao()).isEqualTo(antes.getDescricao());
-        assertThat(depois.getImagemUrl())
-                .as("a foto tambem volta - foi apagada junto")
-                .isEqualTo(antes.getImagemUrl());
+        assertEquals(antes.getNome(), depois.getNome());
+        assertEquals(antes.getDescricao(), depois.getDescricao());
+        assertEquals(antes.getImagemUrl(), depois.getImagemUrl(),
+                "a foto tambem volta - foi apagada junto");
     }
 
     @Test
@@ -95,28 +97,25 @@ class ApresentacaoSincronizadaIntegracaoTest {
         int declarado = antes.getSaldoEstoque();
 
         produtoRepository.salvar(antes.comSaldoEstoque(declarado + 7));
-        assertThat(porSku("SKU-TIN-003").getSaldoEstoque()).isEqualTo(declarado + 7);
+        assertEquals(declarado + 7, porSku("SKU-TIN-003").getSaldoEstoque());
 
         carregador.run(null);
 
-        assertThat(porSku("SKU-TIN-003").getSaldoEstoque())
-                .as("a carga precisa devolver o estoque ensaiado")
-                .isEqualTo(declarado);
+        assertEquals(declarado, porSku("SKU-TIN-003").getSaldoEstoque(),
+                "a carga precisa devolver o estoque ensaiado");
     }
 
     @Test
     @DisplayName("nome e imagem cabem nas colunas")
     void cabemNasColunas() {
         // Um estouro aqui nao falha em teste: falha na carga, e so no banco de quem rodar.
-        assertThat(todos()).allSatisfy(produto -> {
-            assertThat(produto.getNome().length())
-                    .as("nome de %s", produto.getSku()).isLessThanOrEqualTo(200);
+        for (Produto produto : todos()) {
+            assertTrue(produto.getNome().length() <= 200, "nome de " + produto.getSku());
             if (produto.getImagemUrl() != null) {
-                assertThat(produto.getImagemUrl().length())
-                        .as("imagem de %s", produto.getSku()).isLessThanOrEqualTo(500);
-                assertThat(produto.getImagemUrl()).startsWith("https://");
+                assertTrue(produto.getImagemUrl().length() <= 500, "imagem de " + produto.getSku());
+                assertTrue(produto.getImagemUrl().startsWith("https://"));
             }
-        });
+        }
     }
 
     @Test
@@ -130,6 +129,6 @@ class ApresentacaoSincronizadaIntegracaoTest {
 
         // Imagem nula continua sendo estado normal (O-18); o que se prova aqui e que a coleta
         // do time chegou ao banco, e nao ficou so no mapa do codigo.
-        assertThat(comFoto).as("nenhuma das URLs coletadas chegou aos produtos").isNotEmpty();
+        assertFalse(comFoto.isEmpty(), "nenhuma das URLs coletadas chegou aos produtos");
     }
 }
