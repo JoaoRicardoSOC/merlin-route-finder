@@ -9,7 +9,6 @@ import java.util.Map;
 import br.com.jence.backend.domain.repository.FiltroDeProdutos;
 import br.com.jence.backend.domain.repository.Pagina;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
@@ -19,13 +18,16 @@ import org.springframework.stereotype.Service;
  * buscando. Os filtros de secao e disponibilidade valem nos dois casos.
  */
 @Service
-@RequiredArgsConstructor
 public class BuscarProdutosUseCase {
 
     static final int TAMANHO_PADRAO = 20;
     static final int TAMANHO_MAXIMO = 100;
 
     private final ProdutoRepository produtoRepository;
+
+    public BuscarProdutosUseCase(ProdutoRepository produtoRepository) {
+        this.produtoRepository = produtoRepository;
+    }
 
     public CatalogoResponse executar(String termo, String secao, Boolean apenasDisponiveis,
                                      Map<AtributoProduto, List<String>> atributos,
