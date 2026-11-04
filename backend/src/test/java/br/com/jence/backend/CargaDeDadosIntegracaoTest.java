@@ -13,12 +13,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * A massa de demonstracao contra o Oracle real: a carga incremental nao duplica nada, e cada
@@ -63,14 +67,13 @@ class CargaDeDadosIntegracaoTest {
                     skuEmFalta, emFalta.getNome(), candidatos.size(),
                     candidatos.contains(skuEsperado));
 
-            assertThat(candidatos)
-                    .as("zerar %s precisa colocar %s entre os candidatos, senao a demonstracao "
-                            + "cai em 422 em vez de mostrar a sugestao", skuEmFalta, skuEsperado)
-                    .contains(skuEsperado);
+            assertTrue(candidatos.contains(skuEsperado),
+                    String.format("zerar %s precisa colocar %s entre os candidatos, senao a demonstracao "
+                            + "cai em 422 em vez de mostrar a sugestao", skuEmFalta, skuEsperado));
 
-            assertThat(candidatos)
-                    .as("com um candidato so nao ha escolha semantica a demonstrar em %s", skuEmFalta)
-                    .hasSizeGreaterThan(1);
+            assertTrue(candidatos.size() > 1,
+                    String.format("com um candidato so nao ha escolha semantica a demonstrar em %s",
+                            skuEmFalta));
         });
     }
 
@@ -82,13 +85,11 @@ class CargaDeDadosIntegracaoTest {
         // Rodar a carga de novo e exatamente o que acontece a cada reinicio da aplicacao.
         carregador.run(null);
 
-        assertThat(produtoRepository.buscarPaginado(0, 1).totalElementos())
-                .as("um produto que ja existe nao pode ser inserido outra vez")
-                .isEqualTo(produtosAntes);
+        assertEquals(produtosAntes, produtoRepository.buscarPaginado(0, 1).totalElementos(),
+                "um produto que ja existe nao pode ser inserido outra vez");
 
-        assertThat(todosOsPontos())
-                .as("nem uma secao do mapa")
-                .hasSize(pontosAntes);
+        assertEquals(pontosAntes, todosOsPontos().size(),
+                "nem uma secao do mapa");
     }
 
     @Test
@@ -99,14 +100,12 @@ class CargaDeDadosIntegracaoTest {
 
         System.out.println(">>> secoes: " + porCorredor);
 
-        assertThat(porCorredor.values())
-                .as("secao repetida dividiria os produtos de um corredor em dois pontos do mapa")
-                .allMatch(quantidade -> quantidade == 1);
+        assertTrue(porCorredor.values().stream().allMatch(quantidade -> quantidade == 1),
+                "secao repetida dividiria os produtos de um corredor em dois pontos do mapa");
 
         for (TipoPonto tipo : List.of(TipoPonto.CAIXA, TipoPonto.BANHEIRO)) {
-            assertThat(pontoMapaRepository.buscarPorTipo(tipo))
-                    .as("ponto de servico %s duplicado apareceria duas vezes no mapa", tipo)
-                    .hasSize(1);
+            assertEquals(1, pontoMapaRepository.buscarPorTipo(tipo).size(),
+                    String.format("ponto de servico %s duplicado apareceria duas vezes no mapa", tipo));
         }
     }
 
@@ -124,19 +123,18 @@ class CargaDeDadosIntegracaoTest {
                 .filter(produto -> produto.getDescricao() == null || produto.getDescricao().isBlank())
                 .toList();
 
-        assertThat(semDescricao)
-                .as("produtos sem descricao: %s",
-                        semDescricao.stream().map(Produto::getSku).toList())
-                .isEmpty();
+        assertTrue(semDescricao.isEmpty(),
+                String.format("produtos sem descricao: %s",
+                        semDescricao.stream().map(Produto::getSku).toList()));
     }
 
     @Test
     void aDescricaoCabeNaColuna() {
         // A coluna aceita 1000 caracteres; um texto maior nao falha em teste, falha na carga.
-        assertThat(todosOsProdutos()).allSatisfy(produto ->
-                assertThat(produto.getDescricao().length())
-                        .as("descricao de %s", produto.getSku())
-                        .isLessThanOrEqualTo(1000));
+        for (Produto produto : todosOsProdutos()) {
+            assertTrue(produto.getDescricao().length() <= 1000,
+                    String.format("descricao de %s", produto.getSku()));
+        }
     }
 
     @Test
@@ -152,11 +150,11 @@ class CargaDeDadosIntegracaoTest {
         System.out.printf(">>> produtos sem imagem: %d de %d%n",
                 semImagem.size(), todosOsProdutos().size());
 
-        assertThat(semImagem).allSatisfy(produto -> {
-            assertThat(produto.getNome()).isNotBlank();
-            assertThat(produto.getDescricao()).isNotBlank();
-            assertThat(produto.getPontoMapa()).isNotNull();
-        });
+        for (Produto produto : semImagem) {
+            assertFalse(produto.getNome() == null || produto.getNome().isBlank());
+            assertFalse(produto.getDescricao() == null || produto.getDescricao().isBlank());
+            assertNotNull(produto.getPontoMapa());
+        }
     }
 
     @Test
@@ -169,14 +167,12 @@ class CargaDeDadosIntegracaoTest {
          * entra no roteiro, essa regra e da tela, entao uma lixa zerada nunca chegaria a lista
          * e o cenario nao teria como comecar. Ver D-72.
          */
-        assertThat(porSku("SKU-TIN-003").temDisponibilidade())
-                .as("zerada, a lixa nao entra no roteiro e a ruptura nao tem como ser encenada")
-                .isTrue();
+        assertTrue(porSku("SKU-TIN-003").temDisponibilidade(),
+                "zerada, a lixa nao entra no roteiro e a ruptura nao tem como ser encenada");
 
         PARES_DE_SUBSTITUICAO.values().forEach(sku ->
-                assertThat(porSku(sku).temDisponibilidade())
-                        .as("o substituto %s precisa ter estoque", sku)
-                        .isTrue());
+                assertTrue(porSku(sku).temDisponibilidade(),
+                        String.format("o substituto %s precisa ter estoque", sku)));
     }
 
     @Test
@@ -193,11 +189,11 @@ class CargaDeDadosIntegracaoTest {
 
         System.out.println(">>> zerados: " + zerados.stream().map(Produto::getSku).toList());
 
-        assertThat(zerados).hasSizeGreaterThanOrEqualTo(2);
-        assertThat(zerados.stream().map(Produto::getSku).toList())
-                .as("um par de substituicao zerado quebraria a ruptura em vez de enfeitar o filtro")
-                .doesNotContainAnyElementsOf(PARES_DE_SUBSTITUICAO.keySet())
-                .doesNotContainAnyElementsOf(PARES_DE_SUBSTITUICAO.values());
+        assertTrue(zerados.size() >= 2);
+        List<String> skusZerados = zerados.stream().map(Produto::getSku).toList();
+        String mensagem = "um par de substituicao zerado quebraria a ruptura em vez de enfeitar o filtro";
+        assertTrue(Collections.disjoint(skusZerados, PARES_DE_SUBSTITUICAO.keySet()), mensagem);
+        assertTrue(Collections.disjoint(skusZerados, PARES_DE_SUBSTITUICAO.values()), mensagem);
     }
 
     private List<Produto> todosOsProdutos() {
