@@ -8,7 +8,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * A traducao entre dominio e persistencia, campo a campo.
@@ -35,12 +36,12 @@ class PontoMapaFactoryTest {
 
         PontoMapa voltou = factory.paraDominio(factory.paraPersistencia(original));
 
-        assertThat(voltou.getId()).isEqualTo(ID);
-        assertThat(voltou.getTipo()).isEqualTo(TipoPonto.QR_CODE);
-        assertThat(voltou.getCorredor()).isEqualTo("Corredor de Tintas");
-        assertThat(voltou.getCodigoCurto()).isEqualTo("TIN02");
-        assertThat(voltou.getCoordenadaX()).isEqualTo(32);
-        assertThat(voltou.getCoordenadaY()).isEqualTo(18);
+        assertEquals(ID, voltou.getId());
+        assertEquals(TipoPonto.QR_CODE, voltou.getTipo());
+        assertEquals("Corredor de Tintas", voltou.getCorredor());
+        assertEquals("TIN02", voltou.getCodigoCurto());
+        assertEquals(32, voltou.getCoordenadaX());
+        assertEquals(18, voltou.getCoordenadaY());
     }
 
     @Test
@@ -51,10 +52,10 @@ class PontoMapaFactoryTest {
         PontoMapaEntity entity = factory.paraPersistencia(
                 new PontoMapa(ID, TipoPonto.QR_CODE, "Corredor de Tintas", 32, 18, "TIN-02"));
 
-        assertThat(entity.getCorredor()).isEqualTo("Corredor de Tintas");
-        assertThat(entity.getCodigoCurto()).isEqualTo("TIN02");
-        assertThat(entity.getCoordenadaX()).isEqualTo(32);
-        assertThat(entity.getCoordenadaY()).isEqualTo(18);
+        assertEquals("Corredor de Tintas", entity.getCorredor());
+        assertEquals("TIN02", entity.getCodigoCurto());
+        assertEquals(32, entity.getCoordenadaX());
+        assertEquals(18, entity.getCoordenadaY());
     }
 
     @Test
@@ -62,14 +63,14 @@ class PontoMapaFactoryTest {
     void semCodigo() {
         PontoMapa prateleira = new PontoMapa(ID, TipoPonto.PRATELEIRA, "Tintas", 32, 10);
 
-        assertThat(factory.paraPersistencia(prateleira).getCodigoCurto()).isNull();
-        assertThat(factory.paraDominio(factory.paraPersistencia(prateleira)).getCodigoCurto()).isNull();
+        assertNull(factory.paraPersistencia(prateleira).getCodigoCurto());
+        assertNull(factory.paraDominio(factory.paraPersistencia(prateleira)).getCodigoCurto());
     }
 
     @Test
     @DisplayName("nulo entra e nulo sai, nos dois sentidos")
     void nulos() {
-        assertThat(factory.paraDominio(null)).isNull();
-        assertThat(factory.paraPersistencia(null)).isNull();
+        assertNull(factory.paraDominio(null));
+        assertNull(factory.paraPersistencia(null));
     }
 }
