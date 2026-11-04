@@ -21,6 +21,9 @@ Esta máquina não tem acesso ao Oracle da FIAP. Os testes de integração (`mvn
 
 **Dúvidas:** toda decisão não prevista aqui é perguntada ao time antes de ser tomada, e registrada neste documento.
 
+**Pendências que bloqueiam o push** (cada uma sai desta lista quando for resolvida)
+- [ ] Apagar `VITE_API_BASE_URL` no painel da Vercel e publicar o frontend de novo (passo 1.2). Sem isso, o backend publicado sem CORS deixa o frontend sem conseguir chamar a API.
+
 ---
 
 ## 2. Visão geral das fases
@@ -62,8 +65,8 @@ Objetivo: o frontend publicado chamar a API no mesmo domínio, para o backend n�
 - [x] **1.1** Criar `frontend/vercel.json` com rewrite de `/api/:caminho*` para `https://merlin-route-finder-api.onrender.com/api/:caminho*`.
 - [ ] **1.2** Push (perguntar antes) e, **no painel da Vercel**, apagar `VITE_API_BASE_URL` e publicar de novo. *Manual, feito por quem administra o projeto na Vercel.*
 - [ ] **1.3** Percorrer a jornada no frontend publicado e confirmar, nas ferramentas do navegador, que as chamadas vão para o domínio da Vercel.
-- [ ] **1.4** Remover `CorsConfig` e a propriedade `merlin.cors.allowed-origins`.
-- [ ] **1.5** Remover `CORS_ALLOWED_ORIGINS` de `render.yaml` e atualizar `docs/deploy.md`.
+- [x] **1.4** Remover `CorsConfig` e a propriedade `merlin.cors.allowed-origins`.
+- [x] **1.5** Remover `CORS_ALLOWED_ORIGINS` de `render.yaml` e atualizar `docs/deploy.md`.
 
 ### Fase 2 — Asserções só com JUnit
 
