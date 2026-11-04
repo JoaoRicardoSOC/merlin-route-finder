@@ -19,6 +19,12 @@
 **Pontos de verificação com banco 🔒**
 Esta máquina não tem acesso ao Oracle da FIAP. Os testes de integração (`mvnw test -Pintegracao`, 22 classes) e a coleção do Insomnia só rodam na máquina de quem tem acesso. Os passos marcados com 🔒 param o trabalho até essa pessoa rodar e confirmar. **Nenhuma fase é dada como concluída sem o seu 🔒.**
 
+**Linha de base da integração (04/11/2026, código ainda com Spring, depois das fases 2 e 3):** 285 testes, 278 passam. As 7 falhas não vêm da migração:
+- 6 dependem do Gemini, que nesse dia levava 15 s para responder "ok" (a D-37 mediu ~1 s) e estourava o limite de 20 s: `AssistenteIntegracaoTest` (2), `GeminiIntegracaoTest` (1), `JornadaCompletaIntegracaoTest` (2) e `RupturaIntegracaoTest.elegeOSubstitutoSemantico...` (1);
+- 1 tem premissa desatualizada: `RupturaIntegracaoTest.produtoIsoladoNaLoja...` supõe o espelho de Decoração sem vizinho num raio de 25, mas o catálogo cresceu e hoje há outros 9 produtos no mesmo ponto (88,55).
+
+Uma fase só é dada como concluída se a integração não tiver falha **além dessas**.
+
 **Dúvidas:** toda decisão não prevista aqui é perguntada ao time antes de ser tomada, e registrada neste documento.
 
 **Pendências que bloqueiam o push** (cada uma sai desta lista quando for resolvida)
@@ -86,15 +92,12 @@ Um commit por pacote ou subpacote. A dependência do Lombok sai na fase 7, quand
 
 ### Fase 4 — Log com `System.out` e `System.err`
 
-- [ ] **4.1** Trocar `@Slf4j` e `log.info`/`log.warn` por `System.out.println`, e `log.error` por `System.err.println` seguido de `printStackTrace` quando houver exceção. Um commit por classe (10 classes).
+- [x] **4.1** Trocar `@Slf4j` e `log.info`/`log.warn` por `System.out.println`, e `log.error` por `System.err.println` seguido de `printStackTrace` quando houver exceção. Um commit por classe (10 classes).
 
 ### Fase 5 — Configuração por variável de ambiente
 
-- [ ] **5.1** Criar `Configuracao` (vai para o pacote `config` na fase 6), com um método por chave de RC-13, lendo `System.getenv` e usando os mesmos valores padrão do `application.yml`.
-- [ ] **5.2** Trocar cada `@Value` por leitura da `Configuracao`: um commit por classe (`RestClientConfig`, `GeminiClient`).
-- [ ] **5.3** Trocar `@ConditionalOnProperty` do agendador e da carga de dados por uma verificação na `Configuracao` no início do método.
-
-O `application.yml` continua existindo para a configuração do próprio Spring (datasource, JPA) até a fase 7.
+- [x] **5.1** Criar `Configuracao` no pacote `config`, com um método por chave de RC-13, lendo `System.getenv` e usando os mesmos valores padrão do `application.yml`.
+- [x] **5.2** *Mudança de rumo (04/11/2026):* trocar agora o `@Value` do `GeminiClient` e do `RestClientConfig` exigiria configuração do Spring provisória (métodos `@Bean`), justamente o que está saindo, e as duas classes são reescritas nas fases 8 e 10. Cada classe passa a usar a `Configuracao` quando for reescrita: `ConnectionFactory` (7.1), Gemini (8.2), agendador, carga de dados e `Main` (fase 10).
 
 ### Fase 6 — Estrutura de pacotes do material
 
@@ -116,8 +119,8 @@ Ficam temporariamente no lugar antigo: `domain/repository/*Repository`, `domain/
 A fase mais longa. Os DAOs novos são escritos primeiro, ao lado do JPA; depois cada service troca de lado, um por vez; por fim, o JPA é apagado.
 
 **7.A Infraestrutura**
-- [ ] **7.1** `factory/ConnectionFactory`: `getConnection()` como no material (`DriverManager`, credenciais de `Configuracao`). Guarda a conexão da transação em andamento na thread (`ThreadLocal`) e a devolve a quem pedir durante a transação.
-- [ ] **7.2** `factory/Transacao`: executa um trabalho com `setAutoCommit(false)`, `commit` no sucesso, `rollback` em qualquer exceção, e sempre fecha a conexão. Modos: normal, somente leitura (`setReadOnly(true)`) e nova (conexão própria, para a ruptura).
+- [x] **7.1** `factory/ConnectionFactory`: `getConnection()` como no material (`DriverManager`, credenciais de `Configuracao`). Guarda a conexão da transação em andamento na thread (`ThreadLocal`) e a devolve a quem pedir durante a transação.
+- [x] **7.2** `factory/Transacao`: executa um trabalho com `setAutoCommit(false)`, `commit` no sucesso, `rollback` em qualquer exceção, e sempre fecha a conexão. Modos: normal, somente leitura (`setReadOnly(true)`) e nova (conexão própria, para a ruptura).
 - [ ] **7.3** Testes de `Transacao` com tag `integracao`: commit, rollback e transação nova independente. 🔒
 
 **7.B DAOs (sem trocar quem usa ainda)**
