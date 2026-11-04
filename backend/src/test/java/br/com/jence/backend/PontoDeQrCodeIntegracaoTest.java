@@ -11,9 +11,13 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Os pontos de QR Code contra o Oracle real: e por um deles que o cliente entra na jornada, e
@@ -39,11 +43,11 @@ class PontoDeQrCodeIntegracaoTest {
         System.out.println(">>> QR Codes: " + pontos.stream()
                 .map(p -> p.getCodigoCurto() + " @ " + p.getCorredor()).toList());
 
-        assertThat(pontos).isNotEmpty();
-        assertThat(pontos).allSatisfy(ponto ->
-                assertThat(ponto.getCodigoCurto())
-                        .as("um QR Code sem codigo curto nao tem plano B")
-                        .isNotBlank());
+        assertFalse(pontos.isEmpty());
+        for (PontoMapa ponto : pontos) {
+            assertFalse(ponto.getCodigoCurto() == null || ponto.getCodigoCurto().isBlank(),
+                    "um QR Code sem codigo curto nao tem plano B");
+        }
     }
 
     @Test
@@ -56,28 +60,27 @@ class PontoDeQrCodeIntegracaoTest {
          */
         List<String> codigos = qrCodes().stream().map(PontoMapa::getCodigoCurto).toList();
 
-        assertThat(codigos).doesNotHaveDuplicates();
+        assertEquals(codigos.size(), new HashSet<>(codigos).size());
     }
 
     @ParameterizedTest(name = "digitar \"{0}\" encontra o ponto")
     @ValueSource(strings = {"ENT-01", "ent-01", "ENT01", "ent 01"})
     @DisplayName("a busca aceita a grafia que o cliente digitar")
     void buscaTolerante(String digitado) {
-        assertThat(pontoMapaRepository.buscarPorCodigoCurto(digitado))
-                .isPresent()
-                .get()
-                .satisfies(ponto -> {
-                    assertThat(ponto.getTipo()).isEqualTo(TipoPonto.QR_CODE);
-                    assertThat(ponto.getCodigoCurto()).isEqualTo("ENT01");
-                });
+        Optional<PontoMapa> encontrado = pontoMapaRepository.buscarPorCodigoCurto(digitado);
+
+        assertTrue(encontrado.isPresent());
+        PontoMapa ponto = encontrado.get();
+        assertEquals(TipoPonto.QR_CODE, ponto.getTipo());
+        assertEquals("ENT01", ponto.getCodigoCurto());
     }
 
     @Test
     @DisplayName("codigo inexistente devolve vazio, sem estourar")
     void codigoInexistente() {
-        assertThat(pontoMapaRepository.buscarPorCodigoCurto("ZZZ-99")).isEmpty();
-        assertThat(pontoMapaRepository.buscarPorCodigoCurto("")).isEmpty();
-        assertThat(pontoMapaRepository.buscarPorCodigoCurto(null)).isEmpty();
+        assertTrue(pontoMapaRepository.buscarPorCodigoCurto("ZZZ-99").isEmpty());
+        assertTrue(pontoMapaRepository.buscarPorCodigoCurto("").isEmpty());
+        assertTrue(pontoMapaRepository.buscarPorCodigoCurto(null).isEmpty());
     }
 
     @Test
@@ -85,9 +88,9 @@ class PontoDeQrCodeIntegracaoTest {
     void dentroDoGrid() {
         // As coordenadas alimentam o desenho do mapa: um ponto fora do grid apareceria
         // encostado na borda da tela, ou fora dela.
-        assertThat(qrCodes()).allSatisfy(ponto -> {
-            assertThat(ponto.getCoordenadaX()).isBetween(0, 100);
-            assertThat(ponto.getCoordenadaY()).isBetween(0, 100);
-        });
+        for (PontoMapa ponto : qrCodes()) {
+            assertTrue(ponto.getCoordenadaX() >= 0 && ponto.getCoordenadaX() <= 100);
+            assertTrue(ponto.getCoordenadaY() >= 0 && ponto.getCoordenadaY() <= 100);
+        }
     }
 }
