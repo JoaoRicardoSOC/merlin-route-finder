@@ -1,11 +1,8 @@
 package br.com.jence.backend.domain.entity;
 
-import lombok.Getter;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 
-@Getter
 public class Produto {
 
     private final UUID id;
@@ -71,5 +68,37 @@ public class Produto {
      */
     public Produto comApresentacao(String novoNome, String novaDescricao, String novaImagemUrl) {
         return new Produto(id, sku, novoNome, novaDescricao, novaImagemUrl, preco, saldoEstoque, pontoMapa);
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public String getSku() {
+        return sku;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public String getImagemUrl() {
+        return imagemUrl;
+    }
+
+    public BigDecimal getPreco() {
+        return preco;
+    }
+
+    public int getSaldoEstoque() {
+        return saldoEstoque;
+    }
+
+    public PontoMapa getPontoMapa() {
+        return pontoMapa;
     }
 }
