@@ -19,7 +19,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Conversa real com o Gemini sobre o catalogo real. Exige Oracle e GEMINI_API_KEY. */
 @Tag("integracao")
@@ -60,11 +62,11 @@ class AssistenteIntegracaoTest {
         System.out.println(">>> pergunta: O que eu preciso para pintar uma parede?");
         System.out.println(">>> resposta: " + r.conteudo());
 
-        assertThat(r.conteudo()).isNotBlank();
+        assertFalse(r.conteudo() == null || r.conteudo().isBlank());
         // A massa tem tinta, rolo, lixa e fita crepe em Tintas: a resposta deve sair dali.
-        assertThat(r.conteudo().toLowerCase())
-                .as("a sugestao precisa citar produtos que existem no catalogo")
-                .containsAnyOf("tinta", "rolo", "lixa");
+        String conteudo = r.conteudo().toLowerCase();
+        assertTrue(List.of("tinta", "rolo", "lixa").stream().anyMatch(conteudo::contains),
+                "a sugestao precisa citar produtos que existem no catalogo");
     }
 
     @Test
@@ -74,10 +76,11 @@ class AssistenteIntegracaoTest {
 
         System.out.println(">>> pergunta fora de escopo -> " + r.conteudo());
 
-        assertThat(r.conteudo().toLowerCase())
-                .as("nao pode responder ao merito do assunto fora de escopo")
-                .doesNotContain("argentina")
-                .doesNotContain("messi");
+        String conteudo = r.conteudo().toLowerCase();
+        assertFalse(conteudo.contains("argentina"),
+                "nao pode responder ao merito do assunto fora de escopo");
+        assertFalse(conteudo.contains("messi"),
+                "nao pode responder ao merito do assunto fora de escopo");
     }
 
     @Test
@@ -93,10 +96,10 @@ class AssistenteIntegracaoTest {
                 m.getRemetente(),
                 m.getConteudo().length() > 90 ? m.getConteudo().substring(0, 90) + "..." : m.getConteudo()));
 
-        assertThat(historico).hasSize(4);
-        assertThat(historico.get(0).isDoCliente()).isTrue();
-        assertThat(historico.get(1).isDoCliente()).isFalse();
-        assertThat(historico.get(2).getConteudo()).isEqualTo("E para a parte hidraulica?");
-        assertThat(historico.get(3).isDoCliente()).isFalse();
+        assertEquals(4, historico.size());
+        assertTrue(historico.get(0).isDoCliente());
+        assertFalse(historico.get(1).isDoCliente());
+        assertEquals("E para a parte hidraulica?", historico.get(2).getConteudo());
+        assertFalse(historico.get(3).isDoCliente());
     }
 }
