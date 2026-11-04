@@ -7,7 +7,9 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * O tempo de vida da sessao, que deixou de ser um detalhe de infraestrutura.
@@ -35,8 +37,8 @@ class SessaoTest {
          */
         Sessao sessao = recemCriada();
 
-        assertThat(sessao.isValida(LocalDateTime.now().plusMinutes(40))).isTrue();
-        assertThat(sessao.isValida(LocalDateTime.now().plusHours(3))).isTrue();
+        assertTrue(sessao.isValida(LocalDateTime.now().plusMinutes(40)));
+        assertTrue(sessao.isValida(LocalDateTime.now().plusHours(3)));
     }
 
     @Test
@@ -44,7 +46,7 @@ class SessaoTest {
     void aindaVence() {
         // Sem vencimento, o banco acumularia sessoes ACTIVE para sempre e a varredura da D-42
         // nao teria o que classificar.
-        assertThat(recemCriada().isValida(LocalDateTime.now().plusHours(5))).isFalse();
+        assertFalse(recemCriada().isValida(LocalDateTime.now().plusHours(5)));
     }
 
     @Test
@@ -52,8 +54,8 @@ class SessaoTest {
     void ttlCoerente() {
         Sessao sessao = recemCriada();
 
-        assertThat(Duration.between(sessao.getCriadoEm(), sessao.getExpiracaoTtl()))
-                .isEqualTo(Sessao.TTL_PADRAO);
+        assertEquals(Sessao.TTL_PADRAO,
+                Duration.between(sessao.getCriadoEm(), sessao.getExpiracaoTtl()));
     }
 
     // ---------------------------------------------------------------- renovacao
@@ -66,7 +68,7 @@ class SessaoTest {
 
         sessao.renovarSessao();
 
-        assertThat(sessao.isValida(LocalDateTime.now().plusHours(3))).isTrue();
+        assertTrue(sessao.isValida(LocalDateTime.now().plusHours(3)));
     }
 
     @Test
@@ -82,7 +84,7 @@ class SessaoTest {
 
         vencida.renovarSessao();
 
-        assertThat(vencida.isValida()).isFalse();
+        assertFalse(vencida.isValida());
     }
 
     @Test
@@ -91,7 +93,7 @@ class SessaoTest {
         Sessao sessao = recemCriada();
         sessao.encerrar();
 
-        assertThat(sessao.isValida()).isFalse();
-        assertThat(sessao.getStatus()).isEqualTo(StatusSessao.COMPLETED);
+        assertFalse(sessao.isValida());
+        assertEquals(StatusSessao.COMPLETED, sessao.getStatus());
     }
 }
