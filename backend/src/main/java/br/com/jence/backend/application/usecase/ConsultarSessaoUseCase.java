@@ -5,7 +5,6 @@ import br.com.jence.backend.domain.entity.Sessao;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,11 +18,16 @@ import java.util.UUID;
  * ultimo item coletado, e nao apenas da placa lida.
  */
 @Service
-@RequiredArgsConstructor
 public class ConsultarSessaoUseCase {
 
     private final SessaoRepository sessaoRepository;
     private final ListaRoteiroRepository listaRoteiroRepository;
+
+    public ConsultarSessaoUseCase(SessaoRepository sessaoRepository,
+                                  ListaRoteiroRepository listaRoteiroRepository) {
+        this.sessaoRepository = sessaoRepository;
+        this.listaRoteiroRepository = listaRoteiroRepository;
+    }
 
     @Transactional(readOnly = true)
     public SessaoResponse executar(UUID sessaoId) {
