@@ -92,7 +92,7 @@ public class TratarRupturaEstoqueUseCase {
      * transacao desfaz a renovacao da sessao, como o @Transactional fazia. O registro da ruptura
      * nao vai junto: o RegistroRupturaDao o grava numa transacao propria (D-39).
      */
-    public RupturaEstoqueResponse executar(UUID itemId) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+    public RupturaEstoqueResponse executar(UUID itemId) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException, SubstitutoIndisponivelException {
         try (Transacao transacao = Transacao.iniciar()) {
             RupturaEstoqueResponse resposta = tratar(itemId);
             transacao.confirmar();
@@ -100,7 +100,7 @@ public class TratarRupturaEstoqueUseCase {
         }
     }
 
-    private RupturaEstoqueResponse tratar(UUID itemId) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+    private RupturaEstoqueResponse tratar(UUID itemId) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException, SubstitutoIndisponivelException {
         ItemRoteiro item = itemRoteiroDao.buscarPorId(itemId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Item de roteiro", itemId));
 
@@ -150,7 +150,7 @@ public class TratarRupturaEstoqueUseCase {
      * substituto" e justamente o relato mais grave a chegar.
      */
     private RupturaEstoqueResponse recusar(UUID sessaoId, ItemRoteiro item, String motivo)
-            throws SQLException {
+            throws SQLException, SubstitutoIndisponivelException {
         registroRupturaDao.salvar(RegistroRuptura.semSugestao(
                 sessaoId, item.getId(), item.getProduto().getId(), motivo));
 

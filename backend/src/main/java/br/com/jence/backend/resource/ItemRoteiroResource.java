@@ -1,5 +1,6 @@
 package br.com.jence.backend.resource;
 
+import br.com.jence.backend.exception.SubstitutoIndisponivelException;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
@@ -114,7 +115,7 @@ public class ItemRoteiroResource {
                     description = "Ruptura registrada, mas nenhum substituto plausivel por perto")
     })
     public ResponseEntity<RupturaEstoqueResponse> relatarRuptura(@PathVariable UUID itemId)
-            throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+            throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException, SubstitutoIndisponivelException {
         return ResponseEntity.ok(tratarRupturaEstoqueUseCase.executar(itemId));
     }
 }

@@ -9,7 +9,7 @@ package br.com.jence.backend.exception;
  * processada, mas o resultado util nao existe. Nao e 404 (o item existe) nem 409 (nada no
  * estado impede a operacao).
  */
-public class SubstitutoIndisponivelException extends RuntimeException {
+public class SubstitutoIndisponivelException extends Exception {
 
     public SubstitutoIndisponivelException(String motivo) {
         super(motivo);
