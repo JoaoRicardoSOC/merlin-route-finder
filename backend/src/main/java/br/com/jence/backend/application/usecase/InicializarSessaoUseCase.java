@@ -7,7 +7,6 @@ import br.com.jence.backend.domain.entity.Sessao;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import br.com.jence.backend.domain.repository.PontoMapaRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,13 +20,20 @@ import java.util.UUID;
  * digitado pelo cliente quando escanear nao deu certo. Para o caso de uso e o mesmo caminho.
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class InicializarSessaoUseCase {
 
     private final SessaoRepository sessaoRepository;
     private final ListaRoteiroRepository listaRoteiroRepository;
     private final PontoMapaRepository pontoMapaRepository;
+
+    public InicializarSessaoUseCase(SessaoRepository sessaoRepository,
+                                    ListaRoteiroRepository listaRoteiroRepository,
+                                    PontoMapaRepository pontoMapaRepository) {
+        this.sessaoRepository = sessaoRepository;
+        this.listaRoteiroRepository = listaRoteiroRepository;
+        this.pontoMapaRepository = pontoMapaRepository;
+    }
 
     /*
      * Transacional porque a sessao e a lista sao gravadas em duas chamadas: se a segunda
