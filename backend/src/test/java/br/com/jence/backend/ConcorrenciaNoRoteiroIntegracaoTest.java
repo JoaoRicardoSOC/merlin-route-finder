@@ -97,15 +97,20 @@ class ConcorrenciaNoRoteiroIntegracaoTest {
     }
 
     /** Dispara as acoes juntas e espera todas terminarem, propagando qualquer falha. */
-    private void emParalelo(Runnable... acoes) throws Exception {
+    /** Uma acao que pode lancar excecao checada, como os casos de uso que ja usam JDBC. */
+    private interface Acao {
+        void executar() throws Exception;
+    }
+
+    private void emParalelo(Acao... acoes) throws Exception {
         CyclicBarrier largada = new CyclicBarrier(acoes.length);
         ExecutorService executor = Executors.newFixedThreadPool(acoes.length);
         try {
             List<Future<?>> execucoes = new java.util.ArrayList<>();
-            for (Runnable acao : acoes) {
+            for (Acao acao : acoes) {
                 execucoes.add(executor.submit(() -> {
                     largada.await(10, TimeUnit.SECONDS);
-                    acao.run();
+                    acao.executar();
                     return null;
                 }));
             }
@@ -198,8 +203,8 @@ class ConcorrenciaNoRoteiroIntegracaoTest {
         List<ItemRoteiro> itens = itensEmOrdemEstavel(carregar());
 
         emParalelo(itens.stream()
-                .map(item -> (Runnable) () -> marcarColetado.executar(item.getId()))
-                .toArray(Runnable[]::new));
+                .map(item -> (Acao) () -> marcarColetado.executar(item.getId()))
+                .toArray(Acao[]::new));
 
         ListaRoteiro noBanco = carregar();
         imprimir("estado final no banco", noBanco);

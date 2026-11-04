@@ -97,14 +97,19 @@ class AmplitudeDeEscritaIntegracaoTest {
         }
     }
 
-    private Escrita medir(Runnable operacao) {
+    /** Uma operacao que pode lancar excecao checada, como os casos de uso que ja usam JDBC. */
+    private interface Operacao {
+        void executar() throws Exception;
+    }
+
+    private Escrita medir(Operacao operacao) throws Exception {
         String item = "br.com.jence.backend.infrastructure.database.entity.ItemRoteiroEntity";
         var antes = estatisticas.getEntityStatistics(item);
         long u = antes.getUpdateCount();
         long i = antes.getInsertCount();
         long d = antes.getDeleteCount();
 
-        operacao.run();
+        operacao.executar();
 
         var depois = estatisticas.getEntityStatistics(item);
         return new Escrita(depois.getUpdateCount() - u,
@@ -114,7 +119,7 @@ class AmplitudeDeEscritaIntegracaoTest {
 
     @Test
     @DisplayName("marcar um item toca a linha daquele item, e so ela")
-    void marcarTocaUmaLinha() {
+    void marcarTocaUmaLinha() throws Exception {
         UUID alvo = itens().getFirst().getId();
 
         Escrita escrita = medir(() -> marcarColetado.executar(alvo));
@@ -129,7 +134,7 @@ class AmplitudeDeEscritaIntegracaoTest {
 
     @Test
     @DisplayName("adicionar um produto insere uma linha e nao reescreve as existentes")
-    void adicionarInsereUmaLinha() {
+    void adicionarInsereUmaLinha() throws Exception {
         UUID furadeira = produtoRepository.buscarPorSku("SKU-FER-001").orElseThrow().getId();
 
         Escrita escrita = medir(() -> adicionar.executar(sessaoId, furadeira));
@@ -144,7 +149,7 @@ class AmplitudeDeEscritaIntegracaoTest {
 
     @Test
     @DisplayName("remover um item apaga uma linha e nao reescreve as outras")
-    void removerApagaUmaLinha() {
+    void removerApagaUmaLinha() throws Exception {
         UUID alvo = itens().getLast().getId();
 
         Escrita escrita = medir(() -> remover.executar(sessaoId, alvo));
@@ -158,7 +163,7 @@ class AmplitudeDeEscritaIntegracaoTest {
 
     @Test
     @DisplayName("a amplitude nao cresce com o tamanho do roteiro")
-    void amplitudeNaoCresceComORoteiro() {
+    void amplitudeNaoCresceComORoteiro() throws Exception {
         /*
          * Oito itens e o tamanho de uma lista de obra pequena. Se o custo de marcar um item
          * dependesse do tamanho do roteiro, o cliente B2B - que a D-17 deixou sem limite -

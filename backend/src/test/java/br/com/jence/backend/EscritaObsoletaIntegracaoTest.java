@@ -15,9 +15,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.support.TransactionTemplate;
+import br.com.jence.backend.factory.Transacao;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -35,8 +33,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * janela exata) e contar linhas escritas tambem nao (o Hibernate ja nao reescreve irmao que
  * nao mudou).
  * <p>
- * Aqui a sobreposicao e forcada, sem sorte: a operacao de fora roda numa transacao que o teste
- * controla e ainda nao confirmou, enquanto uma segunda operacao roda e confirma numa transacao
+ * Aqui a sobreposicao e forcada, sem sorte: a operacao de fora roda numa {@link Transacao} que o
+ * teste controla e ainda nao confirmou, enquanto uma segunda operacao roda e confirma numa transacao
  * propria. Quando a de fora finalmente grava, o banco ja mudou embaixo dela.
  * <p>
  * O resultado esperado - e verificado - e que nada se perde. O motivo esta na D-48: leitura e
@@ -52,14 +50,11 @@ class EscritaObsoletaIntegracaoTest {
     @Autowired MarcarItemColetadoUseCase marcarColetado;
     @Autowired ListaRoteiroRepository listaRoteiroRepository;
     @Autowired ProdutoRepository produtoRepository;
-    @Autowired PlatformTransactionManager gerenciadorDeTransacao;
 
     @Autowired ListaRoteiroJpaRepository listaJpa;
     @Autowired SessaoJpaRepository sessaoJpa;
 
     private UUID sessaoId;
-    private TransactionTemplate transacaoDeFora;
-    private TransactionTemplate transacaoParalela;
 
     @BeforeEach
     void montarRoteiro() {
@@ -67,11 +62,6 @@ class EscritaObsoletaIntegracaoTest {
         adicionarAoRoteiro("SKU-TIN-001");
         adicionarAoRoteiro("SKU-ENC-001");
         adicionarAoRoteiro("SKU-JAR-001");
-
-        transacaoDeFora = new TransactionTemplate(gerenciadorDeTransacao);
-
-        transacaoParalela = new TransactionTemplate(gerenciadorDeTransacao);
-        transacaoParalela.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
     @AfterEach
@@ -98,20 +88,24 @@ class EscritaObsoletaIntegracaoTest {
 
     @Test
     @DisplayName("uma marcacao que demora a confirmar nao desfaz outra que confirmou antes")
-    void marcacaoLentaNaoDesfazAOutra() {
+    void marcacaoLentaNaoDesfazAOutra() throws Exception {
         List<ItemRoteiro> iniciais = itens();
         UUID lento = iniciais.getFirst().getId();
         UUID rapido = iniciais.get(1).getId();
 
-        transacaoDeFora.executeWithoutResult(status -> {
+        try (Transacao deFora = Transacao.iniciar()) {
             // Requisicao lenta: carrega o roteiro e marca o primeiro item...
             marcarColetado.executar(lento);
 
             // ...e, antes de confirmar, uma segunda requisicao marca outro item e confirma.
-            transacaoParalela.executeWithoutResult(interna -> marcarColetado.executar(rapido));
+            try (Transacao paralela = Transacao.iniciarNova()) {
+                marcarColetado.executar(rapido);
+                paralela.confirmar();
+            }
 
-            // Ao sair daqui a requisicao lenta confirma, ja com uma visao desatualizada.
-        });
+            // So agora a requisicao lenta confirma, ja com uma visao desatualizada.
+            deFora.confirmar();
+        }
 
         imprimir("estado final no banco");
 
@@ -131,16 +125,21 @@ class EscritaObsoletaIntegracaoTest {
 
     @Test
     @DisplayName("uma marcacao que demora a confirmar nao apaga item adicionado nesse intervalo")
-    void marcacaoLentaNaoApagaItemNovo() {
+    void marcacaoLentaNaoApagaItemNovo() throws Exception {
         UUID lento = itens().getFirst().getId();
         UUID furadeira = produtoRepository.buscarPorSku("SKU-FER-001").orElseThrow().getId();
 
-        transacaoDeFora.executeWithoutResult(status -> {
+        try (Transacao deFora = Transacao.iniciar()) {
             marcarColetado.executar(lento);
 
             // O totem soma um produto enquanto a marcacao ainda nao confirmou.
-            transacaoParalela.executeWithoutResult(interna -> adicionar.executar(sessaoId, furadeira));
-        });
+            try (Transacao paralela = Transacao.iniciarNova()) {
+                adicionar.executar(sessaoId, furadeira);
+                paralela.confirmar();
+            }
+
+            deFora.confirmar();
+        }
 
         imprimir("estado final no banco");
 

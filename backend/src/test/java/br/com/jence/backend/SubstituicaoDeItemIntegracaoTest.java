@@ -116,7 +116,7 @@ class SubstituicaoDeItemIntegracaoTest {
 
     @Test
     @DisplayName("o substituto entra NAO coletado, mesmo trocando um item ja coletado")
-    void substitutoEntraNaoColetado() {
+    void substitutoEntraNaoColetado() throws Exception {
         /*
          * O detalhe que decide se o cliente sai da loja com o produto. O substituto pode estar
          * alguns metros adiante, e herdar o estado do item que saiu o marcaria como pego -

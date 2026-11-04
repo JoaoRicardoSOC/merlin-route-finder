@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.sql.SQLException;
 import java.util.UUID;
 
 /**
@@ -54,7 +55,8 @@ public class ItemRoteiroResource {
             description = "Acionado quando o cliente confirma ter pego o produto da prateleira. "
                     + "E o que faz o marcador avancar na navegacao e o que indica ao sistema "
                     + "onde o cliente esta. Idempotente.")
-    public ResponseEntity<ItemRoteiroDetalhadoResponse> coletar(@PathVariable UUID itemId) {
+    public ResponseEntity<ItemRoteiroDetalhadoResponse> coletar(@PathVariable UUID itemId)
+            throws SQLException {
         return ResponseEntity.ok(marcarItemColetadoUseCase.executar(itemId));
     }
 

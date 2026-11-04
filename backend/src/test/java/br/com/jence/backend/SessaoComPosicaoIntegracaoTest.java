@@ -73,7 +73,7 @@ class SessaoComPosicaoIntegracaoTest {
         return sessao;
     }
 
-    private UUID coletar(UUID sessaoId, String sku) {
+    private UUID coletar(UUID sessaoId, String sku) throws Exception {
         UUID produtoId = produtoRepository.buscarPorSku(sku).orElseThrow().getId();
         UUID itemId = adicionar.executar(sessaoId, produtoId).id();
         marcarColetado.executar(itemId);
@@ -127,7 +127,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     @Test
     @DisplayName("coletar um item move a posicao para a prateleira dele")
-    void coletaMoveAPosicao() {
+    void coletaMoveAPosicao() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
         coletar(sessao.id(), "SKU-TIN-001");
 
@@ -137,7 +137,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     @Test
     @DisplayName("com varios coletados, a posicao e a do ultimo")
-    void ultimoColetadoVence() {
+    void ultimoColetadoVence() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
 
         coletar(sessao.id(), "SKU-TIN-001");
@@ -153,7 +153,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     @Test
     @DisplayName("recentrar move a posicao e vence o ultimo item coletado")
-    void recentrarVenceAColeta() {
+    void recentrarVenceAColeta() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
         coletar(sessao.id(), "SKU-TIN-001");
 
@@ -166,7 +166,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     @Test
     @DisplayName("recentrar nao mexe na lista nem no que ja foi coletado")
-    void recentrarPreservaALista() {
+    void recentrarPreservaALista() throws Exception {
         /*
          * E a promessa central da operacao: o cliente se perdeu, nao recomecou. Perder a lista
          * aqui seria pior do que nao ter o recurso.
@@ -188,7 +188,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     @Test
     @DisplayName("placa desconhecida devolve 404 e a posicao anterior continua valendo")
-    void placaDesconhecidaNaoZeraAPosicao() {
+    void placaDesconhecidaNaoZeraAPosicao() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
 
         assertThrows(RecursoNaoEncontradoException.class,
@@ -223,7 +223,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     @Test
     @DisplayName("desmarcar devolve a posicao ao item coletado antes dele")
-    void desmarcarVoltaAoAnterior() {
+    void desmarcarVoltaAoAnterior() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
         coletar(sessao.id(), "SKU-TIN-001");
         UUID jardim = coletar(sessao.id(), "SKU-JAR-001");
@@ -238,7 +238,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     @Test
     @DisplayName("desmarcar o unico coletado devolve a posicao a placa de entrada")
-    void desmarcarOUnico() {
+    void desmarcarOUnico() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
         UUID tinta = coletar(sessao.id(), "SKU-TIN-001");
 
@@ -249,7 +249,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     @Test
     @DisplayName("desmarcar tambem desfaz o estado do item, e nao so a posicao")
-    void desmarcarDesfazOItem() {
+    void desmarcarDesfazOItem() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
         UUID tinta = coletar(sessao.id(), "SKU-TIN-001");
 
@@ -264,7 +264,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     @Test
     @DisplayName("desmarcar o que ja esta desmarcado nao e erro")
-    void desmarcarEIdempotente() {
+    void desmarcarEIdempotente() throws Exception {
         // Rede reenviando, ou o cliente tocando duas vezes: nada disso pode virar erro.
         SessaoResponse sessao = iniciarEm("ENT-01");
         UUID tinta = coletar(sessao.id(), "SKU-TIN-001");
@@ -277,7 +277,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     @Test
     @DisplayName("coletar de novo depois de desmarcar volta a mover a posicao")
-    void podeColetarDeNovo() {
+    void podeColetarDeNovo() throws Exception {
         /*
          * O ciclo completo: o cliente desfaz por engano e refaz. Se marcarComoColetado
          * continuasse guardando a hora da primeira vez, a posicao nao acompanharia.
