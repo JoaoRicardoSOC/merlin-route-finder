@@ -4,7 +4,6 @@ import br.com.jence.backend.application.dto.ChatMensagemResponse;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ChatMensagemRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,11 +21,16 @@ import java.util.UUID;
  * reabre a conversa para reler uma recomendacao.
  */
 @Service
-@RequiredArgsConstructor
 public class ConsultarHistoricoChatUseCase {
 
     private final SessaoRepository sessaoRepository;
     private final ChatMensagemRepository chatMensagemRepository;
+
+    public ConsultarHistoricoChatUseCase(SessaoRepository sessaoRepository,
+                                         ChatMensagemRepository chatMensagemRepository) {
+        this.sessaoRepository = sessaoRepository;
+        this.chatMensagemRepository = chatMensagemRepository;
+    }
 
     public List<ChatMensagemResponse> executar(UUID sessaoId) {
         /*
