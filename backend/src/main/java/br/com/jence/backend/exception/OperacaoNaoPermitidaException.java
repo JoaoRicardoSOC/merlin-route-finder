@@ -7,7 +7,7 @@ package br.com.jence.backend.exception;
  * Convertida em HTTP 409 pelo {@code GlobalExceptionHandler}. Nao confundir com
  * {@link RecursoNaoEncontradoException} (404): aqui o recurso existe.
  */
-public class OperacaoNaoPermitidaException extends RuntimeException {
+public class OperacaoNaoPermitidaException extends Exception {
 
     public OperacaoNaoPermitidaException(String motivo) {
         super(motivo);

@@ -1,5 +1,6 @@
 package br.com.jence.backend.resource;
 
+import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dto.IniciarSessaoRequest;
 import br.com.jence.backend.dto.RecentrarSessaoRequest;
@@ -82,7 +83,7 @@ public class SessaoResource {
                     + "permanecem intactos, e nenhuma sessao nova e criada.")
     public ResponseEntity<SessaoResponse> recentrar(
             @PathVariable UUID sessaoId,
-            @Valid @RequestBody RecentrarSessaoRequest requisicao) throws SQLException, RecursoNaoEncontradoException {
+            @Valid @RequestBody RecentrarSessaoRequest requisicao) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
         return ResponseEntity.ok(
                 recentrarSessaoUseCase.executar(sessaoId, requisicao.codigoPonto()));
     }
@@ -92,7 +93,7 @@ public class SessaoResource {
             description = "Acionado quando o cliente finaliza a compra. Nao exige "
                     + "que todos os itens tenham sido coletados.")
     public ResponseEntity<SessaoResponse> concluir(@PathVariable UUID sessaoId)
-            throws SQLException, RecursoNaoEncontradoException {
+            throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
         return ResponseEntity.ok(concluirRotaUseCase.executar(sessaoId));
     }
 }

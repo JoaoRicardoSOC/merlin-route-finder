@@ -1,5 +1,6 @@
 package br.com.jence.backend.resource;
 
+import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dto.AdicionarItemRequest;
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
@@ -64,7 +65,7 @@ public class RoteiroResource {
                     + "sem duplicar a parada na rota.")
     public ResponseEntity<ItemRoteiroDetalhadoResponse> adicionar(
             @PathVariable UUID sessaoId,
-            @Valid @RequestBody AdicionarItemRequest request) throws SQLException, RecursoNaoEncontradoException {
+            @Valid @RequestBody AdicionarItemRequest request) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
 
         ItemRoteiroDetalhadoResponse item =
                 adicionarProdutoAoRoteiroUseCase.executar(sessaoId, request.produtoId());
@@ -75,7 +76,7 @@ public class RoteiroResource {
     @DeleteMapping("/itens/{itemId}")
     @Operation(summary = "Remover produto da lista (UC-006)")
     public ResponseEntity<Void> remover(@PathVariable UUID sessaoId, @PathVariable UUID itemId)
-            throws SQLException, RecursoNaoEncontradoException {
+            throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
         removerProdutoDoRoteiroUseCase.executar(sessaoId, itemId);
         return ResponseEntity.noContent().build();
     }

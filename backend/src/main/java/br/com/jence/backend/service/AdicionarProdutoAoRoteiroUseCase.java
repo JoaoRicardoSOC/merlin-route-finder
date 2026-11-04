@@ -34,7 +34,7 @@ public class AdicionarProdutoAoRoteiroUseCase {
         this.produtoDao = produtoDao;
     }
 
-    public ItemRoteiroDetalhadoResponse executar(UUID sessaoId, UUID produtoId) throws SQLException, RecursoNaoEncontradoException {
+    public ItemRoteiroDetalhadoResponse executar(UUID sessaoId, UUID produtoId) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
         try (Transacao transacao = Transacao.iniciar()) {
             ItemRoteiroDetalhadoResponse resposta = adicionar(sessaoId, produtoId);
             transacao.confirmar();
@@ -42,7 +42,7 @@ public class AdicionarProdutoAoRoteiroUseCase {
         }
     }
 
-    private ItemRoteiroDetalhadoResponse adicionar(UUID sessaoId, UUID produtoId) throws SQLException, RecursoNaoEncontradoException {
+    private ItemRoteiroDetalhadoResponse adicionar(UUID sessaoId, UUID produtoId) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
         Sessao sessao = sessaoDao.buscarPorId(sessaoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao", sessaoId));
 

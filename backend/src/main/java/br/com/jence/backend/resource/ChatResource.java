@@ -1,5 +1,6 @@
 package br.com.jence.backend.resource;
 
+import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dto.ChatMensagemResponse;
 import br.com.jence.backend.dto.EnviarMensagemRequest;
@@ -79,7 +80,7 @@ public class ChatResource {
     })
     public ResponseEntity<ChatMensagemResponse> enviar(
             @PathVariable UUID sessaoId,
-            @Valid @RequestBody EnviarMensagemRequest request) throws SQLException, RecursoNaoEncontradoException {
+            @Valid @RequestBody EnviarMensagemRequest request) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
 
         ChatMensagemResponse resposta =
                 conversarComAssistenteUseCase.executar(sessaoId, request.conteudo());
