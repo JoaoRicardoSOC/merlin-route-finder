@@ -75,7 +75,7 @@ class ExpiracaoDeSessaoIntegracaoTest {
     }
 
     @Test
-    void classificaCadaSessaoVencidaESalvaNoBanco() {
+    void classificaCadaSessaoVencidaESalvaNoBanco() throws Exception {
         UUID comCarrinho = sessaoAbandonadaHaUmaHora(true);
         UUID semCarrinho = sessaoAbandonadaHaUmaHora(false);
 
@@ -93,7 +93,7 @@ class ExpiracaoDeSessaoIntegracaoTest {
     }
 
     @Test
-    void sessaoAindaValidaNaoEVarrida() {
+    void sessaoAindaValidaNaoEVarrida() throws Exception {
         UUID ativa = inicializar.executar(null).id();
         criadas.add(ativa);
 
@@ -104,7 +104,7 @@ class ExpiracaoDeSessaoIntegracaoTest {
     }
 
     @Test
-    void segundaVarreduraNaoEncontraOQueAPrimeiraJaTratou() {
+    void segundaVarreduraNaoEncontraOQueAPrimeiraJaTratou() throws Exception {
         sessaoAbandonadaHaUmaHora(true);
         sessaoAbandonadaHaUmaHora(false);
 

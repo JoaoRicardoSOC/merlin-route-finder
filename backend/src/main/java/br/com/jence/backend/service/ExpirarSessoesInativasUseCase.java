@@ -1,10 +1,12 @@
 package br.com.jence.backend.service;
 
 import br.com.jence.backend.model.Sessao;
-import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
-import br.com.jence.backend.domain.repository.SessaoRepository;
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.SessaoDao;
+import br.com.jence.backend.factory.Transacao;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,13 +21,12 @@ import java.util.List;
 @Service
 public class ExpirarSessoesInativasUseCase {
 
-    private final SessaoRepository sessaoRepository;
-    private final ListaRoteiroRepository listaRoteiroRepository;
+    private final SessaoDao sessaoDao;
+    private final ListaRoteiroDao listaRoteiroDao;
 
-    public ExpirarSessoesInativasUseCase(SessaoRepository sessaoRepository,
-                                         ListaRoteiroRepository listaRoteiroRepository) {
-        this.sessaoRepository = sessaoRepository;
-        this.listaRoteiroRepository = listaRoteiroRepository;
+    public ExpirarSessoesInativasUseCase(SessaoDao sessaoDao, ListaRoteiroDao listaRoteiroDao) {
+        this.sessaoDao = sessaoDao;
+        this.listaRoteiroDao = listaRoteiroDao;
     }
 
     /** O que a varredura fez, para o agendador registrar e o teste verificar. */
@@ -40,7 +41,7 @@ public class ExpirarSessoesInativasUseCase {
         }
     }
 
-    public ResultadoDaVarredura executar() {
+    public ResultadoDaVarredura executar() throws SQLException {
         return executar(LocalDateTime.now());
     }
 
@@ -48,8 +49,12 @@ public class ExpirarSessoesInativasUseCase {
      * A referencia de tempo e parametro para o teste conseguir varrer um instante especifico
      * sem manipular o relogio do sistema. Mesmo motivo de Sessao.isValida(referencia).
      */
-    public ResultadoDaVarredura executar(LocalDateTime referencia) {
-        List<Sessao> vencidas = sessaoRepository.buscarExpiradas(referencia);
+    public ResultadoDaVarredura executar(LocalDateTime referencia) throws SQLException {
+        List<Sessao> vencidas;
+        try (Transacao transacao = Transacao.iniciarSomenteLeitura()) {
+            vencidas = sessaoDao.buscarExpiradas(referencia);
+            transacao.confirmar();
+        }
 
         int abandonadas = 0;
         int expiradas = 0;
@@ -58,10 +63,10 @@ public class ExpirarSessoesInativasUseCase {
         for (Sessao sessao : vencidas) {
             /*
              * Cada sessao e tratada isoladamente: uma que falhe - lista corrompida, indisponi-
-             * bilidade momentanea do banco - nao pode impedir a varredura das demais. O salvar
-             * do adaptador ja abre a propria transacao, entao nao ha o que desfazer em bloco.
+             * bilidade momentanea do banco - nao pode impedir a varredura das demais. Cada
+             * sessao abre a propria transacao, entao nao ha o que desfazer em bloco.
              */
-            try {
+            try (Transacao transacao = Transacao.iniciar()) {
                 if (tinhaCarrinhoMontado(sessao)) {
                     sessao.abandonar();
                     abandonadas++;
@@ -69,7 +74,8 @@ public class ExpirarSessoesInativasUseCase {
                     sessao.expirar();
                     expiradas++;
                 }
-                sessaoRepository.salvar(sessao);
+                sessaoDao.salvar(sessao);
+                transacao.confirmar();
 
             } catch (Exception e) {
                 falhas++;
@@ -93,8 +99,8 @@ public class ExpirarSessoesInativasUseCase {
      * montou a lista e nao concluiu - uma venda que quase aconteceu. EXPIRED e quem encostou
      * no totem e foi embora sem adicionar nada, onde nada estava em jogo. Ver D-42.
      */
-    private boolean tinhaCarrinhoMontado(Sessao sessao) {
-        return listaRoteiroRepository.buscarPorSessao(sessao.getId())
+    private boolean tinhaCarrinhoMontado(Sessao sessao) throws SQLException {
+        return listaRoteiroDao.buscarPorSessao(sessao.getId())
                 .filter(lista -> !lista.isVazia())
                 .isPresent();
     }
