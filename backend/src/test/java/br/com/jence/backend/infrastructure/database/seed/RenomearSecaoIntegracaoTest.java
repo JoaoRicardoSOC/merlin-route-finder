@@ -19,7 +19,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Renomear uma secao e migracao de dado, nao edicao de string (D-70).
@@ -59,18 +61,19 @@ class RenomearSecaoIntegracaoTest {
 
         System.out.println(">>> secoes gravadas: " + porNome.keySet());
 
-        assertThat(porNome.values())
-                .as("secao repetida dividiria os produtos de um corredor em dois pontos")
-                .allMatch(quantidade -> quantidade == 1);
+        assertTrue(porNome.values().stream().allMatch(quantidade -> quantidade == 1),
+                "secao repetida dividiria os produtos de um corredor em dois pontos");
 
-        assertThat(porNome.keySet())
-                .as("o que esta gravado tem que ser exatamente o que a planta declara")
-                .containsExactlyInAnyOrderElementsOf(
-                        PlantaDaLoja.blocos().stream().map(BlocoMapa::rotulo).toList());
+        // Comparacao como multiconjunto: copias ordenadas, que tambem falham se os tamanhos diferirem.
+        assertEquals(
+                PlantaDaLoja.blocos().stream().map(BlocoMapa::rotulo).sorted().toList(),
+                porNome.keySet().stream().sorted().toList(),
+                "o que esta gravado tem que ser exatamente o que a planta declara");
 
-        assertThat(porNome.keySet())
-                .as("os nomes sem acento sao os antigos e nao podem ter sobrado")
-                .doesNotContain("Eletrica", "Iluminacao", "Decoracao", "Materiais de construcao");
+        for (String antigo : List.of("Eletrica", "Iluminacao", "Decoracao", "Materiais de construcao")) {
+            assertFalse(porNome.keySet().contains(antigo),
+                    "os nomes sem acento sao os antigos e nao podem ter sobrado");
+        }
     }
 
     @Test
@@ -86,24 +89,22 @@ class RenomearSecaoIntegracaoTest {
         UUID idOriginal = antes.getId();
         long produtosAntes = produtosEm("Decoração");
 
-        assertThat(produtosAntes).as("a secao precisa ter produtos para o teste valer").isPositive();
+        assertTrue(produtosAntes > 0, "a secao precisa ter produtos para o teste valer");
 
         pontoMapaJpaRepository.renomearCorredor("Decoração", "Decoracao");
-        assertThat(porCorredor("Decoracao").getId()).isEqualTo(idOriginal);
+        assertEquals(idOriginal, porCorredor("Decoracao").getId());
 
         carregador.run(null);
 
         PontoMapa depois = porCorredor("Decoração");
-        assertThat(depois.getId())
-                .as("a carga criou um ponto novo em vez de renomear o que ja existia")
-                .isEqualTo(idOriginal);
-        assertThat(depois.getCoordenadaX()).isEqualTo(antes.getCoordenadaX());
-        assertThat(depois.getCoordenadaY()).isEqualTo(antes.getCoordenadaY());
-        assertThat(produtosEm("Decoração")).isEqualTo(produtosAntes);
+        assertEquals(idOriginal, depois.getId(),
+                "a carga criou um ponto novo em vez de renomear o que ja existia");
+        assertEquals(antes.getCoordenadaX(), depois.getCoordenadaX());
+        assertEquals(antes.getCoordenadaY(), depois.getCoordenadaY());
+        assertEquals(produtosAntes, produtosEm("Decoração"));
 
-        assertThat(prateleiras())
-                .as("o nome antigo nao pode ter sobrado como ponto orfao")
-                .noneMatch(ponto -> ponto.getCorredor().equals("Decoracao"));
+        assertTrue(prateleiras().stream().noneMatch(ponto -> ponto.getCorredor().equals("Decoracao")),
+                "o nome antigo nao pode ter sobrado como ponto orfao");
     }
 
     private long produtosEm(String corredor) {
