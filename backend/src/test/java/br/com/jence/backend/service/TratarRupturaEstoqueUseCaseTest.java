@@ -1,8 +1,18 @@
 package br.com.jence.backend.service;
 
+import br.com.jence.backend.dao.ItemRoteiroDao;
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.ProdutoDao;
+import br.com.jence.backend.dao.RegistroRupturaDao;
+import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.dto.RupturaEstoqueResponse;
+import br.com.jence.backend.factory.ConexaoFalsa;
+import br.com.jence.backend.factory.ConnectionFactory;
+import br.com.jence.backend.model.AfinidadeDeProduto;
+import br.com.jence.backend.model.FerramentaIA;
 import br.com.jence.backend.model.ItemRoteiro;
 import br.com.jence.backend.model.ListaRoteiro;
+import br.com.jence.backend.model.MensagemIA;
 import br.com.jence.backend.model.OrigemSugestao;
 import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Produto;
@@ -10,28 +20,22 @@ import br.com.jence.backend.model.RegistroRuptura;
 import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.model.StatusSessao;
 import br.com.jence.backend.model.TipoPonto;
+import br.com.jence.backend.model.ValorDeAtributo;
 import br.com.jence.backend.exception.AssistenteIAIndisponivelException;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.exception.SubstitutoIndisponivelException;
-import br.com.jence.backend.domain.repository.ItemRoteiroRepository;
-import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
-import br.com.jence.backend.domain.repository.RegistroRupturaRepository;
-import br.com.jence.backend.domain.repository.SessaoRepository;
 import br.com.jence.backend.domain.service.AssistenteIA;
 import br.com.jence.backend.ia.ExecutorDeFerramenta;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,26 +44,114 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyDouble;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+/**
+ * Roda sem banco: os DAOs sao trocados por versoes em memoria escritas aqui mesmo, e a
+ * {@link ConexaoFalsa} entrega a conexao que a {@link br.com.jence.backend.factory.Transacao}
+ * abre, confirma e fecha.
+ */
 class TratarRupturaEstoqueUseCaseTest {
 
-    @Mock ItemRoteiroRepository itemRoteiroRepository;
-    @Mock ListaRoteiroRepository listaRoteiroRepository;
-    @Mock SessaoRepository sessaoRepository;
-    @Mock ProdutoRepository produtoRepository;
-    @Mock RegistroRupturaRepository registroRupturaRepository;
-    @Mock AssistenteIA assistenteIA;
-    @InjectMocks TratarRupturaEstoqueUseCase useCase;
+    // ---------------------------------------------------------------- dublês em memoria
+
+    /** Devolve os itens que o teste cadastrou. */
+    private static class ItemRoteiroDaoFalso extends ItemRoteiroDao {
+        final Map<UUID, ItemRoteiro> itens = new HashMap<>();
+
+        @Override
+        public Optional<ItemRoteiro> buscarPorId(UUID id) {
+            return Optional.ofNullable(itens.get(id));
+        }
+    }
+
+    /** Devolve a lista cadastrada para cada item. */
+    private static class ListaRoteiroDaoFalso extends ListaRoteiroDao {
+        final Map<UUID, ListaRoteiro> porItem = new HashMap<>();
+
+        @Override
+        public Optional<ListaRoteiro> buscarPorItem(UUID itemId) {
+            return Optional.ofNullable(porItem.get(itemId));
+        }
+    }
+
+    /** Devolve as sessoes cadastradas e anota cada gravacao. */
+    private static class SessaoDaoFalso extends SessaoDao {
+        final Map<UUID, Sessao> sessoes = new HashMap<>();
+        final List<Sessao> salvas = new ArrayList<>();
+
+        @Override
+        public Optional<Sessao> buscarPorId(UUID id) {
+            return Optional.ofNullable(sessoes.get(id));
+        }
+
+        @Override
+        public Sessao salvar(Sessao sessao) {
+            salvas.add(sessao);
+            return sessao;
+        }
+    }
+
+    /**
+     * A consulta espacial devolve os candidatos informados, mas so quando o produto excluido e o
+     * que o teste espera - o mesmo filtro que o {@code eq(...)} do Mockito fazia.
+     */
+    private static class ProdutoDaoFalso extends ProdutoDao {
+        UUID excluidoEsperado;
+        List<Produto> candidatos = List.of();
+
+        @Override
+        public List<ValorDeAtributo> buscarAtributosDe(UUID produtoId) {
+            return List.of();
+        }
+
+        @Override
+        public List<Produto> buscarDisponiveisProximosDe(PontoMapa referencia, UUID excluido,
+                                                         AfinidadeDeProduto afinidade,
+                                                         double raio, int limite) {
+            return excluido.equals(excluidoEsperado) ? candidatos : List.of();
+        }
+    }
+
+    /** Anota cada registro gravado. */
+    private static class RegistroRupturaDaoFalso extends RegistroRupturaDao {
+        final List<RegistroRuptura> salvos = new ArrayList<>();
+
+        @Override
+        public RegistroRuptura salvar(RegistroRuptura registro) {
+            salvos.add(registro);
+            return registro;
+        }
+    }
+
+    /** Responde o texto combinado, ou falha, e guarda o executor de ferramenta que recebeu. */
+    private static class AssistenteFalso implements AssistenteIA {
+        String resposta;
+        RuntimeException falha;
+        int chamadas;
+        ExecutorDeFerramenta executorRecebido;
+
+        @Override
+        public String conversar(String instrucaoSistema, List<MensagemIA> historico,
+                                List<FerramentaIA> ferramentas, ExecutorDeFerramenta executor) {
+            chamadas++;
+            executorRecebido = executor;
+            if (falha != null) {
+                throw falha;
+            }
+            return resposta;
+        }
+    }
+
+    private ItemRoteiroDaoFalso itemRoteiroDao;
+    private ListaRoteiroDaoFalso listaRoteiroDao;
+    private SessaoDaoFalso sessaoDao;
+    private ProdutoDaoFalso produtoDao;
+    private RegistroRupturaDaoFalso registroRupturaDao;
+    private AssistenteFalso assistenteIA;
+    private TratarRupturaEstoqueUseCase useCase;
 
     private static final PontoMapa TINTAS =
             new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 32, 10);
@@ -74,11 +166,27 @@ class TratarRupturaEstoqueUseCaseTest {
 
     @BeforeEach
     void preparar() {
+        ConexaoFalsa.usarNaFabrica();
+
+        itemRoteiroDao = new ItemRoteiroDaoFalso();
+        listaRoteiroDao = new ListaRoteiroDaoFalso();
+        sessaoDao = new SessaoDaoFalso();
+        produtoDao = new ProdutoDaoFalso();
+        registroRupturaDao = new RegistroRupturaDaoFalso();
+        assistenteIA = new AssistenteFalso();
+        useCase = new TratarRupturaEstoqueUseCase(itemRoteiroDao, listaRoteiroDao, sessaoDao,
+                produtoDao, registroRupturaDao, assistenteIA);
+
         sessaoId = UUID.randomUUID();
         itemId = UUID.randomUUID();
         lixaEmFalta = produto("SKU-TIN-003", "Lixa para Parede Grao 120", "3.50", 0, TINTAS);
         lixaDagua = produto("SKU-TIN-004", "Lixa d'Agua Grao 150", "4.20", 40, TINTAS);
         disjuntor = produto("SKU-ELE-003", "Disjuntor Bipolar 25A", "42.90", 15, ELETRICA);
+    }
+
+    @AfterEach
+    void restaurarFabrica() {
+        ConnectionFactory.usarBanco();
     }
 
     // ---------------------------------------------------------------- montagem do cenario
@@ -92,9 +200,9 @@ class TratarRupturaEstoqueUseCaseTest {
         ItemRoteiro item = ItemRoteiro.reconstituir(itemId, lixaEmFalta, null);
         ListaRoteiro lista = ListaRoteiro.reconstituir(UUID.randomUUID(), sessaoId, List.of(item));
 
-        when(itemRoteiroRepository.buscarPorId(itemId)).thenReturn(Optional.of(item));
-        when(listaRoteiroRepository.buscarPorItem(itemId)).thenReturn(Optional.of(lista));
-        when(sessaoRepository.buscarPorId(sessaoId)).thenReturn(Optional.of(sessao));
+        itemRoteiroDao.itens.put(itemId, item);
+        listaRoteiroDao.porItem.put(itemId, lista);
+        sessaoDao.sessoes.put(sessaoId, sessao);
         return item;
     }
 
@@ -104,26 +212,25 @@ class TratarRupturaEstoqueUseCaseTest {
 
     /** A consulta espacial devolve, em ordem de distancia, os candidatos informados. */
     private void comCandidatosProximos(Produto... candidatos) {
-        when(produtoRepository.buscarDisponiveisProximosDe(
-                any(), eq(lixaEmFalta.getId()), any(), anyDouble(), anyInt()))
-                .thenReturn(List.of(candidatos));
+        produtoDao.excluidoEsperado = lixaEmFalta.getId();
+        produtoDao.candidatos = List.of(candidatos);
     }
 
     private void assistenteResponde(String resposta) {
-        when(assistenteIA.conversar(any(), any(), any(), any())).thenReturn(resposta);
+        assistenteIA.resposta = resposta;
     }
 
+    /** O unico registro gravado; falha se houver nenhum ou mais de um. */
     private RegistroRuptura registroSalvo() {
-        ArgumentCaptor<RegistroRuptura> captor = ArgumentCaptor.forClass(RegistroRuptura.class);
-        verify(registroRupturaRepository).salvar(captor.capture());
-        return captor.getValue();
+        assertEquals(1, registroRupturaDao.salvos.size(), "a ruptura deveria ser registrada uma vez");
+        return registroRupturaDao.salvos.getFirst();
     }
 
     // ---------------------------------------------------------------- caminho feliz
 
     @Test
     @DisplayName("o assistente elege um candidato e a sugestao sai com o produto do nosso banco")
-    void assistenteElegeSubstituto() {
+    void assistenteElegeSubstituto() throws Exception {
         comSessaoAtiva();
         comCandidatosProximos(lixaDagua, disjuntor);
         assistenteResponde("SKU-TIN-004 | A lixa d'agua grao 150 da o mesmo acabamento e esta no "
@@ -148,10 +255,11 @@ class TratarRupturaEstoqueUseCaseTest {
 
         useCase.executar(itemId);
 
-        ArgumentCaptor<ExecutorDeFerramenta> captor = ArgumentCaptor.forClass(ExecutorDeFerramenta.class);
-        verify(assistenteIA).conversar(any(), any(), any(), captor.capture());
+        assertEquals(1, assistenteIA.chamadas);
+        ExecutorDeFerramenta executor = assistenteIA.executorRecebido;
+        assertNotNull(executor);
 
-        Object candidatos = captor.getValue().executar("buscar_substitutos_proximos", Map.of()).get("candidatos");
+        Object candidatos = executor.executar("buscar_substitutos_proximos", Map.of()).get("candidatos");
 
         String mensagem = "a ferramenta nao pode devolver nada alem do que a consulta espacial trouxe";
         List<?> lista = assertInstanceOf(List.class, candidatos);
@@ -167,7 +275,7 @@ class TratarRupturaEstoqueUseCaseTest {
 
     @Test
     @DisplayName("a ruptura fica registrada com a origem da sugestao")
-    void registraARuptura() {
+    void registraARuptura() throws Exception {
         comSessaoAtiva();
         comCandidatosProximos(lixaDagua);
         assistenteResponde("SKU-TIN-004 | mesmo acabamento, mesmo corredor");
@@ -185,7 +293,7 @@ class TratarRupturaEstoqueUseCaseTest {
 
     @Test
     @DisplayName("a sessao e renovada: o cliente esta em plena caminhada pela loja")
-    void renovaASessao() {
+    void renovaASessao() throws Exception {
         Sessao sessao = Sessao.reconstituir(sessaoId, StatusSessao.ACTIVE,
                 LocalDateTime.now().minusMinutes(25), LocalDateTime.now().plusMinutes(5), null, null);
         comItemNoRoteiro(sessao);
@@ -195,14 +303,15 @@ class TratarRupturaEstoqueUseCaseTest {
         useCase.executar(itemId);
 
         assertTrue(sessao.getExpiracaoTtl().isAfter(LocalDateTime.now().plusMinutes(25)));
-        verify(sessaoRepository).salvar(sessao);
+        assertEquals(1, sessaoDao.salvas.stream().filter(s -> s == sessao).count(),
+                "a sessao renovada deveria ser gravada uma vez");
     }
 
     // ---------------------------------------------------------------- grounding
 
     @Test
     @DisplayName("SKU fora da lista de candidatos e descartado e cai no mais proximo")
-    void skuInventadoNaoViraSugestao() {
+    void skuInventadoNaoViraSugestao() throws Exception {
         comSessaoAtiva();
         comCandidatosProximos(lixaDagua, disjuntor);
         // Produto que existe no mundo, mas nao estava entre os candidatos que oferecemos.
@@ -219,7 +328,7 @@ class TratarRupturaEstoqueUseCaseTest {
 
     @Test
     @DisplayName("resposta fora do formato combinado cai no mais proximo")
-    void respostaIlegivelCaiNoFallback() {
+    void respostaIlegivelCaiNoFallback() throws Exception {
         comSessaoAtiva();
         comCandidatosProximos(lixaDagua, disjuntor);
         assistenteResponde("Acho que voce deveria procurar um vendedor.");
@@ -232,7 +341,7 @@ class TratarRupturaEstoqueUseCaseTest {
 
     @Test
     @DisplayName("negrito e crase em volta do SKU nao invalidam a escolha")
-    void toleraMarkdownNoCodigo() {
+    void toleraMarkdownNoCodigo() throws Exception {
         comSessaoAtiva();
         comCandidatosProximos(lixaDagua, disjuntor);
         assistenteResponde("**SKU-TIN-004** | Mesmo acabamento, poucos passos a frente.");
@@ -247,11 +356,10 @@ class TratarRupturaEstoqueUseCaseTest {
 
     @Test
     @DisplayName("assistente fora do ar nao deixa o cliente sem resposta")
-    void assistenteIndisponivelCaiNoMaisProximo() {
+    void assistenteIndisponivelCaiNoMaisProximo() throws Exception {
         comSessaoAtiva();
         comCandidatosProximos(lixaDagua, disjuntor);
-        when(assistenteIA.conversar(any(), any(), any(), any()))
-                .thenThrow(new AssistenteIAIndisponivelException("cota esgotada"));
+        assistenteIA.falha = new AssistenteIAIndisponivelException("cota esgotada");
 
         RupturaEstoqueResponse resposta = useCase.executar(itemId);
 
@@ -278,7 +386,7 @@ class TratarRupturaEstoqueUseCaseTest {
         assertFalse(registro.temSugestao());
         assertEquals(OrigemSugestao.NENHUMA, registro.getOrigem());
         assertEquals(item.getProduto().getId(), registro.getProdutoFaltanteId());
-        verify(assistenteIA, never()).conversar(any(), any(), any(), any());
+        assertEquals(0, assistenteIA.chamadas);
     }
 
     @Test
@@ -298,15 +406,15 @@ class TratarRupturaEstoqueUseCaseTest {
 
     @Test
     @DisplayName("produto que o cliente ja vai levar nao entra como candidato")
-    void ignoraCandidatoQueJaEstaNoRoteiro() {
+    void ignoraCandidatoQueJaEstaNoRoteiro() throws Exception {
         ItemRoteiro item = ItemRoteiro.reconstituir(itemId, lixaEmFalta, null);
         ItemRoteiro jaNoCarrinho = ItemRoteiro.reconstituir(UUID.randomUUID(), lixaDagua, null);
         ListaRoteiro lista = ListaRoteiro.reconstituir(
                 UUID.randomUUID(), sessaoId, List.of(item, jaNoCarrinho));
 
-        when(itemRoteiroRepository.buscarPorId(itemId)).thenReturn(Optional.of(item));
-        when(listaRoteiroRepository.buscarPorItem(itemId)).thenReturn(Optional.of(lista));
-        when(sessaoRepository.buscarPorId(sessaoId)).thenReturn(Optional.of(Sessao.iniciar(sessaoId)));
+        itemRoteiroDao.itens.put(itemId, item);
+        listaRoteiroDao.porItem.put(itemId, lista);
+        sessaoDao.sessoes.put(sessaoId, Sessao.iniciar(sessaoId));
         comCandidatosProximos(lixaDagua, disjuntor);
         assistenteResponde("SKU-ELE-003 | Nao ha lixa equivalente; leve o disjuntor.");
 
@@ -321,11 +429,11 @@ class TratarRupturaEstoqueUseCaseTest {
     @Test
     @DisplayName("item inexistente devolve 404")
     void itemInexistente() {
-        when(itemRoteiroRepository.buscarPorId(itemId)).thenReturn(Optional.empty());
+        // Nenhum item cadastrado no DAO falso: a busca volta vazia.
 
         assertThrows(RecursoNaoEncontradoException.class, () -> useCase.executar(itemId));
 
-        verify(registroRupturaRepository, never()).salvar(any());
+        assertTrue(registroRupturaDao.salvos.isEmpty());
     }
 
     @Test
@@ -339,7 +447,7 @@ class TratarRupturaEstoqueUseCaseTest {
                 assertThrows(OperacaoNaoPermitidaException.class, () -> useCase.executar(itemId));
         assertTrue(erro.getMessage().contains("COMPLETED"));
 
-        verify(assistenteIA, never()).conversar(any(), any(), any(), any());
-        verify(registroRupturaRepository, never()).salvar(any());
+        assertEquals(0, assistenteIA.chamadas);
+        assertTrue(registroRupturaDao.salvos.isEmpty());
     }
 }

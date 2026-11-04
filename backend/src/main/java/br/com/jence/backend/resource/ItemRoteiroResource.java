@@ -111,7 +111,8 @@ public class ItemRoteiroResource {
             @ApiResponse(responseCode = "422",
                     description = "Ruptura registrada, mas nenhum substituto plausivel por perto")
     })
-    public ResponseEntity<RupturaEstoqueResponse> relatarRuptura(@PathVariable UUID itemId) {
+    public ResponseEntity<RupturaEstoqueResponse> relatarRuptura(@PathVariable UUID itemId)
+            throws SQLException {
         return ResponseEntity.ok(tratarRupturaEstoqueUseCase.executar(itemId));
     }
 }

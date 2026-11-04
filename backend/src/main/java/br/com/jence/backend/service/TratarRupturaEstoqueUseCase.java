@@ -13,17 +13,18 @@ import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.exception.SubstitutoIndisponivelException;
 import br.com.jence.backend.model.AfinidadeDeProduto;
-import br.com.jence.backend.domain.repository.ItemRoteiroRepository;
-import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
-import br.com.jence.backend.domain.repository.RegistroRupturaRepository;
-import br.com.jence.backend.domain.repository.SessaoRepository;
+import br.com.jence.backend.dao.ItemRoteiroDao;
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.ProdutoDao;
+import br.com.jence.backend.dao.RegistroRupturaDao;
+import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.domain.service.AssistenteIA;
 import br.com.jence.backend.model.MensagemIA;
 import br.com.jence.backend.ia.InstrucaoDeRuptura;
+import br.com.jence.backend.factory.Transacao;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -65,36 +66,48 @@ public class TratarRupturaEstoqueUseCase {
      */
     public static final int LIMITE_DE_CANDIDATOS = 20;
 
-    private final ItemRoteiroRepository itemRoteiroRepository;
-    private final ListaRoteiroRepository listaRoteiroRepository;
-    private final SessaoRepository sessaoRepository;
-    private final ProdutoRepository produtoRepository;
-    private final RegistroRupturaRepository registroRupturaRepository;
+    private final ItemRoteiroDao itemRoteiroDao;
+    private final ListaRoteiroDao listaRoteiroDao;
+    private final SessaoDao sessaoDao;
+    private final ProdutoDao produtoDao;
+    private final RegistroRupturaDao registroRupturaDao;
     private final AssistenteIA assistenteIA;
 
-    public TratarRupturaEstoqueUseCase(ItemRoteiroRepository itemRoteiroRepository,
-                                       ListaRoteiroRepository listaRoteiroRepository,
-                                       SessaoRepository sessaoRepository,
-                                       ProdutoRepository produtoRepository,
-                                       RegistroRupturaRepository registroRupturaRepository,
+    public TratarRupturaEstoqueUseCase(ItemRoteiroDao itemRoteiroDao,
+                                       ListaRoteiroDao listaRoteiroDao,
+                                       SessaoDao sessaoDao,
+                                       ProdutoDao produtoDao,
+                                       RegistroRupturaDao registroRupturaDao,
                                        AssistenteIA assistenteIA) {
-        this.itemRoteiroRepository = itemRoteiroRepository;
-        this.listaRoteiroRepository = listaRoteiroRepository;
-        this.sessaoRepository = sessaoRepository;
-        this.produtoRepository = produtoRepository;
-        this.registroRupturaRepository = registroRupturaRepository;
+        this.itemRoteiroDao = itemRoteiroDao;
+        this.listaRoteiroDao = listaRoteiroDao;
+        this.sessaoDao = sessaoDao;
+        this.produtoDao = produtoDao;
+        this.registroRupturaDao = registroRupturaDao;
         this.assistenteIA = assistenteIA;
     }
 
-    @Transactional
-    public RupturaEstoqueResponse executar(UUID itemId) {
-        ItemRoteiro item = itemRoteiroRepository.buscarPorId(itemId)
+    /*
+     * Quando nao ha substituto, a SubstitutoIndisponivelException sai do bloco sem confirmar e a
+     * transacao desfaz a renovacao da sessao, como o @Transactional fazia. O registro da ruptura
+     * nao vai junto: o RegistroRupturaDao o grava numa transacao propria (D-39).
+     */
+    public RupturaEstoqueResponse executar(UUID itemId) throws SQLException {
+        try (Transacao transacao = Transacao.iniciar()) {
+            RupturaEstoqueResponse resposta = tratar(itemId);
+            transacao.confirmar();
+            return resposta;
+        }
+    }
+
+    private RupturaEstoqueResponse tratar(UUID itemId) throws SQLException {
+        ItemRoteiro item = itemRoteiroDao.buscarPorId(itemId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Item de roteiro", itemId));
 
-        ListaRoteiro lista = listaRoteiroRepository.buscarPorItem(itemId)
+        ListaRoteiro lista = listaRoteiroDao.buscarPorItem(itemId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Lista do item de roteiro", itemId));
 
-        Sessao sessao = sessaoRepository.buscarPorId(lista.getSessaoId())
+        Sessao sessao = sessaoDao.buscarPorId(lista.getSessaoId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao", lista.getSessaoId()));
 
         if (!sessao.isValida()) {
@@ -104,7 +117,7 @@ public class TratarRupturaEstoqueUseCase {
 
         // O cliente esta caminhando pela loja: cada acao dele renova o TTL (D-24).
         sessao.renovarSessao();
-        sessaoRepository.salvar(sessao);
+        sessaoDao.salvar(sessao);
 
         Produto emFalta = item.getProduto();
         List<Produto> candidatos = candidatosProximosDe(emFalta, lista);
@@ -120,7 +133,7 @@ public class TratarRupturaEstoqueUseCase {
             return recusar(sessao.getId(), item, sugestao.justificativa());
         }
 
-        registroRupturaRepository.salvar(RegistroRuptura.comSugestao(
+        registroRupturaDao.salvar(RegistroRuptura.comSugestao(
                 sessao.getId(), item.getId(), emFalta.getId(),
                 sugestao.produto().getId(), sugestao.justificativa(), sugestao.origem()));
 
@@ -136,8 +149,9 @@ public class TratarRupturaEstoqueUseCase {
      * falha com 422. Para a loja, "o cliente foi ate a prateleira e nao havia nada, nem
      * substituto" e justamente o relato mais grave a chegar.
      */
-    private RupturaEstoqueResponse recusar(UUID sessaoId, ItemRoteiro item, String motivo) {
-        registroRupturaRepository.salvar(RegistroRuptura.semSugestao(
+    private RupturaEstoqueResponse recusar(UUID sessaoId, ItemRoteiro item, String motivo)
+            throws SQLException {
+        registroRupturaDao.salvar(RegistroRuptura.semSugestao(
                 sessaoId, item.getId(), item.getProduto().getId(), motivo));
 
         throw new SubstitutoIndisponivelException(
@@ -147,7 +161,7 @@ public class TratarRupturaEstoqueUseCase {
 
     // ---------------------------------------------------------------- pre-filtragem espacial
 
-    private List<Produto> candidatosProximosDe(Produto emFalta, ListaRoteiro lista) {
+    private List<Produto> candidatosProximosDe(Produto emFalta, ListaRoteiro lista) throws SQLException {
         PontoMapa origem = emFalta.getPontoMapa();
         if (origem == null) {
             // Sem posicao conhecida nao existe "perto": nao ha como filtrar espacialmente.
@@ -165,9 +179,9 @@ public class TratarRupturaEstoqueUseCase {
          * teriam sido cortados. Ver D-68.
          */
         AfinidadeDeProduto afinidade = AfinidadeDeProduto.de(
-                produtoRepository.buscarAtributosDe(emFalta.getId()));
+                produtoDao.buscarAtributosDe(emFalta.getId()));
 
-        return produtoRepository
+        return produtoDao
                 .buscarDisponiveisProximosDe(origem, emFalta.getId(), afinidade,
                         RAIO_DE_BUSCA, LIMITE_DE_CANDIDATOS)
                 .stream()
