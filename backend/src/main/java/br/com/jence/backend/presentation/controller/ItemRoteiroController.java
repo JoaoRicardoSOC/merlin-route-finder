@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,7 +31,6 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/roteiro/itens")
-@RequiredArgsConstructor
 @Tag(name = "Roteiro", description = "Execucao da rota no celular")
 public class ItemRoteiroController {
 
@@ -40,6 +38,16 @@ public class ItemRoteiroController {
     private final DesmarcarItemColetadoUseCase desmarcarItemColetadoUseCase;
     private final TratarRupturaEstoqueUseCase tratarRupturaEstoqueUseCase;
     private final SubstituirItemDoRoteiroUseCase substituirItemDoRoteiroUseCase;
+
+    public ItemRoteiroController(MarcarItemColetadoUseCase marcarItemColetadoUseCase,
+                                 DesmarcarItemColetadoUseCase desmarcarItemColetadoUseCase,
+                                 TratarRupturaEstoqueUseCase tratarRupturaEstoqueUseCase,
+                                 SubstituirItemDoRoteiroUseCase substituirItemDoRoteiroUseCase) {
+        this.marcarItemColetadoUseCase = marcarItemColetadoUseCase;
+        this.desmarcarItemColetadoUseCase = desmarcarItemColetadoUseCase;
+        this.tratarRupturaEstoqueUseCase = tratarRupturaEstoqueUseCase;
+        this.substituirItemDoRoteiroUseCase = substituirItemDoRoteiroUseCase;
+    }
 
     @PatchMapping("/{itemId}/coletar")
     @Operation(summary = "Marcar item como coletado (UC-014)",
