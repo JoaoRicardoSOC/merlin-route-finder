@@ -13,7 +13,6 @@ import br.com.jence.backend.domain.repository.SessaoRepository;
 import br.com.jence.backend.domain.service.AssistenteIA;
 import br.com.jence.backend.domain.service.MensagemIA;
 import br.com.jence.backend.infrastructure.ia.factory.InstrucaoDoAssistente;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +29,6 @@ import java.util.UUID;
  * so com o vendedor.
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class ConversarComAssistenteUseCase {
 
@@ -41,6 +39,16 @@ public class ConversarComAssistenteUseCase {
     private final ChatMensagemRepository chatMensagemRepository;
     private final ProdutoRepository produtoRepository;
     private final AssistenteIA assistenteIA;
+
+    public ConversarComAssistenteUseCase(SessaoRepository sessaoRepository,
+                                         ChatMensagemRepository chatMensagemRepository,
+                                         ProdutoRepository produtoRepository,
+                                         AssistenteIA assistenteIA) {
+        this.sessaoRepository = sessaoRepository;
+        this.chatMensagemRepository = chatMensagemRepository;
+        this.produtoRepository = produtoRepository;
+        this.assistenteIA = assistenteIA;
+    }
 
     @Transactional
     public ChatMensagemResponse executar(UUID sessaoId, String pergunta) {
