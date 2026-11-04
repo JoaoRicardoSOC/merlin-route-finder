@@ -12,7 +12,6 @@ import br.com.jence.backend.domain.repository.ProdutoRepository;
 import br.com.jence.backend.infrastructure.database.repository.PontoMapaJpaRepository;
 import br.com.jence.backend.infrastructure.database.repository.ProdutoAtributoJpaRepository;
 import br.com.jence.backend.infrastructure.database.schema.RestricaoDeEnumNoBanco;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -44,7 +43,6 @@ import static java.util.Map.entry;
  * Pode ser desligado com {@code merlin.seed.enabled=false}.
  */
 @Component
-@Slf4j
 @ConditionalOnProperty(name = "merlin.seed.enabled", havingValue = "true", matchIfMissing = true)
 public class CarregadorDadosIniciais implements ApplicationRunner {
 
@@ -372,9 +370,9 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         Pagina<Produto> existentes = produtoRepository.buscarPaginado(0, LIMITE_DE_LEITURA);
 
         if (existentes.totalElementos() > existentes.conteudo().size()) {
-            log.warn("Catalogo tem {} produtos, acima do limite de leitura da carga inicial ({}). "
+            System.out.println(String.format("AVISO: Catalogo tem %s produtos, acima do limite de leitura da carga inicial (%s). "
                             + "Carga ignorada para nao arriscar duplicar SKU.",
-                    existentes.totalElementos(), LIMITE_DE_LEITURA);
+                    existentes.totalElementos(), LIMITE_DE_LEITURA));
             return;
         }
 
@@ -401,14 +399,14 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         sincronizarEstoque(contagem);
 
         if (contagem.nadaFeito()) {
-            log.info("Massa de demonstracao ja esta completa. Nada a carregar.");
+            System.out.println("Massa de demonstracao ja esta completa. Nada a carregar.");
         } else {
-            log.info("Carga incremental: {} ponto(s) do mapa, {} corredor(es) renomeado(s), "
-                            + "{} produto(s) criados, {} apresentacao(oes) sincronizada(s), "
-                            + "{} produto(s) com caracteristicas atualizadas e {} com estoque "
+            System.out.println(String.format("Carga incremental: %s ponto(s) do mapa, %s corredor(es) renomeado(s), "
+                            + "%s produto(s) criados, %s apresentacao(oes) sincronizada(s), "
+                            + "%s produto(s) com caracteristicas atualizadas e %s com estoque "
                             + "ajustado.",
                     contagem.pontos, contagem.renomeados, contagem.produtos,
-                    contagem.apresentacoes, contagem.atributos, contagem.estoques);
+                    contagem.apresentacoes, contagem.atributos, contagem.estoques));
         }
     }
 
@@ -418,8 +416,8 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         for (String tipo : TIPOS_APOSENTADOS) {
             int apagados = pontoMapaJpaRepository.apagarPorTipoBruto(tipo);
             if (apagados > 0) {
-                log.info("Ponto de tipo {}, aposentado pelo escopo revisado: {} linha(s) apagada(s).",
-                        tipo, apagados);
+                System.out.println(String.format("Ponto de tipo %s, aposentado pelo escopo revisado: %s linha(s) apagada(s).",
+                        tipo, apagados));
             }
         }
     }
@@ -438,14 +436,14 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
              */
             int vazias = pontoMapaJpaRepository.apagarPrateleiraVaziaChamada(novo);
             if (vazias > 0) {
-                log.info("Secao '{}' existia vazia e duplicada: {} ponto(s) apagado(s) antes "
-                        + "de renomear.", novo, vazias);
+                System.out.println(String.format("Secao '%s' existia vazia e duplicada: %s ponto(s) apagado(s) antes "
+                        + "de renomear.", novo, vazias));
             }
 
             int linhas = pontoMapaJpaRepository.renomearCorredor(antigo, novo);
             if (linhas > 0) {
-                log.info("Corredor '{}' renomeado para '{}': {} ponto(s) atualizado(s). "
-                        + "Os produtos continuam no mesmo ponto.", antigo, novo, linhas);
+                System.out.println(String.format("Corredor '%s' renomeado para '%s': %s ponto(s) atualizado(s). "
+                        + "Os produtos continuam no mesmo ponto.", antigo, novo, linhas));
                 contagem.renomeados += linhas;
             }
         });
@@ -536,8 +534,8 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
             PontoMapa ponto = secoes.get(declarado.secao());
             if (ponto == null) {
                 // Secao sem bloco na planta: o produto ficaria sem lugar no mapa (D-58).
-                log.warn("Produto {} declara a secao '{}', que nao existe na planta. Ignorado.",
-                        declarado.sku(), declarado.secao());
+                System.out.println(String.format("AVISO: Produto %s declara a secao '%s', que nao existe na planta. Ignorado.",
+                        declarado.sku(), declarado.secao()));
                 continue;
             }
 
@@ -580,8 +578,8 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
             if (esperado == null || esperado == produto.getSaldoEstoque()) {
                 continue;
             }
-            log.info("Estoque de {} ajustado de {} para {}, como a massa declara.",
-                    produto.getSku(), produto.getSaldoEstoque(), esperado);
+            System.out.println(String.format("Estoque de %s ajustado de %s para %s, como a massa declara.",
+                    produto.getSku(), produto.getSaldoEstoque(), esperado));
             produtoRepository.salvar(produto.comSaldoEstoque(esperado));
             contagem.estoques++;
         }
