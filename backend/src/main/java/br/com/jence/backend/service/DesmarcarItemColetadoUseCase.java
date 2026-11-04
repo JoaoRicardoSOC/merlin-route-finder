@@ -4,11 +4,14 @@ import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.model.ItemRoteiro;
 import br.com.jence.backend.model.ListaRoteiro;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
-import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
-import br.com.jence.backend.domain.repository.SessaoRepository;
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.SessaoDao;
+import br.com.jence.backend.factory.Transacao;
+import br.com.jence.backend.model.Sessao;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -24,19 +27,25 @@ import java.util.UUID;
 @Service
 public class DesmarcarItemColetadoUseCase {
 
-    private final ListaRoteiroRepository listaRoteiroRepository;
-    private final SessaoRepository sessaoRepository;
+    private final ListaRoteiroDao listaRoteiroDao;
+    private final SessaoDao sessaoDao;
 
-    public DesmarcarItemColetadoUseCase(ListaRoteiroRepository listaRoteiroRepository,
-                                        SessaoRepository sessaoRepository) {
-        this.listaRoteiroRepository = listaRoteiroRepository;
-        this.sessaoRepository = sessaoRepository;
+    public DesmarcarItemColetadoUseCase(ListaRoteiroDao listaRoteiroDao, SessaoDao sessaoDao) {
+        this.listaRoteiroDao = listaRoteiroDao;
+        this.sessaoDao = sessaoDao;
     }
 
-    @Transactional
-    public ItemRoteiroDetalhadoResponse executar(UUID itemId) {
+    public ItemRoteiroDetalhadoResponse executar(UUID itemId) throws SQLException {
+        try (Transacao transacao = Transacao.iniciar()) {
+            ItemRoteiroDetalhadoResponse resposta = desmarcar(itemId);
+            transacao.confirmar();
+            return resposta;
+        }
+    }
+
+    private ItemRoteiroDetalhadoResponse desmarcar(UUID itemId) throws SQLException {
         // Pela raiz do agregado, e nao pelo item isolado: e por ela que se chega a sessao.
-        ListaRoteiro lista = listaRoteiroRepository.buscarPorItem(itemId)
+        ListaRoteiro lista = listaRoteiroDao.buscarPorItem(itemId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Item do roteiro", itemId));
 
         ItemRoteiro item = lista.getItens().stream()
@@ -50,12 +59,13 @@ public class DesmarcarItemColetadoUseCase {
          * placa lida, se nao houver nenhum. Ver D-64.
          */
         item.desmarcarComoColetado();
-        listaRoteiroRepository.salvar(lista);
+        listaRoteiroDao.salvar(lista);
 
-        sessaoRepository.buscarPorId(lista.getSessaoId()).ifPresent(sessao -> {
-            sessao.renovarSessao();
-            sessaoRepository.salvar(sessao);
-        });
+        Optional<Sessao> sessao = sessaoDao.buscarPorId(lista.getSessaoId());
+        if (sessao.isPresent()) {
+            sessao.get().renovarSessao();
+            sessaoDao.salvar(sessao.get());
+        }
 
         return ItemRoteiroDetalhadoResponse.de(item);
     }

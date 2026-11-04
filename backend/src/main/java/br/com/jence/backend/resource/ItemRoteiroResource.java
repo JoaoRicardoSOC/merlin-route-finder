@@ -65,7 +65,8 @@ public class ItemRoteiroResource {
             description = "Acionado quando o cliente tocou por engano ou devolveu o produto a "
                     + "prateleira. A posicao dele volta sozinha para o item marcado antes "
                     + "deste - ou para a placa lida, se nao houver nenhum. Idempotente.")
-    public ResponseEntity<ItemRoteiroDetalhadoResponse> desmarcar(@PathVariable UUID itemId) {
+    public ResponseEntity<ItemRoteiroDetalhadoResponse> desmarcar(@PathVariable UUID itemId)
+            throws SQLException {
         return ResponseEntity.ok(desmarcarItemColetadoUseCase.executar(itemId));
     }
 
