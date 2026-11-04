@@ -26,7 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -106,16 +107,15 @@ class ProdutoControllerTest {
         verify(buscarProdutosUseCase).executar(termo.capture(), secao.capture(),
                 disponiveis.capture(), atributos.capture(), pagina.capture(), tamanho.capture());
 
-        assertThat(termo.getValue()).isEqualTo("tinta");
-        assertThat(secao.getValue()).isEqualTo("Tintas");
-        assertThat(disponiveis.getValue()).isTrue();
-        assertThat(pagina.getValue()).isEqualTo(1);
-        assertThat(tamanho.getValue()).isEqualTo(5);
+        assertEquals("tinta", termo.getValue());
+        assertEquals("Tintas", secao.getValue());
+        assertTrue(disponiveis.getValue());
+        assertEquals(1, pagina.getValue());
+        assertEquals(5, tamanho.getValue());
 
         // Duas marcas viram uma chave com dois valores; a bitola vira outra chave.
-        assertThat(atributos.getValue())
-                .containsEntry(AtributoProduto.MARCA, List.of("Tigre", "Docol"))
-                .containsEntry(AtributoProduto.BITOLA, List.of("25 mm"));
+        assertEquals(List.of("Tigre", "Docol"), atributos.getValue().get(AtributoProduto.MARCA));
+        assertEquals(List.of("25 mm"), atributos.getValue().get(AtributoProduto.BITOLA));
     }
 
     @Test
@@ -141,9 +141,8 @@ class ProdutoControllerTest {
         verify(buscarProdutosUseCase).executar(any(), any(), any(),
                 atributos.capture(), any(), any());
 
-        assertThat(atributos.getValue())
-                .as("so o filtro valido sobrevive")
-                .containsExactly(java.util.Map.entry(AtributoProduto.MARCA, List.of("Tigre")));
+        assertEquals(Map.of(AtributoProduto.MARCA, List.of("Tigre")), atributos.getValue(),
+                "so o filtro valido sobrevive");
     }
 
     @Test
