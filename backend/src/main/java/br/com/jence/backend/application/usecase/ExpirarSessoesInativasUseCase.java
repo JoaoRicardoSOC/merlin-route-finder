@@ -3,7 +3,6 @@ package br.com.jence.backend.application.usecase;
 import br.com.jence.backend.domain.entity.Sessao;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -19,12 +18,17 @@ import java.util.List;
  * sempre, e qualquer contagem de jornadas em andamento seria ficcao.
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class ExpirarSessoesInativasUseCase {
 
     private final SessaoRepository sessaoRepository;
     private final ListaRoteiroRepository listaRoteiroRepository;
+
+    public ExpirarSessoesInativasUseCase(SessaoRepository sessaoRepository,
+                                         ListaRoteiroRepository listaRoteiroRepository) {
+        this.sessaoRepository = sessaoRepository;
+        this.listaRoteiroRepository = listaRoteiroRepository;
+    }
 
     /** O que a varredura fez, para o agendador registrar e o teste verificar. */
     public record ResultadoDaVarredura(int abandonadas, int expiradas, int falhas) {
