@@ -1,6 +1,7 @@
 package br.com.jence.backend;
 
 import br.com.jence.backend.application.dto.MapaResponse;
+import br.com.jence.backend.application.dto.PontoMapaResponse;
 import br.com.jence.backend.application.usecase.ConsultarMapaUseCase;
 import br.com.jence.backend.domain.entity.BlocoMapa;
 import br.com.jence.backend.domain.entity.PlantaDaLoja;
@@ -19,7 +20,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * A planta contra a massa real: o mapa so serve se o que ele desenha bater com onde os
@@ -43,9 +46,8 @@ class MapaIntegracaoTest {
 
     private List<Produto> catalogo() {
         Pagina<Produto> pagina = produtoRepository.buscarPaginado(0, 1000);
-        assertThat(pagina.totalElementos())
-                .as("catalogo maior que a leitura do teste invalidaria a verificacao")
-                .isLessThanOrEqualTo(pagina.conteudo().size());
+        assertTrue(pagina.totalElementos() <= pagina.conteudo().size(),
+                "catalogo maior que a leitura do teste invalidaria a verificacao");
         return pagina.conteudo();
     }
 
@@ -67,7 +69,7 @@ class MapaIntegracaoTest {
          * Secao sem bloco: os produtos dela aparecem soltos, sem corredor em volta. Bloco sem
          * secao: um corredor vazio desenhado na tela, que o cliente procura e nao acha.
          */
-        assertThat(naMassa).containsExactlyElementsOf(naPlanta);
+        assertEquals(naPlanta, naMassa);
     }
 
     @Test
@@ -78,11 +80,10 @@ class MapaIntegracaoTest {
             BlocoMapa bloco = blocoDe(ponto.getCorredor()).orElseThrow(
                     () -> new AssertionError("sem bloco para a secao " + ponto.getCorredor()));
 
-            assertThat(bloco.contem(ponto.getCoordenadaX(), ponto.getCoordenadaY()))
-                    .as("%s esta em (%d,%d), fora do bloco %s",
+            assertTrue(bloco.contem(ponto.getCoordenadaX(), ponto.getCoordenadaY()),
+                    "%s esta em (%d,%d), fora do bloco %s".formatted(
                             produto.getSku(), ponto.getCoordenadaX(), ponto.getCoordenadaY(),
-                            bloco.rotulo())
-                    .isTrue();
+                            bloco.rotulo()));
         }
     }
 
@@ -99,10 +100,9 @@ class MapaIntegracaoTest {
                     .filter(b -> b.contem(placa.getCoordenadaX(), placa.getCoordenadaY()))
                     .findFirst();
 
-            assertThat(dentroDe)
-                    .as("a placa %s (%d,%d) caiu dentro de um corredor",
-                            placa.getCodigoCurto(), placa.getCoordenadaX(), placa.getCoordenadaY())
-                    .isEmpty();
+            assertTrue(dentroDe.isEmpty(),
+                    "a placa %s (%d,%d) caiu dentro de um corredor".formatted(
+                            placa.getCodigoCurto(), placa.getCoordenadaX(), placa.getCoordenadaY()));
         }
     }
 
@@ -116,22 +116,23 @@ class MapaIntegracaoTest {
         System.out.printf(">>> mapa: %d bloco(s), %d ponto(s)%n",
                 mapa.blocos().size(), mapa.pontos().size());
 
-        assertThat(mapa.largura()).isEqualTo(100);
-        assertThat(mapa.altura()).isEqualTo(100);
-        assertThat(mapa.blocos()).hasSameSizeAs(PlantaDaLoja.blocos());
+        assertEquals(100, mapa.largura());
+        assertEquals(100, mapa.altura());
+        assertEquals(PlantaDaLoja.blocos().size(), mapa.blocos().size());
 
-        assertThat(mapa.pontos()).isNotEmpty();
-        assertThat(mapa.pontos())
-                .as("prateleira ja e representada pelo bloco; repeti-la como ponto duplicaria a secao")
-                .noneMatch(ponto -> ponto.tipo() == TipoPonto.PRATELEIRA);
-        assertThat(mapa.pontos()).extracting("tipo")
-                .contains(TipoPonto.CAIXA, TipoPonto.BANHEIRO, TipoPonto.QR_CODE);
+        assertFalse(mapa.pontos().isEmpty());
+        assertTrue(mapa.pontos().stream().noneMatch(ponto -> ponto.tipo() == TipoPonto.PRATELEIRA),
+                "prateleira ja e representada pelo bloco; repeti-la como ponto duplicaria a secao");
+        List<TipoPonto> tipos = mapa.pontos().stream().map(PontoMapaResponse::tipo).toList();
+        assertTrue(tipos.contains(TipoPonto.CAIXA));
+        assertTrue(tipos.contains(TipoPonto.BANHEIRO));
+        assertTrue(tipos.contains(TipoPonto.QR_CODE));
     }
 
     @Test
     @DisplayName("o mapa e igual entre chamadas: nao depende de sessao nem de estado")
     void mapaEstavel() {
         // E o que permite ao frontend busca-lo uma vez e guardar no aparelho.
-        assertThat(consultarMapa.executar()).isEqualTo(consultarMapa.executar());
+        assertEquals(consultarMapa.executar(), consultarMapa.executar());
     }
 }
