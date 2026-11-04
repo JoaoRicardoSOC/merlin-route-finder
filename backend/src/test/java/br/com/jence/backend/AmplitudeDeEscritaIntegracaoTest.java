@@ -24,7 +24,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Quantas linhas cada operacao do roteiro escreve no banco.
@@ -121,12 +121,10 @@ class AmplitudeDeEscritaIntegracaoTest {
 
         System.out.println(">>> marcar item coletado (roteiro de 3): " + escrita);
 
-        assertThat(escrita.atualizadas())
-                .as("so a linha do item marcado deveria mudar")
-                .isEqualTo(1);
-        assertThat(escrita.apagadas())
-                .as("marcar como coletado nunca deveria apagar item nenhum")
-                .isZero();
+        assertEquals(1L, escrita.atualizadas(),
+                "so a linha do item marcado deveria mudar");
+        assertEquals(0L, escrita.apagadas(),
+                "marcar como coletado nunca deveria apagar item nenhum");
     }
 
     @Test
@@ -138,11 +136,10 @@ class AmplitudeDeEscritaIntegracaoTest {
 
         System.out.println(">>> adicionar produto (roteiro de 3): " + escrita);
 
-        assertThat(escrita.inseridas()).isEqualTo(1);
-        assertThat(escrita.atualizadas())
-                .as("os itens que ja estavam la nao mudaram")
-                .isZero();
-        assertThat(escrita.apagadas()).isZero();
+        assertEquals(1L, escrita.inseridas());
+        assertEquals(0L, escrita.atualizadas(),
+                "os itens que ja estavam la nao mudaram");
+        assertEquals(0L, escrita.apagadas());
     }
 
     @Test
@@ -154,10 +151,9 @@ class AmplitudeDeEscritaIntegracaoTest {
 
         System.out.println(">>> remover item (roteiro de 3): " + escrita);
 
-        assertThat(escrita.apagadas()).isEqualTo(1);
-        assertThat(escrita.atualizadas())
-                .as("remover um item nao pode reescrever o estado dos outros")
-                .isZero();
+        assertEquals(1L, escrita.apagadas());
+        assertEquals(0L, escrita.atualizadas(),
+                "remover um item nao pode reescrever o estado dos outros");
     }
 
     @Test
@@ -174,15 +170,14 @@ class AmplitudeDeEscritaIntegracaoTest {
             adicionarAoRoteiro(sku);
         }
 
-        assertThat(itens()).hasSize(8);
+        assertEquals(8, itens().size());
         UUID alvo = itens().getFirst().getId();
 
         Escrita escrita = medir(() -> marcarColetado.executar(alvo));
 
         System.out.println(">>> marcar item coletado (roteiro de 8): " + escrita);
 
-        assertThat(escrita.total())
-                .as("o custo de marcar um item nao pode depender de quantos itens o cliente tem")
-                .isEqualTo(1);
+        assertEquals(1L, escrita.total(),
+                "o custo de marcar um item nao pode depender de quantos itens o cliente tem");
     }
 }
