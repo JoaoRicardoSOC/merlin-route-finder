@@ -14,8 +14,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.client.ExpectedCount.times;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -52,7 +54,7 @@ class GeminiClientTest {
 
         String resposta = cliente.conversar("instrucao", List.of(MensagemIA.doCliente("e ai?")));
 
-        assertThat(resposta).isEqualTo("A lixa grao 150 serve como substituto.");
+        assertEquals("A lixa grao 150 serve como substituto.", resposta);
         servidor.verify();
     }
 
@@ -90,9 +92,9 @@ class GeminiClientTest {
                     return Map.of("produtos", List.of(Map.of("nome", "Lixa d'Agua Grao 150")));
                 });
 
-        assertThat(ferramentaChamada.get()).isEqualTo("buscar_substitutos");
-        assertThat(argumentosRecebidos.get()).containsEntry("corredor", "Tintas");
-        assertThat(resposta).contains("Lixa d'Agua Grao 150");
+        assertEquals("buscar_substitutos", ferramentaChamada.get());
+        assertEquals("Tintas", argumentosRecebidos.get().get("corredor"));
+        assertTrue(resposta.contains("Lixa d'Agua Grao 150"));
         servidor.verify();
     }
 
@@ -102,9 +104,9 @@ class GeminiClientTest {
         // O tier gratuito estoura cota com facilidade, e a falha costuma passar em segundos.
         servidor.expect(times(3), requestTo(URL)).andRespond(withTooManyRequests());
 
-        assertThatThrownBy(() -> cliente.conversar("instrucao", List.of(MensagemIA.doCliente("oi"))))
-                .isInstanceOf(AssistenteIAIndisponivelException.class)
-                .hasMessageContaining("indisponivel");
+        AssistenteIAIndisponivelException e = assertThrows(AssistenteIAIndisponivelException.class,
+                () -> cliente.conversar("instrucao", List.of(MensagemIA.doCliente("oi"))));
+        assertTrue(e.getMessage().contains("indisponivel"));
 
         servidor.verify();
     }
@@ -120,7 +122,7 @@ class GeminiClientTest {
 
         String resposta = cliente.conversar("instrucao", List.of(MensagemIA.doCliente("oi")));
 
-        assertThat(resposta).isEqualTo("Resposta apos o provedor se recuperar.");
+        assertEquals("Resposta apos o provedor se recuperar.", resposta);
         servidor.verify();
     }
 
@@ -132,9 +134,9 @@ class GeminiClientTest {
                         {"promptFeedback":{"blockReason":"SAFETY"}}
                         """, MediaType.APPLICATION_JSON));
 
-        assertThatThrownBy(() -> cliente.conversar("instrucao", List.of(MensagemIA.doCliente("oi"))))
-                .isInstanceOf(AssistenteIAIndisponivelException.class)
-                .hasMessageContaining("nao produziu resposta");
+        AssistenteIAIndisponivelException e = assertThrows(AssistenteIAIndisponivelException.class,
+                () -> cliente.conversar("instrucao", List.of(MensagemIA.doCliente("oi"))));
+        assertTrue(e.getMessage().contains("nao produziu resposta"));
     }
 
     @Test
@@ -142,10 +144,10 @@ class GeminiClientTest {
     void semChaveConfigurada() {
         GeminiClient semChave = new GeminiClient(RestClient.builder(), BASE, "modelo-teste", "");
 
-        assertThat(semChave.estaConfigurado()).isFalse();
-        assertThatThrownBy(() -> semChave.conversar("instrucao", List.of(MensagemIA.doCliente("oi"))))
-                .isInstanceOf(AssistenteIAIndisponivelException.class)
-                .hasMessageContaining("GEMINI_API_KEY");
+        assertFalse(semChave.estaConfigurado());
+        AssistenteIAIndisponivelException e = assertThrows(AssistenteIAIndisponivelException.class,
+                () -> semChave.conversar("instrucao", List.of(MensagemIA.doCliente("oi"))));
+        assertTrue(e.getMessage().contains("GEMINI_API_KEY"));
     }
 
     @Test
@@ -156,11 +158,11 @@ class GeminiClientTest {
                   {"functionCall":{"name":"consulta","args":{}}}]},"finishReason":"STOP"}]}
                 """, MediaType.APPLICATION_JSON));
 
-        assertThatThrownBy(() -> cliente.conversar("instrucao",
-                List.of(MensagemIA.doCliente("oi")),
-                List.of(new FerramentaIA("consulta", "consulta", List.of())),
-                (nome, args) -> { throw new IllegalStateException("banco fora do ar"); }))
-                .isInstanceOf(AssistenteIAIndisponivelException.class)
-                .hasMessageContaining("Falha ao consultar dados");
+        AssistenteIAIndisponivelException e = assertThrows(AssistenteIAIndisponivelException.class,
+                () -> cliente.conversar("instrucao",
+                        List.of(MensagemIA.doCliente("oi")),
+                        List.of(new FerramentaIA("consulta", "consulta", List.of())),
+                        (nome, args) -> { throw new IllegalStateException("banco fora do ar"); }));
+        assertTrue(e.getMessage().contains("Falha ao consultar dados"));
     }
 }
