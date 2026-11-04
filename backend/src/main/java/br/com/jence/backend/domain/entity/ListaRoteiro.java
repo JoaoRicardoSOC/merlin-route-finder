@@ -1,14 +1,11 @@
 package br.com.jence.backend.domain.entity;
 
-import lombok.Getter;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Getter
 public class ListaRoteiro {
 
     private final UUID id;
@@ -74,5 +71,13 @@ public class ListaRoteiro {
         return itens.stream()
                 .filter(item -> item.getProduto().getId().equals(produtoId))
                 .findFirst();
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public UUID getSessaoId() {
+        return sessaoId;
     }
 }
