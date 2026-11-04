@@ -8,7 +8,6 @@ import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import br.com.jence.backend.domain.repository.PontoMapaRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,12 +21,19 @@ import java.util.UUID;
  * preservado. Muda apenas onde ele esta.
  */
 @Service
-@RequiredArgsConstructor
 public class RecentrarSessaoUseCase {
 
     private final SessaoRepository sessaoRepository;
     private final ListaRoteiroRepository listaRoteiroRepository;
     private final PontoMapaRepository pontoMapaRepository;
+
+    public RecentrarSessaoUseCase(SessaoRepository sessaoRepository,
+                                  ListaRoteiroRepository listaRoteiroRepository,
+                                  PontoMapaRepository pontoMapaRepository) {
+        this.sessaoRepository = sessaoRepository;
+        this.listaRoteiroRepository = listaRoteiroRepository;
+        this.pontoMapaRepository = pontoMapaRepository;
+    }
 
     @Transactional
     public SessaoResponse executar(UUID sessaoId, String codigoPonto) {
