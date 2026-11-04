@@ -1,12 +1,9 @@
 package br.com.jence.backend.domain.entity;
 
-import lombok.Getter;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Getter
 public class Sessao {
 
     /**
@@ -108,5 +105,29 @@ public class Sessao {
             return;
         }
         this.status = statusFinal;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public StatusSessao getStatus() {
+        return status;
+    }
+
+    public LocalDateTime getCriadoEm() {
+        return criadoEm;
+    }
+
+    public LocalDateTime getExpiracaoTtl() {
+        return expiracaoTtl;
+    }
+
+    public PontoMapa getPontoEscaneado() {
+        return pontoEscaneado;
+    }
+
+    public LocalDateTime getEscaneadoEm() {
+        return escaneadoEm;
     }
 }
