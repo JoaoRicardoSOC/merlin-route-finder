@@ -21,7 +21,8 @@ import org.springframework.test.web.servlet.RequestBuilder;
 
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 /**
@@ -54,10 +55,8 @@ class ErrosDeRequisicaoTest {
         int status = statusDe(request);
         System.out.printf(">>> %-42s -> %d%n", cenario, status);
 
-        assertThat(status)
-                .as("%s: erro de cliente nunca pode virar 5xx", cenario)
-                .isLessThan(500);
-        assertThat(status).as("%s", cenario).isEqualTo(esperado);
+        assertTrue(status < 500, cenario + ": erro de cliente nunca pode virar 5xx");
+        assertEquals(esperado, status, cenario);
     }
 
     @Test
