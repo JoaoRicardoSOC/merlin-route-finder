@@ -21,6 +21,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -35,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * <p>
  * Aqui a sobreposicao e forcada, sem sorte: a operacao de fora roda numa {@link Transacao} que o
  * teste controla e ainda nao confirmou, enquanto uma segunda operacao roda e confirma numa transacao
- * propria. Quando a de fora finalmente grava, o banco ja mudou embaixo dela.
+ * propria, em outra thread. Quando a de fora finalmente confirma, o banco ja mudou embaixo dela.
  * <p>
  * O resultado esperado - e verificado - e que nada se perde. O motivo esta na D-48: leitura e
  * gravacao acontecem na mesma transacao, entao as entidades estao gerenciadas e o Hibernate so
@@ -86,6 +90,31 @@ class EscritaObsoletaIntegracaoTest {
                 i.getProduto().getSku(), i.isColetado()));
     }
 
+    /** Uma chamada que pode lancar excecao checada. */
+    private interface Chamada {
+        void executar() throws Exception;
+    }
+
+    /**
+     * Roda a chamada em outra thread, como uma segunda requisicao HTTP.
+     * <p>
+     * Precisa ser outra thread: o JDBC grava na hora, e nao no commit como o Hibernate, entao a
+     * requisicao lenta ja segura a linha da sessao quando a segunda chega. Numa thread so, a
+     * segunda esperaria pela primeira, que esperaria pela segunda. Em threads separadas, a
+     * segunda espera a primeira confirmar e segue - que e o que acontece em producao.
+     */
+    private Future<?> emOutraRequisicao(Chamada chamada) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            return executor.submit(() -> {
+                chamada.executar();
+                return null;
+            });
+        } finally {
+            executor.shutdown();
+        }
+    }
+
     @Test
     @DisplayName("uma marcacao que demora a confirmar nao desfaz outra que confirmou antes")
     void marcacaoLentaNaoDesfazAOutra() throws Exception {
@@ -97,14 +126,13 @@ class EscritaObsoletaIntegracaoTest {
             // Requisicao lenta: carrega o roteiro e marca o primeiro item...
             marcarColetado.executar(lento);
 
-            // ...e, antes de confirmar, uma segunda requisicao marca outro item e confirma.
-            try (Transacao paralela = Transacao.iniciarNova()) {
-                marcarColetado.executar(rapido);
-                paralela.confirmar();
-            }
+            // ...e, antes de ela confirmar, uma segunda requisicao marca outro item.
+            Future<?> paralela = emOutraRequisicao(() -> marcarColetado.executar(rapido));
 
-            // So agora a requisicao lenta confirma, ja com uma visao desatualizada.
+            // So agora a requisicao lenta confirma, e a segunda termina em seguida.
             deFora.confirmar();
+            deFora.close();
+            paralela.get(30, TimeUnit.SECONDS);
         }
 
         imprimir("estado final no banco");
@@ -133,12 +161,11 @@ class EscritaObsoletaIntegracaoTest {
             marcarColetado.executar(lento);
 
             // O totem soma um produto enquanto a marcacao ainda nao confirmou.
-            try (Transacao paralela = Transacao.iniciarNova()) {
-                adicionar.executar(sessaoId, furadeira);
-                paralela.confirmar();
-            }
+            Future<?> paralela = emOutraRequisicao(() -> adicionar.executar(sessaoId, furadeira));
 
             deFora.confirmar();
+            deFora.close();
+            paralela.get(30, TimeUnit.SECONDS);
         }
 
         imprimir("estado final no banco");
