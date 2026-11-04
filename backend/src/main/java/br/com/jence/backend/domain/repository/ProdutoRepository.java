@@ -1,5 +1,10 @@
 package br.com.jence.backend.domain.repository;
 
+import br.com.jence.backend.model.AfinidadeDeProduto;
+import br.com.jence.backend.model.FacetaDeProdutos;
+import br.com.jence.backend.model.FiltroDeProdutos;
+import br.com.jence.backend.model.Pagina;
+import br.com.jence.backend.model.SecaoDoCatalogo;
 import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.ValorDeAtributo;

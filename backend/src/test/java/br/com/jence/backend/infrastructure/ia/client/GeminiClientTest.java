@@ -1,8 +1,8 @@
 package br.com.jence.backend.infrastructure.ia.client;
 
 import br.com.jence.backend.domain.exception.AssistenteIAIndisponivelException;
-import br.com.jence.backend.domain.service.FerramentaIA;
-import br.com.jence.backend.domain.service.MensagemIA;
+import br.com.jence.backend.model.FerramentaIA;
+import br.com.jence.backend.model.MensagemIA;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

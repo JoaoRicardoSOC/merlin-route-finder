@@ -1,4 +1,4 @@
-package br.com.jence.backend.domain.service;
+package br.com.jence.backend.model;
 
 import java.util.List;
 

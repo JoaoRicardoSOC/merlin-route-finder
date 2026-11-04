@@ -1,6 +1,5 @@
-package br.com.jence.backend.domain.repository;
+package br.com.jence.backend.model;
 
-import br.com.jence.backend.model.AtributoProduto;
 
 import java.util.LinkedHashMap;
 import java.util.List;

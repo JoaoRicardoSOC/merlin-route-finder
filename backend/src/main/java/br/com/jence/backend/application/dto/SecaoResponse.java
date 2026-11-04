@@ -1,6 +1,6 @@
 package br.com.jence.backend.application.dto;
 
-import br.com.jence.backend.domain.repository.SecaoDoCatalogo;
+import br.com.jence.backend.model.SecaoDoCatalogo;
 
 /**
  * Espelha o schema {@code Secao} do contrato: uma entrada do menu de navegacao do catalogo.

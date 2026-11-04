@@ -6,7 +6,7 @@ import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.ValorDeAtributo;
 import br.com.jence.backend.model.TipoPonto;
-import br.com.jence.backend.domain.repository.Pagina;
+import br.com.jence.backend.model.Pagina;
 import br.com.jence.backend.domain.repository.PontoMapaRepository;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import br.com.jence.backend.infrastructure.database.repository.PontoMapaJpaRepository;

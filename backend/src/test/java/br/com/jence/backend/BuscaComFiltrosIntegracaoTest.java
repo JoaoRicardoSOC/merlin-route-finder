@@ -1,10 +1,10 @@
 package br.com.jence.backend;
 
 import br.com.jence.backend.model.Produto;
-import br.com.jence.backend.domain.repository.FiltroDeProdutos;
-import br.com.jence.backend.domain.repository.Pagina;
+import br.com.jence.backend.model.FiltroDeProdutos;
+import br.com.jence.backend.model.Pagina;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
-import br.com.jence.backend.domain.repository.SecaoDoCatalogo;
+import br.com.jence.backend.model.SecaoDoCatalogo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

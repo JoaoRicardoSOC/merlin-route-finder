@@ -1,4 +1,4 @@
-package br.com.jence.backend.domain.repository;
+package br.com.jence.backend.model;
 
 /**
  * Uma secao da loja como ela aparece no menu de navegacao do catalogo.

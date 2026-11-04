@@ -8,7 +8,7 @@ import br.com.jence.backend.model.PlantaDaLoja;
 import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.TipoPonto;
-import br.com.jence.backend.domain.repository.Pagina;
+import br.com.jence.backend.model.Pagina;
 import br.com.jence.backend.domain.repository.PontoMapaRepository;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import org.junit.jupiter.api.DisplayName;

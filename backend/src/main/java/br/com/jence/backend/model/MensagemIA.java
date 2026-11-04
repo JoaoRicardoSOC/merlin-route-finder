@@ -1,4 +1,4 @@
-package br.com.jence.backend.domain.service;
+package br.com.jence.backend.model;
 
 /** Uma fala da conversa com o assistente. */
 public record MensagemIA(PapelIA papel, String conteudo) {

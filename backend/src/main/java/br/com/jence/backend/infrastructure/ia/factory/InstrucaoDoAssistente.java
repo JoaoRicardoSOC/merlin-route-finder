@@ -1,7 +1,7 @@
 package br.com.jence.backend.infrastructure.ia.factory;
 
-import br.com.jence.backend.domain.service.FerramentaIA;
-import br.com.jence.backend.domain.service.FerramentaIA.ParametroIA;
+import br.com.jence.backend.model.FerramentaIA;
+import br.com.jence.backend.model.FerramentaIA.ParametroIA;
 
 import java.util.List;
 

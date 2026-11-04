@@ -1,6 +1,6 @@
 package br.com.jence.backend.application.dto;
 
-import br.com.jence.backend.domain.repository.Pagina;
+import br.com.jence.backend.model.Pagina;
 
 import java.util.List;
 import java.util.function.Function;

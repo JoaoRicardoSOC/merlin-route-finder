@@ -6,8 +6,8 @@ import br.com.jence.backend.model.Produto;
 
 import java.util.List;
 import java.util.Map;
-import br.com.jence.backend.domain.repository.FiltroDeProdutos;
-import br.com.jence.backend.domain.repository.Pagina;
+import br.com.jence.backend.model.FiltroDeProdutos;
+import br.com.jence.backend.model.Pagina;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import org.springframework.stereotype.Service;
 

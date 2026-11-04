@@ -4,7 +4,7 @@ import br.com.jence.backend.application.usecase.TratarRupturaEstoqueUseCase;
 import br.com.jence.backend.model.AtributoProduto;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.ValorDeAtributo;
-import br.com.jence.backend.domain.repository.AfinidadeDeProduto;
+import br.com.jence.backend.model.AfinidadeDeProduto;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
