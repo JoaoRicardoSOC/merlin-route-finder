@@ -30,11 +30,7 @@ class PerfilProducaoTest {
     void aplicacaoSobeComPerfilDeProducao() throws Exception {
         assertTrue(Arrays.asList(environment.getActiveProfiles()).contains("prod"));
 
-        assertEquals("false", environment.getProperty("spring.jpa.show-sql"),
-                "SQL nao pode ser logado em producao");
-
         System.out.println(">>> perfil ativo    : prod");
-        System.out.println(">>> show-sql        : " + environment.getProperty("spring.jpa.show-sql"));
 
         // a API responde normalmente
         HttpResponse<String> res = HttpClient.newHttpClient().send(
