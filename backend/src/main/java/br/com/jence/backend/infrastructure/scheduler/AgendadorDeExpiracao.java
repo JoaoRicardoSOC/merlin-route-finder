@@ -1,7 +1,6 @@
 package br.com.jence.backend.infrastructure.scheduler;
 
 import br.com.jence.backend.application.usecase.ExpirarSessoesInativasUseCase;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,12 +17,15 @@ import org.springframework.stereotype.Component;
  * {@code CarregadorDadosIniciais}.
  */
 @Component
-@RequiredArgsConstructor
 @Slf4j
 @ConditionalOnProperty(name = "merlin.agendador.enabled", havingValue = "true", matchIfMissing = true)
 public class AgendadorDeExpiracao {
 
     private final ExpirarSessoesInativasUseCase expirarSessoesInativasUseCase;
+
+    public AgendadorDeExpiracao(ExpirarSessoesInativasUseCase expirarSessoesInativasUseCase) {
+        this.expirarSessoesInativasUseCase = expirarSessoesInativasUseCase;
+    }
 
     /*
      * fixedDelayString e nao fixedRate: o intervalo conta a partir do fim da execucao anterior.
