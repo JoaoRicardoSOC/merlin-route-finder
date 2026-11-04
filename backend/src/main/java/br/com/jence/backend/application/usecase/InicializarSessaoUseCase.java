@@ -7,7 +7,6 @@ import br.com.jence.backend.domain.entity.Sessao;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import br.com.jence.backend.domain.repository.PontoMapaRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +19,6 @@ import java.util.UUID;
  * digitado pelo cliente quando escanear nao deu certo. Para o caso de uso e o mesmo caminho.
  */
 @Service
-@Slf4j
 public class InicializarSessaoUseCase {
 
     private final SessaoRepository sessaoRepository;
@@ -50,8 +48,8 @@ public class InicializarSessaoUseCase {
         PontoMapa ponto = pontoMapaRepository.buscarPorCodigoCurto(codigoPonto).orElse(null);
 
         if (ponto == null && codigoPonto != null && !codigoPonto.isBlank()) {
-            log.info("Sessao iniciada com codigo de placa desconhecido: {}. "
-                    + "Nasce sem posicao.", codigoPonto);
+            System.out.println(String.format("Sessao iniciada com codigo de placa desconhecido: %s. "
+                    + "Nasce sem posicao.", codigoPonto));
         }
 
         Sessao sessao = sessaoRepository.salvar(Sessao.iniciar(UUID.randomUUID(), ponto));
