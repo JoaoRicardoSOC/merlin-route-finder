@@ -74,7 +74,7 @@ public class GeminiClient {
     }
 
     /** Conversa simples, sem ferramentas. */
-    public String conversar(String instrucaoSistema, List<MensagemIA> historico) {
+    public String conversar(String instrucaoSistema, List<MensagemIA> historico) throws AssistenteIAIndisponivelException {
         return conversar(instrucaoSistema, historico, List.of(), (nome, argumentos) -> Map.of());
     }
 
@@ -95,7 +95,7 @@ public class GeminiClient {
     public String conversar(String instrucaoSistema,
                             List<MensagemIA> historico,
                             List<FerramentaIA> ferramentas,
-                            ExecutorDeFerramenta executor) {
+                            ExecutorDeFerramenta executor) throws AssistenteIAIndisponivelException {
 
         if (!estaConfigurado()) {
             throw new AssistenteIAIndisponivelException(
@@ -133,7 +133,7 @@ public class GeminiClient {
     @SuppressWarnings("unchecked")
     private Map<String, Object> chamar(String instrucaoSistema,
                                        List<Map<String, Object>> conversa,
-                                       List<FerramentaIA> ferramentas) {
+                                       List<FerramentaIA> ferramentas) throws AssistenteIAIndisponivelException {
         Map<String, Object> corpo = new LinkedHashMap<>();
         if (instrucaoSistema != null && !instrucaoSistema.isBlank()) {
             corpo.put("system_instruction", Map.of("parts", List.of(Map.of("text", instrucaoSistema))));
@@ -200,7 +200,7 @@ public class GeminiClient {
         throw new AssistenteIAIndisponivelException("Assistente de IA indisponivel no momento", ultimaFalha);
     }
 
-    private void esperarAntesDeInsistir(int tentativa) {
+    private void esperarAntesDeInsistir(int tentativa) throws AssistenteIAIndisponivelException {
         if (tentativa >= MAXIMO_DE_TENTATIVAS) {
             return;
         }
@@ -237,7 +237,7 @@ public class GeminiClient {
     // ---------------------------------------------------------------- leitura da resposta
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> extrairTurnoDoModelo(Map<String, Object> resposta) {
+    private Map<String, Object> extrairTurnoDoModelo(Map<String, Object> resposta) throws AssistenteIAIndisponivelException {
         List<Map<String, Object>> candidatos = (List<Map<String, Object>>) resposta.get("candidates");
 
         if (candidatos == null || candidatos.isEmpty()) {
@@ -268,7 +268,7 @@ public class GeminiClient {
                 .orElse(null);
     }
 
-    private String extrairTexto(List<Map<String, Object>> partes) {
+    private String extrairTexto(List<Map<String, Object>> partes) throws AssistenteIAIndisponivelException {
         String texto = partes.stream()
                 .map(p -> (String) p.get("text"))
                 .filter(t -> t != null && !t.isBlank())
@@ -287,7 +287,7 @@ public class GeminiClient {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> turnoDeResultado(Map<String, Object> chamada, ExecutorDeFerramenta executor) {
+    private Map<String, Object> turnoDeResultado(Map<String, Object> chamada, ExecutorDeFerramenta executor) throws AssistenteIAIndisponivelException {
         String nome = (String) chamada.get("name");
         Map<String, Object> argumentos = (Map<String, Object>) chamada.getOrDefault("args", Map.of());
 

@@ -97,12 +97,13 @@ class ConversarComAssistenteUseCaseTest {
 
         @Override
         public String conversar(String instrucaoSistema, List<MensagemIA> historico,
-                                List<FerramentaIA> ferramentas, ExecutorDeFerramenta executor) {
+                                List<FerramentaIA> ferramentas, ExecutorDeFerramenta executor)
+                throws AssistenteIAIndisponivelException {
             chamadas++;
             historicoRecebido = List.copyOf(historico);
             try {
                 return comportamento.responder(historico, executor);
-            } catch (RuntimeException e) {
+            } catch (RuntimeException | AssistenteIAIndisponivelException e) {
                 throw e;
             } catch (Exception e) {
                 throw new IllegalStateException(e);

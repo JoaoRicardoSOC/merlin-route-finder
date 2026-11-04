@@ -8,7 +8,7 @@ package br.com.jence.backend.exception;
  * ruptura de estoque e o produto disponivel mais proximo calculado por nos; no chat e uma
  * mensagem honesta de indisponibilidade. Quem decide e o caso de uso (ver D-35).
  */
-public class AssistenteIAIndisponivelException extends RuntimeException {
+public class AssistenteIAIndisponivelException extends Exception {
 
     public AssistenteIAIndisponivelException(String motivo) {
         super(motivo);

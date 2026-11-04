@@ -1,5 +1,6 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.exception.AssistenteIAIndisponivelException;
 import br.com.jence.backend.ia.GeminiClient;
 import br.com.jence.backend.model.FerramentaIA;
 import br.com.jence.backend.model.MensagemIA;
@@ -28,7 +29,7 @@ class GeminiIntegracaoTest {
     @Autowired GeminiClient cliente;
 
     @Test
-    void respondeEmPortugues() {
+    void respondeEmPortugues() throws AssistenteIAIndisponivelException {
         assertTrue(cliente.estaConfigurado());
 
         String resposta = assistente.conversar(
@@ -42,7 +43,7 @@ class GeminiIntegracaoTest {
 
     /** A prova de que a fundacao do tratamento de ruptura funciona. */
     @Test
-    void executaCicloCompletoDeFerramenta() {
+    void executaCicloCompletoDeFerramenta() throws AssistenteIAIndisponivelException {
         AtomicReference<Map<String, Object>> argumentos = new AtomicReference<>();
 
         String resposta = assistente.conversar(

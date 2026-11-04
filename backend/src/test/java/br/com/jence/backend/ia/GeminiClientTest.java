@@ -100,7 +100,7 @@ class GeminiClientTest {
 
     @Test
     @DisplayName("extrai o texto de uma resposta simples")
-    void respostaDeTexto() {
+    void respostaDeTexto() throws AssistenteIAIndisponivelException {
         responder(200, """
                 {"candidates":[{"content":{"role":"model","parts":[
                   {"text":"A lixa grao 150 serve como substituto."}]},"finishReason":"STOP"}]}
@@ -114,7 +114,7 @@ class GeminiClientTest {
 
     @Test
     @DisplayName("executa a ferramenta pedida e devolve o resultado ao modelo")
-    void cicloDeFerramenta() {
+    void cicloDeFerramenta() throws AssistenteIAIndisponivelException {
         // 1a resposta: o modelo pede a ferramenta
         responder(200, """
                 {"candidates":[{"content":{"role":"model","parts":[
@@ -171,7 +171,7 @@ class GeminiClientTest {
 
     @Test
     @DisplayName("falha transitoria seguida de sucesso devolve a resposta")
-    void recuperaDeFalhaTransitoria() {
+    void recuperaDeFalhaTransitoria() throws AssistenteIAIndisponivelException {
         responder(500, "{}");
         responder(200, """
                 {"candidates":[{"content":{"role":"model","parts":[

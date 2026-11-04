@@ -130,7 +130,7 @@ class TratarRupturaEstoqueUseCaseTest {
     /** Responde o texto combinado, ou falha, e guarda o executor de ferramenta que recebeu. */
     private static class AssistenteFalso extends GeminiClient {
         String resposta;
-        RuntimeException falha;
+        AssistenteIAIndisponivelException falha;
         int chamadas;
         ExecutorDeFerramenta executorRecebido;
 
@@ -140,7 +140,8 @@ class TratarRupturaEstoqueUseCaseTest {
 
         @Override
         public String conversar(String instrucaoSistema, List<MensagemIA> historico,
-                                List<FerramentaIA> ferramentas, ExecutorDeFerramenta executor) {
+                                List<FerramentaIA> ferramentas, ExecutorDeFerramenta executor)
+                throws AssistenteIAIndisponivelException {
             chamadas++;
             executorRecebido = executor;
             if (falha != null) {
