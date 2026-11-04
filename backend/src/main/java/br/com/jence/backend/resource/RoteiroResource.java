@@ -63,7 +63,7 @@ public class RoteiroResource {
                     + "sem duplicar a parada na rota.")
     public ResponseEntity<ItemRoteiroDetalhadoResponse> adicionar(
             @PathVariable UUID sessaoId,
-            @Valid @RequestBody AdicionarItemRequest request) {
+            @Valid @RequestBody AdicionarItemRequest request) throws SQLException {
 
         ItemRoteiroDetalhadoResponse item =
                 adicionarProdutoAoRoteiroUseCase.executar(sessaoId, request.produtoId());

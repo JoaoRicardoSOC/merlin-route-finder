@@ -91,7 +91,7 @@ class SubstituicaoDeItemIntegracaoTest {
         return produtoRepository.buscarPorSku(sku).orElseThrow().getId();
     }
 
-    private UUID adicionar(UUID sessaoId, String sku) {
+    private UUID adicionar(UUID sessaoId, String sku) throws Exception {
         return adicionar.executar(sessaoId, idDe(sku)).id();
     }
 

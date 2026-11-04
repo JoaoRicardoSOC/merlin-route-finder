@@ -71,13 +71,13 @@ class RupturaIntegracaoTest {
         sessaoJpa.deleteById(sessaoId);
     }
 
-    private ItemRoteiroDetalhadoResponse adicionarAoRoteiro(String sku) {
+    private ItemRoteiroDetalhadoResponse adicionarAoRoteiro(String sku) throws Exception {
         Produto produto = produtoRepository.buscarPorSku(sku).orElseThrow();
         return adicionar.executar(sessaoId, produto.getId());
     }
 
     @Test
-    void elegeOSubstitutoSemanticoEntreOsVizinhosDisponiveis() {
+    void elegeOSubstitutoSemanticoEntreOsVizinhosDisponiveis() throws Exception {
         ItemRoteiroDetalhadoResponse item = adicionarAoRoteiro(LIXA_EM_FALTA);
 
         RupturaEstoqueResponse resposta = tratarRuptura.executar(item.id());
@@ -100,7 +100,7 @@ class RupturaIntegracaoTest {
     }
 
     @Test
-    void registraARupturaParaAOperacaoDaLoja() {
+    void registraARupturaParaAOperacaoDaLoja() throws Exception {
         ItemRoteiroDetalhadoResponse item = adicionarAoRoteiro(LIXA_EM_FALTA);
 
         tratarRuptura.executar(item.id());
@@ -118,7 +118,7 @@ class RupturaIntegracaoTest {
     }
 
     @Test
-    void produtoIsoladoNaLojaNaoRendeSugestaoENemDeixaDeSerRegistrado() {
+    void produtoIsoladoNaLojaNaoRendeSugestaoENemDeixaDeSerRegistrado() throws Exception {
         // O espelho de Decoracao esta em (88,55), a mais de 25 unidades de qualquer outra
         // secao: nao ha vizinho dentro do raio, e a ruptura precisa ser registrada mesmo assim.
         ItemRoteiroDetalhadoResponse item = adicionarAoRoteiro("SKU-DEC-001");

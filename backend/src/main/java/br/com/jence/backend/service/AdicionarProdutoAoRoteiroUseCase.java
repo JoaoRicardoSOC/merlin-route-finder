@@ -7,12 +7,13 @@ import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
-import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
-import br.com.jence.backend.domain.repository.SessaoRepository;
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.ProdutoDao;
+import br.com.jence.backend.dao.SessaoDao;
+import br.com.jence.backend.factory.Transacao;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.util.UUID;
 
 /**
@@ -21,21 +22,28 @@ import java.util.UUID;
 @Service
 public class AdicionarProdutoAoRoteiroUseCase {
 
-    private final SessaoRepository sessaoRepository;
-    private final ListaRoteiroRepository listaRoteiroRepository;
-    private final ProdutoRepository produtoRepository;
+    private final SessaoDao sessaoDao;
+    private final ListaRoteiroDao listaRoteiroDao;
+    private final ProdutoDao produtoDao;
 
-    public AdicionarProdutoAoRoteiroUseCase(SessaoRepository sessaoRepository,
-                                            ListaRoteiroRepository listaRoteiroRepository,
-                                            ProdutoRepository produtoRepository) {
-        this.sessaoRepository = sessaoRepository;
-        this.listaRoteiroRepository = listaRoteiroRepository;
-        this.produtoRepository = produtoRepository;
+    public AdicionarProdutoAoRoteiroUseCase(SessaoDao sessaoDao,
+                                            ListaRoteiroDao listaRoteiroDao,
+                                            ProdutoDao produtoDao) {
+        this.sessaoDao = sessaoDao;
+        this.listaRoteiroDao = listaRoteiroDao;
+        this.produtoDao = produtoDao;
     }
 
-    @Transactional
-    public ItemRoteiroDetalhadoResponse executar(UUID sessaoId, UUID produtoId) {
-        Sessao sessao = sessaoRepository.buscarPorId(sessaoId)
+    public ItemRoteiroDetalhadoResponse executar(UUID sessaoId, UUID produtoId) throws SQLException {
+        try (Transacao transacao = Transacao.iniciar()) {
+            ItemRoteiroDetalhadoResponse resposta = adicionar(sessaoId, produtoId);
+            transacao.confirmar();
+            return resposta;
+        }
+    }
+
+    private ItemRoteiroDetalhadoResponse adicionar(UUID sessaoId, UUID produtoId) throws SQLException {
+        Sessao sessao = sessaoDao.buscarPorId(sessaoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao", sessaoId));
 
         if (!sessao.isValida()) {
@@ -43,22 +51,22 @@ public class AdicionarProdutoAoRoteiroUseCase {
                     "Sessao %s nao esta mais ativa (status %s)".formatted(sessaoId, sessao.getStatus()));
         }
 
-        Produto produto = produtoRepository.buscarPorId(produtoId)
+        Produto produto = produtoDao.buscarPorId(produtoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Produto", produtoId));
 
-        ListaRoteiro lista = listaRoteiroRepository.buscarPorSessao(sessaoId)
+        ListaRoteiro lista = listaRoteiroDao.buscarPorSessao(sessaoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Lista de roteiro da sessao", sessaoId));
 
         // A entidade decide o que fazer com produto repetido (D-18): devolve o item existente
         // em vez de criar outro, evitando duas paradas na mesma coordenada da rota.
         ItemRoteiro item = lista.adicionarProduto(produto);
-        listaRoteiroRepository.salvar(lista);
+        listaRoteiroDao.salvar(lista);
 
         // O cliente esta ativo montando a lista: empurra o TTL para frente. Sem isso, quem
         // monta uma lista longa (o caso que motivou remover o limite de itens) seria
         // desconectado no meio da montagem.
         sessao.renovarSessao();
-        sessaoRepository.salvar(sessao);
+        sessaoDao.salvar(sessao);
 
         return ItemRoteiroDetalhadoResponse.de(item);
     }

@@ -76,7 +76,7 @@ class ConcorrenciaNoRoteiroIntegracaoTest {
         sessaoJpa.deleteById(sessaoId);
     }
 
-    private void adicionarAoRoteiro(String sku) {
+    private void adicionarAoRoteiro(String sku) throws Exception {
         adicionar.executar(sessaoId, produtoRepository.buscarPorSku(sku).orElseThrow().getId());
     }
 
