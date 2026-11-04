@@ -9,12 +9,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.dao.QueryTimeoutException;
-import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.sql.SQLRecoverableException;
+import java.sql.SQLTimeoutException;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,7 +42,7 @@ class FalhaDeInfraestruturaTest {
     @MockitoBean SimularEstoqueUseCase simularEstoqueUseCase;
     @MockitoBean ListarSecoesUseCase listarSecoesUseCase;
 
-    private MvcResult quandoOBancoFalhaCom(RuntimeException falha) throws Exception {
+    private MvcResult quandoOBancoFalhaCom(Exception falha) throws Exception {
         when(buscarProdutosUseCase.executar(any(), any(), any(), any(), any(), any())).thenThrow(falha);
         return mockMvc.perform(get("/api/v1/produtos").param("query", "tinta")).andReturn();
     }
@@ -74,8 +74,8 @@ class FalhaDeInfraestruturaTest {
     @DisplayName("SONDA: banco inacessivel devolve erro limpo, sem vazar detalhe interno")
     void bancoInacessivel() throws Exception {
         assertRespostaLimpa(
-                quandoOBancoFalhaCom(new CannotGetJdbcConnectionException(
-                        "Failed to obtain JDBC Connection: ORA-12170: TNS:Connect timeout occurred")),
+                quandoOBancoFalhaCom(new SQLRecoverableException(
+                        "IO Error: ORA-12170: TNS:Connect timeout occurred")),
                 "conexao com o banco indisponivel");
     }
 
@@ -83,8 +83,8 @@ class FalhaDeInfraestruturaTest {
     @DisplayName("SONDA: consulta que estoura o tempo limite tambem nao vaza detalhe")
     void consultaLenta() throws Exception {
         assertRespostaLimpa(
-                quandoOBancoFalhaCom(new QueryTimeoutException(
-                        "Statement cancelled due to timeout on tb_produto")),
+                quandoOBancoFalhaCom(new SQLTimeoutException(
+                        "ORA-01013: user requested cancel of current operation on tb_produto")),
                 "consulta excedeu o tempo limite");
     }
 
