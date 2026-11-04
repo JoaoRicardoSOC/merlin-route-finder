@@ -1,10 +1,7 @@
 package br.com.jence.backend.domain.entity;
 
-import lombok.Getter;
-
 import java.util.UUID;
 
-@Getter
 public class PontoMapa {
 
     private final UUID id;
@@ -57,5 +54,29 @@ public class PontoMapa {
         int deltaX = this.coordenadaX - outro.coordenadaX;
         int deltaY = this.coordenadaY - outro.coordenadaY;
         return Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public TipoPonto getTipo() {
+        return tipo;
+    }
+
+    public String getCorredor() {
+        return corredor;
+    }
+
+    public int getCoordenadaX() {
+        return coordenadaX;
+    }
+
+    public int getCoordenadaY() {
+        return coordenadaY;
+    }
+
+    public String getCodigoCurto() {
+        return codigoCurto;
     }
 }
