@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * O contrato escrito a mao contra o que a aplicacao de fato expoe.
@@ -97,14 +97,12 @@ class ContratoOpenApiIntegracaoTest {
         soNoPapel.forEach(o -> System.out.println("    SO NO CONTRATO: " + o));
         soNoCodigo.forEach(o -> System.out.println("    SO NO CODIGO:   " + o));
 
-        assertThat(soNoPapel)
-                .as("o contrato promete endpoints que a aplicacao nao tem - o frontend "
-                        + "integraria contra algo inexistente")
-                .isEmpty();
+        assertTrue(soNoPapel.isEmpty(),
+                "o contrato promete endpoints que a aplicacao nao tem - o frontend "
+                        + "integraria contra algo inexistente");
 
-        assertThat(soNoCodigo)
-                .as("a aplicacao expoe endpoints que o contrato nao descreve - o frontend "
-                        + "nem saberia que existem")
-                .isEmpty();
+        assertTrue(soNoCodigo.isEmpty(),
+                "a aplicacao expoe endpoints que o contrato nao descreve - o frontend "
+                        + "nem saberia que existem");
     }
 }
