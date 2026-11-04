@@ -3,7 +3,6 @@ package br.com.jence.backend.application.usecase;
 import br.com.jence.backend.application.dto.ListaRoteiroResponse;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -15,10 +14,13 @@ import java.util.UUID;
  * acontece nas acoes que de fato indicam o cliente montando a lista (adicionar e remover).
  */
 @Service
-@RequiredArgsConstructor
 public class ConsultarListaRoteiroUseCase {
 
     private final ListaRoteiroRepository listaRoteiroRepository;
+
+    public ConsultarListaRoteiroUseCase(ListaRoteiroRepository listaRoteiroRepository) {
+        this.listaRoteiroRepository = listaRoteiroRepository;
+    }
 
     public ListaRoteiroResponse executar(UUID sessaoId) {
         return listaRoteiroRepository.buscarPorSessao(sessaoId)
