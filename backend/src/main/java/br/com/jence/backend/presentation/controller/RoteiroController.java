@@ -9,7 +9,6 @@ import br.com.jence.backend.application.usecase.RemoverProdutoDoRoteiroUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,13 +29,20 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/sessoes/{sessaoId}/roteiro")
-@RequiredArgsConstructor
 @Tag(name = "Roteiro", description = "Montagem da lista de compras no Totem")
 public class RoteiroController {
 
     private final ConsultarListaRoteiroUseCase consultarListaRoteiroUseCase;
     private final AdicionarProdutoAoRoteiroUseCase adicionarProdutoAoRoteiroUseCase;
     private final RemoverProdutoDoRoteiroUseCase removerProdutoDoRoteiroUseCase;
+
+    public RoteiroController(ConsultarListaRoteiroUseCase consultarListaRoteiroUseCase,
+                             AdicionarProdutoAoRoteiroUseCase adicionarProdutoAoRoteiroUseCase,
+                             RemoverProdutoDoRoteiroUseCase removerProdutoDoRoteiroUseCase) {
+        this.consultarListaRoteiroUseCase = consultarListaRoteiroUseCase;
+        this.adicionarProdutoAoRoteiroUseCase = adicionarProdutoAoRoteiroUseCase;
+        this.removerProdutoDoRoteiroUseCase = removerProdutoDoRoteiroUseCase;
+    }
 
     @GetMapping
     @Operation(summary = "Consultar a lista de compras da sessao (UC-005)")
