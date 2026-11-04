@@ -22,7 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * A jornada do cliente percorrida por HTTP, da placa na parede ao encerramento.
@@ -104,7 +107,7 @@ class JornadaCompletaIntegracaoTest {
 
     private JsonNode get(String caminho) {
         ResponseEntity<String> r = chamar(HttpMethod.GET, caminho, null);
-        assertThat(r.getStatusCode().value()).as("GET %s", caminho).isEqualTo(200);
+        assertEquals(200, r.getStatusCode().value(), "GET " + caminho);
         return corpoDe(r);
     }
 
@@ -121,7 +124,7 @@ class JornadaCompletaIntegracaoTest {
     private UUID entrarPelaPlaca(String codigo) {
         String corpo = codigo == null ? null : "{\"codigoPonto\":\"" + codigo + "\"}";
         ResponseEntity<String> r = chamar(HttpMethod.POST, "/sessoes", corpo);
-        assertThat(r.getStatusCode().value()).isEqualTo(201);
+        assertEquals(201, r.getStatusCode().value());
 
         UUID id = UUID.fromString(corpoDe(r).get("id").asText());
         sessoesCriadas.add(id);
@@ -149,7 +152,7 @@ class JornadaCompletaIntegracaoTest {
     private JsonNode adicionar(UUID sessaoId, String produtoId) {
         ResponseEntity<String> r = chamar(HttpMethod.POST, "/sessoes/" + sessaoId + "/roteiro/itens",
                 "{\"produtoId\":\"" + produtoId + "\"}");
-        assertThat(r.getStatusCode().value()).isEqualTo(201);
+        assertEquals(201, r.getStatusCode().value());
         return corpoDe(r);
     }
 
@@ -168,26 +171,26 @@ class JornadaCompletaIntegracaoTest {
         UUID sessao = entrarPelaPlaca("ENT-01");
         JsonNode aberta = get("/sessoes/" + sessao);
 
-        assertThat(aberta.get("status").asText()).isEqualTo("ACTIVE");
-        assertThat(aberta.get("posicaoAtual").get("codigoCurto").asText()).isEqualTo("ENT01");
+        assertEquals("ACTIVE", aberta.get("status").asText());
+        assertEquals("ENT01", aberta.get("posicaoAtual").get("codigoCurto").asText());
         passo("entrou pela placa " + aberta.get("posicaoAtual").get("corredor").asText());
 
         // ---- 2. abre o mapa, que nao depende da sessao
         JsonNode mapa = get("/mapa");
 
-        assertThat(mapa.get("largura").asInt()).isEqualTo(100);
-        assertThat(mapa.get("blocos")).isNotEmpty();
-        assertThat(mapa.get("pontos")).isNotEmpty();
+        assertEquals(100, mapa.get("largura").asInt());
+        assertFalse(mapa.get("blocos").isEmpty());
+        assertFalse(mapa.get("pontos").isEmpty());
         passo("mapa com " + mapa.get("blocos").size() + " corredores e "
                 + mapa.get("pontos").size() + " pontos de servico");
 
         // ---- 3. navega pelo menu de secoes
         JsonNode secoes = get("/produtos/secoes");
-        assertThat(secoes).isNotEmpty();
-        assertThat(secoes.get(0).get("quantidadeProdutos").asInt()).isPositive();
+        assertFalse(secoes.isEmpty());
+        assertTrue(secoes.get(0).get("quantidadeProdutos").asInt() > 0);
 
         JsonNode emTintas = get("/produtos?secao=Tintas&size=50");
-        assertThat(emTintas.get("content")).isNotEmpty();
+        assertFalse(emTintas.get("content").isEmpty());
         passo("Tintas tem " + emTintas.get("totalElements").asInt() + " produtos");
 
         // ---- 4. usa uma faceta que a propria resposta ofereceu
@@ -197,34 +200,32 @@ class JornadaCompletaIntegracaoTest {
                 facetaMarca = faceta;
             }
         }
-        assertThat(facetaMarca)
-                .as("a tela de catalogo precisa de filtros para oferecer")
-                .isNotNull();
+        assertNotNull(facetaMarca, "a tela de catalogo precisa de filtros para oferecer");
 
         String marca = facetaMarca.get("valores").get(0).get("valor").asText();
         long esperados = facetaMarca.get("valores").get(0).get("quantidade").asLong();
 
         JsonNode filtrado = get("/produtos?secao=Tintas&size=50&atributo=MARCA:" + marca);
 
-        assertThat(filtrado.get("totalElements").asLong())
-                .as("a contagem da faceta precisa bater com o filtro que ela oferece")
-                .isEqualTo(esperados);
+        assertEquals(esperados, filtrado.get("totalElements").asLong(),
+                "a contagem da faceta precisa bater com o filtro que ela oferece");
         passo("filtrou Tintas por marca " + marca + " -> " + esperados + " produto(s)");
 
         // ---- 5. busca errando a digitacao
         JsonNode busca = get("/produtos?query=tnta&size=20");
-        assertThat(busca.get("content")).isNotEmpty();
+        assertFalse(busca.get("content").isEmpty());
         passo("busca por 'tnta' -> " + busca.get("content").get(0).get("nome").asText());
 
         // ---- 6. abre o detalhe e ve as especificacoes
         String tinta = busca.get("content").get(0).get("id").asText();
         JsonNode detalhe = get("/produtos/" + tinta);
 
-        assertThat(detalhe.get("descricao").asText()).isNotBlank();
-        assertThat(detalhe.get("pontoMapa").get("corredor").asText()).isNotBlank();
-        assertThat(detalhe.get("atributos"))
-                .as("a tela de detalhe mostra a tabela de especificacoes")
-                .isNotEmpty();
+        String descricao = detalhe.get("descricao").asText();
+        assertFalse(descricao == null || descricao.isBlank());
+        String corredorDoDetalhe = detalhe.get("pontoMapa").get("corredor").asText();
+        assertFalse(corredorDoDetalhe == null || corredorDoDetalhe.isBlank());
+        assertFalse(detalhe.get("atributos").isEmpty(),
+                "a tela de detalhe mostra a tabela de especificacoes");
         passo("detalhe de " + detalhe.get("nome").asText() + " com "
                 + detalhe.get("atributos").size() + " caracteristicas");
 
@@ -237,25 +238,21 @@ class JornadaCompletaIntegracaoTest {
         String itemLixa = adicionar(sessao, lixaZerada).get("id").asText();
 
         JsonNode lista = get("/sessoes/" + sessao + "/roteiro");
-        assertThat(lista.get("quantidadeItens").asInt()).isEqualTo(3);
+        assertEquals(3, lista.get("quantidadeItens").asInt());
         passo("lista montada com 3 itens");
 
         // ---- 8. caminha e coleta: a posicao acompanha
-        assertThat(status(HttpMethod.PATCH, "/roteiro/itens/" + itemCano + "/coletar", null))
-                .isEqualTo(200);
+        assertEquals(200, status(HttpMethod.PATCH, "/roteiro/itens/" + itemCano + "/coletar", null));
 
-        assertThat(corredorAtual(sessao))
-                .as("depois de pegar o cano, o cliente esta em Encanamento")
-                .isEqualTo("Encanamento");
+        assertEquals("Encanamento", corredorAtual(sessao),
+                "depois de pegar o cano, o cliente esta em Encanamento");
         passo("coletou o cano -> posicao em Encanamento");
 
         // ---- 9. tocou por engano: desmarca e a posicao volta
-        assertThat(status(HttpMethod.PATCH, "/roteiro/itens/" + itemCano + "/desmarcar", null))
-                .isEqualTo(200);
+        assertEquals(200, status(HttpMethod.PATCH, "/roteiro/itens/" + itemCano + "/desmarcar", null));
 
-        assertThat(corredorAtual(sessao))
-                .as("desfeita a coleta, ele volta a estar na placa de entrada")
-                .isEqualTo("Entrada da loja");
+        assertEquals("Entrada da loja", corredorAtual(sessao),
+                "desfeita a coleta, ele volta a estar na placa de entrada");
         passo("desmarcou -> posicao de volta na entrada");
 
         // recoloca, porque ele de fato pegou o cano
@@ -265,18 +262,16 @@ class JornadaCompletaIntegracaoTest {
         ResponseEntity<String> respostaRuptura =
                 chamar(HttpMethod.POST, "/roteiro/itens/" + itemLixa + "/ruptura", null);
 
-        assertThat(respostaRuptura.getStatusCode().value())
-                .as("a massa garante um substituto plausivel para a lixa")
-                .isEqualTo(200);
+        assertEquals(200, respostaRuptura.getStatusCode().value(),
+                "a massa garante um substituto plausivel para a lixa");
 
         JsonNode ruptura = corpoDe(respostaRuptura);
         JsonNode sugerido = ruptura.get("produtoSugerido");
 
-        assertThat(sugerido.get("saldoEstoque").asInt())
-                .as("nao adianta sugerir algo que tambem acabou")
-                .isPositive();
-        assertThat(ruptura.get("origemSugestao").asText())
-                .isIn("ASSISTENTE_IA", "PROXIMIDADE");
+        assertTrue(sugerido.get("saldoEstoque").asInt() > 0,
+                "nao adianta sugerir algo que tambem acabou");
+        assertTrue(List.of("ASSISTENTE_IA", "PROXIMIDADE")
+                .contains(ruptura.get("origemSugestao").asText()));
         passo("prateleira vazia -> " + sugerido.get("nome").asText()
                 + " (" + ruptura.get("origemSugestao").asText() + ")");
 
@@ -285,44 +280,40 @@ class JornadaCompletaIntegracaoTest {
                 "/roteiro/itens/" + itemLixa + "/substituir",
                 "{\"produtoSubstitutoId\":\"" + sugerido.get("id").asText() + "\"}");
 
-        assertThat(troca.getStatusCode().value()).isEqualTo(200);
+        assertEquals(200, troca.getStatusCode().value());
         JsonNode depoisDaTroca = corpoDe(troca);
 
-        assertThat(depoisDaTroca.get("quantidadeItens").asInt())
-                .as("trocar nao muda o tamanho da lista")
-                .isEqualTo(3);
+        assertEquals(3, depoisDaTroca.get("quantidadeItens").asInt(),
+                "trocar nao muda o tamanho da lista");
 
         List<String> skus = new ArrayList<>();
         depoisDaTroca.get("itens").forEach(item -> skus.add(item.get("produto").get("sku").asText()));
 
-        assertThat(skus).doesNotContain(EM_FALTA);
-        assertThat(skus).contains(sugerido.get("sku").asText());
+        assertFalse(skus.contains(EM_FALTA));
+        assertTrue(skus.contains(sugerido.get("sku").asText()));
         passo("substituto aceito numa chamada; a lixa em falta saiu da lista");
 
         // ---- 12. se perde e le outra placa
-        assertThat(status(HttpMethod.PUT, "/sessoes/" + sessao + "/posicao",
-                "{\"codigoPonto\":\"CEN-03\"}")).isEqualTo(200);
+        assertEquals(200, status(HttpMethod.PUT, "/sessoes/" + sessao + "/posicao",
+                "{\"codigoPonto\":\"CEN-03\"}"));
 
-        assertThat(corredorAtual(sessao)).isEqualTo("Cruzamento central");
-        assertThat(get("/sessoes/" + sessao + "/roteiro").get("quantidadeItens").asInt())
-                .as("recentrar nao pode mexer na lista")
-                .isEqualTo(3);
+        assertEquals("Cruzamento central", corredorAtual(sessao));
+        assertEquals(3, get("/sessoes/" + sessao + "/roteiro").get("quantidadeItens").asInt(),
+                "recentrar nao pode mexer na lista");
         passo("recentrou no cruzamento central, com a lista intacta");
 
         // ---- 13. encerra
         JsonNode encerrada = corpoDe(chamar(HttpMethod.POST, "/sessoes/" + sessao + "/concluir", null));
-        assertThat(encerrada.get("status").asText()).isEqualTo("COMPLETED");
+        assertEquals("COMPLETED", encerrada.get("status").asText());
         passo("jornada concluida");
 
         // ---- 14. depois de encerrar: le, mas nao escreve
-        assertThat(status(HttpMethod.GET, "/sessoes/" + sessao + "/roteiro", null))
-                .as("a lista continua legivel depois de encerrada (D-41)")
-                .isEqualTo(200);
+        assertEquals(200, status(HttpMethod.GET, "/sessoes/" + sessao + "/roteiro", null),
+                "a lista continua legivel depois de encerrada (D-41)");
 
-        assertThat(status(HttpMethod.POST, "/sessoes/" + sessao + "/roteiro/itens",
-                "{\"produtoId\":\"" + tinta + "\"}"))
-                .as("escrever numa sessao encerrada e 409, e o frontend traduz isso")
-                .isEqualTo(409);
+        assertEquals(409, status(HttpMethod.POST, "/sessoes/" + sessao + "/roteiro/itens",
+                        "{\"produtoId\":\"" + tinta + "\"}"),
+                "escrever numa sessao encerrada e 409, e o frontend traduz isso");
         passo("sessao encerrada: leitura sim, escrita 409");
     }
 
@@ -339,13 +330,12 @@ class JornadaCompletaIntegracaoTest {
          */
         UUID sessao = entrarPelaPlaca("ZZZ-99");
 
-        assertThat(get("/sessoes/" + sessao).get("posicaoAtual").isNull()).isTrue();
+        assertTrue(get("/sessoes/" + sessao).get("posicaoAtual").isNull());
 
         String produto = idDoProduto("SKU-ENC-001");
-        assertThat(status(HttpMethod.POST, "/sessoes/" + sessao + "/roteiro/itens",
-                "{\"produtoId\":\"" + produto + "\"}"))
-                .as("sem posicao, mas com o sistema inteiro disponivel")
-                .isEqualTo(201);
+        assertEquals(201, status(HttpMethod.POST, "/sessoes/" + sessao + "/roteiro/itens",
+                        "{\"produtoId\":\"" + produto + "\"}"),
+                "sem posicao, mas com o sistema inteiro disponivel");
 
         passo("placa desconhecida: sessao viva, posicao nula");
     }
@@ -356,12 +346,11 @@ class JornadaCompletaIntegracaoTest {
         // O outro lado da mesma assimetria: aqui o cliente ja tem sessao, e avisar e acionavel.
         UUID sessao = entrarPelaPlaca("ENT-01");
 
-        assertThat(status(HttpMethod.PUT, "/sessoes/" + sessao + "/posicao",
-                "{\"codigoPonto\":\"ZZZ-99\"}")).isEqualTo(404);
+        assertEquals(404, status(HttpMethod.PUT, "/sessoes/" + sessao + "/posicao",
+                "{\"codigoPonto\":\"ZZZ-99\"}"));
 
-        assertThat(corredorAtual(sessao))
-                .as("errar a digitacao nao pode apagar o que o sistema ja sabia")
-                .isEqualTo("Entrada da loja");
+        assertEquals("Entrada da loja", corredorAtual(sessao),
+                "errar a digitacao nao pode apagar o que o sistema ja sabia");
     }
 
     @Test
@@ -372,9 +361,9 @@ class JornadaCompletaIntegracaoTest {
         // primeira versao deste teste, que codificava o espaco como se fosse URL.
         for (String grafia : List.of("TIN-02", "tin-02", "TIN02", "tin 02")) {
             UUID sessao = entrarPelaPlaca(grafia);
-            assertThat(get("/sessoes/" + sessao).get("posicaoAtual").get("codigoCurto").asText())
-                    .as("grafia %s", grafia)
-                    .isEqualTo("TIN02");
+            assertEquals("TIN02",
+                    get("/sessoes/" + sessao).get("posicaoAtual").get("codigoCurto").asText(),
+                    "grafia " + grafia);
         }
     }
 
@@ -397,10 +386,10 @@ class JornadaCompletaIntegracaoTest {
         JsonNode estado = get("/sessoes/" + sessao);
         JsonNode lista = get("/sessoes/" + sessao + "/roteiro");
 
-        assertThat(estado.get("status").asText()).isEqualTo("ACTIVE");
-        assertThat(estado.get("posicaoAtual").get("corredor").asText()).isEqualTo("Encanamento");
-        assertThat(lista.get("quantidadeItens").asInt()).isEqualTo(1);
-        assertThat(lista.get("itens").get(0).get("coletado").asBoolean()).isTrue();
+        assertEquals("ACTIVE", estado.get("status").asText());
+        assertEquals("Encanamento", estado.get("posicaoAtual").get("corredor").asText());
+        assertEquals(1, lista.get("quantidadeItens").asInt());
+        assertTrue(lista.get("itens").get(0).get("coletado").asBoolean());
 
         passo("recuperacao pelo id da sessao: posicao e coleta preservadas");
     }
@@ -414,8 +403,8 @@ class JornadaCompletaIntegracaoTest {
         try {
             ResponseEntity<String> zerado = chamar(HttpMethod.PATCH,
                     "/produtos/" + trena + "/estoque", "{\"saldoEstoque\":0}");
-            assertThat(zerado.getStatusCode().value()).isEqualTo(200);
-            assertThat(corpoDe(zerado).get("saldoEstoque").asInt()).isZero();
+            assertEquals(200, zerado.getStatusCode().value());
+            assertEquals(0, corpoDe(zerado).get("saldoEstoque").asInt());
 
             UUID sessao = entrarPelaPlaca("ENT-01");
             String item = adicionar(sessao, trena).get("id").asText();
@@ -425,7 +414,7 @@ class JornadaCompletaIntegracaoTest {
 
             passo("cenario criado sob demanda -> " + ruptura.get("produtoSugerido").get("nome").asText());
 
-            assertThat(ruptura.get("produtoSugerido").get("saldoEstoque").asInt()).isPositive();
+            assertTrue(ruptura.get("produtoSugerido").get("saldoEstoque").asInt() > 0);
 
         } finally {
             // Sem isto, o proximo teste - e a proxima demonstracao - encontraria o catalogo torto.
