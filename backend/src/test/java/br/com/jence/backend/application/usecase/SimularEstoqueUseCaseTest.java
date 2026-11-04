@@ -19,8 +19,11 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -63,8 +66,8 @@ class SimularEstoqueUseCaseTest {
 
         ProdutoResponse resposta = useCase.executar(produtoId, 0);
 
-        assertThat(resposta.saldoEstoque()).isZero();
-        assertThat(produtoSalvo().temDisponibilidade()).isFalse();
+        assertEquals(0, resposta.saldoEstoque());
+        assertFalse(produtoSalvo().temDisponibilidade());
     }
 
     @Test
@@ -76,8 +79,8 @@ class SimularEstoqueUseCaseTest {
 
         ProdutoResponse resposta = useCase.executar(produtoId, 40);
 
-        assertThat(resposta.saldoEstoque()).isEqualTo(40);
-        assertThat(produtoSalvo().temDisponibilidade()).isTrue();
+        assertEquals(40, resposta.saldoEstoque());
+        assertTrue(produtoSalvo().temDisponibilidade());
     }
 
     @Test
@@ -88,11 +91,11 @@ class SimularEstoqueUseCaseTest {
         useCase.executar(produtoId, 7);
 
         Produto salvo = produtoSalvo();
-        assertThat(salvo.getId()).isEqualTo(produtoId);
-        assertThat(salvo.getSku()).isEqualTo("SKU-TIN-003");
-        assertThat(salvo.getNome()).isEqualTo("Lixa para Parede Grao 120");
-        assertThat(salvo.getPreco()).isEqualByComparingTo("3.50");
-        assertThat(salvo.getPontoMapa()).isSameAs(TINTAS);
+        assertEquals(produtoId, salvo.getId());
+        assertEquals("SKU-TIN-003", salvo.getSku());
+        assertEquals("Lixa para Parede Grao 120", salvo.getNome());
+        assertEquals(0, salvo.getPreco().compareTo(new BigDecimal("3.50")));
+        assertSame(TINTAS, salvo.getPontoMapa());
     }
 
     @Test
@@ -100,8 +103,7 @@ class SimularEstoqueUseCaseTest {
     void produtoInexistente() {
         when(produtoRepository.buscarPorId(produtoId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> useCase.executar(produtoId, 0))
-                .isInstanceOf(RecursoNaoEncontradoException.class);
+        assertThrows(RecursoNaoEncontradoException.class, () -> useCase.executar(produtoId, 0));
 
         verify(produtoRepository, never()).salvar(any());
     }
@@ -111,8 +113,8 @@ class SimularEstoqueUseCaseTest {
     void saldoNegativoNaEntidade() {
         // O 400 vem do @Min no request; esta e a segunda linha de defesa, para o caso de
         // alguem chamar o caso de uso por outro caminho no futuro.
-        assertThatThrownBy(() -> lixa.comSaldoEstoque(-1))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("nao pode ser negativo");
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                () -> lixa.comSaldoEstoque(-1));
+        assertTrue(e.getMessage().contains("nao pode ser negativo"));
     }
 }
