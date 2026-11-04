@@ -141,11 +141,16 @@ Um commit por DAO, com o seu teste de integração. Regras de todos: SQL com `?`
 
 Um commit por service (19). Em cada um: passa a receber os DAOs concretos pelo construtor (com construtor sem argumentos que faz `new`), troca `@Transactional` por `Transacao` e, se tiver teste unitário, troca o Mockito por subclasses dos DAOs escritas à mão. Enquanto o Spring estiver rodando, os DAOs ganham `@Component` provisório para serem injetados; ele sai na fase 10.
 
-- [ ] **7.13** Services de consulta primeiro (`ConsultarSessao`, `ConsultarListaRoteiro`, `ConsultarProduto`, `BuscarProdutos`, `ListarSecoes`, `ConsultarMapa`, `ConsultarHistoricoChat`).
-- [ ] **7.14** Services de escrita (`InicializarSessao`, `RecentrarSessao`, `ConcluirRota`, `AdicionarProdutoAoRoteiro`, `RemoverProdutoDoRoteiro`, `MarcarItemColetado`, `DesmarcarItemColetado`, `SubstituirItemDoRoteiro`, `SimularEstoque`, `ExpirarSessoesInativas`).
-- [ ] **7.15** Services com IA e ruptura (`ConversarComAssistente`, `TratarRupturaEstoque`). O Gemini continua como está até a fase 8.
-- [ ] **7.16** Carga de dados (`seed`) passa a usar os DAOs.
-- [ ] **7.17** 🔒 `mvnw test -Pintegracao` completo e coleção do Insomnia.
+- [x] **7.13** Services de consulta primeiro (`ConsultarSessao`, `ConsultarListaRoteiro`, `ConsultarProduto`, `BuscarProdutos`, `ListarSecoes`, `ConsultarMapa`, `ConsultarHistoricoChat`).
+- [x] **7.14** Services de escrita (`InicializarSessao`, `RecentrarSessao`, `ConcluirRota`, `AdicionarProdutoAoRoteiro`, `RemoverProdutoDoRoteiro`, `MarcarItemColetado`, `DesmarcarItemColetado`, `SubstituirItemDoRoteiro`, `SimularEstoque`, `ExpirarSessoesInativas`).
+- [x] **7.15** Services com IA e ruptura (`ConversarComAssistente`, `TratarRupturaEstoque`). O Gemini continua como está até a fase 8.
+- [x] **7.16** Carga de dados (`seed`) passa a usar os DAOs.
+- [x] **7.17** 🔒 `mvnw test -Pintegracao` completo e coleção do Insomnia.
+
+**Resultado da 7.17 (04/11/2026):** 322 testes de integração, todos passam, exceto os da linha de base (Gemini lento ou sem cota, e a premissa desatualizada do produto isolado). Três diferenças de comportamento apareceram e ficaram registradas:
+- O JDBC grava na hora, e não no commit como o Hibernate. Duas transações na mesma thread que gravam a mesma linha travam uma à outra; em produção são threads diferentes, e a segunda só espera a primeira confirmar. O `EscritaObsoletaIntegracaoTest` passou a simular a requisição paralela em outra thread.
+- A chave estrangeira `tb_sessao.ponto_escaneado_id` não tem índice. Apagar em `tb_ponto_mapa`, como faz a carga de dados, espera qualquer transação aberta que tenha mexido em `tb_sessao`. Uma JVM de teste travada segurou isso por meia hora.
+- No chat, se a busca no catálogo falhar no meio da conversa, o fallback agora grava a pergunta do cliente; com o Spring, a transação inteira era desfeita.
 
 **7.D Remoção do JPA**
 - [ ] **7.18** Apagar adaptadores, repositórios JPA, entidades JPA, fábricas de conversão, `RestricaoDeEnumNoBanco` e as interfaces `domain/repository/*Repository`. Um commit por grupo.
@@ -155,10 +160,10 @@ Um commit por service (19). Em cada um: passa a receber os DAOs concretos pelo c
 
 ### Fase 8 — Cliente do Gemini com o `HttpClient` do JDK
 
-- [ ] **8.1** Adicionar `jersey-media-json-binding` (dependência do material, traz o JSON-B).
-- [ ] **8.2** `GeminiClient`: `RestClient` → `java.net.http.HttpClient` (instância única, tempos limite da `Configuracao`); corpo montado e lido com JSON-B. Apagar `RestClientConfig`.
-- [ ] **8.3** `GeminiClientTest`: `MockRestServiceServer` → servidor falso com `com.sun.net.httpserver.HttpServer` do JDK.
-- [ ] **8.4** Apagar a interface `AssistenteIA`; `ConversarComAssistente` e `TratarRupturaEstoque` passam a depender de `GeminiClient`. Testes com subclasse escrita à mão.
+- [x] **8.1** Adicionar `jersey-media-json-binding` (dependência do material, traz o JSON-B).
+- [x] **8.2** `GeminiClient`: `RestClient` → `java.net.http.HttpClient` (instância única, tempos limite da `Configuracao`); corpo montado e lido com JSON-B. Apagar `RestClientConfig`.
+- [x] **8.3** `GeminiClientTest`: `MockRestServiceServer` → servidor falso com `com.sun.net.httpserver.HttpServer` do JDK.
+- [x] **8.4** Apagar a interface `AssistenteIA`; `ConversarComAssistente` e `TratarRupturaEstoque` passam a depender de `GeminiClient`. Testes com subclasse escrita à mão.
 
 ### Fase 9 — Exceções checadas, DTOs e validação
 
