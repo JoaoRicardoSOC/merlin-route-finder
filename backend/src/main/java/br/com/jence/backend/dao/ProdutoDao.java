@@ -21,6 +21,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -241,6 +242,29 @@ public class ProdutoDao {
         }
         atributos.sort(Comparator.comparing(ValorDeAtributo::atributo));
         return atributos;
+    }
+
+    /**
+     * As caracteristicas de todo o catalogo, agrupadas por produto, numa consulta so.
+     * <p>
+     * Usado pela carga de dados, que compara o catalogo inteiro com a massa: uma consulta por
+     * produto seriam mais de cem idas e voltas ate o banco a cada inicializacao.
+     */
+    public Map<UUID, List<ValorDeAtributo>> buscarAtributosDeTodos() throws SQLException {
+        Map<UUID, List<ValorDeAtributo>> porProduto = new HashMap<>();
+        try (PreparedStatement stm = conexao().prepareStatement(
+                "select produto_id, chave, valor from tb_produto_atributo")) {
+            stm.setFetchSize(500);
+            try (ResultSet result = stm.executeQuery()) {
+                while (result.next()) {
+                    porProduto.computeIfAbsent(UUID.fromString(result.getString("produto_id")),
+                                    produto -> new ArrayList<>())
+                            .add(new ValorDeAtributo(
+                                    AtributoProduto.valueOf(result.getString("chave")), result.getString("valor")));
+                }
+            }
+        }
+        return porProduto;
     }
 
     /**

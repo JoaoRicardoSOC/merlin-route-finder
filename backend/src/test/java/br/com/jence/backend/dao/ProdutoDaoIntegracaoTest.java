@@ -128,6 +128,19 @@ class ProdutoDaoIntegracaoTest {
     }
 
     @Test
+    @DisplayName("caracteristicas de todo o catalogo batem com as de cada produto")
+    void atributosDeTodos() throws Exception {
+        Map<UUID, List<ValorDeAtributo>> todos = dao.buscarAtributosDeTodos();
+
+        for (Produto produto : dao.buscarPaginado(0, 500).conteudo()) {
+            List<ValorDeAtributo> individuais = dao.buscarAtributosDe(produto.getId());
+            assertEquals(new java.util.HashSet<>(individuais),
+                    new java.util.HashSet<>(todos.getOrDefault(produto.getId(), List.of())),
+                    produto.getSku());
+        }
+    }
+
+    @Test
     @DisplayName("proximos: so disponiveis, dentro do raio, sem o proprio, com limite")
     void proximos() throws Exception {
         Produto referencia = dao.buscarPorSku("SKU-FER-002").orElseThrow();
