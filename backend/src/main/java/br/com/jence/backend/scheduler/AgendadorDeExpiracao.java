@@ -1,4 +1,4 @@
-package br.com.jence.backend.infrastructure.scheduler;
+package br.com.jence.backend.scheduler;
 
 import br.com.jence.backend.service.ExpirarSessoesInativasUseCase;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

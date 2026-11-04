@@ -7,7 +7,7 @@ import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.model.AfinidadeDeProduto;
 import br.com.jence.backend.domain.repository.PontoMapaRepository;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
-import br.com.jence.backend.infrastructure.database.seed.CarregadorDadosIniciais;
+import br.com.jence.backend.seed.CarregadorDadosIniciais;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

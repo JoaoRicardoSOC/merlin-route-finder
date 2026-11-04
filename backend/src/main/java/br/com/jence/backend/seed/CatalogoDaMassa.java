@@ -1,4 +1,4 @@
-package br.com.jence.backend.infrastructure.database.seed;
+package br.com.jence.backend.seed;
 
 import br.com.jence.backend.model.ValorDeAtributo;
 
@@ -23,7 +23,7 @@ import static br.com.jence.backend.model.AtributoProduto.QUANTIDADE;
 import static br.com.jence.backend.model.AtributoProduto.TEMPERATURA_DE_COR;
 import static br.com.jence.backend.model.AtributoProduto.TIPO;
 import static br.com.jence.backend.model.AtributoProduto.VOLUME;
-import static br.com.jence.backend.infrastructure.database.seed.ProdutoDaMassa.de;
+import static br.com.jence.backend.seed.ProdutoDaMassa.de;
 
 /**
  * A loja Leroy Merlin em miniatura: 111 produtos distribuidos pelas dez secoes da planta.

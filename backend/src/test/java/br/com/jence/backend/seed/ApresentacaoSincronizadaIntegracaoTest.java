@@ -1,4 +1,4 @@
-package br.com.jence.backend.infrastructure.database.seed;
+package br.com.jence.backend.seed;
 
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.domain.repository.ProdutoRepository;

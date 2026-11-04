@@ -1,4 +1,4 @@
-package br.com.jence.backend.infrastructure.database.seed;
+package br.com.jence.backend.seed;
 
 import br.com.jence.backend.model.BlocoMapa;
 import br.com.jence.backend.model.PlantaDaLoja;
