@@ -25,8 +25,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * O cenario de ruptura de ponta a ponta, contra o Oracle e o Gemini reais: o cliente adiciona
@@ -87,16 +89,14 @@ class RupturaIntegracaoTest {
         System.out.println(">>> origem:     " + resposta.origemSugestao());
         System.out.println(">>> justifica.: " + resposta.justificativa());
 
-        assertThat(resposta.origemSugestao())
-                .as("se cair em PROXIMIDADE, o assistente nao respondeu - verifique a cota da chave")
-                .isEqualTo(OrigemSugestao.ASSISTENTE_IA);
+        assertEquals(OrigemSugestao.ASSISTENTE_IA, resposta.origemSugestao(),
+                "se cair em PROXIMIDADE, o assistente nao respondeu - verifique a cota da chave");
 
-        assertThat(resposta.produtoSugerido().sku())
-                .as("no mesmo raio ha disjuntor, cabo e parafuso; so a lixa d'agua cumpre a funcao")
-                .isEqualTo(LIXA_SUBSTITUTA);
+        assertEquals(LIXA_SUBSTITUTA, resposta.produtoSugerido().sku(),
+                "no mesmo raio ha disjuntor, cabo e parafuso; so a lixa d'agua cumpre a funcao");
 
-        assertThat(resposta.produtoSugerido().saldoEstoque()).isPositive();
-        assertThat(resposta.justificativa()).isNotBlank();
+        assertTrue(resposta.produtoSugerido().saldoEstoque() > 0);
+        assertFalse(resposta.justificativa() == null || resposta.justificativa().isBlank());
     }
 
     @Test
@@ -107,10 +107,11 @@ class RupturaIntegracaoTest {
 
         List<RegistroRuptura> registros = registroRupturaRepository.buscarPorSessao(sessaoId);
 
-        assertThat(registros).hasSize(1);
-        assertThat(registros.getFirst().getItemRoteiroId()).isEqualTo(item.id());
-        assertThat(registros.getFirst().temSugestao()).isTrue();
-        assertThat(registros.getFirst().getJustificativa()).isNotBlank();
+        assertEquals(1, registros.size());
+        assertEquals(item.id(), registros.getFirst().getItemRoteiroId());
+        assertTrue(registros.getFirst().temSugestao());
+        assertFalse(registros.getFirst().getJustificativa() == null
+                || registros.getFirst().getJustificativa().isBlank());
 
         System.out.println(">>> registro persistido: " + registros.getFirst().getOrigem()
                 + " em " + registros.getFirst().getRegistradoEm());
@@ -122,13 +123,12 @@ class RupturaIntegracaoTest {
         // secao: nao ha vizinho dentro do raio, e a ruptura precisa ser registrada mesmo assim.
         ItemRoteiroDetalhadoResponse item = adicionarAoRoteiro("SKU-DEC-001");
 
-        assertThatThrownBy(() -> tratarRuptura.executar(item.id()))
-                .isInstanceOf(SubstitutoIndisponivelException.class);
+        assertThrows(SubstitutoIndisponivelException.class, () -> tratarRuptura.executar(item.id()));
 
         List<RegistroRuptura> registros = registroRupturaRepository.buscarPorSessao(sessaoId);
 
-        assertThat(registros).hasSize(1);
-        assertThat(registros.getFirst().temSugestao()).isFalse();
-        assertThat(registros.getFirst().getOrigem()).isEqualTo(OrigemSugestao.NENHUMA);
+        assertEquals(1, registros.size());
+        assertFalse(registros.getFirst().temSugestao());
+        assertEquals(OrigemSugestao.NENHUMA, registros.getFirst().getOrigem());
     }
 }
