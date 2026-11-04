@@ -1,4 +1,4 @@
-package br.com.jence.backend.application.usecase;
+package br.com.jence.backend.service;
 
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.model.ItemRoteiro;

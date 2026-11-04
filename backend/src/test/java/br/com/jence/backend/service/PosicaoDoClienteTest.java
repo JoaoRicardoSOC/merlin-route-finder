@@ -1,4 +1,4 @@
-package br.com.jence.backend.domain.service;
+package br.com.jence.backend.service;
 
 import br.com.jence.backend.model.ItemRoteiro;
 import br.com.jence.backend.model.ListaRoteiro;

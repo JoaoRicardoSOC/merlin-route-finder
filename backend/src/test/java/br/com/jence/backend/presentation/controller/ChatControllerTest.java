@@ -1,8 +1,8 @@
 package br.com.jence.backend.presentation.controller;
 
 import br.com.jence.backend.dto.ChatMensagemResponse;
-import br.com.jence.backend.application.usecase.ConsultarHistoricoChatUseCase;
-import br.com.jence.backend.application.usecase.ConversarComAssistenteUseCase;
+import br.com.jence.backend.service.ConsultarHistoricoChatUseCase;
+import br.com.jence.backend.service.ConversarComAssistenteUseCase;
 import br.com.jence.backend.model.Remetente;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;

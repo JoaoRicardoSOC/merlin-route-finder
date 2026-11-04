@@ -1,13 +1,13 @@
 package br.com.jence.backend;
 
 import br.com.jence.backend.dto.SessaoResponse;
-import br.com.jence.backend.application.usecase.AdicionarProdutoAoRoteiroUseCase;
-import br.com.jence.backend.application.usecase.ConsultarSessaoUseCase;
-import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
-import br.com.jence.backend.application.usecase.ConcluirRotaUseCase;
-import br.com.jence.backend.application.usecase.DesmarcarItemColetadoUseCase;
-import br.com.jence.backend.application.usecase.MarcarItemColetadoUseCase;
-import br.com.jence.backend.application.usecase.RecentrarSessaoUseCase;
+import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
+import br.com.jence.backend.service.ConsultarSessaoUseCase;
+import br.com.jence.backend.service.InicializarSessaoUseCase;
+import br.com.jence.backend.service.ConcluirRotaUseCase;
+import br.com.jence.backend.service.DesmarcarItemColetadoUseCase;
+import br.com.jence.backend.service.MarcarItemColetadoUseCase;
+import br.com.jence.backend.service.RecentrarSessaoUseCase;
 import br.com.jence.backend.model.ItemRoteiro;
 import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;

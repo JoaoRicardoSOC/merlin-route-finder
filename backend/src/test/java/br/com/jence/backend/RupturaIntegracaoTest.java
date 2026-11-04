@@ -2,9 +2,9 @@ package br.com.jence.backend;
 
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.dto.RupturaEstoqueResponse;
-import br.com.jence.backend.application.usecase.AdicionarProdutoAoRoteiroUseCase;
-import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
-import br.com.jence.backend.application.usecase.TratarRupturaEstoqueUseCase;
+import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
+import br.com.jence.backend.service.InicializarSessaoUseCase;
+import br.com.jence.backend.service.TratarRupturaEstoqueUseCase;
 import br.com.jence.backend.model.OrigemSugestao;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.RegistroRuptura;

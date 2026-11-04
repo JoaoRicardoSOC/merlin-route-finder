@@ -1,4 +1,4 @@
-package br.com.jence.backend.application.usecase;
+package br.com.jence.backend.service;
 
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.model.ItemRoteiro;
@@ -17,7 +17,7 @@ import java.util.UUID;
  * <p>
  * E o que faz o marcador do item mudar de aparencia no mapa, e tambem <b>a principal pista de
  * onde o cliente esta</b>: quem acabou de pegar um produto esta na prateleira dele. Ver
- * {@link br.com.jence.backend.domain.service.PosicaoDoCliente}.
+ * {@link br.com.jence.backend.service.PosicaoDoCliente}.
  */
 @Service
 public class MarcarItemColetadoUseCase {

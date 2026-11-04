@@ -86,7 +86,7 @@ public class Sessao {
      * desfaz nada do que ele fez. Como {@code escaneadoEm} passa a ser o instante mais
      * recente, a nova placa vence o ultimo item coletado na estimativa de posicao.
      *
-     * @see br.com.jence.backend.domain.service.PosicaoDoCliente
+     * @see br.com.jence.backend.service.PosicaoDoCliente
      */
     public void recentrarEm(PontoMapa ponto, LocalDateTime quando) {
         this.pontoEscaneado = ponto;

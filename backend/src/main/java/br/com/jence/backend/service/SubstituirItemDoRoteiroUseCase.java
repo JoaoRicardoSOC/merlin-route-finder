@@ -1,4 +1,4 @@
-package br.com.jence.backend.application.usecase;
+package br.com.jence.backend.service;
 
 import br.com.jence.backend.dto.ListaRoteiroResponse;
 import br.com.jence.backend.model.ItemRoteiro;
@@ -26,7 +26,7 @@ import java.util.UUID;
  * <p>
  * <b>O substituto entra NAO coletado</b>, e nao herda o estado do item que saiu: ele nem
  * sempre esta na mesma prateleira, e pode estar alguns metros adiante. Marca-lo como coletado
- * mentiria sobre onde o cliente esta ({@link br.com.jence.backend.domain.service.PosicaoDoCliente})
+ * mentiria sobre onde o cliente esta ({@link br.com.jence.backend.service.PosicaoDoCliente})
  * e o faria sair sem o produto.
  * <p>
  * <b>O registro da ruptura nao e tocado.</b> Ele e evidencia do que aconteceu na gondola, e

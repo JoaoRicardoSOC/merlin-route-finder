@@ -1,8 +1,8 @@
 package br.com.jence.backend;
 
-import br.com.jence.backend.application.usecase.AdicionarProdutoAoRoteiroUseCase;
-import br.com.jence.backend.application.usecase.ExpirarSessoesInativasUseCase;
-import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
+import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
+import br.com.jence.backend.service.ExpirarSessoesInativasUseCase;
+import br.com.jence.backend.service.InicializarSessaoUseCase;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.model.StatusSessao;

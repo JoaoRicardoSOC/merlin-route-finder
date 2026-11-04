@@ -1,12 +1,12 @@
 package br.com.jence.backend.presentation;
 
-import br.com.jence.backend.application.usecase.AdicionarProdutoAoRoteiroUseCase;
-import br.com.jence.backend.application.usecase.ConcluirRotaUseCase;
-import br.com.jence.backend.application.usecase.ConsultarListaRoteiroUseCase;
-import br.com.jence.backend.application.usecase.ConsultarSessaoUseCase;
-import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
-import br.com.jence.backend.application.usecase.RecentrarSessaoUseCase;
-import br.com.jence.backend.application.usecase.RemoverProdutoDoRoteiroUseCase;
+import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
+import br.com.jence.backend.service.ConcluirRotaUseCase;
+import br.com.jence.backend.service.ConsultarListaRoteiroUseCase;
+import br.com.jence.backend.service.ConsultarSessaoUseCase;
+import br.com.jence.backend.service.InicializarSessaoUseCase;
+import br.com.jence.backend.service.RecentrarSessaoUseCase;
+import br.com.jence.backend.service.RemoverProdutoDoRoteiroUseCase;
 import br.com.jence.backend.presentation.controller.RoteiroController;
 import br.com.jence.backend.presentation.controller.SessaoController;
 import org.junit.jupiter.api.DisplayName;

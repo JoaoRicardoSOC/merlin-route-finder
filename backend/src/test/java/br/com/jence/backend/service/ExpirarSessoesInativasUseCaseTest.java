@@ -1,6 +1,6 @@
-package br.com.jence.backend.application.usecase;
+package br.com.jence.backend.service;
 
-import br.com.jence.backend.application.usecase.ExpirarSessoesInativasUseCase.ResultadoDaVarredura;
+import br.com.jence.backend.service.ExpirarSessoesInativasUseCase.ResultadoDaVarredura;
 import br.com.jence.backend.model.ItemRoteiro;
 import br.com.jence.backend.model.ListaRoteiro;
 import br.com.jence.backend.model.PontoMapa;

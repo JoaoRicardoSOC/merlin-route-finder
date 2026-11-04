@@ -1,9 +1,9 @@
 package br.com.jence.backend.presentation;
 
-import br.com.jence.backend.application.usecase.BuscarProdutosUseCase;
-import br.com.jence.backend.application.usecase.ConsultarProdutoUseCase;
-import br.com.jence.backend.application.usecase.ListarSecoesUseCase;
-import br.com.jence.backend.application.usecase.SimularEstoqueUseCase;
+import br.com.jence.backend.service.BuscarProdutosUseCase;
+import br.com.jence.backend.service.ConsultarProdutoUseCase;
+import br.com.jence.backend.service.ListarSecoesUseCase;
+import br.com.jence.backend.service.SimularEstoqueUseCase;
 import br.com.jence.backend.presentation.controller.ProdutoController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

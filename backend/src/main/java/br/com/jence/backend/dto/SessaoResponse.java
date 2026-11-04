@@ -3,7 +3,7 @@ package br.com.jence.backend.dto;
 import br.com.jence.backend.model.ListaRoteiro;
 import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.model.StatusSessao;
-import br.com.jence.backend.domain.service.PosicaoDoCliente;
+import br.com.jence.backend.service.PosicaoDoCliente;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

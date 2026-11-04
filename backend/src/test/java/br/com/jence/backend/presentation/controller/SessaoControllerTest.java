@@ -1,10 +1,10 @@
 package br.com.jence.backend.presentation.controller;
 
 import br.com.jence.backend.dto.SessaoResponse;
-import br.com.jence.backend.application.usecase.ConcluirRotaUseCase;
-import br.com.jence.backend.application.usecase.ConsultarSessaoUseCase;
-import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
-import br.com.jence.backend.application.usecase.RecentrarSessaoUseCase;
+import br.com.jence.backend.service.ConcluirRotaUseCase;
+import br.com.jence.backend.service.ConsultarSessaoUseCase;
+import br.com.jence.backend.service.InicializarSessaoUseCase;
+import br.com.jence.backend.service.RecentrarSessaoUseCase;
 import br.com.jence.backend.model.StatusSessao;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;

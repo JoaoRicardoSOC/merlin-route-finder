@@ -2,7 +2,7 @@ package br.com.jence.backend;
 
 import br.com.jence.backend.dto.MapaResponse;
 import br.com.jence.backend.dto.PontoMapaResponse;
-import br.com.jence.backend.application.usecase.ConsultarMapaUseCase;
+import br.com.jence.backend.service.ConsultarMapaUseCase;
 import br.com.jence.backend.model.BlocoMapa;
 import br.com.jence.backend.model.PlantaDaLoja;
 import br.com.jence.backend.model.PontoMapa;

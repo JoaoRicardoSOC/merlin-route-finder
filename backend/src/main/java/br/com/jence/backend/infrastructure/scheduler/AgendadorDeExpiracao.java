@@ -1,6 +1,6 @@
 package br.com.jence.backend.infrastructure.scheduler;
 
-import br.com.jence.backend.application.usecase.ExpirarSessoesInativasUseCase;
+import br.com.jence.backend.service.ExpirarSessoesInativasUseCase;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

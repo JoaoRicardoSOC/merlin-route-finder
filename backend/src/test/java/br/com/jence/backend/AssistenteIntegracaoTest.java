@@ -1,8 +1,8 @@
 package br.com.jence.backend;
 
 import br.com.jence.backend.dto.ChatMensagemResponse;
-import br.com.jence.backend.application.usecase.ConversarComAssistenteUseCase;
-import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
+import br.com.jence.backend.service.ConversarComAssistenteUseCase;
+import br.com.jence.backend.service.InicializarSessaoUseCase;
 import br.com.jence.backend.model.ChatMensagem;
 import br.com.jence.backend.domain.repository.ChatMensagemRepository;
 import br.com.jence.backend.infrastructure.database.repository.ChatMensagemJpaRepository;

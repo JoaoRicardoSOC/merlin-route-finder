@@ -1,4 +1,4 @@
-package br.com.jence.backend.application.usecase;
+package br.com.jence.backend.service;
 
 import br.com.jence.backend.dto.CatalogoResponse;
 import br.com.jence.backend.model.AtributoProduto;
