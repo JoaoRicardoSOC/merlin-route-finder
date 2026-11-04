@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,12 +29,17 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/sessoes/{sessaoId}/chat/mensagens")
-@RequiredArgsConstructor
 @Tag(name = "Chat", description = "Assistente virtual de compras")
 public class ChatController {
 
     private final ConversarComAssistenteUseCase conversarComAssistenteUseCase;
     private final ConsultarHistoricoChatUseCase consultarHistoricoChatUseCase;
+
+    public ChatController(ConversarComAssistenteUseCase conversarComAssistenteUseCase,
+                          ConsultarHistoricoChatUseCase consultarHistoricoChatUseCase) {
+        this.conversarComAssistenteUseCase = conversarComAssistenteUseCase;
+        this.consultarHistoricoChatUseCase = consultarHistoricoChatUseCase;
+    }
 
     @GetMapping
     @Operation(summary = "Consultar historico conversacional da sessao (UC-007 a UC-009)",
