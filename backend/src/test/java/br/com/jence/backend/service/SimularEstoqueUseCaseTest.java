@@ -1,21 +1,23 @@
 package br.com.jence.backend.service;
 
+import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.dto.ProdutoResponse;
+import br.com.jence.backend.factory.ConexaoFalsa;
+import br.com.jence.backend.factory.ConnectionFactory;
 import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,44 +26,69 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class SimularEstoqueUseCaseTest {
 
-    @Mock ProdutoRepository produtoRepository;
-    @InjectMocks SimularEstoqueUseCase useCase;
+    /**
+     * Catalogo em memoria no lugar do banco. Sobrescreve so o que o caso de uso usa e anota
+     * cada produto salvo, para o teste conferir o que foi gravado.
+     */
+    private static class ProdutoDaoFalso extends ProdutoDao {
+
+        final Map<UUID, Produto> catalogo = new HashMap<>();
+        final List<Produto> salvos = new ArrayList<>();
+
+        @Override
+        public Optional<Produto> buscarPorId(UUID id) {
+            return Optional.ofNullable(catalogo.get(id));
+        }
+
+        @Override
+        public Produto salvar(Produto produto) {
+            salvos.add(produto);
+            catalogo.put(produto.getId(), produto);
+            return produto;
+        }
+    }
 
     private static final PontoMapa TINTAS =
             new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 32, 10);
+
+    private ProdutoDaoFalso produtoDao;
+    private SimularEstoqueUseCase useCase;
 
     private UUID produtoId;
     private Produto lixa;
 
     @BeforeEach
     void preparar() {
+        ConexaoFalsa.usarNaFabrica();
+        produtoDao = new ProdutoDaoFalso();
+        useCase = new SimularEstoqueUseCase(produtoDao);
+
         produtoId = UUID.randomUUID();
         lixa = new Produto(produtoId, "SKU-TIN-003", "Lixa para Parede Grao 120",
                 new BigDecimal("3.50"), 40, TINTAS);
     }
 
-    private void comProdutoNoCatalogo() {
-        when(produtoRepository.buscarPorId(produtoId)).thenReturn(Optional.of(lixa));
-        when(produtoRepository.salvar(any())).thenAnswer(i -> i.getArgument(0));
+    @AfterEach
+    void devolverAFabricaAoBanco() {
+        ConnectionFactory.usarBanco();
     }
 
+    private void comProdutoNoCatalogo() {
+        produtoDao.catalogo.put(produtoId, lixa);
+    }
+
+    /** O unico produto salvo; falha se o caso de uso salvou nenhum ou mais de um. */
     private Produto produtoSalvo() {
-        ArgumentCaptor<Produto> captor = ArgumentCaptor.forClass(Produto.class);
-        verify(produtoRepository).salvar(captor.capture());
-        return captor.getValue();
+        assertEquals(1, produtoDao.salvos.size());
+        return produtoDao.salvos.getFirst();
     }
 
     @Test
     @DisplayName("zerar o saldo dispara o cenario de ruptura")
-    void zerarSaldo() {
+    void zerarSaldo() throws Exception {
         comProdutoNoCatalogo();
 
         ProdutoResponse resposta = useCase.executar(produtoId, 0);
@@ -72,7 +99,7 @@ class SimularEstoqueUseCaseTest {
 
     @Test
     @DisplayName("restaurar o saldo desfaz o cenario, para a demo poder ser repetida")
-    void restaurarSaldo() {
+    void restaurarSaldo() throws Exception {
         lixa = new Produto(produtoId, "SKU-TIN-003", "Lixa para Parede Grao 120",
                 new BigDecimal("3.50"), 0, TINTAS);
         comProdutoNoCatalogo();
@@ -85,7 +112,7 @@ class SimularEstoqueUseCaseTest {
 
     @Test
     @DisplayName("so o saldo muda: nome, preco, sku e posicao ficam intactos")
-    void naoAlteraOResto() {
+    void naoAlteraOResto() throws Exception {
         comProdutoNoCatalogo();
 
         useCase.executar(produtoId, 7);
@@ -101,11 +128,9 @@ class SimularEstoqueUseCaseTest {
     @Test
     @DisplayName("produto inexistente devolve 404 e nao grava nada")
     void produtoInexistente() {
-        when(produtoRepository.buscarPorId(produtoId)).thenReturn(Optional.empty());
-
         assertThrows(RecursoNaoEncontradoException.class, () -> useCase.executar(produtoId, 0));
 
-        verify(produtoRepository, never()).salvar(any());
+        assertTrue(produtoDao.salvos.isEmpty());
     }
 
     @Test

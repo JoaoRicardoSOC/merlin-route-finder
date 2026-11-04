@@ -146,7 +146,7 @@ public class ProdutoResource {
                     + "positivo para restaurar.")
     public ResponseEntity<ProdutoResponse> simularEstoque(
             @PathVariable UUID produtoId,
-            @Valid @RequestBody EstoqueUpdateRequest request) {
+            @Valid @RequestBody EstoqueUpdateRequest request) throws SQLException {
 
         return ResponseEntity.ok(simularEstoqueUseCase.executar(produtoId, request.saldoEstoque()));
     }

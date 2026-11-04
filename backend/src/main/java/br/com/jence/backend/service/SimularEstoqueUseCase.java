@@ -3,10 +3,11 @@ package br.com.jence.backend.service;
 import br.com.jence.backend.dto.ProdutoResponse;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
+import br.com.jence.backend.dao.ProdutoDao;
+import br.com.jence.backend.factory.Transacao;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.util.UUID;
 
 /**
@@ -22,18 +23,25 @@ import java.util.UUID;
 @Service
 public class SimularEstoqueUseCase {
 
-    private final ProdutoRepository produtoRepository;
+    private final ProdutoDao produtoDao;
 
-    public SimularEstoqueUseCase(ProdutoRepository produtoRepository) {
-        this.produtoRepository = produtoRepository;
+    public SimularEstoqueUseCase(ProdutoDao produtoDao) {
+        this.produtoDao = produtoDao;
     }
 
-    @Transactional
-    public ProdutoResponse executar(UUID produtoId, int novoSaldo) {
-        Produto produto = produtoRepository.buscarPorId(produtoId)
+    public ProdutoResponse executar(UUID produtoId, int novoSaldo) throws SQLException {
+        try (Transacao transacao = Transacao.iniciar()) {
+            ProdutoResponse resposta = simular(produtoId, novoSaldo);
+            transacao.confirmar();
+            return resposta;
+        }
+    }
+
+    private ProdutoResponse simular(UUID produtoId, int novoSaldo) throws SQLException {
+        Produto produto = produtoDao.buscarPorId(produtoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Produto", produtoId));
 
-        Produto atualizado = produtoRepository.salvar(produto.comSaldoEstoque(novoSaldo));
+        Produto atualizado = produtoDao.salvar(produto.comSaldoEstoque(novoSaldo));
 
         /*
          * Em nivel de aviso, e nao de informacao, de proposito: e uma alteracao manual de
