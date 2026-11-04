@@ -26,14 +26,16 @@ public class RemoverProdutoDoRoteiroUseCase {
         this.listaRoteiroDao = listaRoteiroDao;
     }
 
-    public void executar(UUID sessaoId, UUID itemId) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+    public void executar(UUID sessaoId, UUID itemId)
+            throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
         try (Transacao transacao = Transacao.iniciar()) {
             remover(sessaoId, itemId);
             transacao.confirmar();
         }
     }
 
-    private void remover(UUID sessaoId, UUID itemId) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+    private void remover(UUID sessaoId, UUID itemId)
+            throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
         Sessao sessao = sessaoDao.buscarPorId(sessaoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao", sessaoId));
 

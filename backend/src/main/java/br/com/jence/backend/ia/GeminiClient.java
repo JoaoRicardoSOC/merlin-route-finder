@@ -74,7 +74,8 @@ public class GeminiClient {
     }
 
     /** Conversa simples, sem ferramentas. */
-    public String conversar(String instrucaoSistema, List<MensagemIA> historico) throws AssistenteIAIndisponivelException {
+    public String conversar(String instrucaoSistema, List<MensagemIA> historico)
+            throws AssistenteIAIndisponivelException {
         return conversar(instrucaoSistema, historico, List.of(), (nome, argumentos) -> Map.of());
     }
 
@@ -237,7 +238,8 @@ public class GeminiClient {
     // ---------------------------------------------------------------- leitura da resposta
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> extrairTurnoDoModelo(Map<String, Object> resposta) throws AssistenteIAIndisponivelException {
+    private Map<String, Object> extrairTurnoDoModelo(Map<String, Object> resposta)
+            throws AssistenteIAIndisponivelException {
         List<Map<String, Object>> candidatos = (List<Map<String, Object>>) resposta.get("candidates");
 
         if (candidatos == null || candidatos.isEmpty()) {
@@ -287,7 +289,8 @@ public class GeminiClient {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> turnoDeResultado(Map<String, Object> chamada, ExecutorDeFerramenta executor) throws AssistenteIAIndisponivelException {
+    private Map<String, Object> turnoDeResultado(Map<String, Object> chamada, ExecutorDeFerramenta executor)
+            throws AssistenteIAIndisponivelException {
         String nome = (String) chamada.get("name");
         Map<String, Object> argumentos = (Map<String, Object>) chamada.getOrDefault("args", Map.of());
 

@@ -36,7 +36,8 @@ public class RecentrarSessaoUseCase {
         this.pontoMapaDao = pontoMapaDao;
     }
 
-    public SessaoResponse executar(UUID sessaoId, String codigoPonto) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+    public SessaoResponse executar(UUID sessaoId, String codigoPonto)
+            throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
         try (Transacao transacao = Transacao.iniciar()) {
             SessaoResponse resposta = recentrar(sessaoId, codigoPonto);
             transacao.confirmar();
@@ -44,7 +45,8 @@ public class RecentrarSessaoUseCase {
         }
     }
 
-    private SessaoResponse recentrar(UUID sessaoId, String codigoPonto) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+    private SessaoResponse recentrar(UUID sessaoId, String codigoPonto)
+            throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
         Sessao sessao = sessaoDao.buscarPorId(sessaoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao", sessaoId));
 

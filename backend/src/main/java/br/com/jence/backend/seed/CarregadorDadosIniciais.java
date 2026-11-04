@@ -525,7 +525,8 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         }
     }
 
-    private void criarSeNaoHouver(Contagem contagem, TipoPonto tipo, String corredor, int x, int y) throws SQLException {
+    private void criarSeNaoHouver(Contagem contagem, TipoPonto tipo, String corredor, int x, int y)
+            throws SQLException {
         if (pontoMapaDao.buscarPorTipo(tipo).isEmpty()) {
             pontoMapaDao.salvar(new PontoMapa(UUID.randomUUID(), tipo, corredor, x, y));
             contagem.pontos++;

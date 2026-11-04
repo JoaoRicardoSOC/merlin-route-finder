@@ -49,7 +49,8 @@ public class ConversarComAssistenteUseCase {
         this.assistenteIA = assistenteIA;
     }
 
-    public ChatMensagemResponse executar(UUID sessaoId, String pergunta) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+    public ChatMensagemResponse executar(UUID sessaoId, String pergunta)
+            throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
         try (Transacao transacao = Transacao.iniciar()) {
             ChatMensagemResponse resposta = conversar(sessaoId, pergunta);
             transacao.confirmar();
@@ -57,7 +58,8 @@ public class ConversarComAssistenteUseCase {
         }
     }
 
-    private ChatMensagemResponse conversar(UUID sessaoId, String pergunta) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+    private ChatMensagemResponse conversar(UUID sessaoId, String pergunta)
+            throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
         Sessao sessao = sessaoDao.buscarPorId(sessaoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao", sessaoId));
 
