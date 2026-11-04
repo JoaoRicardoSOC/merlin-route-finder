@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -49,9 +49,9 @@ class ConsultarHistoricoChatUseCaseTest {
 
         List<ChatMensagemResponse> historico = useCase.executar(sessaoId);
 
-        assertThat(historico).hasSize(2);
-        assertThat(historico.getFirst().conteudo()).isEqualTo("o que preciso para pintar?");
-        assertThat(historico.getLast().conteudo()).isEqualTo("tinta, rolo e lixa");
+        assertEquals(2, historico.size());
+        assertEquals("o que preciso para pintar?", historico.getFirst().conteudo());
+        assertEquals("tinta, rolo e lixa", historico.getLast().conteudo());
     }
 
     @Test
@@ -63,7 +63,7 @@ class ConsultarHistoricoChatUseCaseTest {
         when(chatMensagemRepository.buscarHistorico(sessaoId)).thenReturn(List.of(
                 ChatMensagem.doAssistente(UUID.randomUUID(), sessaoId, "leve a lixa d'agua")));
 
-        assertThat(useCase.executar(sessaoId)).hasSize(1);
+        assertEquals(1, useCase.executar(sessaoId).size());
     }
 
     @Test
@@ -82,9 +82,8 @@ class ConsultarHistoricoChatUseCaseTest {
     void sessaoInexistente() {
         when(sessaoRepository.buscarPorId(sessaoId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> useCase.executar(sessaoId))
-                .as("lista vazia seria indistinguivel de uma conversa que ainda nao comecou")
-                .isInstanceOf(RecursoNaoEncontradoException.class);
+        assertThrows(RecursoNaoEncontradoException.class, () -> useCase.executar(sessaoId),
+                "lista vazia seria indistinguivel de uma conversa que ainda nao comecou");
 
         verify(chatMensagemRepository, never()).buscarHistorico(any());
     }
