@@ -1,7 +1,6 @@
 package br.com.jence.backend.infrastructure.scheduler;
 
 import br.com.jence.backend.application.usecase.ExpirarSessoesInativasUseCase;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Component;
  * {@code CarregadorDadosIniciais}.
  */
 @Component
-@Slf4j
 @ConditionalOnProperty(name = "merlin.agendador.enabled", havingValue = "true", matchIfMissing = true)
 public class AgendadorDeExpiracao {
 
@@ -46,7 +44,8 @@ public class AgendadorDeExpiracao {
              * Como o motivo mais provavel de falha aqui e o banco estar momentaneamente fora,
              * deixar a excecao subir aposentaria a varredura ate o proximo restart.
              */
-            log.error("Varredura de TTL falhou; a proxima segue agendada", e);
+            System.err.println("Varredura de TTL falhou; a proxima segue agendada");
+            e.printStackTrace();
         }
     }
 }
