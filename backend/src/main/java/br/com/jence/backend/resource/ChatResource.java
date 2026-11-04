@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
@@ -50,7 +51,8 @@ public class ChatResource {
             @ApiResponse(responseCode = "200", description = "Historico da conversa, possivelmente vazio"),
             @ApiResponse(responseCode = "404", description = "Sessao inexistente")
     })
-    public ResponseEntity<List<ChatMensagemResponse>> historico(@PathVariable UUID sessaoId) {
+    public ResponseEntity<List<ChatMensagemResponse>> historico(@PathVariable UUID sessaoId)
+            throws SQLException {
         return ResponseEntity.ok(consultarHistoricoChatUseCase.executar(sessaoId));
     }
 

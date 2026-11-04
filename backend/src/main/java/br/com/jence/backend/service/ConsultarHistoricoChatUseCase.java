@@ -2,10 +2,12 @@ package br.com.jence.backend.service;
 
 import br.com.jence.backend.dto.ChatMensagemResponse;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
-import br.com.jence.backend.domain.repository.ChatMensagemRepository;
-import br.com.jence.backend.domain.repository.SessaoRepository;
+import br.com.jence.backend.dao.ChatMensagemDao;
+import br.com.jence.backend.dao.SessaoDao;
+import br.com.jence.backend.factory.Transacao;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,26 +25,33 @@ import java.util.UUID;
 @Service
 public class ConsultarHistoricoChatUseCase {
 
-    private final SessaoRepository sessaoRepository;
-    private final ChatMensagemRepository chatMensagemRepository;
+    private final SessaoDao sessaoDao;
+    private final ChatMensagemDao chatMensagemDao;
 
-    public ConsultarHistoricoChatUseCase(SessaoRepository sessaoRepository,
-                                         ChatMensagemRepository chatMensagemRepository) {
-        this.sessaoRepository = sessaoRepository;
-        this.chatMensagemRepository = chatMensagemRepository;
+    public ConsultarHistoricoChatUseCase(SessaoDao sessaoDao, ChatMensagemDao chatMensagemDao) {
+        this.sessaoDao = sessaoDao;
+        this.chatMensagemDao = chatMensagemDao;
     }
 
-    public List<ChatMensagemResponse> executar(UUID sessaoId) {
+    public List<ChatMensagemResponse> executar(UUID sessaoId) throws SQLException {
+        try (Transacao transacao = Transacao.iniciarSomenteLeitura()) {
+            List<ChatMensagemResponse> historico = consultar(sessaoId);
+            transacao.confirmar();
+            return historico;
+        }
+    }
+
+    private List<ChatMensagemResponse> consultar(UUID sessaoId) throws SQLException {
         /*
          * A sessao e verificada mesmo sem ser usada depois. Sem isso, um id inexistente
          * devolveria lista vazia - indistinguivel de uma conversa que ainda nao comecou, e o
          * frontend nao teria como saber que estava perguntando pelo lugar errado.
          */
-        if (sessaoRepository.buscarPorId(sessaoId).isEmpty()) {
+        if (sessaoDao.buscarPorId(sessaoId).isEmpty()) {
             throw new RecursoNaoEncontradoException("Sessao", sessaoId);
         }
 
-        return chatMensagemRepository.buscarHistorico(sessaoId).stream()
+        return chatMensagemDao.buscarHistorico(sessaoId).stream()
                 .map(ChatMensagemResponse::de)
                 .toList();
     }
