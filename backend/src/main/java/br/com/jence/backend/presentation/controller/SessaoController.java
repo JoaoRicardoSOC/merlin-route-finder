@@ -10,7 +10,6 @@ import br.com.jence.backend.application.usecase.RecentrarSessaoUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,7 +31,6 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/sessoes")
-@RequiredArgsConstructor
 @Tag(name = "Sessao", description = "Ciclo de vida da sessao do cliente")
 public class SessaoController {
 
@@ -40,6 +38,16 @@ public class SessaoController {
     private final ConsultarSessaoUseCase consultarSessaoUseCase;
     private final ConcluirRotaUseCase concluirRotaUseCase;
     private final RecentrarSessaoUseCase recentrarSessaoUseCase;
+
+    public SessaoController(InicializarSessaoUseCase inicializarSessaoUseCase,
+                            ConsultarSessaoUseCase consultarSessaoUseCase,
+                            ConcluirRotaUseCase concluirRotaUseCase,
+                            RecentrarSessaoUseCase recentrarSessaoUseCase) {
+        this.inicializarSessaoUseCase = inicializarSessaoUseCase;
+        this.consultarSessaoUseCase = consultarSessaoUseCase;
+        this.concluirRotaUseCase = concluirRotaUseCase;
+        this.recentrarSessaoUseCase = recentrarSessaoUseCase;
+    }
 
     @PostMapping
     @Operation(summary = "Inicializar sessao (UC-001)",
