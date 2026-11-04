@@ -5,12 +5,18 @@ import br.com.jence.backend.domain.service.AssistenteIA;
 import br.com.jence.backend.model.FerramentaIA;
 import br.com.jence.backend.model.MensagemIA;
 import br.com.jence.backend.model.PapelIA;
-import org.springframework.beans.factory.annotation.Value;
+import br.com.jence.backend.config.Configuracao;
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestClient;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -35,17 +41,33 @@ public class GeminiClient implements AssistenteIA {
     private static final int MAXIMO_DE_TENTATIVAS = 3;
     private static final Duration ESPERA_ENTRE_TENTATIVAS = Duration.ofSeconds(2);
 
-    private final RestClient restClient;
+    /** Converte o corpo da chamada em JSON e a resposta de volta em mapas e listas. */
+    private static final Jsonb JSON = JsonbBuilder.create();
+
+    /*
+     * Um cliente HTTP so, reaproveitado entre chamadas, com os tempos limite visiveis aqui. Numa
+     * demonstracao ao vivo, esperar por uma API travada e pior do que degradar rapido: o caso de
+     * uso tem fallback, mas so se a chamada devolver.
+     */
+    private final HttpClient http;
+    private final Duration tempoLimiteDeLeitura;
+    private final String urlBase;
     private final String modelo;
     private final String chave;
 
-    public GeminiClient(RestClient.Builder builder,
-                        @Value("${merlin.ia.base-url}") String baseUrl,
-                        @Value("${merlin.ia.modelo}") String modelo,
-                        @Value("${merlin.ia.api-key:}") String chave) {
-        this.restClient = builder.baseUrl(baseUrl).build();
-        this.modelo = modelo;
-        this.chave = chave;
+    /** Le a configuracao das variaveis de ambiente. */
+    public GeminiClient() {
+        this(Configuracao.doAmbiente());
+    }
+
+    public GeminiClient(Configuracao configuracao) {
+        this.http = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(configuracao.getHttpTempoLimiteConexaoSegundos()))
+                .build();
+        this.tempoLimiteDeLeitura = Duration.ofSeconds(configuracao.getHttpTempoLimiteLeituraSegundos());
+        this.urlBase = configuracao.getIaUrlBase();
+        this.modelo = configuracao.getIaModelo();
+        this.chave = configuracao.getIaChave();
     }
 
     public boolean estaConfigurado() {
@@ -112,26 +134,43 @@ public class GeminiClient implements AssistenteIA {
          */
         Exception ultimaFalha = null;
 
+        HttpRequest pedido = HttpRequest.newBuilder()
+                .uri(URI.create(urlBase + "/v1beta/models/" + modelo + ":generateContent?key="
+                        + URLEncoder.encode(chave, StandardCharsets.UTF_8)))
+                .timeout(tempoLimiteDeLeitura)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(JSON.toJson(corpo), StandardCharsets.UTF_8))
+                .build();
+
         for (int tentativa = 1; tentativa <= MAXIMO_DE_TENTATIVAS; tentativa++) {
             try {
-                Map<String, Object> resposta = restClient.post()
-                        .uri("/v1beta/models/{modelo}:generateContent?key={chave}", modelo, chave)
-                        .body(corpo)
-                        .retrieve()
-                        .body(Map.class);
+                HttpResponse<String> resposta = http.send(pedido, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                int status = resposta.statusCode();
 
-                if (resposta == null) {
+                if (status == 429 || status >= 500) {
+                    ultimaFalha = new IOException("HTTP " + status + ": " + resposta.body());
+                    System.out.println(String.format("AVISO: Assistente indisponivel na tentativa %s de %s: HTTP %s",
+                            tentativa, MAXIMO_DE_TENTATIVAS, status));
+                    esperarAntesDeInsistir(tentativa);
+                    continue;
+                }
+                if (status < 200 || status >= 300) {
+                    throw new IOException("HTTP " + status + ": " + resposta.body());
+                }
+
+                Map<String, Object> corpoDaResposta = resposta.body() == null || resposta.body().isBlank()
+                        ? null
+                        : JSON.fromJson(resposta.body(), Map.class);
+                if (corpoDaResposta == null) {
                     throw new AssistenteIAIndisponivelException("Assistente devolveu resposta vazia");
                 }
-                return resposta;
+                return corpoDaResposta;
 
             } catch (AssistenteIAIndisponivelException e) {
                 throw e;
-            } catch (HttpClientErrorException.TooManyRequests | HttpServerErrorException e) {
-                ultimaFalha = e;
-                System.out.println(String.format("AVISO: Assistente indisponivel na tentativa %s de %s: %s",
-                        tentativa, MAXIMO_DE_TENTATIVAS, e.getMessage()));
-                esperarAntesDeInsistir(tentativa);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new AssistenteIAIndisponivelException("Consulta ao assistente interrompida", e);
             } catch (Exception e) {
                 // Falhas que nao se resolvem sozinhas (rede, formato) nao merecem nova tentativa.
                 System.out.println(String.format("AVISO: Falha ao consultar o assistente de IA: %s", e.toString()));
