@@ -51,7 +51,7 @@ Objetivo: ter com o que comparar o antes e o depois, e ter o schema escrito ante
 - [x] **0.1** Commitar os documentos de requisitos e este plano.
 - [x] **0.2** Criar a coleção do Insomnia em `docs/insomnia/merlin-paridade.json`: os 18 endpoints, em ordem de jornada (iniciar sessão → buscar produto → montar roteiro → coletar → ruptura → substituir → concluir), mais um pedido por caso de erro de RF-03 a RF-07.
 - [ ] **0.3** 🔒 Rodar a coleção contra a versão atual e registrar status e corpo de cada pedido em `docs/insomnia/base-antes.md`.
-- [ ] **0.4** Gerar o DDL a partir das entidades JPA com a exportação de schema do próprio Hibernate, em modo offline e com dialeto Oracle. Reescrever o resultado no formato do material (`CREATE SEQUENCE`/`CREATE TABLE`) em `database/migrations/V001__schema_inicial.sql`, incluindo chaves estrangeiras, `UNIQUE` (`sku`, `codigo_curto`, produto + atributo) e as restrições `CHECK` dos enums.
+- [x] **0.4** Gerar o DDL a partir das entidades JPA com a exportação de schema do próprio Hibernate, em modo offline e com dialeto Oracle. Reescrever o resultado no formato do material (`CREATE SEQUENCE`/`CREATE TABLE`) em `database/migrations/V001__schema_inicial.sql`, incluindo chaves estrangeiras, `UNIQUE` (`sku`, `codigo_curto`, produto + atributo) e as restrições `CHECK` dos enums.
 - [ ] **0.5** 🔒 Comparar o script com o schema real no SQL Developer e corrigir as diferenças.
 - [ ] **0.6** Medir o tempo de resposta atual dos endpoints de busca de produtos, mapa e roteiro (RNF-06) e registrar em `docs/insomnia/base-antes.md`. *Perguntar antes, porque as medições chamam a API publicada.*
 
