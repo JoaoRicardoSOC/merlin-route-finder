@@ -153,10 +153,12 @@ Um commit por service (19). Em cada um: passa a receber os DAOs concretos pelo c
 - No chat, se a busca no catálogo falhar no meio da conversa, o fallback agora grava a pergunta do cliente; com o Spring, a transação inteira era desfeita.
 
 **7.D Remoção do JPA**
-- [ ] **7.18** Apagar adaptadores, repositórios JPA, entidades JPA, fábricas de conversão, `RestricaoDeEnumNoBanco` e as interfaces `domain/repository/*Repository`. Um commit por grupo.
-- [ ] **7.19** Tirar do `pom.xml` `spring-boot-starter-data-jpa` e o starter de teste correspondente; trocar `ojdbc11` por `ojdbc8` `23.2.0.0`; tirar o Lombok.
-- [ ] **7.20** Tirar `spring.datasource` e `spring.jpa` dos `application*.yml`.
-- [ ] **7.21** 🔒 `mvnw test -Pintegracao` completo de novo, agora sem nenhum JPA.
+- [x] **7.18** Apagar adaptadores, repositórios JPA, entidades JPA, fábricas de conversão, `RestricaoDeEnumNoBanco` e as interfaces `domain/repository/*Repository`. Um commit por grupo.
+- [x] **7.19** Tirar do `pom.xml` `spring-boot-starter-data-jpa` e o starter de teste correspondente; trocar `ojdbc11` por `ojdbc8` `23.2.0.0`; tirar o Lombok.
+- [x] **7.20** Tirar `spring.datasource` e `spring.jpa` dos `application*.yml`.
+- [x] **7.21** 🔒 `mvnw test -Pintegracao` completo de novo, agora sem nenhum JPA.
+
+**Resultado da 7.21 (04/11/2026):** 315 testes de integração, 312 passam. As três falhas são do Gemini: nas duas, ele respondeu que não havia substituto para a lixa, embora a Lixa d'Água Grão 150 estivesse entre os candidatos enviados. Nas outras execuções do mesmo cenário ele a escolheu. É a mesma categoria da linha de base, que tinha sete falhas.
 
 ### Fase 8 — Cliente do Gemini com o `HttpClient` do JDK
 
