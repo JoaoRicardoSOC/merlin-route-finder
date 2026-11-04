@@ -26,8 +26,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Duas requisicoes mexendo no mesmo roteiro ao mesmo tempo.
@@ -137,9 +139,10 @@ class ConcorrenciaNoRoteiroIntegracaoTest {
                 .map(ItemRoteiro::getId)
                 .toList();
 
-        assertThat(coletados)
-                .as("o cliente marcou os dois; nenhum pode ter voltado atras")
-                .containsExactlyInAnyOrder(primeiro, segundo);
+        // mesma colecao sem olhar a ordem: compara as duas listas ordenadas
+        assertEquals(Stream.of(primeiro, segundo).sorted().toList(),
+                coletados.stream().sorted().toList(),
+                "o cliente marcou os dois; nenhum pode ter voltado atras");
     }
 
     // ---------------------------------------------------------------- sonda 2
@@ -157,15 +160,13 @@ class ConcorrenciaNoRoteiroIntegracaoTest {
         ListaRoteiro noBanco = carregar();
         imprimir("estado final no banco", noBanco);
 
-        assertThat(noBanco.getItens())
-                .as("marcar um item como coletado nao pode APAGAR o que o totem acabou de somar")
-                .hasSize(4);
+        assertEquals(4, noBanco.getItens().size(),
+                "marcar um item como coletado nao pode APAGAR o que o totem acabou de somar");
 
-        assertThat(itensEmOrdemEstavel(noBanco).stream()
+        assertTrue(itensEmOrdemEstavel(noBanco).stream()
                 .filter(i -> i.getId().equals(paraColetar))
-                .findFirst().orElseThrow().isColetado())
-                .as("e a marcacao tambem precisa sobreviver")
-                .isTrue();
+                .findFirst().orElseThrow().isColetado(),
+                "e a marcacao tambem precisa sobreviver");
     }
 
     // ---------------------------------------------------------------- sonda 3
@@ -184,10 +185,9 @@ class ConcorrenciaNoRoteiroIntegracaoTest {
         ListaRoteiro noBanco = carregar();
         imprimir("estado final no banco", noBanco);
 
-        assertThat(noBanco.getItens()).hasSize(2);
-        assertThat(itensEmOrdemEstavel(noBanco).getFirst().isColetado())
-                .as("remover um item nao pode desfazer a coleta de outro")
-                .isTrue();
+        assertEquals(2, noBanco.getItens().size());
+        assertTrue(itensEmOrdemEstavel(noBanco).getFirst().isColetado(),
+                "remover um item nao pode desfazer a coleta de outro");
     }
 
     // ---------------------------------------------------------------- sonda 4
@@ -204,8 +204,7 @@ class ConcorrenciaNoRoteiroIntegracaoTest {
         ListaRoteiro noBanco = carregar();
         imprimir("estado final no banco", noBanco);
 
-        assertThat(noBanco.getItens())
-                .as("cliente no mesmo corredor marcando tudo de uma vez")
-                .allMatch(ItemRoteiro::isColetado);
+        assertTrue(noBanco.getItens().stream().allMatch(ItemRoteiro::isColetado),
+                "cliente no mesmo corredor marcando tudo de uma vez");
     }
 }
