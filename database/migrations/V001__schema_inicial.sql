@@ -3,8 +3,14 @@
 --
 -- Executar no SQL Developer, como no material, num schema vazio. Ate a migracao para
 -- JAX-RS o schema era criado pelo Hibernate (ddl-auto: update); este script foi gerado a
--- partir das entidades JPA e reescrito a mao. Comparar com o schema real antes de usar
--- num ambiente que ja existe (passo 0.5 do plano de migracao).
+-- partir das entidades JPA e reescrito a mao.
+--
+-- Comparado com o schema publicado em 04/11/2026 (USER_TAB_COLUMNS e USER_CONSTRAINTS): tabelas,
+-- colunas, tipos, nulidade, chaves, UNIQUE e CHECK batem. O publicado tem ainda tres colunas
+-- que nenhum codigo usa, sobras do token de handoff (D-44) que o ddl-auto: update nunca apagou:
+-- tb_item_roteiro.ordem_caminho, tb_lista_roteiro.handoff_token e
+-- tb_lista_roteiro.token_expiracao. Todas aceitam nulo, entao nao atrapalham as gravacoes, e
+-- ficam de fora deste script.
 --
 -- Diferente do material, nao ha SEQUENCE: as chaves sao UUID gerados pela aplicacao e
 -- gravados como VARCHAR2(36) (decisao D-11).
