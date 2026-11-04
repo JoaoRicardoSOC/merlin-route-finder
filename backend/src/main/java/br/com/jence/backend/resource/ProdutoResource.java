@@ -119,7 +119,7 @@ public class ProdutoResource {
             description = "O menu de navegacao por corredor, com a quantidade de produtos de "
                     + "cada secao. So aparecem secoes que tem produto: uma secao vazia seria "
                     + "um beco sem saida no menu.")
-    public ResponseEntity<List<SecaoResponse>> listarSecoes() {
+    public ResponseEntity<List<SecaoResponse>> listarSecoes() throws SQLException {
         return ResponseEntity.ok(listarSecoesUseCase.executar());
     }
 
