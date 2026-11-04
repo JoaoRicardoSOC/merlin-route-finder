@@ -12,8 +12,10 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Arrays;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Sobe a aplicacao com o perfil de producao ativo, num servidor HTTP real. */
 @Tag("integracao")
@@ -26,11 +28,10 @@ class PerfilProducaoTest {
 
     @Test
     void aplicacaoSobeComPerfilDeProducao() throws Exception {
-        assertThat(environment.getActiveProfiles()).contains("prod");
+        assertTrue(Arrays.asList(environment.getActiveProfiles()).contains("prod"));
 
-        assertThat(environment.getProperty("spring.jpa.show-sql"))
-                .as("SQL nao pode ser logado em producao")
-                .isEqualTo("false");
+        assertEquals("false", environment.getProperty("spring.jpa.show-sql"),
+                "SQL nao pode ser logado em producao");
 
         System.out.println(">>> perfil ativo    : prod");
         System.out.println(">>> show-sql        : " + environment.getProperty("spring.jpa.show-sql"));
@@ -42,7 +43,7 @@ class PerfilProducaoTest {
                         .GET().build(),
                 HttpResponse.BodyHandlers.ofString());
 
-        assertThat(res.statusCode()).isEqualTo(200);
+        assertEquals(200, res.statusCode());
         System.out.println(">>> GET /api/v1/produtos -> " + res.statusCode());
 
         // Swagger continua acessivel: e vitrine da API na banca (D-34)
@@ -52,7 +53,7 @@ class PerfilProducaoTest {
                         .GET().build(),
                 HttpResponse.BodyHandlers.ofString());
 
-        assertThat(docs.statusCode()).isEqualTo(200);
+        assertEquals(200, docs.statusCode());
         System.out.println(">>> GET /v3/api-docs     -> " + docs.statusCode());
     }
 }
