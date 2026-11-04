@@ -10,7 +10,6 @@ import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,12 +19,19 @@ import java.util.UUID;
  * UC-004: adiciona um produto ao roteiro em montagem no Totem.
  */
 @Service
-@RequiredArgsConstructor
 public class AdicionarProdutoAoRoteiroUseCase {
 
     private final SessaoRepository sessaoRepository;
     private final ListaRoteiroRepository listaRoteiroRepository;
     private final ProdutoRepository produtoRepository;
+
+    public AdicionarProdutoAoRoteiroUseCase(SessaoRepository sessaoRepository,
+                                            ListaRoteiroRepository listaRoteiroRepository,
+                                            ProdutoRepository produtoRepository) {
+        this.sessaoRepository = sessaoRepository;
+        this.listaRoteiroRepository = listaRoteiroRepository;
+        this.produtoRepository = produtoRepository;
+    }
 
     @Transactional
     public ItemRoteiroDetalhadoResponse executar(UUID sessaoId, UUID produtoId) {
