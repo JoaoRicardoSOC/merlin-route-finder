@@ -169,5 +169,11 @@ class ProdutoDaoIntegracaoTest {
         Produto alterado = dao.buscarPorId(original.getId()).orElseThrow();
         assertEquals(0, new BigDecimal("1.23").compareTo(alterado.getPreco()));
         assertEquals(777, alterado.getSaldoEstoque());
+        // Nome, descricao e imagem sao tres textos vizinhos no SQL: trocar dois deles nao daria
+        // erro nenhum, e o catalogo mostraria a descricao no lugar do nome.
+        assertEquals(original.getNome(), alterado.getNome());
+        assertEquals(original.getDescricao(), alterado.getDescricao());
+        assertEquals(original.getImagemUrl(), alterado.getImagemUrl());
+        assertEquals(original.getSku(), alterado.getSku());
     }
 }
