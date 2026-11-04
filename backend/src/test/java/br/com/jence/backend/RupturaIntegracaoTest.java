@@ -77,7 +77,7 @@ class RupturaIntegracaoTest {
         System.out.println(">>> em falta:   " + item.produto().nome());
         System.out.println(">>> sugerido:   " + resposta.produtoSugerido().nome()
                 + " (" + resposta.produtoSugerido().sku() + ")");
-        System.out.println(">>> corredor:   " + resposta.produtoSugerido().pontoMapa().corredor());
+        System.out.println(">>> corredor:   " + resposta.produtoSugerido().pontoMapa().getCorredor());
         System.out.println(">>> origem:     " + resposta.origemSugestao());
         System.out.println(">>> justifica.: " + resposta.justificativa());
 

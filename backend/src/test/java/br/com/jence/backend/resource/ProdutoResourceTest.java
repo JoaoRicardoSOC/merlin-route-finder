@@ -11,6 +11,7 @@ import br.com.jence.backend.service.BuscarProdutosUseCase;
 import br.com.jence.backend.service.ConsultarProdutoUseCase;
 import br.com.jence.backend.service.ListarSecoesUseCase;
 import br.com.jence.backend.service.SimularEstoqueUseCase;
+import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
@@ -204,7 +205,7 @@ class ProdutoResourceTest {
         UUID pontoId = UUID.randomUUID();
         when(consultarProdutoUseCase.executar(id)).thenReturn(new ProdutoDetalhadoResponse(
                 id, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L", null, null, new BigDecimal("289.90"), 12,
-                pontoId, "Tintas", new PontoMapaResponse(pontoId, TipoPonto.PRATELEIRA, "Tintas", null, 32, 10), List.of()));
+                pontoId, "Tintas", PontoMapaResponse.de(new PontoMapa(pontoId, TipoPonto.PRATELEIRA, "Tintas", 32, 10)), List.of()));
 
         mockMvc.perform(get("/api/v1/produtos/{id}", id))
                 .andExpect(status().isOk())

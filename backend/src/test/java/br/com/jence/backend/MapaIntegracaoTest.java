@@ -121,9 +121,9 @@ class MapaIntegracaoTest {
         assertEquals(PlantaDaLoja.blocos().size(), mapa.blocos().size());
 
         assertFalse(mapa.pontos().isEmpty());
-        assertTrue(mapa.pontos().stream().noneMatch(ponto -> ponto.tipo() == TipoPonto.PRATELEIRA),
+        assertTrue(mapa.pontos().stream().noneMatch(ponto -> ponto.getTipo() == TipoPonto.PRATELEIRA),
                 "prateleira ja e representada pelo bloco; repeti-la como ponto duplicaria a secao");
-        List<TipoPonto> tipos = mapa.pontos().stream().map(PontoMapaResponse::tipo).toList();
+        List<TipoPonto> tipos = mapa.pontos().stream().map(PontoMapaResponse::getTipo).toList();
         assertTrue(tipos.contains(TipoPonto.CAIXA));
         assertTrue(tipos.contains(TipoPonto.BANHEIRO));
         assertTrue(tipos.contains(TipoPonto.QR_CODE));

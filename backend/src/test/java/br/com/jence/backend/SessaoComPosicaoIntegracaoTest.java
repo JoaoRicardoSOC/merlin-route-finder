@@ -83,16 +83,16 @@ class SessaoComPosicaoIntegracaoTest {
         SessaoResponse sessao = iniciarEm("ENT-01");
 
         assertNotNull(sessao.posicaoAtual());
-        assertEquals("ENT01", sessao.posicaoAtual().codigoCurto());
-        assertEquals(TipoPonto.QR_CODE, sessao.posicaoAtual().tipo());
+        assertEquals("ENT01", sessao.posicaoAtual().getCodigoCurto());
+        assertEquals(TipoPonto.QR_CODE, sessao.posicaoAtual().getTipo());
     }
 
     @Test
     @DisplayName("o plano B chega pelo mesmo caminho: codigo digitado em qualquer grafia")
     void codigoDigitado() throws Exception {
         // O cliente que nao conseguiu escanear digita o que le na placa, do jeito que le.
-        assertEquals("ENT01", iniciarEm("ent 01").posicaoAtual().codigoCurto());
-        assertEquals("TIN02", iniciarEm("Tin-02").posicaoAtual().codigoCurto());
+        assertEquals("ENT01", iniciarEm("ent 01").posicaoAtual().getCodigoCurto());
+        assertEquals("TIN02", iniciarEm("Tin-02").posicaoAtual().getCodigoCurto());
     }
 
     @Test
@@ -126,7 +126,7 @@ class SessaoComPosicaoIntegracaoTest {
         SessaoResponse sessao = iniciarEm("ENT-01");
         coletar(sessao.id(), "SKU-TIN-001");
 
-        assertEquals("Tintas", consultar.executar(sessao.id()).posicaoAtual().corredor(),
+        assertEquals("Tintas", consultar.executar(sessao.id()).posicaoAtual().getCorredor(),
                 "depois de pegar a tinta, o cliente esta em Tintas, nao na entrada");
     }
 
@@ -138,7 +138,7 @@ class SessaoComPosicaoIntegracaoTest {
         coletar(sessao.id(), "SKU-TIN-001");
         coletar(sessao.id(), "SKU-JAR-001");
 
-        String corredor = consultar.executar(sessao.id()).posicaoAtual().corredor();
+        String corredor = consultar.executar(sessao.id()).posicaoAtual().getCorredor();
 
         System.out.println(">>> posicao apos duas coletas: " + corredor);
         assertEquals("Jardim", corredor);
@@ -154,9 +154,9 @@ class SessaoComPosicaoIntegracaoTest {
 
         SessaoResponse depois = recentrar.executar(sessao.id(), "CEN-03");
 
-        assertEquals("CEN03", depois.posicaoAtual().codigoCurto(),
+        assertEquals("CEN03", depois.posicaoAtual().getCodigoCurto(),
                 "quem leu uma placa agora nao esta mais na prateleira de antes");
-        assertEquals("CEN03", consultar.executar(sessao.id()).posicaoAtual().codigoCurto());
+        assertEquals("CEN03", consultar.executar(sessao.id()).posicaoAtual().getCodigoCurto());
     }
 
     @Test
@@ -189,7 +189,7 @@ class SessaoComPosicaoIntegracaoTest {
         assertThrows(RecursoNaoEncontradoException.class,
                 () -> recentrar.executar(sessao.id(), "ZZZ-99"));
 
-        assertEquals("ENT01", consultar.executar(sessao.id()).posicaoAtual().codigoCurto(),
+        assertEquals("ENT01", consultar.executar(sessao.id()).posicaoAtual().getCodigoCurto(),
                 "errar a digitacao nao pode apagar o que o sistema ja sabia");
     }
 
@@ -223,11 +223,11 @@ class SessaoComPosicaoIntegracaoTest {
         coletar(sessao.id(), "SKU-TIN-001");
         UUID jardim = coletar(sessao.id(), "SKU-JAR-001");
 
-        assertEquals("Jardim", consultar.executar(sessao.id()).posicaoAtual().corredor());
+        assertEquals("Jardim", consultar.executar(sessao.id()).posicaoAtual().getCorredor());
 
         desmarcar.executar(jardim);
 
-        assertEquals("Tintas", consultar.executar(sessao.id()).posicaoAtual().corredor(),
+        assertEquals("Tintas", consultar.executar(sessao.id()).posicaoAtual().getCorredor(),
                 "desfazer a coleta em Jardim devolve o cliente a Tintas");
     }
 
@@ -239,7 +239,7 @@ class SessaoComPosicaoIntegracaoTest {
 
         desmarcar.executar(tinta);
 
-        assertEquals("ENT01", consultar.executar(sessao.id()).posicaoAtual().codigoCurto());
+        assertEquals("ENT01", consultar.executar(sessao.id()).posicaoAtual().getCodigoCurto());
     }
 
     @Test
@@ -267,7 +267,7 @@ class SessaoComPosicaoIntegracaoTest {
         desmarcar.executar(tinta);
 
         assertFalse(desmarcar.executar(tinta).coletado());
-        assertEquals("ENT01", consultar.executar(sessao.id()).posicaoAtual().codigoCurto());
+        assertEquals("ENT01", consultar.executar(sessao.id()).posicaoAtual().getCodigoCurto());
     }
 
     @Test
@@ -283,7 +283,7 @@ class SessaoComPosicaoIntegracaoTest {
         desmarcar.executar(tinta);
         marcarColetado.executar(tinta);
 
-        assertEquals("Tintas", consultar.executar(sessao.id()).posicaoAtual().corredor());
+        assertEquals("Tintas", consultar.executar(sessao.id()).posicaoAtual().getCorredor());
     }
 
     // ---------------------------------------------------------------- persistencia
@@ -294,6 +294,6 @@ class SessaoComPosicaoIntegracaoTest {
         // O celular guarda so o id da sessao no localStorage; tudo o mais volta do banco.
         SessaoResponse sessao = iniciarEm("TIN-02");
 
-        assertEquals("TIN02", consultar.executar(sessao.id()).posicaoAtual().codigoCurto());
+        assertEquals("TIN02", consultar.executar(sessao.id()).posicaoAtual().getCodigoCurto());
     }
 }

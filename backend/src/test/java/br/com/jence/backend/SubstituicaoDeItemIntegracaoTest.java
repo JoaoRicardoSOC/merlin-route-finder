@@ -149,7 +149,7 @@ class SubstituicaoDeItemIntegracaoTest {
 
         substituir.executar(lixaEmFalta, idDe(SUBSTITUTO));
 
-        assertEquals("ENT01", consultar.executar(sessaoId).posicaoAtual().codigoCurto());
+        assertEquals("ENT01", consultar.executar(sessaoId).posicaoAtual().getCodigoCurto());
     }
 
     // ---------------------------------------------------------------- o que a troca nao apaga
