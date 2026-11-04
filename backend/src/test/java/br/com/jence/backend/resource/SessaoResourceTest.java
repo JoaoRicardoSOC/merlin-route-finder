@@ -1,4 +1,4 @@
-package br.com.jence.backend.presentation.controller;
+package br.com.jence.backend.resource;
 
 import br.com.jence.backend.dto.SessaoResponse;
 import br.com.jence.backend.service.ConcluirRotaUseCase;
@@ -31,8 +31,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Testes da camada web: carregam apenas o controller e o tratamento de excecoes, com os casos
  * de uso mockados. Nao precisam de banco nem de credenciais.
  */
-@WebMvcTest(SessaoController.class)
-class SessaoControllerTest {
+@WebMvcTest(SessaoResource.class)
+class SessaoResourceTest {
 
     @Autowired MockMvc mockMvc;
 

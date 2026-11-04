@@ -1,4 +1,4 @@
-package br.com.jence.backend.presentation.controller;
+package br.com.jence.backend.resource;
 
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.dto.ListaRoteiroResponse;
@@ -26,20 +26,20 @@ import java.util.UUID;
 /**
  * Acoes sobre um item durante a caminhada pela loja.
  * <p>
- * Controller separado do de roteiro porque estas rotas nao levam a sessao no caminho: o
+ * Resource separado do de roteiro porque estas rotas nao levam a sessao no caminho: o
  * celular ja tem o id do item vindo da lista de compras.
  */
 @RestController
 @RequestMapping("/api/v1/roteiro/itens")
 @Tag(name = "Roteiro", description = "Execucao da rota no celular")
-public class ItemRoteiroController {
+public class ItemRoteiroResource {
 
     private final MarcarItemColetadoUseCase marcarItemColetadoUseCase;
     private final DesmarcarItemColetadoUseCase desmarcarItemColetadoUseCase;
     private final TratarRupturaEstoqueUseCase tratarRupturaEstoqueUseCase;
     private final SubstituirItemDoRoteiroUseCase substituirItemDoRoteiroUseCase;
 
-    public ItemRoteiroController(MarcarItemColetadoUseCase marcarItemColetadoUseCase,
+    public ItemRoteiroResource(MarcarItemColetadoUseCase marcarItemColetadoUseCase,
                                  DesmarcarItemColetadoUseCase desmarcarItemColetadoUseCase,
                                  TratarRupturaEstoqueUseCase tratarRupturaEstoqueUseCase,
                                  SubstituirItemDoRoteiroUseCase substituirItemDoRoteiroUseCase) {

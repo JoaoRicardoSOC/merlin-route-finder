@@ -1,4 +1,4 @@
-package br.com.jence.backend.presentation.controller;
+package br.com.jence.backend.resource;
 
 import br.com.jence.backend.dto.CatalogoResponse;
 import br.com.jence.backend.dto.FacetaResponse;
@@ -37,8 +37,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ProdutoController.class)
-class ProdutoControllerTest {
+@WebMvcTest(ProdutoResource.class)
+class ProdutoResourceTest {
 
     @Autowired MockMvc mockMvc;
 

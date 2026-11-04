@@ -1,4 +1,4 @@
-package br.com.jence.backend.presentation.controller;
+package br.com.jence.backend.resource;
 
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.dto.PontoMapaResponse;
@@ -34,8 +34,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ItemRoteiroController.class)
-class ItemRoteiroControllerTest {
+@WebMvcTest(ItemRoteiroResource.class)
+class ItemRoteiroResourceTest {
 
     @Autowired MockMvc mockMvc;
     @MockitoBean MarcarItemColetadoUseCase marcarItemColetadoUseCase;

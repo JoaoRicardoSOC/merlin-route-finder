@@ -1,4 +1,4 @@
-package br.com.jence.backend.presentation.controller;
+package br.com.jence.backend.resource;
 
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.dto.ListaRoteiroResponse;
@@ -27,8 +27,8 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(RoteiroController.class)
-class RoteiroControllerTest {
+@WebMvcTest(RoteiroResource.class)
+class RoteiroResourceTest {
 
     @Autowired MockMvc mockMvc;
 

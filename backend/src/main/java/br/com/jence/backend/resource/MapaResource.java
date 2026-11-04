@@ -1,4 +1,4 @@
-package br.com.jence.backend.presentation.controller;
+package br.com.jence.backend.resource;
 
 import br.com.jence.backend.dto.MapaResponse;
 import br.com.jence.backend.service.ConsultarMapaUseCase;
@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/mapa")
 @Tag(name = "Mapa", description = "Planta da loja para desenhar a tela de mapa")
-public class MapaController {
+public class MapaResource {
 
     private final ConsultarMapaUseCase consultarMapaUseCase;
 
-    public MapaController(ConsultarMapaUseCase consultarMapaUseCase) {
+    public MapaResource(ConsultarMapaUseCase consultarMapaUseCase) {
         this.consultarMapaUseCase = consultarMapaUseCase;
     }
 

@@ -1,4 +1,4 @@
-package br.com.jence.backend.presentation.controller;
+package br.com.jence.backend.resource;
 
 import br.com.jence.backend.dto.ChatMensagemResponse;
 import br.com.jence.backend.dto.EnviarMensagemRequest;
@@ -24,18 +24,18 @@ import java.util.UUID;
 /**
  * Conversa do cliente com o assistente de compras (UC-007 a UC-009).
  * <p>
- * Controller proprio, e nao mais um metodo no {@code RoteiroController}: chat e roteiro sao
+ * Resource proprio, e nao mais um metodo no {@code RoteiroResource}: chat e roteiro sao
  * recursos distintos sob a mesma sessao, e o contrato ja os separa em tags diferentes.
  */
 @RestController
 @RequestMapping("/api/v1/sessoes/{sessaoId}/chat/mensagens")
 @Tag(name = "Chat", description = "Assistente virtual de compras")
-public class ChatController {
+public class ChatResource {
 
     private final ConversarComAssistenteUseCase conversarComAssistenteUseCase;
     private final ConsultarHistoricoChatUseCase consultarHistoricoChatUseCase;
 
-    public ChatController(ConversarComAssistenteUseCase conversarComAssistenteUseCase,
+    public ChatResource(ConversarComAssistenteUseCase conversarComAssistenteUseCase,
                           ConsultarHistoricoChatUseCase consultarHistoricoChatUseCase) {
         this.conversarComAssistenteUseCase = conversarComAssistenteUseCase;
         this.consultarHistoricoChatUseCase = consultarHistoricoChatUseCase;

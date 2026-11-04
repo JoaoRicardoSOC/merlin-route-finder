@@ -1,4 +1,4 @@
-package br.com.jence.backend.presentation.controller;
+package br.com.jence.backend.resource;
 
 import br.com.jence.backend.dto.AdicionarItemRequest;
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
@@ -24,19 +24,19 @@ import java.util.UUID;
 /**
  * Montagem do carrinho de roteiro no Totem.
  * <p>
- * Controller separado do de sessao apesar de compartilhar o prefixo da URL: o recurso e outro
+ * Resource separado do de sessao apesar de compartilhar o prefixo da URL: o recurso e outro
  * e tem casos de uso proprios.
  */
 @RestController
 @RequestMapping("/api/v1/sessoes/{sessaoId}/roteiro")
 @Tag(name = "Roteiro", description = "Montagem da lista de compras no Totem")
-public class RoteiroController {
+public class RoteiroResource {
 
     private final ConsultarListaRoteiroUseCase consultarListaRoteiroUseCase;
     private final AdicionarProdutoAoRoteiroUseCase adicionarProdutoAoRoteiroUseCase;
     private final RemoverProdutoDoRoteiroUseCase removerProdutoDoRoteiroUseCase;
 
-    public RoteiroController(ConsultarListaRoteiroUseCase consultarListaRoteiroUseCase,
+    public RoteiroResource(ConsultarListaRoteiroUseCase consultarListaRoteiroUseCase,
                              AdicionarProdutoAoRoteiroUseCase adicionarProdutoAoRoteiroUseCase,
                              RemoverProdutoDoRoteiroUseCase removerProdutoDoRoteiroUseCase) {
         this.consultarListaRoteiroUseCase = consultarListaRoteiroUseCase;

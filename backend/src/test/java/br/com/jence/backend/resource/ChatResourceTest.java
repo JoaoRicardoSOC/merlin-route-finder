@@ -1,4 +1,4 @@
-package br.com.jence.backend.presentation.controller;
+package br.com.jence.backend.resource;
 
 import br.com.jence.backend.dto.ChatMensagemResponse;
 import br.com.jence.backend.service.ConsultarHistoricoChatUseCase;
@@ -31,8 +31,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ChatController.class)
-class ChatControllerTest {
+@WebMvcTest(ChatResource.class)
+class ChatResourceTest {
 
     @Autowired MockMvc mockMvc;
 

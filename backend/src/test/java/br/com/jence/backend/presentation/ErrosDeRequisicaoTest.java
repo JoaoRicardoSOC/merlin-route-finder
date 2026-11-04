@@ -7,8 +7,8 @@ import br.com.jence.backend.service.ConsultarSessaoUseCase;
 import br.com.jence.backend.service.InicializarSessaoUseCase;
 import br.com.jence.backend.service.RecentrarSessaoUseCase;
 import br.com.jence.backend.service.RemoverProdutoDoRoteiroUseCase;
-import br.com.jence.backend.presentation.controller.RoteiroController;
-import br.com.jence.backend.presentation.controller.SessaoController;
+import br.com.jence.backend.resource.RoteiroResource;
+import br.com.jence.backend.resource.SessaoResource;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  * problema que nao e dele - o que polui monitoramento e impede o frontend de distinguir "eu
  * mandei errado" de "o servidor caiu".
  */
-@WebMvcTest({SessaoController.class, RoteiroController.class})
+@WebMvcTest({SessaoResource.class, RoteiroResource.class})
 class ErrosDeRequisicaoTest {
 
     @Autowired MockMvc mockMvc;

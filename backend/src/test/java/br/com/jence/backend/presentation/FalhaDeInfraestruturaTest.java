@@ -4,7 +4,7 @@ import br.com.jence.backend.service.BuscarProdutosUseCase;
 import br.com.jence.backend.service.ConsultarProdutoUseCase;
 import br.com.jence.backend.service.ListarSecoesUseCase;
 import br.com.jence.backend.service.SimularEstoqueUseCase;
-import br.com.jence.backend.presentation.controller.ProdutoController;
+import br.com.jence.backend.resource.ProdutoResource;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  * continua sendo JSON no formato de sempre, e que <b>nada do detalhe interno vaza</b> para
  * quem chamou.
  */
-@WebMvcTest(ProdutoController.class)
+@WebMvcTest(ProdutoResource.class)
 class FalhaDeInfraestruturaTest {
 
     @Autowired MockMvc mockMvc;

@@ -1,4 +1,4 @@
-package br.com.jence.backend.presentation.controller;
+package br.com.jence.backend.resource;
 
 import br.com.jence.backend.dto.CatalogoResponse;
 import br.com.jence.backend.dto.EstoqueUpdateRequest;
@@ -33,20 +33,20 @@ import java.util.UUID;
  * Consulta do catalogo de produtos, mais a ferramenta de simulacao de estoque usada em
  * demonstracao.
  * <p>
- * Segue o padrao do {@code SessaoController}: apenas recebe, delega e devolve. Os limites de
+ * Segue o padrao do {@code SessaoResource}: apenas recebe, delega e devolve. Os limites de
  * paginacao e o tratamento de termo em branco ficam no caso de uso, que ja e dono dessa regra.
  */
 @RestController
 @RequestMapping("/api/v1/produtos")
 @Tag(name = "Catalogo", description = "Busca e detalhamento de produtos")
-public class ProdutoController {
+public class ProdutoResource {
 
     private final BuscarProdutosUseCase buscarProdutosUseCase;
     private final ConsultarProdutoUseCase consultarProdutoUseCase;
     private final SimularEstoqueUseCase simularEstoqueUseCase;
     private final ListarSecoesUseCase listarSecoesUseCase;
 
-    public ProdutoController(BuscarProdutosUseCase buscarProdutosUseCase,
+    public ProdutoResource(BuscarProdutosUseCase buscarProdutosUseCase,
                              ConsultarProdutoUseCase consultarProdutoUseCase,
                              SimularEstoqueUseCase simularEstoqueUseCase,
                              ListarSecoesUseCase listarSecoesUseCase) {

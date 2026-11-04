@@ -1,4 +1,4 @@
-package br.com.jence.backend.presentation.controller;
+package br.com.jence.backend.resource;
 
 import br.com.jence.backend.dto.IniciarSessaoRequest;
 import br.com.jence.backend.dto.RecentrarSessaoRequest;
@@ -25,21 +25,21 @@ import java.util.UUID;
 /**
  * Ciclo de vida da sessao do cliente.
  * <p>
- * Controller fino de proposito: apenas recebe, delega e devolve. As falhas de dominio sao
+ * Resource fino de proposito: apenas recebe, delega e devolve. As falhas de dominio sao
  * traduzidas em status HTTP pelo {@code GlobalExceptionHandler}, entao nao ha tratamento de
  * erro aqui.
  */
 @RestController
 @RequestMapping("/api/v1/sessoes")
 @Tag(name = "Sessao", description = "Ciclo de vida da sessao do cliente")
-public class SessaoController {
+public class SessaoResource {
 
     private final InicializarSessaoUseCase inicializarSessaoUseCase;
     private final ConsultarSessaoUseCase consultarSessaoUseCase;
     private final ConcluirRotaUseCase concluirRotaUseCase;
     private final RecentrarSessaoUseCase recentrarSessaoUseCase;
 
-    public SessaoController(InicializarSessaoUseCase inicializarSessaoUseCase,
+    public SessaoResource(InicializarSessaoUseCase inicializarSessaoUseCase,
                             ConsultarSessaoUseCase consultarSessaoUseCase,
                             ConcluirRotaUseCase concluirRotaUseCase,
                             RecentrarSessaoUseCase recentrarSessaoUseCase) {
