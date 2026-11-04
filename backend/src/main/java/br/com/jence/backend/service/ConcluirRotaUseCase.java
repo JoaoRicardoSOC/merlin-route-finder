@@ -4,10 +4,11 @@ import br.com.jence.backend.dto.SessaoResponse;
 import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
-import br.com.jence.backend.domain.repository.SessaoRepository;
+import br.com.jence.backend.dao.SessaoDao;
+import br.com.jence.backend.factory.Transacao;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.util.UUID;
 
 /**
@@ -20,15 +21,22 @@ import java.util.UUID;
 @Service
 public class ConcluirRotaUseCase {
 
-    private final SessaoRepository sessaoRepository;
+    private final SessaoDao sessaoDao;
 
-    public ConcluirRotaUseCase(SessaoRepository sessaoRepository) {
-        this.sessaoRepository = sessaoRepository;
+    public ConcluirRotaUseCase(SessaoDao sessaoDao) {
+        this.sessaoDao = sessaoDao;
     }
 
-    @Transactional
-    public SessaoResponse executar(UUID sessaoId) {
-        Sessao sessao = sessaoRepository.buscarPorId(sessaoId)
+    public SessaoResponse executar(UUID sessaoId) throws SQLException {
+        try (Transacao transacao = Transacao.iniciar()) {
+            SessaoResponse resposta = concluir(sessaoId);
+            transacao.confirmar();
+            return resposta;
+        }
+    }
+
+    private SessaoResponse concluir(UUID sessaoId) throws SQLException {
+        Sessao sessao = sessaoDao.buscarPorId(sessaoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao", sessaoId));
 
         if (!sessao.isValida()) {
@@ -37,6 +45,6 @@ public class ConcluirRotaUseCase {
         }
 
         sessao.encerrar();
-        return SessaoResponse.de(sessaoRepository.salvar(sessao));
+        return SessaoResponse.de(sessaoDao.salvar(sessao));
     }
 }

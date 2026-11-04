@@ -200,7 +200,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     @Test
     @DisplayName("sessao encerrada recusa o recentrar")
-    void sessaoEncerradaRecusa() {
+    void sessaoEncerradaRecusa() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
         concluir.executar(sessao.id());
 

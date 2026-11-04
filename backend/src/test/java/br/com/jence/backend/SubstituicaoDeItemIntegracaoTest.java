@@ -226,7 +226,7 @@ class SubstituicaoDeItemIntegracaoTest {
 
     @Test
     @DisplayName("sessao encerrada recusa a troca")
-    void sessaoEncerrada() {
+    void sessaoEncerrada() throws Exception {
         UUID sessaoId = novaSessao();
         UUID lixaEmFalta = adicionar(sessaoId, EM_FALTA);
         concluir.executar(sessaoId);

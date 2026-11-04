@@ -90,7 +90,8 @@ public class SessaoResource {
     @Operation(summary = "Encerrar a sessao (UC-014)",
             description = "Acionado quando o cliente finaliza a compra. Nao exige "
                     + "que todos os itens tenham sido coletados.")
-    public ResponseEntity<SessaoResponse> concluir(@PathVariable UUID sessaoId) {
+    public ResponseEntity<SessaoResponse> concluir(@PathVariable UUID sessaoId)
+            throws SQLException {
         return ResponseEntity.ok(concluirRotaUseCase.executar(sessaoId));
     }
 }
