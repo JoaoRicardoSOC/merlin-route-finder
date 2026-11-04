@@ -18,14 +18,7 @@ O backend é uma **aplicação Spring Boot: um processo Java que fica de pé o t
 
 Não é gambiarra: **frontend e backend já são dois programas separados hoje**, conversando por HTTP em `localhost:5173` e `localhost:8080`. O deploy só troca `localhost` por URLs públicas.
 
-O que liga os dois são duas variáveis apontando uma para a outra:
-
-| Quem | Variável | Aponta para |
-|---|---|---|
-| Frontend | a variável de API do Vite (definida pela dupla de frontend) | URL pública da API |
-| Backend | `CORS_ALLOWED_ORIGINS` | URL pública do frontend |
-
-Sem a segunda, o navegador **bloqueia** as respostas da API mesmo com o backend funcionando — é a causa nº 1 de "funciona no Postman mas não no site".
+O que liga os dois é o **rewrite da Vercel** (`frontend/vercel.json`): o navegador chama `/api/...` no próprio domínio do frontend, e a Vercel repassa para o Render. Para o navegador, frontend e API são o mesmo site, e por isso o backend não precisa de CORS. Em desenvolvimento, o proxy do Vite (`frontend/vite.config.js`) faz o mesmo papel com `localhost:8080`.
 
 **Container em vez do runtime Java do Render:** o ambiente do servidor passa a ser o mesmo da máquina de qualquer integrante, e a versão do Java e do Maven vem do que o repositório declara.
 
@@ -69,7 +62,6 @@ No painel do serviço, em *Environment*. As marcadas com `sync: false` no bluepr
 | `GEMINI_API_KEY` | chave do Google AI Studio | **usar a chave nova** ([O-01](observacoes.md#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada)) |
 | `SPRING_PROFILES_ACTIVE` | `prod` | já vem do blueprint |
 | `DB_POOL_SIZE` | `5` | o schema da FIAP permite **20 sessões por usuário**, divididas entre a instância publicada e a máquina de quem cedeu a credencial ([D-46](decisoes-tecnicas.md#d-46-o-pool-de-conexões-é-dimensionado-pelos-limites-reais-do-schema-da-fiap)) |
-| `CORS_ALLOWED_ORIGINS` | deixar em branco por ora | preenchido quando o frontend for publicado |
 | `PORT` | **não definir** | o Render injeta sozinho |
 
 Nenhum desses valores vai para o repositório. O `render.yaml` declara apenas os nomes.
@@ -140,20 +132,9 @@ O time decidiu (23/08/2026) seguir no plano gratuito e assumir o aquecimento man
 
 ## Depois que o frontend for publicado
 
-Dois valores no painel do Render, sem recompilar nada:
+No painel da Vercel, em *Settings → Environment Variables*, a variável `VITE_API_BASE_URL` **não pode existir**. Sem ela, o frontend chama `/api/...` no próprio domínio e o rewrite de `frontend/vercel.json` repassa para o Render. Com ela, o frontend chama o Render direto, e o navegador bloqueia as respostas, porque o backend não envia cabeçalhos de CORS.
 
-| Variável | Valor |
-|---|---|
-| `CORS_ALLOWED_ORIGINS` | a URL do frontend, sem barra no fim — ex.: `https://merlin-route-finder.vercel.app` |
-
-`CORS_ALLOWED_ORIGINS` aceita várias origens separadas por vírgula, se houver mais de um endereço de frontend.
-
-> [!WARNING]
-> **Enquanto o frontend não estiver publicado, esta variável tem que continuar vazia.** Vazia, o backend cai no padrão do `application.yml`, que libera `localhost:5173` — e é assim que o time desenvolve. Preencher com a URL de produção **antes** de haver produção derruba o ambiente local de todo mundo, com o sintoma clássico e enganoso: a API responde no Postman e o navegador bloqueia.
->
-> Medido em 30/08: um servidor de desenvolvimento subiu na porta 5174 em vez da 5173 e todas as chamadas voltaram **403**. A causa foi a mesma — origem fora da lista.
-
-Salvar reinicia o serviço. **Este é o passo que fecha a integração** — antes dele o navegador bloqueia as chamadas do frontend, mesmo com a API respondendo normalmente.
+Depois de apagar a variável, publicar o frontend de novo: o valor das variáveis `VITE_*` entra no build, não é lido em tempo de execução.
 
 ---
 
