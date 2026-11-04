@@ -1,6 +1,6 @@
 package br.com.jence.backend.domain.repository;
 
-import br.com.jence.backend.domain.entity.Sessao;
+import br.com.jence.backend.model.Sessao;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -1,6 +1,6 @@
 package br.com.jence.backend.infrastructure.database.factory;
 
-import br.com.jence.backend.domain.entity.PontoMapa;
+import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.infrastructure.database.entity.PontoMapaEntity;
 import org.springframework.stereotype.Component;
 

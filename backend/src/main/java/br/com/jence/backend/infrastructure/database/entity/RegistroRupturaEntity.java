@@ -1,6 +1,6 @@
 package br.com.jence.backend.infrastructure.database.entity;
 
-import br.com.jence.backend.domain.entity.OrigemSugestao;
+import br.com.jence.backend.model.OrigemSugestao;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

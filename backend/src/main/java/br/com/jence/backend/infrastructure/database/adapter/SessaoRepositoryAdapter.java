@@ -1,7 +1,7 @@
 package br.com.jence.backend.infrastructure.database.adapter;
 
-import br.com.jence.backend.domain.entity.Sessao;
-import br.com.jence.backend.domain.entity.StatusSessao;
+import br.com.jence.backend.model.Sessao;
+import br.com.jence.backend.model.StatusSessao;
 import br.com.jence.backend.domain.repository.SessaoRepository;
 import br.com.jence.backend.infrastructure.database.entity.SessaoEntity;
 import br.com.jence.backend.infrastructure.database.factory.SessaoFactory;

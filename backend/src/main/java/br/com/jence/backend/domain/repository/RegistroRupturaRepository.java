@@ -1,6 +1,6 @@
 package br.com.jence.backend.domain.repository;
 
-import br.com.jence.backend.domain.entity.RegistroRuptura;
+import br.com.jence.backend.model.RegistroRuptura;
 
 import java.util.List;
 import java.util.UUID;

@@ -1,6 +1,6 @@
 package br.com.jence.backend.infrastructure.database.repository;
 
-import br.com.jence.backend.domain.entity.TipoPonto;
+import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.infrastructure.database.entity.PontoMapaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

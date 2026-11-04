@@ -1,6 +1,6 @@
 package br.com.jence.backend.infrastructure.database.entity;
 
-import br.com.jence.backend.domain.entity.Remetente;
+import br.com.jence.backend.model.Remetente;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

@@ -1,4 +1,4 @@
-package br.com.jence.backend.domain.entity;
+package br.com.jence.backend.model;
 
 /**
  * De onde veio a sugestao de substituto registrada numa ruptura.

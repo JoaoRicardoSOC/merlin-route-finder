@@ -1,10 +1,10 @@
 package br.com.jence.backend.infrastructure.database.seed;
 
-import br.com.jence.backend.domain.entity.BlocoMapa;
-import br.com.jence.backend.domain.entity.PlantaDaLoja;
-import br.com.jence.backend.domain.entity.PontoMapa;
-import br.com.jence.backend.domain.entity.Produto;
-import br.com.jence.backend.domain.entity.TipoPonto;
+import br.com.jence.backend.model.BlocoMapa;
+import br.com.jence.backend.model.PlantaDaLoja;
+import br.com.jence.backend.model.PontoMapa;
+import br.com.jence.backend.model.Produto;
+import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.domain.repository.PontoMapaRepository;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import br.com.jence.backend.infrastructure.database.repository.PontoMapaJpaRepository;

@@ -1,7 +1,7 @@
 package br.com.jence.backend.domain.repository;
 
-import br.com.jence.backend.domain.entity.PontoMapa;
-import br.com.jence.backend.domain.entity.TipoPonto;
+import br.com.jence.backend.model.PontoMapa;
+import br.com.jence.backend.model.TipoPonto;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,6 +1,6 @@
 package br.com.jence.backend.infrastructure.database.repository;
 
-import br.com.jence.backend.domain.entity.StatusSessao;
+import br.com.jence.backend.model.StatusSessao;
 import br.com.jence.backend.infrastructure.database.entity.SessaoEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 

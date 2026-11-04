@@ -1,8 +1,8 @@
 package br.com.jence.backend.domain.repository;
 
-import br.com.jence.backend.domain.entity.PontoMapa;
-import br.com.jence.backend.domain.entity.Produto;
-import br.com.jence.backend.domain.entity.ValorDeAtributo;
+import br.com.jence.backend.model.PontoMapa;
+import br.com.jence.backend.model.Produto;
+import br.com.jence.backend.model.ValorDeAtributo;
 
 import java.util.List;
 import java.util.Optional;

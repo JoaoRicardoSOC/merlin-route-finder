@@ -1,6 +1,6 @@
 package br.com.jence.backend.application.dto;
 
-import br.com.jence.backend.domain.entity.ItemRoteiro;
+import br.com.jence.backend.model.ItemRoteiro;
 
 import java.util.UUID;
 

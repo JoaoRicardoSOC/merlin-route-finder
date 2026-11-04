@@ -1,7 +1,7 @@
 package br.com.jence.backend.infrastructure.database.adapter;
 
-import br.com.jence.backend.domain.entity.PontoMapa;
-import br.com.jence.backend.domain.entity.TipoPonto;
+import br.com.jence.backend.model.PontoMapa;
+import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.domain.repository.PontoMapaRepository;
 import br.com.jence.backend.infrastructure.database.entity.PontoMapaEntity;
 import br.com.jence.backend.infrastructure.database.factory.PontoMapaFactory;

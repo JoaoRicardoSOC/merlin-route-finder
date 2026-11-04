@@ -1,4 +1,4 @@
-package br.com.jence.backend.domain.entity;
+package br.com.jence.backend.model;
 
 /**
  * As caracteristicas pelas quais um produto pode ser filtrado.

@@ -1,4 +1,4 @@
-package br.com.jence.backend.domain.entity;
+package br.com.jence.backend.model;
 
 /**
  * Uma caracteristica de um produto: a chave e o valor que ele tem para ela.

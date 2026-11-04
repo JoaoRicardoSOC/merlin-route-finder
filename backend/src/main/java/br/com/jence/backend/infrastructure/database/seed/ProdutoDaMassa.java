@@ -1,7 +1,7 @@
 package br.com.jence.backend.infrastructure.database.seed;
 
-import br.com.jence.backend.domain.entity.AtributoProduto;
-import br.com.jence.backend.domain.entity.ValorDeAtributo;
+import br.com.jence.backend.model.AtributoProduto;
+import br.com.jence.backend.model.ValorDeAtributo;
 
 import java.math.BigDecimal;
 import java.util.List;

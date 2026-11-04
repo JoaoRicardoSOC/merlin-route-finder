@@ -1,7 +1,7 @@
 package br.com.jence.backend.infrastructure.database.schema;
 
-import br.com.jence.backend.domain.entity.AtributoProduto;
-import br.com.jence.backend.domain.entity.TipoPonto;
+import br.com.jence.backend.model.AtributoProduto;
+import br.com.jence.backend.model.TipoPonto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;

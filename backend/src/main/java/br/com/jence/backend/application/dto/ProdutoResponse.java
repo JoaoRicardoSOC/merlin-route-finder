@@ -1,6 +1,6 @@
 package br.com.jence.backend.application.dto;
 
-import br.com.jence.backend.domain.entity.Produto;
+import br.com.jence.backend.model.Produto;
 
 import java.math.BigDecimal;
 import java.util.UUID;

@@ -1,9 +1,9 @@
 package br.com.jence.backend.application.usecase;
 
 import br.com.jence.backend.application.dto.ProdutoResponse;
-import br.com.jence.backend.domain.entity.PontoMapa;
-import br.com.jence.backend.domain.entity.Produto;
-import br.com.jence.backend.domain.entity.TipoPonto;
+import br.com.jence.backend.model.PontoMapa;
+import br.com.jence.backend.model.Produto;
+import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import org.junit.jupiter.api.BeforeEach;

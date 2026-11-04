@@ -7,7 +7,7 @@ import br.com.jence.backend.application.dto.ProdutoResponse;
 import br.com.jence.backend.application.usecase.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.application.usecase.ConsultarListaRoteiroUseCase;
 import br.com.jence.backend.application.usecase.RemoverProdutoDoRoteiroUseCase;
-import br.com.jence.backend.domain.entity.TipoPonto;
+import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.DisplayName;

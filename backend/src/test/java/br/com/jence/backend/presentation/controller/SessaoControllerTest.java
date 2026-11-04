@@ -5,7 +5,7 @@ import br.com.jence.backend.application.usecase.ConcluirRotaUseCase;
 import br.com.jence.backend.application.usecase.ConsultarSessaoUseCase;
 import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
 import br.com.jence.backend.application.usecase.RecentrarSessaoUseCase;
-import br.com.jence.backend.domain.entity.StatusSessao;
+import br.com.jence.backend.model.StatusSessao;
 import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.DisplayName;

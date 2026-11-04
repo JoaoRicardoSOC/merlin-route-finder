@@ -1,9 +1,9 @@
 package br.com.jence.backend;
 
 import br.com.jence.backend.application.usecase.TratarRupturaEstoqueUseCase;
-import br.com.jence.backend.domain.entity.PontoMapa;
-import br.com.jence.backend.domain.entity.Produto;
-import br.com.jence.backend.domain.entity.TipoPonto;
+import br.com.jence.backend.model.PontoMapa;
+import br.com.jence.backend.model.Produto;
+import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.domain.repository.AfinidadeDeProduto;
 import br.com.jence.backend.domain.repository.PontoMapaRepository;
 import br.com.jence.backend.domain.repository.ProdutoRepository;

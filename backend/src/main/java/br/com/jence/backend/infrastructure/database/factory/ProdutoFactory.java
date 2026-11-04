@@ -1,6 +1,6 @@
 package br.com.jence.backend.infrastructure.database.factory;
 
-import br.com.jence.backend.domain.entity.Produto;
+import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.infrastructure.database.entity.ProdutoEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

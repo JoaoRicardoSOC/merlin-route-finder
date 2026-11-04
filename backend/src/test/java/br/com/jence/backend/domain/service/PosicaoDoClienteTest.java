@@ -1,12 +1,12 @@
 package br.com.jence.backend.domain.service;
 
-import br.com.jence.backend.domain.entity.ItemRoteiro;
-import br.com.jence.backend.domain.entity.ListaRoteiro;
-import br.com.jence.backend.domain.entity.PontoMapa;
-import br.com.jence.backend.domain.entity.Produto;
-import br.com.jence.backend.domain.entity.Sessao;
-import br.com.jence.backend.domain.entity.StatusSessao;
-import br.com.jence.backend.domain.entity.TipoPonto;
+import br.com.jence.backend.model.ItemRoteiro;
+import br.com.jence.backend.model.ListaRoteiro;
+import br.com.jence.backend.model.PontoMapa;
+import br.com.jence.backend.model.Produto;
+import br.com.jence.backend.model.Sessao;
+import br.com.jence.backend.model.StatusSessao;
+import br.com.jence.backend.model.TipoPonto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

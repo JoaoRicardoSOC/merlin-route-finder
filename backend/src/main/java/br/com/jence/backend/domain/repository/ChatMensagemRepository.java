@@ -1,6 +1,6 @@
 package br.com.jence.backend.domain.repository;
 
-import br.com.jence.backend.domain.entity.ChatMensagem;
+import br.com.jence.backend.model.ChatMensagem;
 
 import java.util.List;
 import java.util.UUID;

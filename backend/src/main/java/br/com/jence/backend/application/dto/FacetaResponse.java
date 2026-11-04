@@ -1,6 +1,6 @@
 package br.com.jence.backend.application.dto;
 
-import br.com.jence.backend.domain.entity.AtributoProduto;
+import br.com.jence.backend.model.AtributoProduto;
 import br.com.jence.backend.domain.repository.FacetaDeProdutos;
 
 import java.util.List;

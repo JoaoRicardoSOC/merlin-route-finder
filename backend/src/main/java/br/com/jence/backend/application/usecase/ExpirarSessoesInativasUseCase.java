@@ -1,6 +1,6 @@
 package br.com.jence.backend.application.usecase;
 
-import br.com.jence.backend.domain.entity.Sessao;
+import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;
 import org.springframework.stereotype.Service;

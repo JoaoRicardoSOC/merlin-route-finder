@@ -1,4 +1,4 @@
-package br.com.jence.backend.domain.entity;
+package br.com.jence.backend.model;
 
 /**
  * Um bloco da planta da loja: o retangulo que representa um corredor na tela do mapa.

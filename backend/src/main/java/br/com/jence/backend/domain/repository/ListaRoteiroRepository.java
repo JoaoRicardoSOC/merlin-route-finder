@@ -1,6 +1,6 @@
 package br.com.jence.backend.domain.repository;
 
-import br.com.jence.backend.domain.entity.ListaRoteiro;
+import br.com.jence.backend.model.ListaRoteiro;
 
 import java.util.Optional;
 import java.util.UUID;

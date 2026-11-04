@@ -1,9 +1,9 @@
 package br.com.jence.backend.infrastructure.database.adapter;
 
-import br.com.jence.backend.domain.entity.AtributoProduto;
-import br.com.jence.backend.domain.entity.PontoMapa;
-import br.com.jence.backend.domain.entity.Produto;
-import br.com.jence.backend.domain.entity.ValorDeAtributo;
+import br.com.jence.backend.model.AtributoProduto;
+import br.com.jence.backend.model.PontoMapa;
+import br.com.jence.backend.model.Produto;
+import br.com.jence.backend.model.ValorDeAtributo;
 import br.com.jence.backend.domain.repository.AfinidadeDeProduto;
 import br.com.jence.backend.domain.repository.FacetaDeProdutos;
 import br.com.jence.backend.domain.repository.FiltroDeProdutos;

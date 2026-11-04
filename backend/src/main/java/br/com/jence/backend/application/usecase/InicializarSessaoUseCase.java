@@ -1,9 +1,9 @@
 package br.com.jence.backend.application.usecase;
 
 import br.com.jence.backend.application.dto.SessaoResponse;
-import br.com.jence.backend.domain.entity.ListaRoteiro;
-import br.com.jence.backend.domain.entity.PontoMapa;
-import br.com.jence.backend.domain.entity.Sessao;
+import br.com.jence.backend.model.ListaRoteiro;
+import br.com.jence.backend.model.PontoMapa;
+import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import br.com.jence.backend.domain.repository.PontoMapaRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;

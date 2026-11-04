@@ -1,6 +1,6 @@
 package br.com.jence.backend.infrastructure.database.adapter;
 
-import br.com.jence.backend.domain.entity.ItemRoteiro;
+import br.com.jence.backend.model.ItemRoteiro;
 import br.com.jence.backend.domain.repository.ItemRoteiroRepository;
 import br.com.jence.backend.infrastructure.database.entity.ItemRoteiroEntity;
 import br.com.jence.backend.infrastructure.database.factory.ItemRoteiroFactory;

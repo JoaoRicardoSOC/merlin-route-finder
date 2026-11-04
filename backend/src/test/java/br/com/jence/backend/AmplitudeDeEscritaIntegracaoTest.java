@@ -4,7 +4,7 @@ import br.com.jence.backend.application.usecase.AdicionarProdutoAoRoteiroUseCase
 import br.com.jence.backend.application.usecase.InicializarSessaoUseCase;
 import br.com.jence.backend.application.usecase.MarcarItemColetadoUseCase;
 import br.com.jence.backend.application.usecase.RemoverProdutoDoRoteiroUseCase;
-import br.com.jence.backend.domain.entity.ItemRoteiro;
+import br.com.jence.backend.model.ItemRoteiro;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import br.com.jence.backend.infrastructure.database.repository.ListaRoteiroJpaRepository;

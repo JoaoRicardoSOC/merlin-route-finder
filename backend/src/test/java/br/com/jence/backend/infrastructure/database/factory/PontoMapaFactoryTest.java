@@ -1,7 +1,7 @@
 package br.com.jence.backend.infrastructure.database.factory;
 
-import br.com.jence.backend.domain.entity.PontoMapa;
-import br.com.jence.backend.domain.entity.TipoPonto;
+import br.com.jence.backend.model.PontoMapa;
+import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.infrastructure.database.entity.PontoMapaEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

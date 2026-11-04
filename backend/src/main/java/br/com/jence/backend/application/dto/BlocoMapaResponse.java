@@ -1,6 +1,6 @@
 package br.com.jence.backend.application.dto;
 
-import br.com.jence.backend.domain.entity.BlocoMapa;
+import br.com.jence.backend.model.BlocoMapa;
 
 /** Espelha o schema {@code BlocoMapa} do contrato: um retangulo a desenhar na tela do mapa. */
 public record BlocoMapaResponse(

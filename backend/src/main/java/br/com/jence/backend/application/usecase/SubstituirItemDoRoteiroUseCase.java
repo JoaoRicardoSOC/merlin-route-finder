@@ -1,10 +1,10 @@
 package br.com.jence.backend.application.usecase;
 
 import br.com.jence.backend.application.dto.ListaRoteiroResponse;
-import br.com.jence.backend.domain.entity.ItemRoteiro;
-import br.com.jence.backend.domain.entity.ListaRoteiro;
-import br.com.jence.backend.domain.entity.Produto;
-import br.com.jence.backend.domain.entity.Sessao;
+import br.com.jence.backend.model.ItemRoteiro;
+import br.com.jence.backend.model.ListaRoteiro;
+import br.com.jence.backend.model.Produto;
+import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;

@@ -1,6 +1,6 @@
 package br.com.jence.backend.infrastructure.database.entity;
 
-import br.com.jence.backend.domain.entity.TipoPonto;
+import br.com.jence.backend.model.TipoPonto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

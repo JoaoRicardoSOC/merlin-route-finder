@@ -10,7 +10,7 @@ import br.com.jence.backend.application.usecase.BuscarProdutosUseCase;
 import br.com.jence.backend.application.usecase.ConsultarProdutoUseCase;
 import br.com.jence.backend.application.usecase.ListarSecoesUseCase;
 import br.com.jence.backend.application.usecase.SimularEstoqueUseCase;
-import br.com.jence.backend.domain.entity.AtributoProduto;
+import br.com.jence.backend.model.AtributoProduto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

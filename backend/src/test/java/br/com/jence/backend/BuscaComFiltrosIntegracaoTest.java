@@ -1,6 +1,6 @@
 package br.com.jence.backend;
 
-import br.com.jence.backend.domain.entity.Produto;
+import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.domain.repository.FiltroDeProdutos;
 import br.com.jence.backend.domain.repository.Pagina;
 import br.com.jence.backend.domain.repository.ProdutoRepository;

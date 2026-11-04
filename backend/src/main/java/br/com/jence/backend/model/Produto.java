@@ -1,4 +1,4 @@
-package br.com.jence.backend.domain.entity;
+package br.com.jence.backend.model;
 
 import java.math.BigDecimal;
 import java.util.UUID;

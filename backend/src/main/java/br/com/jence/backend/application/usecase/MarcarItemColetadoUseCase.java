@@ -1,8 +1,8 @@
 package br.com.jence.backend.application.usecase;
 
 import br.com.jence.backend.application.dto.ItemRoteiroDetalhadoResponse;
-import br.com.jence.backend.domain.entity.ItemRoteiro;
-import br.com.jence.backend.domain.entity.ListaRoteiro;
+import br.com.jence.backend.model.ItemRoteiro;
+import br.com.jence.backend.model.ListaRoteiro;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;

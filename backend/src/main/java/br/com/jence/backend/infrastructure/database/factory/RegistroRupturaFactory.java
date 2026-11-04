@@ -1,6 +1,6 @@
 package br.com.jence.backend.infrastructure.database.factory;
 
-import br.com.jence.backend.domain.entity.RegistroRuptura;
+import br.com.jence.backend.model.RegistroRuptura;
 import br.com.jence.backend.infrastructure.database.entity.RegistroRupturaEntity;
 import org.springframework.stereotype.Component;
 

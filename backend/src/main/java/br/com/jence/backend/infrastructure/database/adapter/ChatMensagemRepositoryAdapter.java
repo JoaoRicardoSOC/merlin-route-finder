@@ -1,6 +1,6 @@
 package br.com.jence.backend.infrastructure.database.adapter;
 
-import br.com.jence.backend.domain.entity.ChatMensagem;
+import br.com.jence.backend.model.ChatMensagem;
 import br.com.jence.backend.domain.repository.ChatMensagemRepository;
 import br.com.jence.backend.infrastructure.database.entity.ChatMensagemEntity;
 import br.com.jence.backend.infrastructure.database.factory.ChatMensagemFactory;

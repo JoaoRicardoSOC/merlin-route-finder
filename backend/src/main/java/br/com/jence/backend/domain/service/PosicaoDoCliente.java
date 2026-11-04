@@ -1,9 +1,9 @@
 package br.com.jence.backend.domain.service;
 
-import br.com.jence.backend.domain.entity.ItemRoteiro;
-import br.com.jence.backend.domain.entity.ListaRoteiro;
-import br.com.jence.backend.domain.entity.PontoMapa;
-import br.com.jence.backend.domain.entity.Sessao;
+import br.com.jence.backend.model.ItemRoteiro;
+import br.com.jence.backend.model.ListaRoteiro;
+import br.com.jence.backend.model.PontoMapa;
+import br.com.jence.backend.model.Sessao;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;

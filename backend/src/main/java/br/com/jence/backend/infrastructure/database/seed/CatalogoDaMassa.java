@@ -1,28 +1,28 @@
 package br.com.jence.backend.infrastructure.database.seed;
 
-import br.com.jence.backend.domain.entity.ValorDeAtributo;
+import br.com.jence.backend.model.ValorDeAtributo;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static br.com.jence.backend.domain.entity.AtributoProduto.ACABAMENTO;
-import static br.com.jence.backend.domain.entity.AtributoProduto.AMPERAGEM;
-import static br.com.jence.backend.domain.entity.AtributoProduto.BITOLA;
-import static br.com.jence.backend.domain.entity.AtributoProduto.COMPRIMENTO;
-import static br.com.jence.backend.domain.entity.AtributoProduto.COR;
-import static br.com.jence.backend.domain.entity.AtributoProduto.DIMENSAO;
-import static br.com.jence.backend.domain.entity.AtributoProduto.FORMATO;
-import static br.com.jence.backend.domain.entity.AtributoProduto.GRAO;
-import static br.com.jence.backend.domain.entity.AtributoProduto.LARGURA;
-import static br.com.jence.backend.domain.entity.AtributoProduto.MARCA;
-import static br.com.jence.backend.domain.entity.AtributoProduto.MATERIAL;
-import static br.com.jence.backend.domain.entity.AtributoProduto.PESO;
-import static br.com.jence.backend.domain.entity.AtributoProduto.POLOS;
-import static br.com.jence.backend.domain.entity.AtributoProduto.POTENCIA;
-import static br.com.jence.backend.domain.entity.AtributoProduto.QUANTIDADE;
-import static br.com.jence.backend.domain.entity.AtributoProduto.TEMPERATURA_DE_COR;
-import static br.com.jence.backend.domain.entity.AtributoProduto.TIPO;
-import static br.com.jence.backend.domain.entity.AtributoProduto.VOLUME;
+import static br.com.jence.backend.model.AtributoProduto.ACABAMENTO;
+import static br.com.jence.backend.model.AtributoProduto.AMPERAGEM;
+import static br.com.jence.backend.model.AtributoProduto.BITOLA;
+import static br.com.jence.backend.model.AtributoProduto.COMPRIMENTO;
+import static br.com.jence.backend.model.AtributoProduto.COR;
+import static br.com.jence.backend.model.AtributoProduto.DIMENSAO;
+import static br.com.jence.backend.model.AtributoProduto.FORMATO;
+import static br.com.jence.backend.model.AtributoProduto.GRAO;
+import static br.com.jence.backend.model.AtributoProduto.LARGURA;
+import static br.com.jence.backend.model.AtributoProduto.MARCA;
+import static br.com.jence.backend.model.AtributoProduto.MATERIAL;
+import static br.com.jence.backend.model.AtributoProduto.PESO;
+import static br.com.jence.backend.model.AtributoProduto.POLOS;
+import static br.com.jence.backend.model.AtributoProduto.POTENCIA;
+import static br.com.jence.backend.model.AtributoProduto.QUANTIDADE;
+import static br.com.jence.backend.model.AtributoProduto.TEMPERATURA_DE_COR;
+import static br.com.jence.backend.model.AtributoProduto.TIPO;
+import static br.com.jence.backend.model.AtributoProduto.VOLUME;
 import static br.com.jence.backend.infrastructure.database.seed.ProdutoDaMassa.de;
 
 /**

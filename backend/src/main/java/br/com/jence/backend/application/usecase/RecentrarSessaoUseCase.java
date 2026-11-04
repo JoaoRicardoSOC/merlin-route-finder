@@ -1,8 +1,8 @@
 package br.com.jence.backend.application.usecase;
 
 import br.com.jence.backend.application.dto.SessaoResponse;
-import br.com.jence.backend.domain.entity.PontoMapa;
-import br.com.jence.backend.domain.entity.Sessao;
+import br.com.jence.backend.model.PontoMapa;
+import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;

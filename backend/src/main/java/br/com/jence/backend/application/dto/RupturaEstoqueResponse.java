@@ -1,7 +1,7 @@
 package br.com.jence.backend.application.dto;
 
-import br.com.jence.backend.domain.entity.OrigemSugestao;
-import br.com.jence.backend.domain.entity.Produto;
+import br.com.jence.backend.model.OrigemSugestao;
+import br.com.jence.backend.model.Produto;
 
 import java.util.UUID;
 

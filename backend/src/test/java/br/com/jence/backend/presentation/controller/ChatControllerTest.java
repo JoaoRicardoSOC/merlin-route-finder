@@ -3,7 +3,7 @@ package br.com.jence.backend.presentation.controller;
 import br.com.jence.backend.application.dto.ChatMensagemResponse;
 import br.com.jence.backend.application.usecase.ConsultarHistoricoChatUseCase;
 import br.com.jence.backend.application.usecase.ConversarComAssistenteUseCase;
-import br.com.jence.backend.domain.entity.Remetente;
+import br.com.jence.backend.model.Remetente;
 import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,7 +1,7 @@
 package br.com.jence.backend.domain.repository;
 
-import br.com.jence.backend.domain.entity.AtributoProduto;
-import br.com.jence.backend.domain.entity.ValorDeAtributo;
+import br.com.jence.backend.model.AtributoProduto;
+import br.com.jence.backend.model.ValorDeAtributo;
 
 import java.util.List;
 

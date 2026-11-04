@@ -1,8 +1,8 @@
 package br.com.jence.backend.application.dto;
 
-import br.com.jence.backend.domain.entity.ListaRoteiro;
-import br.com.jence.backend.domain.entity.Sessao;
-import br.com.jence.backend.domain.entity.StatusSessao;
+import br.com.jence.backend.model.ListaRoteiro;
+import br.com.jence.backend.model.Sessao;
+import br.com.jence.backend.model.StatusSessao;
 import br.com.jence.backend.domain.service.PosicaoDoCliente;
 
 import java.time.LocalDateTime;

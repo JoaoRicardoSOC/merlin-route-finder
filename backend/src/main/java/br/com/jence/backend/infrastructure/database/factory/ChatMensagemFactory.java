@@ -1,6 +1,6 @@
 package br.com.jence.backend.infrastructure.database.factory;
 
-import br.com.jence.backend.domain.entity.ChatMensagem;
+import br.com.jence.backend.model.ChatMensagem;
 import br.com.jence.backend.infrastructure.database.entity.ChatMensagemEntity;
 import org.springframework.stereotype.Component;
 

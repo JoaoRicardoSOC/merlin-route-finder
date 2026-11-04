@@ -1,6 +1,6 @@
 package br.com.jence.backend.infrastructure.database.seed;
 
-import br.com.jence.backend.domain.entity.Produto;
+import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;

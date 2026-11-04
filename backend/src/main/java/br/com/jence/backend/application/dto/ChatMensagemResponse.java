@@ -1,7 +1,7 @@
 package br.com.jence.backend.application.dto;
 
-import br.com.jence.backend.domain.entity.ChatMensagem;
-import br.com.jence.backend.domain.entity.Remetente;
+import br.com.jence.backend.model.ChatMensagem;
+import br.com.jence.backend.model.Remetente;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
