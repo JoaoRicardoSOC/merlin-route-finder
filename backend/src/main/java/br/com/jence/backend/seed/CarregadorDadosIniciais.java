@@ -7,16 +7,16 @@ import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.ValorDeAtributo;
 import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.model.Pagina;
-import br.com.jence.backend.domain.repository.PontoMapaRepository;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
-import br.com.jence.backend.infrastructure.database.repository.PontoMapaJpaRepository;
-import br.com.jence.backend.infrastructure.database.repository.ProdutoAtributoJpaRepository;
-import br.com.jence.backend.infrastructure.database.schema.RestricaoDeEnumNoBanco;
+import br.com.jence.backend.dao.PontoMapaDao;
+import br.com.jence.backend.dao.ProdutoDao;
+import br.com.jence.backend.dao.RestricaoDeEnumDao;
+import br.com.jence.backend.factory.Transacao;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -321,11 +321,9 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
     private record Apresentacao(String nome, String descricao, String imagemUrl) {
     }
 
-    private final ProdutoRepository produtoRepository;
-    private final PontoMapaRepository pontoMapaRepository;
-    private final PontoMapaJpaRepository pontoMapaJpaRepository;
-    private final ProdutoAtributoJpaRepository atributoJpaRepository;
-    private final RestricaoDeEnumNoBanco restricaoDeEnum;
+    private final ProdutoDao produtoDao;
+    private final PontoMapaDao pontoMapaDao;
+    private final RestricaoDeEnumDao restricaoDeEnum;
 
     /*
      * O que esta execucao criou. Vive numa instancia propria por chamada, e nao em campo do
@@ -353,21 +351,20 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
      */
     private final Map<String, Apresentacao> apresentacoes = new LinkedHashMap<>();
 
-    public CarregadorDadosIniciais(ProdutoRepository produtoRepository,
-                                   PontoMapaRepository pontoMapaRepository,
-                                   PontoMapaJpaRepository pontoMapaJpaRepository,
-                                   ProdutoAtributoJpaRepository atributoJpaRepository,
-                                   RestricaoDeEnumNoBanco restricaoDeEnum) {
-        this.produtoRepository = produtoRepository;
-        this.pontoMapaRepository = pontoMapaRepository;
-        this.pontoMapaJpaRepository = pontoMapaJpaRepository;
-        this.atributoJpaRepository = atributoJpaRepository;
+    public CarregadorDadosIniciais(ProdutoDao produtoDao, PontoMapaDao pontoMapaDao,
+                                   RestricaoDeEnumDao restricaoDeEnum) {
+        this.produtoDao = produtoDao;
+        this.pontoMapaDao = pontoMapaDao;
         this.restricaoDeEnum = restricaoDeEnum;
     }
 
     @Override
-    public void run(ApplicationArguments args) {
-        Pagina<Produto> existentes = produtoRepository.buscarPaginado(0, LIMITE_DE_LEITURA);
+    public void run(ApplicationArguments args) throws SQLException {
+        Pagina<Produto> existentes;
+        try (Transacao transacao = Transacao.iniciarSomenteLeitura()) {
+            existentes = produtoDao.buscarPaginado(0, LIMITE_DE_LEITURA);
+            transacao.confirmar();
+        }
 
         if (existentes.totalElementos() > existentes.conteudo().size()) {
             System.out.println(String.format("AVISO: Catalogo tem %s produtos, acima do limite de leitura da carga inicial (%s). "
@@ -384,19 +381,31 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         /*
           * A ordem importa: apagar as linhas de tipo aposentado antes de refazer a restricao,
           * porque uma linha com valor fora do enum faria o "add check" ser recusado.
+          *
+          * Tres transacoes, e nao uma: a restricao e refeita com ALTER TABLE, que no Oracle
+          * confirma sozinho o que estiver pendente. Separadas, cada etapa confirma por inteiro.
           */
-        apagarPontosDeTipoAposentado();
-        renomearCorredores(contagem);
-        restricaoDeEnum.sincronizar();
+        try (Transacao transacao = Transacao.iniciar()) {
+            apagarPontosDeTipoAposentado();
+            renomearCorredores(contagem);
+            transacao.confirmar();
+        }
+        try (Transacao transacao = Transacao.iniciar()) {
+            restricaoDeEnum.sincronizar();
+            transacao.confirmar();
+        }
 
-        Map<String, PontoMapa> secoes = carregarOuCriarSecoes(contagem);
-        criarPontosDeServicoQueFaltam(contagem);
-        criarPontosDeQrCodeQueFaltam(contagem);
-        apresentacoes.clear();
-        criarCatalogo(secoes, skusExistentes, contagem);
-        sincronizarApresentacoes(contagem);
-        sincronizarAtributos(contagem);
-        sincronizarEstoque(contagem);
+        try (Transacao transacao = Transacao.iniciar()) {
+            Map<String, PontoMapa> secoes = carregarOuCriarSecoes(contagem);
+            criarPontosDeServicoQueFaltam(contagem);
+            criarPontosDeQrCodeQueFaltam(contagem);
+            apresentacoes.clear();
+            criarCatalogo(secoes, skusExistentes, contagem);
+            sincronizarApresentacoes(contagem);
+            sincronizarAtributos(contagem);
+            sincronizarEstoque(contagem);
+            transacao.confirmar();
+        }
 
         if (contagem.nadaFeito()) {
             System.out.println("Massa de demonstracao ja esta completa. Nada a carregar.");
@@ -412,9 +421,9 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
 
     // ---------------------------------------------------------------- pontos do mapa
 
-    private void apagarPontosDeTipoAposentado() {
+    private void apagarPontosDeTipoAposentado() throws SQLException {
         for (String tipo : TIPOS_APOSENTADOS) {
-            int apagados = pontoMapaJpaRepository.apagarPorTipoBruto(tipo);
+            int apagados = pontoMapaDao.apagarPorTipoBruto(tipo);
             if (apagados > 0) {
                 System.out.println(String.format("Ponto de tipo %s, aposentado pelo escopo revisado: %s linha(s) apagada(s).",
                         tipo, apagados));
@@ -426,31 +435,34 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
      * Precisa rodar antes de carregarOuCriarSecoes: depois, a secao de nome novo ja teria sido
      * criada vazia e a renomeacao esbarraria na unicidade do corredor.
      */
-    private void renomearCorredores(Contagem contagem) {
-        CORREDORES_RENOMEADOS.forEach((antigo, novo) -> {
+    private void renomearCorredores(Contagem contagem) throws SQLException {
+        for (Map.Entry<String, String> renomeacao : CORREDORES_RENOMEADOS.entrySet()) {
+            String antigo = renomeacao.getKey();
+            String novo = renomeacao.getValue();
+
             /*
              * Limpa antes de renomear. Se uma execucao anterior ja criou a secao com o nome
              * novo - o que acontece quando alguem roda a planta acentuada sem esta migracao -,
              * renomear por cima deixaria duas linhas com o mesmo nome, uma com os produtos e
              * outra vazia. A vazia nao serve para nada e ninguem a referencia.
              */
-            int vazias = pontoMapaJpaRepository.apagarPrateleiraVaziaChamada(novo);
+            int vazias = pontoMapaDao.apagarPrateleiraVaziaChamada(novo);
             if (vazias > 0) {
                 System.out.println(String.format("Secao '%s' existia vazia e duplicada: %s ponto(s) apagado(s) antes "
                         + "de renomear.", novo, vazias));
             }
 
-            int linhas = pontoMapaJpaRepository.renomearCorredor(antigo, novo);
+            int linhas = pontoMapaDao.renomearCorredor(antigo, novo);
             if (linhas > 0) {
                 System.out.println(String.format("Corredor '%s' renomeado para '%s': %s ponto(s) atualizado(s). "
                         + "Os produtos continuam no mesmo ponto.", antigo, novo, linhas));
                 contagem.renomeados += linhas;
             }
-        });
+        }
     }
 
-    private Map<String, PontoMapa> carregarOuCriarSecoes(Contagem contagem) {
-        Map<String, PontoMapa> existentes = pontoMapaRepository.buscarPorTipo(TipoPonto.PRATELEIRA)
+    private Map<String, PontoMapa> carregarOuCriarSecoes(Contagem contagem) throws SQLException {
+        Map<String, PontoMapa> existentes = pontoMapaDao.buscarPorTipo(TipoPonto.PRATELEIRA)
                 .stream()
                 .collect(Collectors.toMap(PontoMapa::getCorredor, Function.identity(), (a, b) -> a));
 
@@ -467,10 +479,10 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
     }
 
     private void registrar(Map<String, PontoMapa> secoes, Map<String, PontoMapa> existentes,
-                           Contagem contagem, BlocoMapa bloco) {
+                           Contagem contagem, BlocoMapa bloco) throws SQLException {
         PontoMapa ponto = existentes.get(bloco.rotulo());
         if (ponto == null) {
-            ponto = pontoMapaRepository.salvar(new PontoMapa(UUID.randomUUID(),
+            ponto = pontoMapaDao.salvar(new PontoMapa(UUID.randomUUID(),
                     TipoPonto.PRATELEIRA, bloco.rotulo(), bloco.centroX(), bloco.centroY()));
             contagem.pontos++;
         }
@@ -479,7 +491,7 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
 
     /* Nao vendem nada, mas precisam aparecer no mapa: o cliente vai ate os caixas para
      * fechar a compra, e o banheiro e uma parada que ele pode querer localizar. */
-    private void criarPontosDeServicoQueFaltam(Contagem contagem) {
+    private void criarPontosDeServicoQueFaltam(Contagem contagem) throws SQLException {
         criarSeNaoHouver(contagem, TipoPonto.CAIXA, "Frente de loja", 62, 88);
         criarSeNaoHouver(contagem, TipoPonto.BANHEIRO, "Sanitários", 52, 8);
     }
@@ -495,7 +507,7 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
      * Quantos e exatamente onde ainda e decisao do time (O-18): trocar as coordenadas aqui nao
      * afeta nenhuma outra parte do sistema.
      */
-    private void criarPontosDeQrCodeQueFaltam(Contagem contagem) {
+    private void criarPontosDeQrCodeQueFaltam(Contagem contagem) throws SQLException {
         criarQrCodeSeNaoHouver(contagem, "ENT-01", "Entrada da loja", 50, 92);
         criarQrCodeSeNaoHouver(contagem, "TIN-02", "Corredor de Tintas", 32, 18);
         criarQrCodeSeNaoHouver(contagem, "CEN-03", "Cruzamento central", 41, 40);
@@ -505,17 +517,17 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
     }
 
     private void criarQrCodeSeNaoHouver(Contagem contagem, String codigo, String corredor,
-                                        int x, int y) {
-        if (pontoMapaRepository.buscarPorCodigoCurto(codigo).isEmpty()) {
-            pontoMapaRepository.salvar(
+                                        int x, int y) throws SQLException {
+        if (pontoMapaDao.buscarPorCodigoCurto(codigo).isEmpty()) {
+            pontoMapaDao.salvar(
                     new PontoMapa(UUID.randomUUID(), TipoPonto.QR_CODE, corredor, x, y, codigo));
             contagem.pontos++;
         }
     }
 
-    private void criarSeNaoHouver(Contagem contagem, TipoPonto tipo, String corredor, int x, int y) {
-        if (pontoMapaRepository.buscarPorTipo(tipo).isEmpty()) {
-            pontoMapaRepository.salvar(new PontoMapa(UUID.randomUUID(), tipo, corredor, x, y));
+    private void criarSeNaoHouver(Contagem contagem, TipoPonto tipo, String corredor, int x, int y) throws SQLException {
+        if (pontoMapaDao.buscarPorTipo(tipo).isEmpty()) {
+            pontoMapaDao.salvar(new PontoMapa(UUID.randomUUID(), tipo, corredor, x, y));
             contagem.pontos++;
         }
     }
@@ -529,7 +541,7 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
      * acrescentar uma entrada la, e nao editar tres lugares em paralelo. Ver D-66.
      */
     private void criarCatalogo(Map<String, PontoMapa> secoes, Set<String> jaExistentes,
-                               Contagem contagem) {
+                               Contagem contagem) throws SQLException {
         for (ProdutoDaMassa declarado : CatalogoDaMassa.produtos()) {
             PontoMapa ponto = secoes.get(declarado.secao());
             if (ponto == null) {
@@ -546,7 +558,7 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
                 continue;
             }
 
-            produtoRepository.salvar(new Produto(UUID.randomUUID(), declarado.sku(),
+            produtoDao.salvar(new Produto(UUID.randomUUID(), declarado.sku(),
                     declarado.nome(), declarado.descricao(), IMAGENS.get(declarado.sku()),
                     declarado.precoEmReais(), declarado.estoque(), ponto));
             contagem.produtos++;
@@ -569,34 +581,29 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
      * <p>Setima vez que o mesmo padrao aparece: campo de fora da reconciliacao envelhece em
      * silencio. Ver D-51, D-53, D-56, D-59, D-69 e D-70.
      */
-    private void sincronizarEstoque(Contagem contagem) {
+    private void sincronizarEstoque(Contagem contagem) throws SQLException {
         Map<String, Integer> declarados = CatalogoDaMassa.produtos().stream()
                 .collect(Collectors.toMap(ProdutoDaMassa::sku, ProdutoDaMassa::estoque));
 
-        for (Produto produto : produtoRepository.buscarPaginado(0, LIMITE_DE_LEITURA).conteudo()) {
+        for (Produto produto : produtoDao.buscarPaginado(0, LIMITE_DE_LEITURA).conteudo()) {
             Integer esperado = declarados.get(produto.getSku());
             if (esperado == null || esperado == produto.getSaldoEstoque()) {
                 continue;
             }
             System.out.println(String.format("Estoque de %s ajustado de %s para %s, como a massa declara.",
                     produto.getSku(), produto.getSaldoEstoque(), esperado));
-            produtoRepository.salvar(produto.comSaldoEstoque(esperado));
+            produtoDao.salvar(produto.comSaldoEstoque(esperado));
             contagem.estoques++;
         }
     }
 
-    private void sincronizarAtributos(Contagem contagem) {
+    private void sincronizarAtributos(Contagem contagem) throws SQLException {
         Map<String, List<ValorDeAtributo>> declarados = CatalogoDaMassa.produtos().stream()
                 .collect(Collectors.toMap(ProdutoDaMassa::sku, ProdutoDaMassa::atributos));
 
-        Map<UUID, List<ValorDeAtributo>> gravados = atributoJpaRepository.findAll().stream()
-                .collect(Collectors.groupingBy(
-                        entity -> entity.getProduto().getId(),
-                        Collectors.mapping(
-                                entity -> new ValorDeAtributo(entity.getChave(), entity.getValor()),
-                                Collectors.toList())));
+        Map<UUID, List<ValorDeAtributo>> gravados = produtoDao.buscarAtributosDeTodos();
 
-        for (Produto produto : produtoRepository.buscarPaginado(0, LIMITE_DE_LEITURA).conteudo()) {
+        for (Produto produto : produtoDao.buscarPaginado(0, LIMITE_DE_LEITURA).conteudo()) {
             List<ValorDeAtributo> esperados = declarados.get(produto.getSku());
             if (esperados == null) {
                 continue;
@@ -605,7 +612,7 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
             List<ValorDeAtributo> atuais = gravados.getOrDefault(produto.getId(), List.of());
 
             if (!Set.copyOf(atuais).equals(Set.copyOf(esperados))) {
-                produtoRepository.salvarAtributos(produto.getId(), esperados);
+                produtoDao.salvarAtributos(produto.getId(), esperados);
                 contagem.atributos++;
             }
         }
@@ -624,8 +631,8 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
      * um problema: o atributo MARCA sincroniza sempre e o nome nao sincronizava nunca, e o
      * banco publicado ficaria com marca nova e nome velho. Ver D-69.
      */
-    private void sincronizarApresentacoes(Contagem contagem) {
-        for (Produto produto : produtoRepository.buscarPaginado(0, LIMITE_DE_LEITURA).conteudo()) {
+    private void sincronizarApresentacoes(Contagem contagem) throws SQLException {
+        for (Produto produto : produtoDao.buscarPaginado(0, LIMITE_DE_LEITURA).conteudo()) {
             Apresentacao declarada = apresentacoes.get(produto.getSku());
             if (declarada == null) {
                 continue;
@@ -636,7 +643,7 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
                     || !Objects.equals(declarada.imagemUrl(), produto.getImagemUrl());
 
             if (mudou) {
-                produtoRepository.salvar(produto.comApresentacao(
+                produtoDao.salvar(produto.comApresentacao(
                         declarada.nome(), declarada.descricao(), declarada.imagemUrl()));
                 contagem.apresentacoes++;
             }

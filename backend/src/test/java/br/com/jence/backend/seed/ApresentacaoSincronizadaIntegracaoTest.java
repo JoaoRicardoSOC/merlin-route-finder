@@ -69,7 +69,7 @@ class ApresentacaoSincronizadaIntegracaoTest {
 
     @Test
     @DisplayName("mexer no que esta gravado e recarregar restaura o que a massa diz")
-    void aCargaDesfazUmaAlteracaoFeitaAMao() {
+    void aCargaDesfazUmaAlteracaoFeitaAMao() throws Exception {
         Produto antes = porSku("SKU-DEC-001");
 
         produtoRepository.salvar(antes.comApresentacao(
@@ -87,7 +87,7 @@ class ApresentacaoSincronizadaIntegracaoTest {
 
     @Test
     @DisplayName("o saldo em estoque tambem volta a ser o que a massa declara")
-    void oEstoqueVoltaAoDeclarado() {
+    void oEstoqueVoltaAoDeclarado() throws Exception {
         /*
          * Estoque ficou de fora da reconciliacao por muito tempo, e so apareceu quando a lixa
          * da ruptura passou a nascer com saldo (D-72): a mudanca nao chegava a banco nenhum

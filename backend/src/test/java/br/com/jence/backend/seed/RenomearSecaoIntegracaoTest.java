@@ -78,7 +78,7 @@ class RenomearSecaoIntegracaoTest {
 
     @Test
     @DisplayName("renomear preserva o ponto e os produtos que apontam para ele")
-    void renomearPreservaOsProdutos() {
+    void renomearPreservaOsProdutos() throws Exception {
         /*
          * A prova direta do que D-70 protege: volta o nome antigo em banco, roda a carga e
          * verifica que o ponto e o mesmo - mesmo id, mesmas coordenadas - e que os produtos

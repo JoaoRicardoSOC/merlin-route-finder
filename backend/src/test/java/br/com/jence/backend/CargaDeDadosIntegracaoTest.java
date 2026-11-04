@@ -78,7 +78,7 @@ class CargaDeDadosIntegracaoTest {
     }
 
     @Test
-    void aCargaIncrementalNaoDuplicaNada() {
+    void aCargaIncrementalNaoDuplicaNada() throws Exception {
         long produtosAntes = produtoRepository.buscarPaginado(0, 1).totalElementos();
         int pontosAntes = todosOsPontos().size();
 
