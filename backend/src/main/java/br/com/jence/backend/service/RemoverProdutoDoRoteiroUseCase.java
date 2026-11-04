@@ -4,11 +4,12 @@ import br.com.jence.backend.model.ListaRoteiro;
 import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
-import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
-import br.com.jence.backend.domain.repository.SessaoRepository;
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.SessaoDao;
+import br.com.jence.backend.factory.Transacao;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.util.UUID;
 
 /**
@@ -17,18 +18,23 @@ import java.util.UUID;
 @Service
 public class RemoverProdutoDoRoteiroUseCase {
 
-    private final SessaoRepository sessaoRepository;
-    private final ListaRoteiroRepository listaRoteiroRepository;
+    private final SessaoDao sessaoDao;
+    private final ListaRoteiroDao listaRoteiroDao;
 
-    public RemoverProdutoDoRoteiroUseCase(SessaoRepository sessaoRepository,
-                                          ListaRoteiroRepository listaRoteiroRepository) {
-        this.sessaoRepository = sessaoRepository;
-        this.listaRoteiroRepository = listaRoteiroRepository;
+    public RemoverProdutoDoRoteiroUseCase(SessaoDao sessaoDao, ListaRoteiroDao listaRoteiroDao) {
+        this.sessaoDao = sessaoDao;
+        this.listaRoteiroDao = listaRoteiroDao;
     }
 
-    @Transactional
-    public void executar(UUID sessaoId, UUID itemId) {
-        Sessao sessao = sessaoRepository.buscarPorId(sessaoId)
+    public void executar(UUID sessaoId, UUID itemId) throws SQLException {
+        try (Transacao transacao = Transacao.iniciar()) {
+            remover(sessaoId, itemId);
+            transacao.confirmar();
+        }
+    }
+
+    private void remover(UUID sessaoId, UUID itemId) throws SQLException {
+        Sessao sessao = sessaoDao.buscarPorId(sessaoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao", sessaoId));
 
         if (!sessao.isValida()) {
@@ -36,17 +42,17 @@ public class RemoverProdutoDoRoteiroUseCase {
                     "Sessao %s nao esta mais ativa (status %s)".formatted(sessaoId, sessao.getStatus()));
         }
 
-        ListaRoteiro lista = listaRoteiroRepository.buscarPorSessao(sessaoId)
+        ListaRoteiro lista = listaRoteiroDao.buscarPorSessao(sessaoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Lista de roteiro da sessao", sessaoId));
 
         if (!lista.removerProduto(itemId)) {
             throw new RecursoNaoEncontradoException("Item do roteiro", itemId);
         }
 
-        // A remocao vira DELETE via orphanRemoval do agregado (D-13).
-        listaRoteiroRepository.salvar(lista);
+        // A remocao vira DELETE: o DAO apaga o item lido que saiu do agregado (D-13).
+        listaRoteiroDao.salvar(lista);
 
         sessao.renovarSessao();
-        sessaoRepository.salvar(sessao);
+        sessaoDao.salvar(sessao);
     }
 }

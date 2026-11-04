@@ -73,7 +73,8 @@ public class RoteiroResource {
 
     @DeleteMapping("/itens/{itemId}")
     @Operation(summary = "Remover produto da lista (UC-006)")
-    public ResponseEntity<Void> remover(@PathVariable UUID sessaoId, @PathVariable UUID itemId) {
+    public ResponseEntity<Void> remover(@PathVariable UUID sessaoId, @PathVariable UUID itemId)
+            throws SQLException {
         removerProdutoDoRoteiroUseCase.executar(sessaoId, itemId);
         return ResponseEntity.noContent().build();
     }
