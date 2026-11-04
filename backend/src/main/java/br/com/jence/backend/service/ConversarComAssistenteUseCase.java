@@ -7,15 +7,16 @@ import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.exception.AssistenteIAIndisponivelException;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
-import br.com.jence.backend.domain.repository.ChatMensagemRepository;
-import br.com.jence.backend.domain.repository.ProdutoRepository;
-import br.com.jence.backend.domain.repository.SessaoRepository;
+import br.com.jence.backend.dao.ChatMensagemDao;
+import br.com.jence.backend.dao.ProdutoDao;
+import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.domain.service.AssistenteIA;
 import br.com.jence.backend.model.MensagemIA;
+import br.com.jence.backend.factory.Transacao;
 import br.com.jence.backend.ia.InstrucaoDoAssistente;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -33,24 +34,31 @@ public class ConversarComAssistenteUseCase {
     /** Quantas buscas o assistente recebe por consulta, para a resposta nao virar catalogo. */
     private static final int LIMITE_DE_RESULTADOS = 8;
 
-    private final SessaoRepository sessaoRepository;
-    private final ChatMensagemRepository chatMensagemRepository;
-    private final ProdutoRepository produtoRepository;
+    private final SessaoDao sessaoDao;
+    private final ChatMensagemDao chatMensagemDao;
+    private final ProdutoDao produtoDao;
     private final AssistenteIA assistenteIA;
 
-    public ConversarComAssistenteUseCase(SessaoRepository sessaoRepository,
-                                         ChatMensagemRepository chatMensagemRepository,
-                                         ProdutoRepository produtoRepository,
+    public ConversarComAssistenteUseCase(SessaoDao sessaoDao,
+                                         ChatMensagemDao chatMensagemDao,
+                                         ProdutoDao produtoDao,
                                          AssistenteIA assistenteIA) {
-        this.sessaoRepository = sessaoRepository;
-        this.chatMensagemRepository = chatMensagemRepository;
-        this.produtoRepository = produtoRepository;
+        this.sessaoDao = sessaoDao;
+        this.chatMensagemDao = chatMensagemDao;
+        this.produtoDao = produtoDao;
         this.assistenteIA = assistenteIA;
     }
 
-    @Transactional
-    public ChatMensagemResponse executar(UUID sessaoId, String pergunta) {
-        Sessao sessao = sessaoRepository.buscarPorId(sessaoId)
+    public ChatMensagemResponse executar(UUID sessaoId, String pergunta) throws SQLException {
+        try (Transacao transacao = Transacao.iniciar()) {
+            ChatMensagemResponse resposta = conversar(sessaoId, pergunta);
+            transacao.confirmar();
+            return resposta;
+        }
+    }
+
+    private ChatMensagemResponse conversar(UUID sessaoId, String pergunta) throws SQLException {
+        Sessao sessao = sessaoDao.buscarPorId(sessaoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao", sessaoId));
 
         if (!sessao.isValida()) {
@@ -60,11 +68,11 @@ public class ConversarComAssistenteUseCase {
 
         List<MensagemIA> historico = historicoAnteriorDe(sessaoId);
 
-        chatMensagemRepository.salvar(ChatMensagem.doCliente(UUID.randomUUID(), sessaoId, pergunta));
+        chatMensagemDao.salvar(ChatMensagem.doCliente(UUID.randomUUID(), sessaoId, pergunta));
         historico.add(MensagemIA.doCliente(pergunta));
 
         sessao.renovarSessao();
-        sessaoRepository.salvar(sessao);
+        sessaoDao.salvar(sessao);
 
         String resposta;
         try {
@@ -85,14 +93,14 @@ public class ConversarComAssistenteUseCase {
             return respostaNaoPersistida(sessaoId, InstrucaoDoAssistente.mensagemDeIndisponibilidade());
         }
 
-        ChatMensagem salva = chatMensagemRepository.salvar(
+        ChatMensagem salva = chatMensagemDao.salvar(
                 ChatMensagem.doAssistente(UUID.randomUUID(), sessaoId, resposta));
 
         return ChatMensagemResponse.de(salva);
     }
 
-    private List<MensagemIA> historicoAnteriorDe(UUID sessaoId) {
-        return new java.util.ArrayList<>(chatMensagemRepository.buscarHistorico(sessaoId).stream()
+    private List<MensagemIA> historicoAnteriorDe(UUID sessaoId) throws SQLException {
+        return new java.util.ArrayList<>(chatMensagemDao.buscarHistorico(sessaoId).stream()
                 .map(m -> m.isDoCliente()
                         ? MensagemIA.doCliente(m.getConteudo())
                         : MensagemIA.doAssistente(m.getConteudo()))
@@ -107,7 +115,8 @@ public class ConversarComAssistenteUseCase {
      * Aceita varios termos numa chamada porque o tier gratuito do Gemini limita a 5
      * requisicoes por minuto: buscar produto a produto esgotaria a cota numa unica pergunta.
      */
-    private Map<String, Object> consultarCatalogo(String ferramenta, Map<String, Object> argumentos) {
+    private Map<String, Object> consultarCatalogo(String ferramenta, Map<String, Object> argumentos)
+            throws SQLException {
         String entrada = String.valueOf(argumentos.getOrDefault("termos", "")).trim();
         if (entrada.isBlank()) {
             return Map.of("produtos", List.of());
@@ -121,7 +130,7 @@ public class ConversarComAssistenteUseCase {
             if (limpo.isEmpty()) {
                 continue;
             }
-            produtoRepository.buscarPorTermo(limpo, 0, LIMITE_DE_RESULTADOS).conteudo().stream()
+            produtoDao.buscarPorTermo(limpo, 0, LIMITE_DE_RESULTADOS).conteudo().stream()
                     // O mesmo produto pode responder a dois termos; nao repetir na resposta.
                     .filter(p -> jaIncluidos.add(p.getSku()))
                     .map(this::descrever)

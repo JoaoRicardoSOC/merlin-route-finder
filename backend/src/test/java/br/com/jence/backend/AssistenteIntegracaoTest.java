@@ -56,7 +56,7 @@ class AssistenteIntegracaoTest {
     }
 
     @Test
-    void sugereProdutosReaisDoCatalogo() {
+    void sugereProdutosReaisDoCatalogo() throws Exception {
         ChatMensagemResponse r = conversar.executar(sessaoId, "O que eu preciso para pintar uma parede?");
 
         System.out.println(">>> pergunta: O que eu preciso para pintar uma parede?");
@@ -70,7 +70,7 @@ class AssistenteIntegracaoTest {
     }
 
     @Test
-    void recusaAssuntoForaDoEscopo() {
+    void recusaAssuntoForaDoEscopo() throws Exception {
         ChatMensagemResponse r = conversar.executar(sessaoId,
                 "Quem foi o vencedor da Copa do Mundo de 2022 e por que?");
 
@@ -84,7 +84,7 @@ class AssistenteIntegracaoTest {
     }
 
     @Test
-    void mantemAConversaEmOrdemCronologica() throws InterruptedException {
+    void mantemAConversaEmOrdemCronologica() throws Exception {
         conversar.executar(sessaoId, "Quero reformar o banheiro. Por onde começo?");
         Thread.sleep(5_000);
         conversar.executar(sessaoId, "E para a parte hidraulica?");

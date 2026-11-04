@@ -141,7 +141,7 @@ class TratarRupturaEstoqueUseCaseTest {
 
     @Test
     @DisplayName("o assistente so recebe os candidatos da pre-filtragem espacial")
-    void ferramentaDevolveApenasOsCandidatosFiltrados() {
+    void ferramentaDevolveApenasOsCandidatosFiltrados() throws Exception {
         comSessaoAtiva();
         comCandidatosProximos(lixaDagua, disjuntor);
         assistenteResponde("SKU-TIN-004 | serve para o mesmo acabamento");

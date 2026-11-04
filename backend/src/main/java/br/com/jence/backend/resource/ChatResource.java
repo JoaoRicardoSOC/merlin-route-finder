@@ -78,7 +78,7 @@ public class ChatResource {
     })
     public ResponseEntity<ChatMensagemResponse> enviar(
             @PathVariable UUID sessaoId,
-            @Valid @RequestBody EnviarMensagemRequest request) {
+            @Valid @RequestBody EnviarMensagemRequest request) throws SQLException {
 
         ChatMensagemResponse resposta =
                 conversarComAssistenteUseCase.executar(sessaoId, request.conteudo());
