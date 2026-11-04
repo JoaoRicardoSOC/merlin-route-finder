@@ -1,5 +1,6 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.factory.ConnectionFactory;
 import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.service.InicializarSessaoUseCase;
 import br.com.jence.backend.service.MarcarItemColetadoUseCase;
@@ -9,9 +10,6 @@ import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import br.com.jence.backend.infrastructure.database.repository.ListaRoteiroJpaRepository;
 import br.com.jence.backend.infrastructure.database.repository.SessaoJpaRepository;
-import jakarta.persistence.EntityManagerFactory;
-import org.hibernate.SessionFactory;
-import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,9 +18,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -31,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * <p>
  * Marcar um item como coletado toca <b>uma</b> linha; adicionar insere uma; remover apaga uma.
  * Nenhuma delas reescreve os irmaos, apesar de os casos de uso gravarem pelo agregado - porque
- * o Hibernate compara com o estado de quando carregou e so escreve o que mudou (D-48).
+ * o {@code ListaRoteiroDao} compara com a foto de quando leu e so escreve o que mudou (D-48).
  * <p>
  * O teste mais util aqui e o do roteiro de oito itens: ele fixa que <b>o custo de marcar um
  * item nao cresce com o tamanho da lista</b>, o que importa para o cliente B2B que monta a
@@ -39,9 +46,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * <p>
  * Serve tambem de alarme: se alguem um dia trocar a gravacao por um caminho que remonte o
  * agregado fora da transacao de leitura, estes numeros sobem e o teste avisa.
+ * <p>
+ * A contagem e feita na propria conexao JDBC: durante o teste, a {@link ConnectionFactory}
+ * entrega uma conexao de verdade embrulhada num {@link Proxy}, que embrulha cada
+ * {@link PreparedStatement} e soma as linhas que cada {@code insert}, {@code update} e
+ * {@code delete} em {@code tb_item_roteiro} diz ter afetado.
  */
 @Tag("integracao")
-@SpringBootTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
+@SpringBootTest
 class AmplitudeDeEscritaIntegracaoTest {
 
     @Autowired InicializarSessaoUseCase inicializar;
@@ -50,26 +62,30 @@ class AmplitudeDeEscritaIntegracaoTest {
     @Autowired RemoverProdutoDoRoteiroUseCase remover;
     @Autowired ListaRoteiroRepository listaRoteiroRepository;
     @Autowired ProdutoRepository produtoRepository;
-    @Autowired EntityManagerFactory entityManagerFactory;
 
     @Autowired ListaRoteiroJpaRepository listaJpa;
     @Autowired SessaoJpaRepository sessaoJpa;
 
     private UUID sessaoId;
-    private Statistics estatisticas;
+
+    /** Linhas de {@code tb_item_roteiro} escritas desde o inicio do teste, por tipo de comando. */
+    private final AtomicLong atualizadas = new AtomicLong();
+    private final AtomicLong inseridas = new AtomicLong();
+    private final AtomicLong apagadas = new AtomicLong();
 
     @BeforeEach
     void montarRoteiro() throws Exception {
+        ConnectionFactory.usarFonte(this::conexaoQueConta);
+
         sessaoId = inicializar.executar(null).id();
         adicionarAoRoteiro("SKU-TIN-001");
         adicionarAoRoteiro("SKU-ENC-001");
         adicionarAoRoteiro("SKU-JAR-001");
-
-        estatisticas = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
     }
 
     @AfterEach
     void limpar() {
+        ConnectionFactory.usarBanco();
         listaJpa.findBySessaoId(sessaoId).ifPresent(listaJpa::delete);
         sessaoJpa.deleteById(sessaoId);
     }
@@ -103,18 +119,64 @@ class AmplitudeDeEscritaIntegracaoTest {
     }
 
     private Escrita medir(Operacao operacao) throws Exception {
-        String item = "br.com.jence.backend.infrastructure.database.entity.ItemRoteiroEntity";
-        var antes = estatisticas.getEntityStatistics(item);
-        long u = antes.getUpdateCount();
-        long i = antes.getInsertCount();
-        long d = antes.getDeleteCount();
+        long u = atualizadas.get();
+        long i = inseridas.get();
+        long d = apagadas.get();
 
         operacao.executar();
 
-        var depois = estatisticas.getEntityStatistics(item);
-        return new Escrita(depois.getUpdateCount() - u,
-                depois.getInsertCount() - i,
-                depois.getDeleteCount() - d);
+        return new Escrita(atualizadas.get() - u,
+                inseridas.get() - i,
+                apagadas.get() - d);
+    }
+
+    // ---------------------------------------------------------------- contagem na conexao
+
+    /** Uma conexao de verdade com o banco, que entrega comandos que se contam. */
+    private Connection conexaoQueConta() throws SQLException {
+        Connection real = DriverManager.getConnection(
+                System.getenv("DB_URL"), System.getenv("DB_USER"), System.getenv("DB_PASSWORD"));
+        return (Connection) Proxy.newProxyInstance(
+                Connection.class.getClassLoader(),
+                new Class<?>[]{Connection.class},
+                (proxy, metodo, argumentos) -> {
+                    Object resultado = repassar(real, metodo, argumentos);
+                    if (metodo.getName().equals("prepareStatement")
+                            && resultado instanceof PreparedStatement comando) {
+                        return queConta(comando, (String) argumentos[0]);
+                    }
+                    return resultado;
+                });
+    }
+
+    /** O comando, que ao executar soma as linhas afetadas no contador do seu tipo. */
+    private PreparedStatement queConta(PreparedStatement real, String sql) {
+        String texto = sql.strip().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
+        AtomicLong contador = texto.startsWith("insert into tb_item_roteiro") ? inseridas
+                : texto.startsWith("update tb_item_roteiro") ? atualizadas
+                : texto.startsWith("delete from tb_item_roteiro") ? apagadas
+                : null;
+
+        return (PreparedStatement) Proxy.newProxyInstance(
+                PreparedStatement.class.getClassLoader(),
+                new Class<?>[]{PreparedStatement.class},
+                (proxy, metodo, argumentos) -> {
+                    Object resultado = repassar(real, metodo, argumentos);
+                    if (contador != null && metodo.getName().equals("executeUpdate")
+                            && (argumentos == null || argumentos.length == 0)) {
+                        contador.addAndGet((Integer) resultado);
+                    }
+                    return resultado;
+                });
+    }
+
+    /** Chama o metodo no objeto de verdade, devolvendo a excecao original e nao a da reflexao. */
+    private static Object repassar(Object alvo, Method metodo, Object[] argumentos) throws Throwable {
+        try {
+            return metodo.invoke(alvo, argumentos);
+        } catch (InvocationTargetException e) {
+            throw e.getCause();
+        }
     }
 
     @Test
@@ -168,7 +230,7 @@ class AmplitudeDeEscritaIntegracaoTest {
          * Oito itens e o tamanho de uma lista de obra pequena. Se o custo de marcar um item
          * dependesse do tamanho do roteiro, o cliente B2B - que a D-17 deixou sem limite -
          * pagaria cada vez mais caro conforme a lista crescesse. Nao paga: continua sendo uma
-         * linha, porque o Hibernate so escreve o que mudou.
+         * linha, porque o DAO so escreve o que mudou.
          */
         for (String sku : List.of("SKU-FER-001", "SKU-ILU-001", "SKU-MAT-001",
                 "SKU-COZ-001", "SKU-DEC-001")) {
