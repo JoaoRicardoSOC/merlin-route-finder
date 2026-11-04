@@ -17,7 +17,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * O filtro por caracteristica e o calculo de facetas contra o Oracle real.
@@ -64,9 +66,9 @@ class AtributosEFacetasIntegracaoTest {
             List<AtributoProduto> chaves = produtoRepository.buscarAtributosDe(produto.getId())
                     .stream().map(ValorDeAtributo::atributo).toList();
 
-            assertThat(chaves)
-                    .as("caracteristicas de %s", produto.getSku())
-                    .contains(AtributoProduto.MARCA, AtributoProduto.TIPO);
+            String mensagem = String.format("caracteristicas de %s", produto.getSku());
+            assertTrue(chaves.contains(AtributoProduto.MARCA), mensagem);
+            assertTrue(chaves.contains(AtributoProduto.TIPO), mensagem);
         }
     }
 
@@ -82,8 +84,8 @@ class AtributosEFacetasIntegracaoTest {
         System.out.println(">>> caracteristicas do cano: "
                 + produtoRepository.buscarAtributosDe(cano.getId()));
 
-        assertThat(chaves).isSorted();
-        assertThat(chaves.get(0)).isEqualTo(AtributoProduto.MARCA);
+        assertEquals(chaves.stream().sorted().toList(), chaves);
+        assertEquals(AtributoProduto.MARCA, chaves.get(0));
     }
 
     // ---------------------------------------------------------------- filtro por caracteristica
@@ -98,9 +100,11 @@ class AtributosEFacetasIntegracaoTest {
          */
         List<String> tigre = skus(comAtributos(Map.of(AtributoProduto.MARCA, List.of("Tigre"))));
 
-        assertThat(tigre).isNotEmpty().contains("SKU-ENC-001");
-        assertThat(tigre).allSatisfy(sku ->
-                assertThat(marcasDe(sku)).contains("Tigre"));
+        assertFalse(tigre.isEmpty());
+        assertTrue(tigre.contains("SKU-ENC-001"));
+        for (String sku : tigre) {
+            assertTrue(marcasDe(sku).contains("Tigre"));
+        }
     }
 
     @Test
@@ -117,11 +121,12 @@ class AtributosEFacetasIntegracaoTest {
         List<String> tigreOuDexter = skus(comAtributos(
                 Map.of(AtributoProduto.MARCA, List.of("Tigre", "Dexter"))));
 
-        assertThat(tigreOuDexter)
-                .as("marcar duas marcas mostra as duas, e nao a intersecao vazia entre elas")
-                .containsExactlyInAnyOrderElementsOf(
-                        Stream.concat(tigre.stream(), dexter.stream()).distinct().toList());
-        assertThat(tigreOuDexter).hasSizeGreaterThan(tigre.size());
+        // Comparacao em qualquer ordem: as duas listas ordenadas tem de ser iguais.
+        assertEquals(
+                Stream.concat(tigre.stream(), dexter.stream()).distinct().sorted().toList(),
+                tigreOuDexter.stream().sorted().toList(),
+                "marcar duas marcas mostra as duas, e nao a intersecao vazia entre elas");
+        assertTrue(tigreOuDexter.size() > tigre.size());
     }
 
     @Test
@@ -138,14 +143,13 @@ class AtributosEFacetasIntegracaoTest {
                 AtributoProduto.MARCA, List.of("Tigre"),
                 AtributoProduto.BITOLA, List.of("25 mm"))));
 
-        assertThat(tigreDe25mm)
-                .isNotEmpty()
-                .containsExactlyInAnyOrderElementsOf(
-                        tigre.stream().filter(de25mm::contains).toList());
-        assertThat(tigreDe25mm)
-                .as("a intersecao precisa ser menor que cada filtro isolado, ou o E virou OU")
-                .hasSizeLessThan(tigre.size())
-                .hasSizeLessThan(de25mm.size());
+        assertFalse(tigreDe25mm.isEmpty());
+        assertEquals(
+                tigre.stream().filter(de25mm::contains).sorted().toList(),
+                tigreDe25mm.stream().sorted().toList());
+        String mensagem = "a intersecao precisa ser menor que cada filtro isolado, ou o E virou OU";
+        assertTrue(tigreDe25mm.size() < tigre.size(), mensagem);
+        assertTrue(tigreDe25mm.size() < de25mm.size(), mensagem);
     }
 
     private List<String> marcasDe(String sku) {
@@ -168,26 +172,25 @@ class AtributosEFacetasIntegracaoTest {
         List<String> lampadaKian = skus(new FiltroDeProdutos("lâmpada", "Iluminação", true,
                 Map.of(AtributoProduto.MARCA, List.of("Kian"))));
 
-        assertThat(lampadaKian)
-                .as("a lampada amarela tambem e Kian, mas esta zerada")
-                .contains("SKU-ILU-001")
-                .doesNotContain("SKU-ILU-004");
+        String mensagem = "a lampada amarela tambem e Kian, mas esta zerada";
+        assertTrue(lampadaKian.contains("SKU-ILU-001"), mensagem);
+        assertFalse(lampadaKian.contains("SKU-ILU-004"), mensagem);
     }
 
     @Test
     @DisplayName("combinacao impossivel devolve vazio, nao erro")
     void combinacaoImpossivel() {
-        assertThat(skus(comAtributos(Map.of(
+        assertTrue(skus(comAtributos(Map.of(
                 AtributoProduto.MARCA, List.of("Tigre"),
-                AtributoProduto.GRAO, List.of("120"))))).isEmpty();
+                AtributoProduto.GRAO, List.of("120")))).isEmpty());
     }
 
     @Test
     @DisplayName("valor inexistente nao devolve o catalogo inteiro")
     void valorInexistente() {
         // O erro classico de predicado montado: construir a condicao e nunca aplica-la.
-        assertThat(skus(comAtributos(
-                Map.of(AtributoProduto.MARCA, List.of("Marca Que Nao Existe"))))).isEmpty();
+        assertTrue(skus(comAtributos(
+                Map.of(AtributoProduto.MARCA, List.of("Marca Que Nao Existe")))).isEmpty());
     }
 
     // ---------------------------------------------------------------- facetas
@@ -206,12 +209,14 @@ class AtributosEFacetasIntegracaoTest {
          * aparecer para quem navega em Tintas. Um filtro que nao se aplica a nada e pior do
          * que filtro nenhum - o cliente o experimenta e nada acontece.
          */
-        assertThat(faceta(emTintas, AtributoProduto.GRAO)).isPresent();
-        assertThat(faceta(emTintas, AtributoProduto.AMPERAGEM)).isEmpty();
+        assertTrue(faceta(emTintas, AtributoProduto.GRAO).isPresent());
+        assertTrue(faceta(emTintas, AtributoProduto.AMPERAGEM).isEmpty());
 
-        assertThat(faceta(emTintas, AtributoProduto.GRAO).orElseThrow().valores())
-                .extracting(FacetaDeProdutos.Valor::valor)
-                .containsExactlyInAnyOrder("120", "150");
+        assertEquals(List.of("120", "150"),
+                faceta(emTintas, AtributoProduto.GRAO).orElseThrow().valores().stream()
+                        .map(FacetaDeProdutos.Valor::valor)
+                        .sorted()
+                        .toList());
     }
 
     @Test
@@ -220,8 +225,8 @@ class AtributosEFacetasIntegracaoTest {
         List<FacetaDeProdutos> emEletrica = produtoRepository.calcularFacetas(
                 new FiltroDeProdutos(null, "Elétrica", false));
 
-        assertThat(faceta(emEletrica, AtributoProduto.AMPERAGEM)).isPresent();
-        assertThat(faceta(emEletrica, AtributoProduto.GRAO)).isEmpty();
+        assertTrue(faceta(emEletrica, AtributoProduto.AMPERAGEM).isPresent());
+        assertTrue(faceta(emEletrica, AtributoProduto.GRAO).isEmpty());
     }
 
     @Test
@@ -231,9 +236,9 @@ class AtributosEFacetasIntegracaoTest {
 
         for (FacetaDeProdutos faceta : todas) {
             for (FacetaDeProdutos.Valor valor : faceta.valores()) {
-                assertThat(skus(comAtributos(Map.of(faceta.atributo(), List.of(valor.valor())))))
-                        .as("%s = %s", faceta.rotulo(), valor.valor())
-                        .hasSize((int) valor.quantidade());
+                assertEquals((int) valor.quantidade(),
+                        skus(comAtributos(Map.of(faceta.atributo(), List.of(valor.valor())))).size(),
+                        String.format("%s = %s", faceta.rotulo(), valor.valor()));
             }
         }
     }
@@ -243,14 +248,16 @@ class AtributosEFacetasIntegracaoTest {
     void ordenacaoDasFacetas() {
         List<FacetaDeProdutos> todas = produtoRepository.calcularFacetas(FiltroDeProdutos.nenhum());
 
-        assertThat(todas.get(0).atributo())
-                .as("marca e o filtro mais usado numa loja de construcao")
-                .isEqualTo(AtributoProduto.MARCA);
+        assertEquals(AtributoProduto.MARCA, todas.get(0).atributo(),
+                "marca e o filtro mais usado numa loja de construcao");
 
-        assertThat(todas).allSatisfy(faceta ->
-                assertThat(faceta.valores())
-                        .extracting(FacetaDeProdutos.Valor::quantidade)
-                        .isSortedAccordingTo(java.util.Comparator.reverseOrder()));
+        for (FacetaDeProdutos faceta : todas) {
+            List<Long> quantidades = faceta.valores().stream()
+                    .map(FacetaDeProdutos.Valor::quantidade)
+                    .toList();
+            assertEquals(quantidades.stream().sorted(java.util.Comparator.reverseOrder()).toList(),
+                    quantidades);
+        }
     }
 
     @Test
@@ -269,6 +276,8 @@ class AtributosEFacetasIntegracaoTest {
                 .map(FacetaDeProdutos.Valor::valor)
                 .toList();
 
-        assertThat(marcasVisiveis).contains("Tigre", "Dexter", "Standers");
+        assertTrue(marcasVisiveis.contains("Tigre"));
+        assertTrue(marcasVisiveis.contains("Dexter"));
+        assertTrue(marcasVisiveis.contains("Standers"));
     }
 }
