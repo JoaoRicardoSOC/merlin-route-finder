@@ -1,0 +1,582 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_source": "merlin.paridade",
+  "resources": [
+    {
+      "_id": "wrk_merlin",
+      "_type": "workspace",
+      "name": "Merlin - Paridade da migracao",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "parentId": "wrk_merlin",
+      "name": "Base",
+      "data": {
+        "base_url": "http://localhost:8080",
+        "sessaoId": "",
+        "produtoId": "",
+        "produtoSubstitutoId": "",
+        "itemId": ""
+      }
+    },
+    {
+      "_id": "fld_jornada",
+      "_type": "request_group",
+      "parentId": "wrk_merlin",
+      "name": "Jornada"
+    },
+    {
+      "_id": "fld_erros",
+      "_type": "request_group",
+      "parentId": "wrk_merlin",
+      "name": "Erros"
+    },
+    {
+      "_id": "req_01",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "01 Consultar mapa",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/mapa",
+      "description": "Esperado: 200",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_02",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "02 Iniciar sessao com placa",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/sessoes",
+      "description": "Esperado: 201 - copie o id para sessaoId",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"codigoPonto\": \"ENT-01\"\n}"
+      },
+      "metaSortKey": 2
+    },
+    {
+      "_id": "req_03",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "03 Iniciar sessao sem corpo",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/sessoes",
+      "description": "Esperado: 201",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": ""
+      },
+      "metaSortKey": 3
+    },
+    {
+      "_id": "req_04",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "04 Consultar sessao",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/sessoes/{{ _.sessaoId }}",
+      "description": "Esperado: 200",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 4
+    },
+    {
+      "_id": "req_05",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "05 Recentrar posicao",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/v1/sessoes/{{ _.sessaoId }}/posicao",
+      "description": "Esperado: 200",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"codigoPonto\": \"CEN-03\"\n}"
+      },
+      "metaSortKey": 5
+    },
+    {
+      "_id": "req_06",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "06 Listar secoes",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/produtos/secoes",
+      "description": "Esperado: 200",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 6
+    },
+    {
+      "_id": "req_07",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "07 Buscar por termo",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/produtos?query=tinta&page=0&size=20",
+      "description": "Esperado: 200 - copie um id para produtoId e outro para produtoSubstitutoId",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 7
+    },
+    {
+      "_id": "req_08",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "08 Buscar com filtros",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/produtos?secao=Tintas&atributo=MARCA:Coral&apenasDisponiveis=true",
+      "description": "Esperado: 200",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 8
+    },
+    {
+      "_id": "req_09",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "09 Consultar produto",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/produtos/{{ _.produtoId }}",
+      "description": "Esperado: 200",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 9
+    },
+    {
+      "_id": "req_10",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "10 Consultar roteiro vazio",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/sessoes/{{ _.sessaoId }}/roteiro",
+      "description": "Esperado: 200",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 10
+    },
+    {
+      "_id": "req_11",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "11 Adicionar item ao roteiro",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/sessoes/{{ _.sessaoId }}/roteiro/itens",
+      "description": "Esperado: 201 - copie o id do item para itemId",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"produtoId\": \"{{ _.produtoId }}\"\n}"
+      },
+      "metaSortKey": 11
+    },
+    {
+      "_id": "req_12",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "12 Consultar roteiro com item",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/sessoes/{{ _.sessaoId }}/roteiro",
+      "description": "Esperado: 200",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 12
+    },
+    {
+      "_id": "req_13",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "13 Marcar item coletado",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/v1/roteiro/itens/{{ _.itemId }}/coletar",
+      "description": "Esperado: 200",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 13
+    },
+    {
+      "_id": "req_14",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "14 Desmarcar item coletado",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/v1/roteiro/itens/{{ _.itemId }}/desmarcar",
+      "description": "Esperado: 200",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 14
+    },
+    {
+      "_id": "req_15",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "15 Relatar ruptura",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/roteiro/itens/{{ _.itemId }}/ruptura",
+      "description": "Esperado: 200 ou 422",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 15
+    },
+    {
+      "_id": "req_16",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "16 Substituir item",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/roteiro/itens/{{ _.itemId }}/substituir",
+      "description": "Esperado: 200 - copie o novo id do item para itemId",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"produtoSubstitutoId\": \"{{ _.produtoSubstitutoId }}\"\n}"
+      },
+      "metaSortKey": 16
+    },
+    {
+      "_id": "req_17",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "17 Historico do chat",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/sessoes/{{ _.sessaoId }}/chat/mensagens",
+      "description": "Esperado: 200",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 17
+    },
+    {
+      "_id": "req_18",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "18 Enviar mensagem ao chat",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/sessoes/{{ _.sessaoId }}/chat/mensagens",
+      "description": "Esperado: 200 ou 201",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"conteudo\": \"Onde fica a tinta branca?\"\n}"
+      },
+      "metaSortKey": 18
+    },
+    {
+      "_id": "req_19",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "19 Simular estoque",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/v1/produtos/{{ _.produtoId }}/estoque",
+      "description": "Esperado: 200",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"saldoEstoque\": 10\n}"
+      },
+      "metaSortKey": 19
+    },
+    {
+      "_id": "req_20",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "20 Remover item do roteiro",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/v1/sessoes/{{ _.sessaoId }}/roteiro/itens/{{ _.itemId }}",
+      "description": "Esperado: 204",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 20
+    },
+    {
+      "_id": "req_21",
+      "_type": "request",
+      "parentId": "fld_jornada",
+      "name": "21 Concluir rota",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/sessoes/{{ _.sessaoId }}/concluir",
+      "description": "Esperado: 200",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 21
+    },
+    {
+      "_id": "req_22",
+      "_type": "request",
+      "parentId": "fld_erros",
+      "name": "E01 UUID malformado na URL",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/sessoes/nao-e-uuid",
+      "description": "Esperado: 400",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 22
+    },
+    {
+      "_id": "req_23",
+      "_type": "request",
+      "parentId": "fld_erros",
+      "name": "E02 Sessao inexistente",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/sessoes/00000000-0000-0000-0000-000000000000",
+      "description": "Esperado: 404",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 23
+    },
+    {
+      "_id": "req_24",
+      "_type": "request",
+      "parentId": "fld_erros",
+      "name": "E03 Produto inexistente",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/produtos/00000000-0000-0000-0000-000000000000",
+      "description": "Esperado: 404",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 24
+    },
+    {
+      "_id": "req_25",
+      "_type": "request",
+      "parentId": "fld_erros",
+      "name": "E04 JSON malformado",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/sessoes/{{ _.sessaoId }}/roteiro/itens",
+      "description": "Esperado: 400",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{invalido"
+      },
+      "metaSortKey": 25
+    },
+    {
+      "_id": "req_26",
+      "_type": "request",
+      "parentId": "fld_erros",
+      "name": "E05 Corpo sem campo obrigatorio",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/sessoes/{{ _.sessaoId }}/roteiro/itens",
+      "description": "Esperado: 400 com lista errors",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{}"
+      },
+      "metaSortKey": 26
+    },
+    {
+      "_id": "req_27",
+      "_type": "request",
+      "parentId": "fld_erros",
+      "name": "E06 Placa em branco",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/v1/sessoes/{{ _.sessaoId }}/posicao",
+      "description": "Esperado: 400 com lista errors",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"codigoPonto\": \"\"\n}"
+      },
+      "metaSortKey": 27
+    },
+    {
+      "_id": "req_28",
+      "_type": "request",
+      "parentId": "fld_erros",
+      "name": "E07 Placa desconhecida",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/v1/sessoes/{{ _.sessaoId }}/posicao",
+      "description": "Esperado: 404",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"codigoPonto\": \"XXX-99\"\n}"
+      },
+      "metaSortKey": 28
+    },
+    {
+      "_id": "req_29",
+      "_type": "request",
+      "parentId": "fld_erros",
+      "name": "E08 Estoque negativo",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/v1/produtos/{{ _.produtoId }}/estoque",
+      "description": "Esperado: 400 com lista errors",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"saldoEstoque\": -1\n}"
+      },
+      "metaSortKey": 29
+    },
+    {
+      "_id": "req_30",
+      "_type": "request",
+      "parentId": "fld_erros",
+      "name": "E09 Mensagem longa demais",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/sessoes/{{ _.sessaoId }}/chat/mensagens",
+      "description": "Esperado: 400 com lista errors",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"conteudo\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"\n}"
+      },
+      "metaSortKey": 30
+    },
+    {
+      "_id": "req_31",
+      "_type": "request",
+      "parentId": "fld_erros",
+      "name": "E10 Parametro de pagina invalido",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/produtos?page=abc",
+      "description": "Esperado: 400",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 31
+    },
+    {
+      "_id": "req_32",
+      "_type": "request",
+      "parentId": "fld_erros",
+      "name": "E11 Metodo nao suportado",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/v1/mapa",
+      "description": "Esperado: 405",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 32
+    },
+    {
+      "_id": "req_33",
+      "_type": "request",
+      "parentId": "fld_erros",
+      "name": "E12 Content-Type nao suportado",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/sessoes/{{ _.sessaoId }}/chat/mensagens",
+      "description": "Esperado: 415",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "text/plain"
+        }
+      ],
+      "body": {
+        "mimeType": "text/plain",
+        "text": "ola"
+      },
+      "metaSortKey": 33
+    },
+    {
+      "_id": "req_34",
+      "_type": "request",
+      "parentId": "fld_erros",
+      "name": "E13 Caminho inexistente",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/nao-existe",
+      "description": "Esperado: 404",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 34
+    },
+    {
+      "_id": "req_35",
+      "_type": "request",
+      "parentId": "fld_erros",
+      "name": "E14 Coletar em sessao concluida (rodar depois do 21)",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/v1/roteiro/itens/{{ _.itemId }}/coletar",
+      "description": "Esperado: 409",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 35
+    },
+    {
+      "_id": "req_36",
+      "_type": "request",
+      "parentId": "fld_erros",
+      "name": "E15 Query string fora de UTF-8",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/produtos?query=%E7",
+      "description": "Esperado: 400",
+      "headers": [],
+      "body": {},
+      "metaSortKey": 36
+    }
+  ]
+}
