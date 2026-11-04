@@ -23,7 +23,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -77,9 +78,9 @@ class ExpirarSessoesInativasUseCaseTest {
 
         ResultadoDaVarredura resultado = useCase.executar(AGORA);
 
-        assertThat(sessao.getStatus()).isEqualTo(StatusSessao.ABANDONED);
-        assertThat(resultado.abandonadas()).isEqualTo(1);
-        assertThat(resultado.expiradas()).isZero();
+        assertEquals(StatusSessao.ABANDONED, sessao.getStatus());
+        assertEquals(1, resultado.abandonadas());
+        assertEquals(0, resultado.expiradas());
         verify(sessaoRepository).salvar(sessao);
     }
 
@@ -92,9 +93,9 @@ class ExpirarSessoesInativasUseCaseTest {
 
         ResultadoDaVarredura resultado = useCase.executar(AGORA);
 
-        assertThat(sessao.getStatus()).isEqualTo(StatusSessao.EXPIRED);
-        assertThat(resultado.expiradas()).isEqualTo(1);
-        assertThat(resultado.abandonadas()).isZero();
+        assertEquals(StatusSessao.EXPIRED, sessao.getStatus());
+        assertEquals(1, resultado.expiradas());
+        assertEquals(0, resultado.abandonadas());
     }
 
     @Test
@@ -106,7 +107,7 @@ class ExpirarSessoesInativasUseCaseTest {
 
         useCase.executar(AGORA);
 
-        assertThat(sessao.getStatus()).isEqualTo(StatusSessao.EXPIRED);
+        assertEquals(StatusSessao.EXPIRED, sessao.getStatus());
     }
 
     @Test
@@ -120,9 +121,9 @@ class ExpirarSessoesInativasUseCaseTest {
 
         ResultadoDaVarredura resultado = useCase.executar(AGORA);
 
-        assertThat(comItens.getStatus()).isEqualTo(StatusSessao.ABANDONED);
-        assertThat(vazia.getStatus()).isEqualTo(StatusSessao.EXPIRED);
-        assertThat(resultado.total()).isEqualTo(2);
+        assertEquals(StatusSessao.ABANDONED, comItens.getStatus());
+        assertEquals(StatusSessao.EXPIRED, vazia.getStatus());
+        assertEquals(2, resultado.total());
     }
 
     // ---------------------------------------------------------------- o que nao pode acontecer
@@ -142,9 +143,8 @@ class ExpirarSessoesInativasUseCaseTest {
 
         useCase.executar(AGORA);
 
-        assertThat(concluida.getStatus())
-                .as("o guard da D-06 protege o desfecho que ja aconteceu")
-                .isEqualTo(StatusSessao.COMPLETED);
+        assertEquals(StatusSessao.COMPLETED, concluida.getStatus(),
+                "o guard da D-06 protege o desfecho que ja aconteceu");
     }
 
     @Test
@@ -154,7 +154,7 @@ class ExpirarSessoesInativasUseCaseTest {
 
         ResultadoDaVarredura resultado = useCase.executar(AGORA);
 
-        assertThat(resultado.vazio()).isTrue();
+        assertTrue(resultado.vazio());
         verify(sessaoRepository, never()).salvar(any());
     }
 
@@ -171,10 +171,9 @@ class ExpirarSessoesInativasUseCaseTest {
 
         ResultadoDaVarredura resultado = useCase.executar(AGORA);
 
-        assertThat(resultado.falhas()).isEqualTo(1);
-        assertThat(saudavel.getStatus())
-                .as("a segunda sessao precisa ser tratada apesar da falha na primeira")
-                .isEqualTo(StatusSessao.EXPIRED);
+        assertEquals(1, resultado.falhas());
+        assertEquals(StatusSessao.EXPIRED, saudavel.getStatus(),
+                "a segunda sessao precisa ser tratada apesar da falha na primeira");
         verify(sessaoRepository).salvar(saudavel);
         verify(sessaoRepository, never()).salvar(problematica);
     }
