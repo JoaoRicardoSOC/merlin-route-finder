@@ -149,7 +149,7 @@ class SubstituicaoDeItemIntegracaoTest {
 
     @Test
     @DisplayName("a posicao do cliente nao pula para a prateleira do substituto")
-    void posicaoNaoPula() {
+    void posicaoNaoPula() throws Exception {
         // Ele ainda nao foi buscar o substituto: a posicao continua sendo a ultima evidencia
         // real, e nao um palpite sobre onde ele vai estar.
         UUID sessaoId = novaSessao();

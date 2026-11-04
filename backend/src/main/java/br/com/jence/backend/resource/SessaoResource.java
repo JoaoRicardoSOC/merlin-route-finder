@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
+import java.sql.SQLException;
 import java.util.UUID;
 
 /**
@@ -68,7 +69,8 @@ public class SessaoResource {
     @GetMapping("/{sessaoId}")
     @Operation(summary = "Consultar status da sessao",
             description = "Devolve o status da sessao e onde o cliente esta.")
-    public ResponseEntity<SessaoResponse> consultar(@PathVariable UUID sessaoId) {
+    public ResponseEntity<SessaoResponse> consultar(@PathVariable UUID sessaoId)
+            throws SQLException {
         return ResponseEntity.ok(consultarSessaoUseCase.executar(sessaoId));
     }
 

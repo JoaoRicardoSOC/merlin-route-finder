@@ -295,7 +295,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     @Test
     @DisplayName("a posicao sobrevive ao recarregar a pagina")
-    void posicaoPersistida() {
+    void posicaoPersistida() throws Exception {
         // O celular guarda so o id da sessao no localStorage; tudo o mais volta do banco.
         SessaoResponse sessao = iniciarEm("TIN-02");
 

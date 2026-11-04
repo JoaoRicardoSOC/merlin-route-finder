@@ -3,11 +3,12 @@ package br.com.jence.backend.service;
 import br.com.jence.backend.dto.SessaoResponse;
 import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
-import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
-import br.com.jence.backend.domain.repository.SessaoRepository;
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.SessaoDao;
+import br.com.jence.backend.factory.Transacao;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.util.UUID;
 
 /**
@@ -20,21 +21,27 @@ import java.util.UUID;
 @Service
 public class ConsultarSessaoUseCase {
 
-    private final SessaoRepository sessaoRepository;
-    private final ListaRoteiroRepository listaRoteiroRepository;
+    private final SessaoDao sessaoDao;
+    private final ListaRoteiroDao listaRoteiroDao;
 
-    public ConsultarSessaoUseCase(SessaoRepository sessaoRepository,
-                                  ListaRoteiroRepository listaRoteiroRepository) {
-        this.sessaoRepository = sessaoRepository;
-        this.listaRoteiroRepository = listaRoteiroRepository;
+    public ConsultarSessaoUseCase(SessaoDao sessaoDao, ListaRoteiroDao listaRoteiroDao) {
+        this.sessaoDao = sessaoDao;
+        this.listaRoteiroDao = listaRoteiroDao;
     }
 
-    @Transactional(readOnly = true)
-    public SessaoResponse executar(UUID sessaoId) {
-        Sessao sessao = sessaoRepository.buscarPorId(sessaoId)
+    public SessaoResponse executar(UUID sessaoId) throws SQLException {
+        try (Transacao transacao = Transacao.iniciarSomenteLeitura()) {
+            SessaoResponse resposta = consultar(sessaoId);
+            transacao.confirmar();
+            return resposta;
+        }
+    }
+
+    private SessaoResponse consultar(UUID sessaoId) throws SQLException {
+        Sessao sessao = sessaoDao.buscarPorId(sessaoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao", sessaoId));
 
         return SessaoResponse.de(sessao,
-                listaRoteiroRepository.buscarPorSessao(sessaoId).orElse(null));
+                listaRoteiroDao.buscarPorSessao(sessaoId).orElse(null));
     }
 }
