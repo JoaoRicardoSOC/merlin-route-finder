@@ -5,7 +5,6 @@ import br.com.jence.backend.domain.entity.Sessao;
 import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.SessaoRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,10 +18,13 @@ import java.util.UUID;
  * tudo ele ainda precisa chegar ao caixa, e encerrar ali mataria a navegacao no trecho final.
  */
 @Service
-@RequiredArgsConstructor
 public class ConcluirRotaUseCase {
 
     private final SessaoRepository sessaoRepository;
+
+    public ConcluirRotaUseCase(SessaoRepository sessaoRepository) {
+        this.sessaoRepository = sessaoRepository;
+    }
 
     @Transactional
     public SessaoResponse executar(UUID sessaoId) {
