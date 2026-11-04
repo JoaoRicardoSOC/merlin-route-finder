@@ -4,7 +4,6 @@ import br.com.jence.backend.application.dto.ProdutoResponse;
 import br.com.jence.backend.domain.entity.Produto;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +20,6 @@ import java.util.UUID;
  * Ver D-40 sobre o que isso expoe e por que foi aceito.
  */
 @Service
-@Slf4j
 public class SimularEstoqueUseCase {
 
     private final ProdutoRepository produtoRepository;
@@ -42,8 +40,8 @@ public class SimularEstoqueUseCase {
          * catalogo feita por fora de qualquer regra de negocio. Se aparecer num log de
          * producao sem ninguem ter pedido, alguem precisa reparar.
          */
-        log.warn("Simulacao de estoque: '{}' passou de {} para {} unidades",
-                produto.getNome(), produto.getSaldoEstoque(), atualizado.getSaldoEstoque());
+        System.out.println(String.format("AVISO: Simulacao de estoque: '%s' passou de %s para %s unidades",
+                produto.getNome(), produto.getSaldoEstoque(), atualizado.getSaldoEstoque()));
 
         return ProdutoResponse.de(atualizado);
     }
