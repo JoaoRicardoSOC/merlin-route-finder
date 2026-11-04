@@ -4,7 +4,6 @@ import br.com.jence.backend.application.dto.ProdutoResponse;
 import br.com.jence.backend.domain.entity.Produto;
 import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,11 +21,14 @@ import java.util.UUID;
  * Ver D-40 sobre o que isso expoe e por que foi aceito.
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class SimularEstoqueUseCase {
 
     private final ProdutoRepository produtoRepository;
+
+    public SimularEstoqueUseCase(ProdutoRepository produtoRepository) {
+        this.produtoRepository = produtoRepository;
+    }
 
     @Transactional
     public ProdutoResponse executar(UUID produtoId, int novoSaldo) {
