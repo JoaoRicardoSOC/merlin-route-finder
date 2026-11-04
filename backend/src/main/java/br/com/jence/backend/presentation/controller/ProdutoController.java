@@ -14,7 +14,6 @@ import br.com.jence.backend.domain.entity.AtributoProduto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -39,7 +38,6 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/produtos")
-@Slf4j
 @Tag(name = "Catalogo", description = "Busca e detalhamento de produtos")
 public class ProdutoController {
 
@@ -107,7 +105,8 @@ public class ProdutoController {
                 escolhas.computeIfAbsent(chave, k -> new ArrayList<>())
                         .add(parametro.substring(separador + 1));
             } catch (IllegalArgumentException chaveDesconhecida) {
-                log.debug("Filtro de atributo ignorado, chave desconhecida: {}", parametro);
+                // Chave desconhecida e ignorada, nao recusada: vem de um link antigo, e o
+                // cliente nao tem o que fazer a respeito (contrato em openapi.yaml).
             }
         }
 
