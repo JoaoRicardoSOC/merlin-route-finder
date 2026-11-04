@@ -14,7 +14,6 @@ import br.com.jence.backend.domain.entity.AtributoProduto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,7 +39,6 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/produtos")
-@RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Catalogo", description = "Busca e detalhamento de produtos")
 public class ProdutoController {
@@ -49,6 +47,16 @@ public class ProdutoController {
     private final ConsultarProdutoUseCase consultarProdutoUseCase;
     private final SimularEstoqueUseCase simularEstoqueUseCase;
     private final ListarSecoesUseCase listarSecoesUseCase;
+
+    public ProdutoController(BuscarProdutosUseCase buscarProdutosUseCase,
+                             ConsultarProdutoUseCase consultarProdutoUseCase,
+                             SimularEstoqueUseCase simularEstoqueUseCase,
+                             ListarSecoesUseCase listarSecoesUseCase) {
+        this.buscarProdutosUseCase = buscarProdutosUseCase;
+        this.consultarProdutoUseCase = consultarProdutoUseCase;
+        this.simularEstoqueUseCase = simularEstoqueUseCase;
+        this.listarSecoesUseCase = listarSecoesUseCase;
+    }
 
     @GetMapping
     @Operation(summary = "Busca e filtragem do catalogo (UC-002)",
