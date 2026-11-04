@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -70,7 +71,7 @@ public class ProdutoResource {
             @RequestParam(required = false) Boolean apenasDisponiveis,
             @RequestParam(required = false) List<String> atributo,
             @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size) {
+            @RequestParam(required = false) Integer size) throws SQLException {
 
         // 'query' e o nome publico no contrato; 'termo' e o vocabulario interno.
         return ResponseEntity.ok(buscarProdutosUseCase.executar(
