@@ -9,7 +9,8 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * A conversao de produto para a resposta da listagem.
@@ -33,10 +34,9 @@ class ProdutoResponseTest {
 
         ProdutoResponse resposta = ProdutoResponse.de(produtoEm(tintas));
 
-        assertThat(resposta.corredor()).isEqualTo("Tintas");
-        assertThat(resposta.pontoMapaId())
-                .as("o id continua vindo: o mapa ainda precisa dele para casar o marcador")
-                .isEqualTo(tintas.getId());
+        assertEquals("Tintas", resposta.corredor());
+        assertEquals(tintas.getId(), resposta.pontoMapaId(),
+                "o id continua vindo: o mapa ainda precisa dele para casar o marcador");
     }
 
     @Test
@@ -53,10 +53,9 @@ class ProdutoResponseTest {
 
         ProdutoDetalhadoResponse detalhe = ProdutoDetalhadoResponse.de(produtoEm(tintas));
 
-        assertThat(detalhe.corredor()).isEqualTo("Tintas");
-        assertThat(detalhe.corredor())
-                .as("os dois caminhos precisam concordar")
-                .isEqualTo(detalhe.pontoMapa().corredor());
+        assertEquals("Tintas", detalhe.corredor());
+        assertEquals(detalhe.pontoMapa().corredor(), detalhe.corredor(),
+                "os dois caminhos precisam concordar");
     }
 
     @Test
@@ -69,8 +68,8 @@ class ProdutoResponseTest {
          */
         ProdutoResponse resposta = ProdutoResponse.de(produtoEm(null));
 
-        assertThat(resposta.corredor()).isNull();
-        assertThat(resposta.pontoMapaId()).isNull();
-        assertThat(resposta.nome()).isEqualTo("Tinta Acrílica Fosca Branca 18L");
+        assertNull(resposta.corredor());
+        assertNull(resposta.pontoMapaId());
+        assertEquals("Tinta Acrílica Fosca Branca 18L", resposta.nome());
     }
 }
