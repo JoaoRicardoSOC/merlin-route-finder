@@ -6,7 +6,6 @@ import br.com.jence.backend.domain.service.ExecutorDeFerramenta;
 import br.com.jence.backend.domain.service.FerramentaIA;
 import br.com.jence.backend.domain.service.MensagemIA;
 import br.com.jence.backend.domain.service.PapelIA;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -28,7 +27,6 @@ import java.util.Map;
  * <b>inteiro</b> no historico da chamada seguinte.
  */
 @Component
-@Slf4j
 public class GeminiClient implements AssistenteIA {
 
     /** Limite de idas e voltas com o modelo, para uma conversa nunca virar laco infinito. */
@@ -132,12 +130,12 @@ public class GeminiClient implements AssistenteIA {
                 throw e;
             } catch (HttpClientErrorException.TooManyRequests | HttpServerErrorException e) {
                 ultimaFalha = e;
-                log.warn("Assistente indisponivel na tentativa {} de {}: {}",
-                        tentativa, MAXIMO_DE_TENTATIVAS, e.getMessage());
+                System.out.println(String.format("AVISO: Assistente indisponivel na tentativa %s de %s: %s",
+                        tentativa, MAXIMO_DE_TENTATIVAS, e.getMessage()));
                 esperarAntesDeInsistir(tentativa);
             } catch (Exception e) {
                 // Falhas que nao se resolvem sozinhas (rede, formato) nao merecem nova tentativa.
-                log.warn("Falha ao consultar o assistente de IA: {}", e.toString());
+                System.out.println(String.format("AVISO: Falha ao consultar o assistente de IA: %s", e.toString()));
                 throw new AssistenteIAIndisponivelException("Assistente de IA indisponivel no momento", e);
             }
         }
@@ -189,7 +187,7 @@ public class GeminiClient implements AssistenteIA {
 
         if (candidatos == null || candidatos.isEmpty()) {
             // Acontece quando o filtro de conteudo do provedor bloqueia a resposta.
-            log.warn("Assistente respondeu sem candidatos: {}", resposta);
+            System.out.println(String.format("AVISO: Assistente respondeu sem candidatos: %s", resposta));
             throw new AssistenteIAIndisponivelException("Assistente nao produziu resposta");
         }
 
@@ -242,7 +240,7 @@ public class GeminiClient implements AssistenteIA {
         try {
             resultado = executor.executar(nome, argumentos);
         } catch (Exception e) {
-            log.warn("Ferramenta '{}' falhou: {}", nome, e.toString());
+            System.out.println(String.format("AVISO: Ferramenta '%s' falhou: %s", nome, e.toString()));
             throw new AssistenteIAIndisponivelException("Falha ao consultar dados para o assistente", e);
         }
 
