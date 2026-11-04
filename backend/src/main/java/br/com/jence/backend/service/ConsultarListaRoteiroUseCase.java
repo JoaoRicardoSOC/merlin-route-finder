@@ -2,9 +2,11 @@ package br.com.jence.backend.service;
 
 import br.com.jence.backend.dto.ListaRoteiroResponse;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
-import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.factory.Transacao;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLException;
 import java.util.UUID;
 
 /**
@@ -16,14 +18,22 @@ import java.util.UUID;
 @Service
 public class ConsultarListaRoteiroUseCase {
 
-    private final ListaRoteiroRepository listaRoteiroRepository;
+    private final ListaRoteiroDao listaRoteiroDao;
 
-    public ConsultarListaRoteiroUseCase(ListaRoteiroRepository listaRoteiroRepository) {
-        this.listaRoteiroRepository = listaRoteiroRepository;
+    public ConsultarListaRoteiroUseCase(ListaRoteiroDao listaRoteiroDao) {
+        this.listaRoteiroDao = listaRoteiroDao;
     }
 
-    public ListaRoteiroResponse executar(UUID sessaoId) {
-        return listaRoteiroRepository.buscarPorSessao(sessaoId)
+    public ListaRoteiroResponse executar(UUID sessaoId) throws SQLException {
+        try (Transacao transacao = Transacao.iniciarSomenteLeitura()) {
+            ListaRoteiroResponse resposta = consultar(sessaoId);
+            transacao.confirmar();
+            return resposta;
+        }
+    }
+
+    private ListaRoteiroResponse consultar(UUID sessaoId) throws SQLException {
+        return listaRoteiroDao.buscarPorSessao(sessaoId)
                 .map(ListaRoteiroResponse::de)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Lista de roteiro da sessao", sessaoId));
     }

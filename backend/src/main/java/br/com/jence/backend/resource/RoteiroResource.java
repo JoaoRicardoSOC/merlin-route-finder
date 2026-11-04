@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.sql.SQLException;
 import java.util.UUID;
 
 /**
@@ -46,7 +47,8 @@ public class RoteiroResource {
 
     @GetMapping
     @Operation(summary = "Consultar a lista de compras da sessao (UC-005)")
-    public ResponseEntity<ListaRoteiroResponse> consultar(@PathVariable UUID sessaoId) {
+    public ResponseEntity<ListaRoteiroResponse> consultar(@PathVariable UUID sessaoId)
+            throws SQLException {
         return ResponseEntity.ok(consultarListaRoteiroUseCase.executar(sessaoId));
     }
 
