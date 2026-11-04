@@ -103,14 +103,14 @@ Um commit por pacote ou subpacote. A dependência do Lombok sai na fase 7, quand
 
 Só movimentação e renomeação, sem mudar comportamento. Um commit por item, com os testes movidos no mesmo commit. Fica de fora o que a fase 7 apaga.
 
-- [ ] **6.1** `domain/entity` → `model`.
-- [ ] **6.2** Tipos de valor de `domain/repository` (`Pagina`, `FiltroDeProdutos`, `FacetaDeProdutos`, `SecaoDoCatalogo`, `AfinidadeDeProduto`) e de `domain/service` (`MensagemIA`, `PapelIA`, `FerramentaIA`) → `model`.
-- [ ] **6.3** `domain/exception` → `exception`.
-- [ ] **6.4** `application/dto` e `presentation/response/StandardError` → `dto`.
-- [ ] **6.5** `application/usecase` e `domain/service/PosicaoDoCliente` → `service`.
-- [ ] **6.6** `presentation/controller/*Controller` → `resource/*Resource` (ainda com anotações do Spring).
-- [ ] **6.7** `infrastructure/ia` e `domain/service/ExecutorDeFerramenta` → `ia`.
-- [ ] **6.8** `infrastructure/scheduler` → `scheduler`; `infrastructure/database/seed` → `seed`; `Configuracao` → `config`.
+- [x] **6.1** `domain/entity` → `model`.
+- [x] **6.2** Tipos de valor de `domain/repository` (`Pagina`, `FiltroDeProdutos`, `FacetaDeProdutos`, `SecaoDoCatalogo`, `AfinidadeDeProduto`) e de `domain/service` (`MensagemIA`, `PapelIA`, `FerramentaIA`) → `model`.
+- [x] **6.3** `domain/exception` → `exception`.
+- [x] **6.4** `application/dto` e `presentation/response/StandardError` → `dto`.
+- [x] **6.5** `application/usecase` e `domain/service/PosicaoDoCliente` → `service`.
+- [x] **6.6** `presentation/controller/*Controller` → `resource/*Resource` (ainda com anotações do Spring).
+- [x] **6.7** `infrastructure/ia` e `domain/service/ExecutorDeFerramenta` → `ia`.
+- [x] **6.8** `infrastructure/scheduler` → `scheduler`; `infrastructure/database/seed` → `seed`; `Configuracao` → `config`.
 
 Ficam temporariamente no lugar antigo: `domain/repository/*Repository`, `domain/service/AssistenteIA`, `infrastructure/database/*`, `infrastructure/config`, `infrastructure/web` e `presentation/advice`.
 
