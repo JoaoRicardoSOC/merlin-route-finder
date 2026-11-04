@@ -110,7 +110,7 @@ class MapaIntegracaoTest {
 
     @Test
     @DisplayName("o mapa devolve os blocos e os pontos que nao sao prateleira")
-    void mapaCompleto() {
+    void mapaCompleto() throws Exception {
         MapaResponse mapa = consultarMapa.executar();
 
         System.out.printf(">>> mapa: %d bloco(s), %d ponto(s)%n",
@@ -131,7 +131,7 @@ class MapaIntegracaoTest {
 
     @Test
     @DisplayName("o mapa e igual entre chamadas: nao depende de sessao nem de estado")
-    void mapaEstavel() {
+    void mapaEstavel() throws Exception {
         // E o que permite ao frontend busca-lo uma vez e guardar no aparelho.
         assertEquals(consultarMapa.executar(), consultarMapa.executar());
     }

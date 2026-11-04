@@ -5,10 +5,13 @@ import br.com.jence.backend.dto.MapaResponse;
 import br.com.jence.backend.dto.PontoMapaResponse;
 import br.com.jence.backend.model.PlantaDaLoja;
 import br.com.jence.backend.model.TipoPonto;
-import br.com.jence.backend.domain.repository.PontoMapaRepository;
+import br.com.jence.backend.dao.PontoMapaDao;
+import br.com.jence.backend.factory.Transacao;
+import br.com.jence.backend.model.PontoMapa;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -30,16 +33,27 @@ public class ConsultarMapaUseCase {
     private static final List<TipoPonto> TIPOS_DE_MARCADOR =
             List.of(TipoPonto.CAIXA, TipoPonto.BANHEIRO, TipoPonto.QR_CODE);
 
-    private final PontoMapaRepository pontoMapaRepository;
+    private final PontoMapaDao pontoMapaDao;
 
-    public ConsultarMapaUseCase(PontoMapaRepository pontoMapaRepository) {
-        this.pontoMapaRepository = pontoMapaRepository;
+    public ConsultarMapaUseCase(PontoMapaDao pontoMapaDao) {
+        this.pontoMapaDao = pontoMapaDao;
     }
 
-    @Transactional(readOnly = true)
-    public MapaResponse executar() {
-        List<PontoMapaResponse> pontos = TIPOS_DE_MARCADOR.stream()
-                .flatMap(tipo -> pontoMapaRepository.buscarPorTipo(tipo).stream())
+    public MapaResponse executar() throws SQLException {
+        try (Transacao transacao = Transacao.iniciarSomenteLeitura()) {
+            MapaResponse mapa = montar();
+            transacao.confirmar();
+            return mapa;
+        }
+    }
+
+    private MapaResponse montar() throws SQLException {
+        List<PontoMapa> marcadores = new ArrayList<>();
+        for (TipoPonto tipo : TIPOS_DE_MARCADOR) {
+            marcadores.addAll(pontoMapaDao.buscarPorTipo(tipo));
+        }
+
+        List<PontoMapaResponse> pontos = marcadores.stream()
                 .sorted(Comparator.comparing(p -> p.getTipo().name()))
                 .map(PontoMapaResponse::de)
                 .toList();
