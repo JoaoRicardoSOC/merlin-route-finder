@@ -4,7 +4,7 @@ import br.com.jence.backend.application.dto.ProdutoResponse;
 import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.TipoPonto;
-import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
+import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

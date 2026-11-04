@@ -8,8 +8,8 @@ import br.com.jence.backend.application.usecase.AdicionarProdutoAoRoteiroUseCase
 import br.com.jence.backend.application.usecase.ConsultarListaRoteiroUseCase;
 import br.com.jence.backend.application.usecase.RemoverProdutoDoRoteiroUseCase;
 import br.com.jence.backend.model.TipoPonto;
-import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
-import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
+import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
+import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,4 +1,4 @@
-package br.com.jence.backend.domain.exception;
+package br.com.jence.backend.exception;
 
 /**
  * Lancada quando o assistente de IA nao pode responder: cota esgotada, tempo esgotado, filtro

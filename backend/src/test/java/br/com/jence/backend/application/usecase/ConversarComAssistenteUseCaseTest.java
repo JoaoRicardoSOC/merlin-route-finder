@@ -2,9 +2,9 @@ package br.com.jence.backend.application.usecase;
 
 import br.com.jence.backend.application.dto.ChatMensagemResponse;
 import br.com.jence.backend.model.*;
-import br.com.jence.backend.domain.exception.AssistenteIAIndisponivelException;
-import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
-import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
+import br.com.jence.backend.exception.AssistenteIAIndisponivelException;
+import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
+import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ChatMensagemRepository;
 import br.com.jence.backend.model.Pagina;
 import br.com.jence.backend.domain.repository.ProdutoRepository;

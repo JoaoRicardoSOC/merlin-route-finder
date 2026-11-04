@@ -8,7 +8,7 @@ import br.com.jence.backend.application.usecase.TratarRupturaEstoqueUseCase;
 import br.com.jence.backend.model.OrigemSugestao;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.RegistroRuptura;
-import br.com.jence.backend.domain.exception.SubstitutoIndisponivelException;
+import br.com.jence.backend.exception.SubstitutoIndisponivelException;
 import br.com.jence.backend.domain.repository.ProdutoRepository;
 import br.com.jence.backend.domain.repository.RegistroRupturaRepository;
 import br.com.jence.backend.infrastructure.database.repository.ListaRoteiroJpaRepository;

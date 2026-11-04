@@ -1,7 +1,7 @@
 package br.com.jence.backend.application.usecase;
 
 import br.com.jence.backend.application.dto.ListaRoteiroResponse;
-import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
+import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import org.springframework.stereotype.Service;
 

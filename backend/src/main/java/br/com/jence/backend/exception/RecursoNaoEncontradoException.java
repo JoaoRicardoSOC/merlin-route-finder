@@ -1,4 +1,4 @@
-package br.com.jence.backend.domain.exception;
+package br.com.jence.backend.exception;
 
 /**
  * Lancada quando um recurso referenciado por identificador nao existe.

@@ -12,7 +12,7 @@ import br.com.jence.backend.application.usecase.ConsultarProdutoUseCase;
 import br.com.jence.backend.application.usecase.ListarSecoesUseCase;
 import br.com.jence.backend.application.usecase.SimularEstoqueUseCase;
 import br.com.jence.backend.model.TipoPonto;
-import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
+import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

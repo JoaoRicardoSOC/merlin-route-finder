@@ -2,7 +2,7 @@ package br.com.jence.backend.domain.service;
 
 import br.com.jence.backend.model.FerramentaIA;
 import br.com.jence.backend.model.MensagemIA;
-import br.com.jence.backend.domain.exception.AssistenteIAIndisponivelException;
+import br.com.jence.backend.exception.AssistenteIAIndisponivelException;
 
 import java.util.List;
 import java.util.Map;

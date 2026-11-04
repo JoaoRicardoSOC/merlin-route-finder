@@ -2,8 +2,8 @@ package br.com.jence.backend.application.usecase;
 
 import br.com.jence.backend.model.ListaRoteiro;
 import br.com.jence.backend.model.Sessao;
-import br.com.jence.backend.domain.exception.OperacaoNaoPermitidaException;
-import br.com.jence.backend.domain.exception.RecursoNaoEncontradoException;
+import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
+import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.domain.repository.ListaRoteiroRepository;
 import br.com.jence.backend.domain.repository.SessaoRepository;
 import org.springframework.stereotype.Service;

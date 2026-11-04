@@ -1,4 +1,4 @@
-package br.com.jence.backend.domain.exception;
+package br.com.jence.backend.exception;
 
 /**
  * Lancada quando o recurso existe, mas seu estado atual nao permite a operacao pedida -
