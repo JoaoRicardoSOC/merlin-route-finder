@@ -10,7 +10,10 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * A traducao do produto entre dominio e persistencia, campo a campo.
@@ -40,14 +43,14 @@ class ProdutoFactoryTest {
     void idaEVolta() {
         Produto voltou = factory.paraDominio(factory.paraPersistencia(completo()));
 
-        assertThat(voltou.getSku()).isEqualTo("SKU-TIN-001");
-        assertThat(voltou.getNome()).isEqualTo("Tinta Acrilica Fosca Branca 18L");
-        assertThat(voltou.getDescricao())
-                .isEqualTo("Tinta de acabamento fosco para paredes internas e externas.");
-        assertThat(voltou.getImagemUrl()).isEqualTo("https://exemplo.leroymerlin.com.br/tinta.jpg");
-        assertThat(voltou.getPreco()).isEqualByComparingTo("289.90");
-        assertThat(voltou.getSaldoEstoque()).isEqualTo(12);
-        assertThat(voltou.getPontoMapa().getCorredor()).isEqualTo("Tintas");
+        assertEquals("SKU-TIN-001", voltou.getSku());
+        assertEquals("Tinta Acrilica Fosca Branca 18L", voltou.getNome());
+        assertEquals("Tinta de acabamento fosco para paredes internas e externas.",
+                voltou.getDescricao());
+        assertEquals("https://exemplo.leroymerlin.com.br/tinta.jpg", voltou.getImagemUrl());
+        assertEquals(0, voltou.getPreco().compareTo(new BigDecimal("289.90")));
+        assertEquals(12, voltou.getSaldoEstoque());
+        assertEquals("Tintas", voltou.getPontoMapa().getCorredor());
     }
 
     @Test
@@ -57,10 +60,10 @@ class ProdutoFactoryTest {
         // olha a ida e a volta.
         ProdutoEntity entity = factory.paraPersistencia(completo());
 
-        assertThat(entity.getNome()).isEqualTo("Tinta Acrilica Fosca Branca 18L");
-        assertThat(entity.getDescricao())
-                .isEqualTo("Tinta de acabamento fosco para paredes internas e externas.");
-        assertThat(entity.getImagemUrl()).isEqualTo("https://exemplo.leroymerlin.com.br/tinta.jpg");
+        assertEquals("Tinta Acrilica Fosca Branca 18L", entity.getNome());
+        assertEquals("Tinta de acabamento fosco para paredes internas e externas.",
+                entity.getDescricao());
+        assertEquals("https://exemplo.leroymerlin.com.br/tinta.jpg", entity.getImagemUrl());
     }
 
     @Test
@@ -70,8 +73,8 @@ class ProdutoFactoryTest {
 
         Produto voltou = factory.paraDominio(factory.paraPersistencia(cru));
 
-        assertThat(voltou.getDescricao()).isNull();
-        assertThat(voltou.getImagemUrl()).isNull();
+        assertNull(voltou.getDescricao());
+        assertNull(voltou.getImagemUrl());
     }
 
     @Test
@@ -84,8 +87,8 @@ class ProdutoFactoryTest {
          */
         Produto zerado = completo().comSaldoEstoque(0);
 
-        assertThat(zerado.getDescricao()).isNotNull();
-        assertThat(zerado.getImagemUrl()).isNotNull();
-        assertThat(zerado.temDisponibilidade()).isFalse();
+        assertNotNull(zerado.getDescricao());
+        assertNotNull(zerado.getImagemUrl());
+        assertFalse(zerado.temDisponibilidade());
     }
 }
