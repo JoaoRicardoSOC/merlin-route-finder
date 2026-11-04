@@ -1,11 +1,8 @@
 package br.com.jence.backend.domain.entity;
 
-import lombok.Getter;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Getter
 public class ItemRoteiro {
 
     private final UUID id;
@@ -60,5 +57,17 @@ public class ItemRoteiro {
      */
     public void desmarcarComoColetado() {
         this.coletadoEm = null;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public Produto getProduto() {
+        return produto;
+    }
+
+    public LocalDateTime getColetadoEm() {
+        return coletadoEm;
     }
 }
