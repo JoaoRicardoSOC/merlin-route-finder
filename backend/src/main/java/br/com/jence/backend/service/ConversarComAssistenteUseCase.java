@@ -10,7 +10,7 @@ import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dao.ChatMensagemDao;
 import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.dao.SessaoDao;
-import br.com.jence.backend.domain.service.AssistenteIA;
+import br.com.jence.backend.ia.GeminiClient;
 import br.com.jence.backend.model.MensagemIA;
 import br.com.jence.backend.factory.Transacao;
 import br.com.jence.backend.ia.InstrucaoDoAssistente;
@@ -37,12 +37,12 @@ public class ConversarComAssistenteUseCase {
     private final SessaoDao sessaoDao;
     private final ChatMensagemDao chatMensagemDao;
     private final ProdutoDao produtoDao;
-    private final AssistenteIA assistenteIA;
+    private final GeminiClient assistenteIA;
 
     public ConversarComAssistenteUseCase(SessaoDao sessaoDao,
                                          ChatMensagemDao chatMensagemDao,
                                          ProdutoDao produtoDao,
-                                         AssistenteIA assistenteIA) {
+                                         GeminiClient assistenteIA) {
         this.sessaoDao = sessaoDao;
         this.chatMensagemDao = chatMensagemDao;
         this.produtoDao = produtoDao;

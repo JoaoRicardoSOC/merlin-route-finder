@@ -1,7 +1,6 @@
 package br.com.jence.backend.ia;
 
 import br.com.jence.backend.exception.AssistenteIAIndisponivelException;
-import br.com.jence.backend.domain.service.AssistenteIA;
 import br.com.jence.backend.model.FerramentaIA;
 import br.com.jence.backend.model.MensagemIA;
 import br.com.jence.backend.model.PapelIA;
@@ -24,15 +23,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Implementacao do assistente sobre a API REST do Google Gemini. Unica classe do projeto que
- * conhece o protocolo do provedor.
+ * O assistente de IA, sobre a API REST do Google Gemini. Unica classe do projeto que conhece o
+ * protocolo do provedor.
  * <p>
  * O formato das mensagens foi confirmado por chamadas reais a API, nao assumido: o modelo
  * responde com {@code functionCall{name, args, id}}, e o turno dele precisa ser devolvido
  * <b>inteiro</b> no historico da chamada seguinte.
  */
 @Component
-public class GeminiClient implements AssistenteIA {
+public class GeminiClient {
 
     /** Limite de idas e voltas com o modelo, para uma conversa nunca virar laco infinito. */
     private static final int MAXIMO_DE_CICLOS = 5;
@@ -74,7 +73,25 @@ public class GeminiClient implements AssistenteIA {
         return chave != null && !chave.isBlank();
     }
 
-    @Override
+    /** Conversa simples, sem ferramentas. */
+    public String conversar(String instrucaoSistema, List<MensagemIA> historico) {
+        return conversar(instrucaoSistema, historico, List.of(), (nome, argumentos) -> Map.of());
+    }
+
+    /**
+     * Conversa em que o assistente pode pedir a execucao de ferramentas antes de responder.
+     * <p>
+     * O ciclo de ida e volta com o provedor e resolvido aqui: quem chama apenas informa como
+     * executar cada ferramenta.
+     *
+     * @param instrucaoSistema como o assistente deve se comportar
+     * @param historico        a conversa ate aqui
+     * @param ferramentas      o que ele pode consultar (vazio para conversa simples)
+     * @param executor         executa a ferramenta pedida e devolve o resultado
+     * @return o texto final da resposta
+     * @throws AssistenteIAIndisponivelException em qualquer falha; o fallback e decisao de
+     *                                           quem chama, nao do assistente
+     */
     public String conversar(String instrucaoSistema,
                             List<MensagemIA> historico,
                             List<FerramentaIA> ferramentas,

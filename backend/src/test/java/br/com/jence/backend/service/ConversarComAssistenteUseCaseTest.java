@@ -9,7 +9,8 @@ import br.com.jence.backend.dao.ChatMensagemDao;
 import br.com.jence.backend.model.Pagina;
 import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.dao.SessaoDao;
-import br.com.jence.backend.domain.service.AssistenteIA;
+import br.com.jence.backend.config.Configuracao;
+import br.com.jence.backend.ia.GeminiClient;
 import br.com.jence.backend.factory.ConexaoFalsa;
 import br.com.jence.backend.factory.ConnectionFactory;
 import br.com.jence.backend.ia.ExecutorDeFerramenta;
@@ -85,10 +86,14 @@ class ConversarComAssistenteUseCaseTest {
     }
 
     /** Assistente que segue o comportamento combinado e anota as chamadas. */
-    static class AssistenteFalso implements AssistenteIA {
+    static class AssistenteFalso extends GeminiClient {
         Comportamento comportamento;
         int chamadas;
         List<MensagemIA> historicoRecebido;
+
+        AssistenteFalso() {
+            super(new Configuracao(Map.of()));
+        }
 
         @Override
         public String conversar(String instrucaoSistema, List<MensagemIA> historico,

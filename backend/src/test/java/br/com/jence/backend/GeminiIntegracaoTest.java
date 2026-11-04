@@ -1,6 +1,6 @@
 package br.com.jence.backend;
 
-import br.com.jence.backend.domain.service.AssistenteIA;
+import br.com.jence.backend.ia.GeminiClient;
 import br.com.jence.backend.model.FerramentaIA;
 import br.com.jence.backend.model.MensagemIA;
 import br.com.jence.backend.ia.GeminiClient;
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @EnabledIfEnvironmentVariable(named = "GEMINI_API_KEY", matches = ".+")
 class GeminiIntegracaoTest {
 
-    @Autowired AssistenteIA assistente;
+    @Autowired GeminiClient assistente;
     @Autowired GeminiClient cliente;
 
     @Test

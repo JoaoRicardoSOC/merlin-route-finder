@@ -25,7 +25,8 @@ import br.com.jence.backend.exception.AssistenteIAIndisponivelException;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.exception.SubstitutoIndisponivelException;
-import br.com.jence.backend.domain.service.AssistenteIA;
+import br.com.jence.backend.config.Configuracao;
+import br.com.jence.backend.ia.GeminiClient;
 import br.com.jence.backend.ia.ExecutorDeFerramenta;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -127,11 +128,15 @@ class TratarRupturaEstoqueUseCaseTest {
     }
 
     /** Responde o texto combinado, ou falha, e guarda o executor de ferramenta que recebeu. */
-    private static class AssistenteFalso implements AssistenteIA {
+    private static class AssistenteFalso extends GeminiClient {
         String resposta;
         RuntimeException falha;
         int chamadas;
         ExecutorDeFerramenta executorRecebido;
+
+        AssistenteFalso() {
+            super(new Configuracao(Map.of()));
+        }
 
         @Override
         public String conversar(String instrucaoSistema, List<MensagemIA> historico,

@@ -18,7 +18,7 @@ import br.com.jence.backend.dao.ListaRoteiroDao;
 import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.dao.RegistroRupturaDao;
 import br.com.jence.backend.dao.SessaoDao;
-import br.com.jence.backend.domain.service.AssistenteIA;
+import br.com.jence.backend.ia.GeminiClient;
 import br.com.jence.backend.model.MensagemIA;
 import br.com.jence.backend.ia.InstrucaoDeRuptura;
 import br.com.jence.backend.factory.Transacao;
@@ -71,14 +71,14 @@ public class TratarRupturaEstoqueUseCase {
     private final SessaoDao sessaoDao;
     private final ProdutoDao produtoDao;
     private final RegistroRupturaDao registroRupturaDao;
-    private final AssistenteIA assistenteIA;
+    private final GeminiClient assistenteIA;
 
     public TratarRupturaEstoqueUseCase(ItemRoteiroDao itemRoteiroDao,
                                        ListaRoteiroDao listaRoteiroDao,
                                        SessaoDao sessaoDao,
                                        ProdutoDao produtoDao,
                                        RegistroRupturaDao registroRupturaDao,
-                                       AssistenteIA assistenteIA) {
+                                       GeminiClient assistenteIA) {
         this.itemRoteiroDao = itemRoteiroDao;
         this.listaRoteiroDao = listaRoteiroDao;
         this.sessaoDao = sessaoDao;
