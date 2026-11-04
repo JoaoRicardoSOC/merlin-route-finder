@@ -27,8 +27,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -67,15 +68,15 @@ class ConversarComAssistenteUseCaseTest {
 
         ChatMensagemResponse resposta = useCase.executar(sessaoId, "o que preciso para pintar?");
 
-        assertThat(resposta.conteudo()).isEqualTo("Voce vai precisar de tinta, rolo e lixa.");
-        assertThat(resposta.remetente()).isEqualTo(Remetente.ASSISTANT);
+        assertEquals("Voce vai precisar de tinta, rolo e lixa.", resposta.conteudo());
+        assertEquals(Remetente.ASSISTANT, resposta.remetente());
 
         ArgumentCaptor<ChatMensagem> salvas = ArgumentCaptor.forClass(ChatMensagem.class);
         verify(chatMensagemRepository, times(2)).salvar(salvas.capture());
 
-        assertThat(salvas.getAllValues().get(0).isDoCliente()).isTrue();
-        assertThat(salvas.getAllValues().get(0).getConteudo()).isEqualTo("o que preciso para pintar?");
-        assertThat(salvas.getAllValues().get(1).getRemetente()).isEqualTo(Remetente.ASSISTANT);
+        assertTrue(salvas.getAllValues().get(0).isDoCliente());
+        assertEquals("o que preciso para pintar?", salvas.getAllValues().get(0).getConteudo());
+        assertEquals(Remetente.ASSISTANT, salvas.getAllValues().get(1).getRemetente());
     }
 
     @Test
@@ -94,8 +95,8 @@ class ConversarComAssistenteUseCaseTest {
         ArgumentCaptor<List<MensagemIA>> historico = ArgumentCaptor.forClass(List.class);
         verify(assistenteIA).conversar(any(), historico.capture(), any(), any());
 
-        assertThat(historico.getValue()).extracting(MensagemIA::conteudo)
-                .containsExactly("quero pintar o quarto", "de que cor?", "branco");
+        assertEquals(List.of("quero pintar o quarto", "de que cor?", "branco"),
+                historico.getValue().stream().map(MensagemIA::conteudo).toList());
     }
 
     /** O grounding: a ferramenta so devolve o que a nossa busca encontrou. */
@@ -119,16 +120,15 @@ class ConversarComAssistenteUseCaseTest {
 
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> produtos = (List<Map<String, Object>>) resultado.get("produtos");
-            assertThat(produtos).hasSize(1);
-            assertThat(produtos.get(0))
-                    .containsEntry("nome", "Tinta Acrilica 18L")
-                    .containsEntry("corredor", "Tintas")
-                    .containsEntry("disponivel", true);
+            assertEquals(1, produtos.size());
+            assertEquals("Tinta Acrilica 18L", produtos.get(0).get("nome"));
+            assertEquals("Tintas", produtos.get(0).get("corredor"));
+            assertEquals(true, produtos.get(0).get("disponivel"));
 
             return "A Tinta Acrilica 18L esta no corredor Tintas.";
         });
 
-        assertThat(useCase.executar(sessaoId, "quero tinta").conteudo()).contains("Tinta Acrilica 18L");
+        assertTrue(useCase.executar(sessaoId, "quero tinta").conteudo().contains("Tinta Acrilica 18L"));
     }
 
     /** Uma chamada da ferramenta cobre varios termos: o tier gratuito so permite 5 por minuto. */
@@ -158,9 +158,9 @@ class ConversarComAssistenteUseCaseTest {
 
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> produtos = (List<Map<String, Object>>) resultado.get("produtos");
-            assertThat(produtos).hasSize(2);
-            assertThat(produtos).extracting(p -> p.get("nome"))
-                    .containsExactly("Tinta Acrilica 18L", "Rolo de La 23cm");
+            assertEquals(2, produtos.size());
+            assertEquals(List.of("Tinta Acrilica 18L", "Rolo de La 23cm"),
+                    produtos.stream().map(p -> p.get("nome")).toList());
             return "ok";
         });
 
@@ -178,7 +178,7 @@ class ConversarComAssistenteUseCaseTest {
         when(chatMensagemRepository.buscarHistorico(sessaoId)).thenReturn(List.of());
         when(assistenteIA.conversar(any(), any(), any(), any())).thenAnswer(invocacao -> {
             ExecutorDeFerramenta executor = invocacao.getArgument(3);
-            assertThat(executor.executar("buscar_produtos", Map.of())).containsEntry("produtos", List.of());
+            assertEquals(List.of(), executor.executar("buscar_produtos", Map.of()).get("produtos"));
             return "ok";
         });
 
@@ -199,7 +199,7 @@ class ConversarComAssistenteUseCaseTest {
 
         ChatMensagemResponse resposta = useCase.executar(sessaoId, "o que preciso para pintar?");
 
-        assertThat(resposta.conteudo()).contains("Não consegui consultar o assistente");
+        assertTrue(resposta.conteudo().contains("Não consegui consultar o assistente"));
 
         // so a pergunta do cliente foi salva: a falha nao entra no historico
         verify(chatMensagemRepository, times(1)).salvar(any());
@@ -212,8 +212,7 @@ class ConversarComAssistenteUseCaseTest {
         encerrada.encerrar();
         when(sessaoRepository.buscarPorId(sessaoId)).thenReturn(Optional.of(encerrada));
 
-        assertThatThrownBy(() -> useCase.executar(sessaoId, "oi"))
-                .isInstanceOf(OperacaoNaoPermitidaException.class);
+        assertThrows(OperacaoNaoPermitidaException.class, () -> useCase.executar(sessaoId, "oi"));
 
         verifyNoInteractions(assistenteIA);
     }
@@ -223,7 +222,6 @@ class ConversarComAssistenteUseCaseTest {
     void sessaoInexistente() {
         when(sessaoRepository.buscarPorId(any())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> useCase.executar(sessaoId, "oi"))
-                .isInstanceOf(RecursoNaoEncontradoException.class);
+        assertThrows(RecursoNaoEncontradoException.class, () -> useCase.executar(sessaoId, "oi"));
     }
 }
