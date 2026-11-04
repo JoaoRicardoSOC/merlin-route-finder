@@ -85,8 +85,8 @@ class ConsultarHistoricoChatUseCaseTest {
         List<ChatMensagemResponse> historico = useCase.executar(sessaoId);
 
         assertEquals(2, historico.size());
-        assertEquals("o que preciso para pintar?", historico.getFirst().conteudo());
-        assertEquals("tinta, rolo e lixa", historico.getLast().conteudo());
+        assertEquals("o que preciso para pintar?", historico.getFirst().getConteudo());
+        assertEquals("tinta, rolo e lixa", historico.getLast().getConteudo());
     }
 
     @Test

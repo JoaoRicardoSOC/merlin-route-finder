@@ -147,8 +147,8 @@ class ConversarComAssistenteUseCaseTest {
 
         ChatMensagemResponse resposta = useCase.executar(sessaoId, "o que preciso para pintar?");
 
-        assertEquals("Voce vai precisar de tinta, rolo e lixa.", resposta.conteudo());
-        assertEquals(Remetente.ASSISTANT, resposta.remetente());
+        assertEquals("Voce vai precisar de tinta, rolo e lixa.", resposta.getConteudo());
+        assertEquals(Remetente.ASSISTANT, resposta.getRemetente());
 
         List<ChatMensagem> salvas = chatMensagemDao.salvas;
         assertEquals(2, salvas.size());
@@ -199,7 +199,7 @@ class ConversarComAssistenteUseCaseTest {
             return "A Tinta Acrilica 18L esta no corredor Tintas.";
         };
 
-        assertTrue(useCase.executar(sessaoId, "quero tinta").conteudo().contains("Tinta Acrilica 18L"));
+        assertTrue(useCase.executar(sessaoId, "quero tinta").getConteudo().contains("Tinta Acrilica 18L"));
     }
 
     /** Uma chamada da ferramenta cobre varios termos: o tier gratuito so permite 5 por minuto. */
@@ -261,7 +261,7 @@ class ConversarComAssistenteUseCaseTest {
 
         ChatMensagemResponse resposta = useCase.executar(sessaoId, "o que preciso para pintar?");
 
-        assertTrue(resposta.conteudo().contains("Não consegui consultar o assistente"));
+        assertTrue(resposta.getConteudo().contains("Não consegui consultar o assistente"));
 
         // so a pergunta do cliente foi salva: a falha nao entra no historico
         assertEquals(1, chatMensagemDao.salvas.size());

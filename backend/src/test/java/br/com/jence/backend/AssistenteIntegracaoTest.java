@@ -52,11 +52,11 @@ class AssistenteIntegracaoTest {
         ChatMensagemResponse r = conversar.executar(sessaoId, "O que eu preciso para pintar uma parede?");
 
         System.out.println(">>> pergunta: O que eu preciso para pintar uma parede?");
-        System.out.println(">>> resposta: " + r.conteudo());
+        System.out.println(">>> resposta: " + r.getConteudo());
 
-        assertFalse(r.conteudo() == null || r.conteudo().isBlank());
+        assertFalse(r.getConteudo() == null || r.getConteudo().isBlank());
         // A massa tem tinta, rolo, lixa e fita crepe em Tintas: a resposta deve sair dali.
-        String conteudo = r.conteudo().toLowerCase();
+        String conteudo = r.getConteudo().toLowerCase();
         assertTrue(List.of("tinta", "rolo", "lixa").stream().anyMatch(conteudo::contains),
                 "a sugestao precisa citar produtos que existem no catalogo");
     }
@@ -66,9 +66,9 @@ class AssistenteIntegracaoTest {
         ChatMensagemResponse r = conversar.executar(sessaoId,
                 "Quem foi o vencedor da Copa do Mundo de 2022 e por que?");
 
-        System.out.println(">>> pergunta fora de escopo -> " + r.conteudo());
+        System.out.println(">>> pergunta fora de escopo -> " + r.getConteudo());
 
-        String conteudo = r.conteudo().toLowerCase();
+        String conteudo = r.getConteudo().toLowerCase();
         assertFalse(conteudo.contains("argentina"),
                 "nao pode responder ao merito do assunto fora de escopo");
         assertFalse(conteudo.contains("messi"),

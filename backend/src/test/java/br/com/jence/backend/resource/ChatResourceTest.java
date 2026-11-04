@@ -47,8 +47,13 @@ class ChatResourceTest {
     }
 
     private ChatMensagemResponse mensagem(Remetente remetente, String conteudo) {
-        return new ChatMensagemResponse(UUID.randomUUID(), sessaoId, remetente, conteudo,
-                LocalDateTime.now());
+        ChatMensagemResponse mensagem = new ChatMensagemResponse();
+        mensagem.setId(UUID.randomUUID());
+        mensagem.setSessaoId(sessaoId);
+        mensagem.setRemetente(remetente);
+        mensagem.setConteudo(conteudo);
+        mensagem.setEnviadoEm(LocalDateTime.now());
+        return mensagem;
     }
 
     private MockHttpServletRequestBuilder enviar(String corpo) {
