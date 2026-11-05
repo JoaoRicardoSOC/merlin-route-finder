@@ -112,6 +112,7 @@
 - [D-89. O backend sai do Spring Boot e segue o material da FIAP à risca](#d-89-o-backend-sai-do-spring-boot-e-segue-o-material-da-fiap-à-risca)
 - [D-90. JDBC sem pool: cada transação abre e fecha a própria conexão](#d-90-jdbc-sem-pool-cada-transação-abre-e-fecha-a-própria-conexão)
 - [D-91. O CORS sai do backend: a Vercel repassa `/api/*` para o Render](#d-91-o-cors-sai-do-backend-a-vercel-repassa-api-para-o-render)
+- [D-92. Exceções checadas, tratadas no `catch` de cada Resource](#d-92-exceções-checadas-tratadas-no-catch-de-cada-resource)
 
 ---
 
@@ -2498,6 +2499,27 @@ não existe pedido entre origens. Em desenvolvimento, o proxy do Vite faz o mesm
 
 **A condição.** A variável `VITE_API_BASE_URL` não pode existir na Vercel: com ela, o frontend
 chamaria o Render direto e o navegador bloquearia as respostas. Ver [`deploy.md`](deploy.md).
+
+---
+
+### D-92. Exceções checadas, tratadas no `catch` de cada Resource
+
+**Contexto.** O material usa exceções checadas e trata os erros no próprio método do Resource.
+O `GlobalExceptionHandler` do Spring saiu.
+
+**A decisão.** As quatro exceções do domínio estendem `Exception`. Cada método de Resource tem o
+seu `try/catch` e devolve o erro pelo `RespostaDeErro`, com os mesmos status e textos do handler
+antigo, no corpo `StandardError`.
+
+**O que foi medido no Jersey, e mudou o desenho.** Um UUID malformado no `@PathParam` respondia
+404, como se o endereço não existisse; um JSON malformado num parâmetro DTO respondia 500 com uma
+página HTML do Grizzly; um `Integer` ou `Boolean` inválido na query também virava 404. Por isso os
+Resources recebem o id, o corpo e os números da query **como texto**, e convertem dentro do `try`
+pela `LeituraDaRequisicao`. Os 400 de antes voltaram, com o mesmo corpo.
+
+**O que ficou diferente, e foi aceito (RF-04).** Rota inexistente, método não permitido e
+`Content-Type` errado são respondidos pelo Jersey antes de chegar ao Resource: o status é o mesmo
+(404, 405, 415), mas a resposta vem sem corpo. O frontend só lê o status nesses casos.
 
 ---
 
