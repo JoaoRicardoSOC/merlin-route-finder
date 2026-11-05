@@ -13,6 +13,7 @@ import br.com.jence.backend.service.ConsultarProdutoUseCase;
 import br.com.jence.backend.service.ListarSecoesUseCase;
 import br.com.jence.backend.service.SimularEstoqueUseCase;
 import br.com.jence.backend.model.PontoMapa;
+import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
@@ -50,8 +51,9 @@ class ProdutoResourceTest {
     @MockitoBean ListarSecoesUseCase listarSecoesUseCase;
 
     private ProdutoResponse produto(UUID id) {
-        return new ProdutoResponse(id, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L", null, null,
-                new BigDecimal("289.90"), 12, UUID.randomUUID(), "Tintas");
+        return ProdutoResponse.de(new Produto(id, "SKU-TIN-001",
+                "Tinta Acrilica Fosca Branca 18L", new BigDecimal("289.90"), 12,
+                new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 50, 50)));
     }
 
     @Test
@@ -255,8 +257,9 @@ class ProdutoResourceTest {
     void zerarEstoque() throws Exception {
         UUID produtoId = UUID.randomUUID();
         when(simularEstoqueUseCase.executar(eq(produtoId), eq(0))).thenReturn(
-                new ProdutoResponse(produtoId, "SKU-TIN-003", "Lixa para Parede Grao 120", null, null,
-                        new BigDecimal("3.50"), 0, UUID.randomUUID(), "Tintas"));
+                ProdutoResponse.de(new Produto(produtoId, "SKU-TIN-003",
+                        "Lixa para Parede Grao 120", new BigDecimal("3.50"), 0,
+                        new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 50, 50))));
 
         mockMvc.perform(ajustarEstoque(produtoId, """
                         {"saldoEstoque": 0}"""))
@@ -270,8 +273,9 @@ class ProdutoResourceTest {
     void restaurarEstoque() throws Exception {
         UUID produtoId = UUID.randomUUID();
         when(simularEstoqueUseCase.executar(eq(produtoId), eq(25))).thenReturn(
-                new ProdutoResponse(produtoId, "SKU-TIN-003", "Lixa para Parede Grao 120", null, null,
-                        new BigDecimal("3.50"), 25, UUID.randomUUID(), "Tintas"));
+                ProdutoResponse.de(new Produto(produtoId, "SKU-TIN-003",
+                        "Lixa para Parede Grao 120", new BigDecimal("3.50"), 25,
+                        new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 50, 50))));
 
         mockMvc.perform(ajustarEstoque(produtoId, """
                         {"saldoEstoque": 25}"""))

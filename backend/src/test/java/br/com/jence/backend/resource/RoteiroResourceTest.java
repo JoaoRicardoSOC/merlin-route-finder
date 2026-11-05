@@ -7,6 +7,8 @@ import br.com.jence.backend.dto.ProdutoResponse;
 import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.service.ConsultarListaRoteiroUseCase;
 import br.com.jence.backend.service.RemoverProdutoDoRoteiroUseCase;
+import br.com.jence.backend.model.PontoMapa;
+import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
@@ -40,8 +42,9 @@ class RoteiroResourceTest {
 
     private ItemRoteiroDetalhadoResponse item(UUID itemId, UUID produtoId) {
         return new ItemRoteiroDetalhadoResponse(itemId, produtoId, false,
-                new ProdutoResponse(produtoId, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L", null, null,
-                        new BigDecimal("289.90"), 12, UUID.randomUUID(), "Tintas"));
+                ProdutoResponse.de(new Produto(produtoId, "SKU-TIN-001",
+                        "Tinta Acrilica Fosca Branca 18L", new BigDecimal("289.90"), 12,
+                        new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 50, 50))));
     }
 
     @Test

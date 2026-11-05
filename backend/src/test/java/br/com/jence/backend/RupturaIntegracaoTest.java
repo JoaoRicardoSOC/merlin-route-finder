@@ -74,7 +74,7 @@ class RupturaIntegracaoTest {
 
         RupturaEstoqueResponse resposta = tratarRuptura.executar(item.id());
 
-        System.out.println(">>> em falta:   " + item.produto().nome());
+        System.out.println(">>> em falta:   " + item.produto().getNome());
         System.out.println(">>> sugerido:   " + resposta.produtoSugerido().nome()
                 + " (" + resposta.produtoSugerido().sku() + ")");
         System.out.println(">>> corredor:   " + resposta.produtoSugerido().pontoMapa().getCorredor());

@@ -93,7 +93,7 @@ class SimularEstoqueUseCaseTest {
 
         ProdutoResponse resposta = useCase.executar(produtoId, 0);
 
-        assertEquals(0, resposta.saldoEstoque());
+        assertEquals(0, resposta.getSaldoEstoque());
         assertFalse(produtoSalvo().temDisponibilidade());
     }
 
@@ -106,7 +106,7 @@ class SimularEstoqueUseCaseTest {
 
         ProdutoResponse resposta = useCase.executar(produtoId, 40);
 
-        assertEquals(40, resposta.saldoEstoque());
+        assertEquals(40, resposta.getSaldoEstoque());
         assertTrue(produtoSalvo().temDisponibilidade());
     }
 

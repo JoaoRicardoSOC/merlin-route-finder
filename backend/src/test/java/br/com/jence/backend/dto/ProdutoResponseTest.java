@@ -34,9 +34,35 @@ class ProdutoResponseTest {
 
         ProdutoResponse resposta = ProdutoResponse.de(produtoEm(tintas));
 
-        assertEquals("Tintas", resposta.corredor());
-        assertEquals(tintas.getId(), resposta.pontoMapaId(),
+        assertEquals("Tintas", resposta.getCorredor());
+        assertEquals(tintas.getId(), resposta.getPontoMapaId(),
                 "o id continua vindo: o mapa ainda precisa dele para casar o marcador");
+    }
+
+    @Test
+    @DisplayName("copia cada campo do produto, e o ponto vira id e corredor")
+    void copiaOsCampos() {
+        /*
+         * O ModelMapper casa os campos pelo nome. Este teste confere campo a campo para que
+         * um campo novo com nome parecido nao seja preenchido com o valor errado sem ninguem ver.
+         */
+        PontoMapa tintas = new PontoMapa(
+                UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 32, 10);
+        Produto produto = new Produto(UUID.randomUUID(), "SKU-TIN-001", "Tinta Acrílica Fosca Branca 18L",
+                "Tinta de acabamento fosco.", "https://exemplo.com/tinta.png",
+                new BigDecimal("289.90"), 12, tintas);
+
+        ProdutoResponse resposta = ProdutoResponse.de(produto);
+
+        assertEquals(produto.getId(), resposta.getId());
+        assertEquals("SKU-TIN-001", resposta.getSku());
+        assertEquals("Tinta Acrílica Fosca Branca 18L", resposta.getNome());
+        assertEquals("Tinta de acabamento fosco.", resposta.getDescricao());
+        assertEquals("https://exemplo.com/tinta.png", resposta.getImagemUrl());
+        assertEquals(new BigDecimal("289.90"), resposta.getPreco());
+        assertEquals(12, resposta.getSaldoEstoque());
+        assertEquals(tintas.getId(), resposta.getPontoMapaId());
+        assertEquals("Tintas", resposta.getCorredor());
     }
 
     @Test
@@ -68,8 +94,8 @@ class ProdutoResponseTest {
          */
         ProdutoResponse resposta = ProdutoResponse.de(produtoEm(null));
 
-        assertNull(resposta.corredor());
-        assertNull(resposta.pontoMapaId());
-        assertEquals("Tinta Acrílica Fosca Branca 18L", resposta.nome());
+        assertNull(resposta.getCorredor());
+        assertNull(resposta.getPontoMapaId());
+        assertEquals("Tinta Acrílica Fosca Branca 18L", resposta.getNome());
     }
 }

@@ -12,6 +12,7 @@ import br.com.jence.backend.service.SubstituirItemDoRoteiroUseCase;
 import br.com.jence.backend.service.TratarRupturaEstoqueUseCase;
 import br.com.jence.backend.model.OrigemSugestao;
 import br.com.jence.backend.model.PontoMapa;
+import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
@@ -53,8 +54,9 @@ class ItemRoteiroResourceTest {
         UUID produtoId = UUID.randomUUID();
         when(marcarItemColetadoUseCase.executar(itemId)).thenReturn(
                 new ItemRoteiroDetalhadoResponse(itemId, produtoId, true,
-                        new ProdutoResponse(produtoId, "SKU-ENC-001", "Cano PVC Soldavel 25mm 6m", null, null,
-                                new BigDecimal("28.90"), 35, UUID.randomUUID(), "Encanamento")));
+                        ProdutoResponse.de(new Produto(produtoId, "SKU-ENC-001",
+                                "Cano PVC Soldavel 25mm 6m", new BigDecimal("28.90"), 35,
+                                new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Encanamento", 50, 50)))));
 
         mockMvc.perform(patch("/api/v1/roteiro/itens/{i}/coletar", itemId))
                 .andExpect(status().isOk())
@@ -70,9 +72,9 @@ class ItemRoteiroResourceTest {
         UUID produtoId = UUID.randomUUID();
         when(desmarcarItemColetadoUseCase.executar(itemId)).thenReturn(
                 new ItemRoteiroDetalhadoResponse(itemId, produtoId, false,
-                        new ProdutoResponse(produtoId, "SKU-ENC-001", "Cano PVC Soldavel 25mm 6m",
-                                null, null, new BigDecimal("28.90"), 35, UUID.randomUUID(),
-                                "Encanamento")));
+                        ProdutoResponse.de(new Produto(produtoId, "SKU-ENC-001",
+                                "Cano PVC Soldavel 25mm 6m", new BigDecimal("28.90"), 35,
+                                new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Encanamento", 50, 50)))));
 
         mockMvc.perform(patch("/api/v1/roteiro/itens/{i}/desmarcar", itemId))
                 .andExpect(status().isOk())
@@ -105,10 +107,9 @@ class ItemRoteiroResourceTest {
         when(substituirItemDoRoteiroUseCase.executar(itemId, substitutoId)).thenReturn(
                 new ListaRoteiroResponse(UUID.randomUUID(), UUID.randomUUID(), 1, List.of(
                         new ItemRoteiroDetalhadoResponse(novoItemId, substitutoId, false,
-                                new ProdutoResponse(substitutoId, "SKU-TIN-004",
-                                        "Lixa d'Agua Grao 150", null, null,
-                                        new BigDecimal("4.20"), 40, UUID.randomUUID(),
-                                        "Tintas")))));
+                                ProdutoResponse.de(new Produto(substitutoId, "SKU-TIN-004",
+                                        "Lixa d'Agua Grao 150", new BigDecimal("4.20"), 40,
+                                        new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 50, 50)))))));
 
         mockMvc.perform(post("/api/v1/roteiro/itens/{i}/substituir", itemId)
                         .contentType(MediaType.APPLICATION_JSON)

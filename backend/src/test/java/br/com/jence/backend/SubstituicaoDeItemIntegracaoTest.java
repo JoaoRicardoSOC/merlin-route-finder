@@ -88,7 +88,7 @@ class SubstituicaoDeItemIntegracaoTest {
     }
 
     private List<String> skusDaLista(ListaRoteiroResponse lista) {
-        return lista.itens().stream().map(item -> item.produto().sku()).sorted().toList();
+        return lista.itens().stream().map(item -> item.produto().getSku()).sorted().toList();
     }
 
     // ---------------------------------------------------------------- a troca
@@ -122,7 +122,7 @@ class SubstituicaoDeItemIntegracaoTest {
 
         assertEquals(1, depois.itens().size());
         ItemRoteiroDetalhadoResponse item = depois.itens().get(0);
-        assertEquals(SUBSTITUTO, item.produto().sku());
+        assertEquals(SUBSTITUTO, item.produto().getSku());
         assertFalse(item.coletado());
     }
 
