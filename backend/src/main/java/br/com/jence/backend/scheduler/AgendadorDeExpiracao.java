@@ -1,9 +1,6 @@
 package br.com.jence.backend.scheduler;
 
 import br.com.jence.backend.service.ExpirarSessoesInativasUseCase;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -16,11 +13,9 @@ import java.util.concurrent.TimeUnit;
  * testado sem envolver agendamento nenhum. Mesma separacao entre porta e adaptador usada no
  * resto do projeto - aqui o "adaptador" e o relogio.
  * <p>
- * Pode ser desligado com {@code merlin.agendador.enabled=false}, mesmo padrao do
- * {@code CarregadorDadosIniciais}.
+ * A Main so o liga se {@code MERLIN_AGENDADOR_ENABLED} nao for {@code false}, mesmo padrao da
+ * carga de dados.
  */
-@Component
-@ConditionalOnProperty(name = "merlin.agendador.enabled", havingValue = "true", matchIfMissing = true)
 public class AgendadorDeExpiracao {
 
     private final ExpirarSessoesInativasUseCase expirarSessoesInativasUseCase;
@@ -70,23 +65,15 @@ public class AgendadorDeExpiracao {
         executor = null;
     }
 
-    /*
-     * fixedDelayString e nao fixedRate: o intervalo conta a partir do fim da execucao anterior.
-     * Com fixedRate, uma varredura lenta comecaria a se sobrepor a seguinte, e duas passagens
-     * simultaneas disputariam as mesmas sessoes.
-     *
-     * O atraso inicial evita competir com a carga de dados no startup.
-     */
-    @Scheduled(fixedDelayString = "${merlin.agendador.intervalo-ms:300000}",
-            initialDelayString = "${merlin.agendador.atraso-inicial-ms:60000}")
+    /** Uma passagem da varredura. Chamada pelo executor no intervalo definido em iniciar(). */
     public void varrerSessoesVencidas() {
         try {
             expirarSessoesInativasUseCase.executar();
 
         } catch (Exception e) {
             /*
-             * O agendador (o do Spring e o ScheduledExecutorService) interrompe as execucoes
-             * seguintes de uma tarefa que lanca.
+             * O ScheduledExecutorService interrompe as execucoes seguintes de uma tarefa que
+             * lanca.
              * Como o motivo mais provavel de falha aqui e o banco estar momentaneamente fora,
              * deixar a excecao subir aposentaria a varredura ate o proximo restart.
              */
