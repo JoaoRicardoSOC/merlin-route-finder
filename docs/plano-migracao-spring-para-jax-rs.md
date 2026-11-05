@@ -172,7 +172,7 @@ Um commit por service (19). Em cada um: passa a receber os DAOs concretos pelo c
 - [x] **9.1** Uma exceção por commit (`RecursoNaoEncontrado`, `OperacaoNaoPermitida`, `SubstitutoIndisponivel`, `AssistenteIAIndisponivel`): passa a estender `Exception` e cada método que a lança declara `throws`. O `GlobalExceptionHandler` do Spring continua tratando até a fase 10.
 - [x] **9.2** Adicionar `modelmapper` `3.0.0` e `factory/MapperFactory`, com instância única.
 - [x] **9.3** Um DTO por commit (21): `record` → classe com construtor sem argumentos, getters e setters. A conversão no service passa a usar `ModelMapper` onde a cópia é direta e setters nos campos calculados.
-- [ ] **9.4** Validação manual: cada DTO de requisição ganha um método `validar()` que devolve a lista de erros de campo, com as mesmas regras e mensagens das anotações de hoje. O Resource devolve 400 com `StandardError` quando a lista não vem vazia. Um commit por DTO.
+- [x] **9.4** Validação manual: cada DTO de requisição ganha um método `validar()` que devolve a lista de erros de campo, com as mesmas regras e mensagens das anotações de hoje. O Resource devolve 400 com `StandardError` quando a lista não vem vazia. Um commit por DTO.
 - [ ] **9.5** Tirar `spring-boot-starter-validation` do `pom.xml`.
 
 ### Fase 10 — Troca do Spring pelo Jersey

@@ -1,7 +1,9 @@
 package br.com.jence.backend.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Corpo de {@code PUT /sessoes/{sessaoId}/posicao}: a placa onde o cliente esta agora.
@@ -13,7 +15,6 @@ import jakarta.validation.constraints.NotBlank;
 public class RecentrarSessaoRequest {
 
     /** Codigo de localizacao impresso na placa, em qualquer grafia. */
-    @NotBlank(message = "informe o codigo da placa")
     @Schema(description = "Codigo de localizacao da placa onde o cliente esta agora.",
             example = "CEN-03", requiredMode = Schema.RequiredMode.REQUIRED)
     private String codigoPonto;
@@ -27,5 +28,18 @@ public class RecentrarSessaoRequest {
 
     public void setCodigoPonto(String codigoPonto) {
         this.codigoPonto = codigoPonto;
+    }
+
+    /**
+     * Confere o corpo com as mesmas regras e mensagens que as anotacoes de validacao tinham.
+     *
+     * @return os campos com problema; vazia quando o corpo esta certo
+     */
+    public List<StandardError.ValidationError> validar() {
+        List<StandardError.ValidationError> erros = new ArrayList<>();
+        if (codigoPonto == null || codigoPonto.isBlank()) {
+            erros.add(StandardError.ValidationError.de("codigoPonto", "informe o codigo da placa"));
+        }
+        return erros;
     }
 }

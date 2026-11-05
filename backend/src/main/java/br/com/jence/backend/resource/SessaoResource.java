@@ -5,13 +5,14 @@ import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dto.IniciarSessaoRequest;
 import br.com.jence.backend.dto.RecentrarSessaoRequest;
 import br.com.jence.backend.dto.SessaoResponse;
+import br.com.jence.backend.dto.StandardError;
 import br.com.jence.backend.service.ConcluirRotaUseCase;
 import br.com.jence.backend.service.ConsultarSessaoUseCase;
 import br.com.jence.backend.service.InicializarSessaoUseCase;
 import br.com.jence.backend.service.RecentrarSessaoUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -81,9 +83,16 @@ public class SessaoResource {
             description = "Acionado quando o cliente se perde e le outra placa da loja. "
                     + "Atualiza apenas onde ele esta: a lista e o que ja foi coletado "
                     + "permanecem intactos, e nenhuma sessao nova e criada.")
-    public ResponseEntity<SessaoResponse> recentrar(
+    public ResponseEntity<?> recentrar(
             @PathVariable UUID sessaoId,
-            @Valid @RequestBody RecentrarSessaoRequest requisicao) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+            @RequestBody RecentrarSessaoRequest requisicao,
+            HttpServletRequest http) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+
+        List<StandardError.ValidationError> erros = requisicao.validar();
+        if (!erros.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(StandardError.falhaDeValidacao(http.getRequestURI(), erros));
+        }
         return ResponseEntity.ok(
                 recentrarSessaoUseCase.executar(sessaoId, requisicao.getCodigoPonto()));
     }
