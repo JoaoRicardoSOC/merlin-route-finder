@@ -85,7 +85,7 @@ public class SessaoResource {
             @PathVariable UUID sessaoId,
             @Valid @RequestBody RecentrarSessaoRequest requisicao) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
         return ResponseEntity.ok(
-                recentrarSessaoUseCase.executar(sessaoId, requisicao.codigoPonto()));
+                recentrarSessaoUseCase.executar(sessaoId, requisicao.getCodigoPonto()));
     }
 
     @PostMapping("/{sessaoId}/concluir")
