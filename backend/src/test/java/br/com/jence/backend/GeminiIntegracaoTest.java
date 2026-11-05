@@ -5,11 +5,10 @@ import br.com.jence.backend.ia.GeminiClient;
 import br.com.jence.backend.model.FerramentaIA;
 import br.com.jence.backend.model.MensagemIA;
 import br.com.jence.backend.ia.GeminiClient;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 import java.util.Map;
@@ -21,12 +20,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Conversa de verdade com a API do Gemini. Exige GEMINI_API_KEY. */
 @Tag("integracao")
-@SpringBootTest
 @EnabledIfEnvironmentVariable(named = "GEMINI_API_KEY", matches = ".+")
 class GeminiIntegracaoTest {
 
-    @Autowired GeminiClient assistente;
-    @Autowired GeminiClient cliente;
+    /** A massa de demonstracao no banco, como a Main garante antes de subir. */
+    @BeforeAll
+    static void carregarMassa() throws Exception {
+        BancoDeTeste.carregarMassa();
+    }
+
+    private final GeminiClient assistente = new GeminiClient();
+    private final GeminiClient cliente = new GeminiClient();
 
     @Test
     void respondeEmPortugues() throws AssistenteIAIndisponivelException {
