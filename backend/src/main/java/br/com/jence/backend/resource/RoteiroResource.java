@@ -5,12 +5,13 @@ import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dto.AdicionarItemRequest;
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.dto.ListaRoteiroResponse;
+import br.com.jence.backend.dto.StandardError;
 import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.service.ConsultarListaRoteiroUseCase;
 import br.com.jence.backend.service.RemoverProdutoDoRoteiroUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -63,9 +65,16 @@ public class RoteiroResource {
     @Operation(summary = "Adicionar produto ao roteiro (UC-004)",
             description = "Sem limite de itens. Produto ja presente devolve o item existente, "
                     + "sem duplicar a parada na rota.")
-    public ResponseEntity<ItemRoteiroDetalhadoResponse> adicionar(
+    public ResponseEntity<?> adicionar(
             @PathVariable UUID sessaoId,
-            @Valid @RequestBody AdicionarItemRequest request) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+            @RequestBody AdicionarItemRequest request,
+            HttpServletRequest http) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+
+        List<StandardError.ValidationError> erros = request.validar();
+        if (!erros.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(StandardError.falhaDeValidacao(http.getRequestURI(), erros));
+        }
 
         ItemRoteiroDetalhadoResponse item =
                 adicionarProdutoAoRoteiroUseCase.executar(sessaoId, request.getProdutoId());
