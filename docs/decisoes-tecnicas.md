@@ -111,6 +111,7 @@
 **Migração para JAX-RS**
 - [D-89. O backend sai do Spring Boot e segue o material da FIAP à risca](#d-89-o-backend-sai-do-spring-boot-e-segue-o-material-da-fiap-à-risca)
 - [D-90. JDBC sem pool: cada transação abre e fecha a própria conexão](#d-90-jdbc-sem-pool-cada-transação-abre-e-fecha-a-própria-conexão)
+- [D-91. O CORS sai do backend: a Vercel repassa `/api/*` para o Render](#d-91-o-cors-sai-do-backend-a-vercel-repassa-api-para-o-render)
 
 ---
 
@@ -2483,6 +2484,20 @@ com o de antes; se ficar inaceitável, o assunto volta ao time.
 **O que melhora.** O limite de 20 sessões por usuário no schema da FIAP deixa de ser dividido
 com um pool que segurava conexões paradas: só ocupa sessão quem está executando. Ver a revisão
 da [D-46](#d-46-o-pool-de-conexões-é-dimensionado-pelos-limites-reais-do-schema-da-fiap).
+
+---
+
+### D-91. O CORS sai do backend: a Vercel repassa `/api/*` para o Render
+
+**Contexto.** O `CorsConfig` era configuração do Spring. Em vez de reescrever os cabeçalhos de
+CORS em JAX-RS, o problema foi tirado do backend.
+
+**A decisão.** O frontend chama `/api/...` no próprio domínio, e o rewrite de
+`frontend/vercel.json` repassa para o Render. Para o navegador, frontend e API são o mesmo site, e
+não existe pedido entre origens. Em desenvolvimento, o proxy do Vite faz o mesmo.
+
+**A condição.** A variável `VITE_API_BASE_URL` não pode existir na Vercel: com ela, o frontend
+chamaria o Render direto e o navegador bloquearia as respostas. Ver [`deploy.md`](deploy.md).
 
 ---
 
