@@ -16,10 +16,6 @@ import br.com.jence.backend.service.DesmarcarItemColetadoUseCase;
 import br.com.jence.backend.service.MarcarItemColetadoUseCase;
 import br.com.jence.backend.service.SubstituirItemDoRoteiroUseCase;
 import br.com.jence.backend.service.TratarRupturaEstoqueUseCase;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
@@ -41,7 +37,6 @@ import java.util.UUID;
  * celular ja tem o id do item vindo da lista de compras.
  */
 @Path("/api/v1/roteiro/itens")
-@Tag(name = "Roteiro", description = "Execucao da rota no celular")
 public class ItemRoteiroResource {
 
     /*
@@ -81,10 +76,6 @@ public class ItemRoteiroResource {
     @PATCH
     @Path("/{itemId}/coletar")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Marcar item como coletado (UC-014)",
-            description = "Acionado quando o cliente confirma ter pego o produto da prateleira. "
-                    + "E o que faz o marcador avancar na navegacao e o que indica ao sistema "
-                    + "onde o cliente esta. Idempotente.")
     public Response coletar(@PathParam("itemId") String itemId) {
         String path = uriInfo.getRequestUri().getPath();
         try {
@@ -102,10 +93,6 @@ public class ItemRoteiroResource {
     @PATCH
     @Path("/{itemId}/desmarcar")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Desfazer a coleta de um item",
-            description = "Acionado quando o cliente tocou por engano ou devolveu o produto a "
-                    + "prateleira. A posicao dele volta sozinha para o item marcado antes "
-                    + "deste - ou para a placa lida, se nao houver nenhum. Idempotente.")
     public Response desmarcar(@PathParam("itemId") String itemId) {
         String path = uriInfo.getRequestUri().getPath();
         try {
@@ -124,19 +111,6 @@ public class ItemRoteiroResource {
     @Path("/{itemId}/substituir")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Aceitar o substituto, trocando o item da lista",
-            description = "O produto que faltou sai da lista e o substituto entra, numa "
-                    + "chamada so - sem isso, aceitar a sugestao exigiria do cliente duas "
-                    + "acoes em pe no corredor. O substituto entra NAO coletado: ele pode "
-                    + "estar alguns metros adiante, e e o mapa que vai dizer onde. O registro "
-                    + "da ruptura permanece: ele e evidencia do que aconteceu na gondola.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Lista ja com a troca feita"),
-            @ApiResponse(responseCode = "400", description = "Corpo sem o produto substituto"),
-            @ApiResponse(responseCode = "404", description = "Item ou produto inexistente"),
-            @ApiResponse(responseCode = "409",
-                    description = "Sessao encerrada, ou tentativa de trocar o produto por ele mesmo")
-    })
     public Response substituir(@PathParam("itemId") String itemId, String corpo) {
         String path = uriInfo.getRequestUri().getPath();
         try {
@@ -170,19 +144,6 @@ public class ItemRoteiroResource {
     @POST
     @Path("/{itemId}/ruptura")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Relatar prateleira vazia e receber um substituto (UC-013)",
-            description = "Acionado quando o cliente chega a prateleira e o produto acabou. "
-                    + "Registra a ruptura, filtra no banco os produtos disponiveis fisicamente "
-                    + "proximos e aciona o assistente para eleger, entre esses candidatos e "
-                    + "somente eles, o que cumpre a mesma funcao. O campo origemSugestao "
-                    + "informa se a escolha foi do assistente ou do calculo de proximidade.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Substituto sugerido"),
-            @ApiResponse(responseCode = "404", description = "Item de roteiro inexistente"),
-            @ApiResponse(responseCode = "409", description = "Sessao encerrada ou expirada"),
-            @ApiResponse(responseCode = "422",
-                    description = "Ruptura registrada, mas nenhum substituto plausivel por perto")
-    })
     public Response relatarRuptura(@PathParam("itemId") String itemId) {
         String path = uriInfo.getRequestUri().getPath();
         try {

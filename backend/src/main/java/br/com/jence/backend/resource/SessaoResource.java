@@ -14,8 +14,6 @@ import br.com.jence.backend.service.ConcluirRotaUseCase;
 import br.com.jence.backend.service.ConsultarSessaoUseCase;
 import br.com.jence.backend.service.InicializarSessaoUseCase;
 import br.com.jence.backend.service.RecentrarSessaoUseCase;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -33,7 +31,6 @@ import java.util.List;
 import java.util.UUID;
 
 @Path("/api/v1/sessoes")
-@Tag(name = "Sessao", description = "Ciclo de vida da sessao do cliente")
 public class SessaoResource {
 
     private final InicializarSessaoUseCase inicializarSessaoUseCase;
@@ -70,11 +67,6 @@ public class SessaoResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Inicializar sessao (UC-001)",
-            description = "Acionado quando o cliente entra pela placa de localizacao, "
-                    + "escaneando o QR Code ou digitando o codigo. Cria uma sessao ACTIVE com "
-                    + "uma lista de roteiro vazia. O corpo e opcional: sem codigo, ou com um "
-                    + "codigo desconhecido, a sessao nasce sem posicao e continua utilizavel.")
     public Response inicializar(String corpo) {
         String path = uriInfo.getRequestUri().getPath();
         try {
@@ -96,8 +88,6 @@ public class SessaoResource {
     @GET
     @Path("/{sessaoId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Consultar status da sessao",
-            description = "Devolve o status da sessao e onde o cliente esta.")
     public Response consultar(@PathParam("sessaoId") String sessaoId) {
         String path = uriInfo.getRequestUri().getPath();
         try {
@@ -116,10 +106,6 @@ public class SessaoResource {
     @Path("/{sessaoId}/posicao")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Recentrar a posicao do cliente",
-            description = "Acionado quando o cliente se perde e le outra placa da loja. "
-                    + "Atualiza apenas onde ele esta: a lista e o que ja foi coletado "
-                    + "permanecem intactos, e nenhuma sessao nova e criada.")
     public Response recentrar(@PathParam("sessaoId") String sessaoId, String corpo) {
         String path = uriInfo.getRequestUri().getPath();
         try {
@@ -147,9 +133,6 @@ public class SessaoResource {
     @POST
     @Path("/{sessaoId}/concluir")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Encerrar a sessao (UC-014)",
-            description = "Acionado quando o cliente finaliza a compra. Nao exige "
-                    + "que todos os itens tenham sido coletados.")
     public Response concluir(@PathParam("sessaoId") String sessaoId) {
         String path = uriInfo.getRequestUri().getPath();
         try {

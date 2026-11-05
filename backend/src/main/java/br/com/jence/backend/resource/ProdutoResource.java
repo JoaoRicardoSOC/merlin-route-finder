@@ -10,8 +10,6 @@ import br.com.jence.backend.service.BuscarProdutosUseCase;
 import br.com.jence.backend.service.ConsultarProdutoUseCase;
 import br.com.jence.backend.service.ListarSecoesUseCase;
 import br.com.jence.backend.service.SimularEstoqueUseCase;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PATCH;
@@ -38,7 +36,6 @@ import java.util.UUID;
  * paginacao e o tratamento de termo em branco ficam no caso de uso, que ja e dono dessa regra.
  */
 @Path("/api/v1/produtos")
-@Tag(name = "Catalogo", description = "Busca e detalhamento de produtos")
 public class ProdutoResource {
 
     private final BuscarProdutosUseCase buscarProdutosUseCase;
@@ -70,13 +67,6 @@ public class ProdutoResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Busca e filtragem do catalogo (UC-002)",
-            description = "Sem termo, navega o catalogo. Com termo, filtra por nome tolerando "
-                    + "busca parcial e pequenos erros de digitacao. Os filtros de secao e de "
-                    + "disponibilidade combinam com o termo e entre si, e cada parametro "
-                    + "'atributo' vem no formato CHAVE:valor. Valores da mesma chave sao 'ou', "
-                    + "chaves diferentes sao 'e'. A resposta traz as facetas disponiveis para o "
-                    + "recorte atual. Combinacao sem resultado devolve pagina vazia, nao erro.")
     public Response buscar(
             @QueryParam("query") String query,
             @QueryParam("secao") String secao,
@@ -145,10 +135,6 @@ public class ProdutoResource {
     @GET
     @Path("/secoes")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Listar as secoes do catalogo",
-            description = "O menu de navegacao por corredor, com a quantidade de produtos de "
-                    + "cada secao. So aparecem secoes que tem produto: uma secao vazia seria "
-                    + "um beco sem saida no menu.")
     public Response listarSecoes() {
         String path = uriInfo.getRequestUri().getPath();
         try {
@@ -161,8 +147,6 @@ public class ProdutoResource {
     @GET
     @Path("/{produtoId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Detalhamento de produto (UC-003)",
-            description = "Inclui o ponto de mapa onde o produto esta fisicamente na loja.")
     public Response consultar(@PathParam("produtoId") String produtoId) {
         String path = uriInfo.getRequestUri().getPath();
         try {
@@ -187,12 +171,6 @@ public class ProdutoResource {
     @Path("/{produtoId}/estoque")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "[Demonstracao] Simular alteracao de estoque",
-            description = "FERRAMENTA INTERNA - nao faz parte de nenhum caso de uso do cliente "
-                    + "final. Zera ou restaura o saldo de um produto sob demanda, para disparar "
-                    + "o fluxo de ruptura (UC-013) de forma confiavel durante uma gravacao ou "
-                    + "apresentacao ao vivo. Envie 0 para provocar a ruptura e qualquer valor "
-                    + "positivo para restaurar.")
     public Response simularEstoque(@PathParam("produtoId") String produtoId, String corpo) {
         String path = uriInfo.getRequestUri().getPath();
         try {

@@ -12,8 +12,6 @@ import br.com.jence.backend.resource.LeituraDaRequisicao.RequisicaoInvalida;
 import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.service.ConsultarListaRoteiroUseCase;
 import br.com.jence.backend.service.RemoverProdutoDoRoteiroUseCase;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -36,7 +34,6 @@ import java.util.UUID;
  * e tem casos de uso proprios.
  */
 @Path("/api/v1/sessoes/{sessaoId}/roteiro")
-@Tag(name = "Roteiro", description = "Montagem da lista de compras no Totem")
 public class RoteiroResource {
 
     private final ConsultarListaRoteiroUseCase consultarListaRoteiroUseCase;
@@ -64,7 +61,6 @@ public class RoteiroResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Consultar a lista de compras da sessao (UC-005)")
     public Response consultar(@PathParam("sessaoId") String sessaoId) {
         String path = uriInfo.getRequestUri().getPath();
         try {
@@ -88,9 +84,6 @@ public class RoteiroResource {
     @Path("/itens")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Adicionar produto ao roteiro (UC-004)",
-            description = "Sem limite de itens. Produto ja presente devolve o item existente, "
-                    + "sem duplicar a parada na rota.")
     public Response adicionar(@PathParam("sessaoId") String sessaoId, String corpo) {
         String path = uriInfo.getRequestUri().getPath();
         try {
@@ -121,7 +114,6 @@ public class RoteiroResource {
     @DELETE
     @Path("/itens/{itemId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Remover produto da lista (UC-006)")
     public Response remover(@PathParam("sessaoId") String sessaoId,
                             @PathParam("itemId") String itemId) {
         String path = uriInfo.getRequestUri().getPath();

@@ -1,7 +1,5 @@
 package br.com.jence.backend.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,8 +13,6 @@ import java.util.List;
 public class RecentrarSessaoRequest {
 
     /** Codigo de localizacao impresso na placa, em qualquer grafia. */
-    @Schema(description = "Codigo de localizacao da placa onde o cliente esta agora.",
-            example = "CEN-03", requiredMode = Schema.RequiredMode.REQUIRED)
     private String codigoPonto;
 
     public RecentrarSessaoRequest() {

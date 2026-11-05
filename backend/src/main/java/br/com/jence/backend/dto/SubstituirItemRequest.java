@@ -1,7 +1,5 @@
 package br.com.jence.backend.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -16,8 +14,6 @@ import java.util.UUID;
  */
 public class SubstituirItemRequest {
 
-    @Schema(description = "Produto que entra no lugar do que faltou.",
-            requiredMode = Schema.RequiredMode.REQUIRED)
     private UUID produtoSubstitutoId;
 
     public SubstituirItemRequest() {

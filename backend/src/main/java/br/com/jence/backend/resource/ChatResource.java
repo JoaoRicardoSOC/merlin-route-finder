@@ -12,10 +12,6 @@ import br.com.jence.backend.ia.GeminiClient;
 import br.com.jence.backend.resource.LeituraDaRequisicao.RequisicaoInvalida;
 import br.com.jence.backend.service.ConsultarHistoricoChatUseCase;
 import br.com.jence.backend.service.ConversarComAssistenteUseCase;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -37,7 +33,6 @@ import java.util.UUID;
  * recursos distintos sob a mesma sessao, e o contrato ja os separa em tags diferentes.
  */
 @Path("/api/v1/sessoes/{sessaoId}/chat/mensagens")
-@Tag(name = "Chat", description = "Assistente virtual de compras")
 public class ChatResource {
 
     /*
@@ -69,14 +64,6 @@ public class ChatResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Consultar historico conversacional da sessao (UC-007 a UC-009)",
-            description = "Devolve as mensagens em ordem cronologica, do cliente e do "
-                    + "assistente. Sessao encerrada nao impede a leitura: o historico e "
-                    + "registro do que ja aconteceu.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Historico da conversa, possivelmente vazio"),
-            @ApiResponse(responseCode = "404", description = "Sessao inexistente")
-    })
     public Response historico(@PathParam("sessaoId") String sessaoId) {
         String path = uriInfo.getRequestUri().getPath();
         try {
@@ -103,17 +90,6 @@ public class ChatResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Enviar mensagem ao assistente virtual (UC-007 a UC-009)",
-            description = "O assistente consulta o catalogo real da loja antes de responder e "
-                    + "tem escopo fechado: recusa assuntos fora de reforma, construcao, "
-                    + "decoracao e jardinagem. Se o assistente estiver indisponivel, a resposta "
-                    + "e uma mensagem honesta de indisponibilidade, que nao entra no historico.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Resposta do assistente"),
-            @ApiResponse(responseCode = "400", description = "Conteudo vazio ou acima de 1000 caracteres"),
-            @ApiResponse(responseCode = "404", description = "Sessao inexistente"),
-            @ApiResponse(responseCode = "409", description = "Sessao encerrada ou expirada")
-    })
     public Response enviar(@PathParam("sessaoId") String sessaoId, String corpo) {
         String path = uriInfo.getRequestUri().getPath();
         try {
