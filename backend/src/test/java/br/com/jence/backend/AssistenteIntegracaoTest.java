@@ -1,17 +1,21 @@
 package br.com.jence.backend;
 
 import br.com.jence.backend.dao.ChatMensagemDao;
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.PontoMapaDao;
+import br.com.jence.backend.dao.ProdutoDao;
+import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.dto.ChatMensagemResponse;
+import br.com.jence.backend.ia.GeminiClient;
 import br.com.jence.backend.service.ConversarComAssistenteUseCase;
 import br.com.jence.backend.service.InicializarSessaoUseCase;
 import br.com.jence.backend.model.ChatMensagem;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,12 +26,24 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Conversa real com o Gemini sobre o catalogo real. Exige Oracle e GEMINI_API_KEY. */
 @Tag("integracao")
-@SpringBootTest
 @EnabledIfEnvironmentVariable(named = "GEMINI_API_KEY", matches = ".+")
 class AssistenteIntegracaoTest {
 
-    @Autowired InicializarSessaoUseCase inicializar;
-    @Autowired ConversarComAssistenteUseCase conversar;
+    /** A massa de demonstracao no banco, como a Main garante antes de subir. */
+    @BeforeAll
+    static void carregarMassa() throws Exception {
+        BancoDeTeste.carregarMassa();
+    }
+
+    private final InicializarSessaoUseCase inicializar = new InicializarSessaoUseCase(
+            new SessaoDao(),
+            new ListaRoteiroDao(),
+            new PontoMapaDao());
+    private final ConversarComAssistenteUseCase conversar = new ConversarComAssistenteUseCase(
+            new SessaoDao(),
+            new ChatMensagemDao(),
+            new ProdutoDao(),
+            new GeminiClient());
     private final ChatMensagemDao chatMensagemDao = BancoDeTeste.mensagens();
 
     private UUID sessaoId;
