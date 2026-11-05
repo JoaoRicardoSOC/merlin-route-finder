@@ -186,7 +186,7 @@ Nesta fase o Spring e o Jersey convivem no `pom.xml` até o passo 10.12. **Aten�
 - [x] **10.5** Um Resource por commit (6), junto com o seu teste web: anotações do Spring → JAX-RS; `try/catch` em cada método montando `StandardError` com o status certo (mesmos status do `GlobalExceptionHandler`); `@PathParam` como `String` convertido com `UUID.fromString`; `Location` com `UriBuilder` só onde existe hoje; segundo construtor que recebe os services. O teste sobe o Grizzly com o Resource registrado com services falsos e chama com o `HttpClient` do JDK.
 - [x] **10.6** `ErrosDeRequisicaoTest` e `FalhaDeInfraestruturaTest` reescritos no mesmo formato. Confirmar RF-06 e RF-07; se o JSON malformado não der 400, aplicar a alternativa de RF-07.
 - [x] **10.7** Teste de contrato reescrito sem Spring e sem SnakeYAML: as rotas são lidas por reflexão das anotações `@Path`/`@GET`/... dos Resources, e as do `openapi.yaml`, com leitura linha a linha em Java puro. Sem banco, ele passa a rodar na suíte padrão.
-- [ ] **10.8** Os 21 testes de integração restantes: um commit por classe, subindo o servidor com `Main.startServer` numa porta livre e chamando com o `HttpClient` do JDK.
+- [x] **10.8** Os 21 testes de integração restantes: um commit por classe, subindo o servidor com `Main.startServer` numa porta livre e chamando com o `HttpClient` do JDK.
 - [ ] **10.9** 🔒 `mvnw test -Pintegracao` completo.
 - [ ] **10.10** Apagar `BackendApplication`, `GlobalExceptionHandler`, `AgendamentoConfig`, os `@Component`/`@Service` provisórios e os `application*.yml`.
 - [ ] **10.11** Apagar as anotações do Swagger (`@Tag`, `@Operation`, `@ApiResponse`, `@Schema`).
