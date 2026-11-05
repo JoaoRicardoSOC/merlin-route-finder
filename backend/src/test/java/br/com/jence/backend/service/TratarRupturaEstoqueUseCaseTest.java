@@ -244,12 +244,12 @@ class TratarRupturaEstoqueUseCaseTest {
 
         RupturaEstoqueResponse resposta = useCase.executar(itemId);
 
-        assertEquals(lixaEmFalta.getId(), resposta.produtoOriginalId());
-        assertEquals(lixaDagua.getId(), resposta.produtoSugeridoId());
-        assertEquals("SKU-TIN-004", resposta.produtoSugerido().getSku());
-        assertEquals(0, resposta.produtoSugerido().getPreco().compareTo(new BigDecimal("4.20")));
-        assertTrue(resposta.justificativa().startsWith("A lixa d'agua"));
-        assertEquals(OrigemSugestao.ASSISTENTE_IA, resposta.origemSugestao());
+        assertEquals(lixaEmFalta.getId(), resposta.getProdutoOriginalId());
+        assertEquals(lixaDagua.getId(), resposta.getProdutoSugeridoId());
+        assertEquals("SKU-TIN-004", resposta.getProdutoSugerido().getSku());
+        assertEquals(0, resposta.getProdutoSugerido().getPreco().compareTo(new BigDecimal("4.20")));
+        assertTrue(resposta.getJustificativa().startsWith("A lixa d'agua"));
+        assertEquals(OrigemSugestao.ASSISTENTE_IA, resposta.getOrigemSugestao());
     }
 
     @Test
@@ -325,10 +325,10 @@ class TratarRupturaEstoqueUseCaseTest {
 
         RupturaEstoqueResponse resposta = useCase.executar(itemId);
 
-        assertEquals(lixaDagua.getId(), resposta.produtoSugeridoId(),
+        assertEquals(lixaDagua.getId(), resposta.getProdutoSugeridoId(),
                 "nenhum produto pode sair daqui sem ter vindo da nossa pre-filtragem");
-        assertEquals(OrigemSugestao.PROXIMIDADE, resposta.origemSugestao());
-        assertFalse(resposta.justificativa().contains("massa corrida"),
+        assertEquals(OrigemSugestao.PROXIMIDADE, resposta.getOrigemSugestao());
+        assertFalse(resposta.getJustificativa().contains("massa corrida"),
                 "a justificativa inventada pelo modelo nao pode chegar ao cliente");
     }
 
@@ -341,8 +341,8 @@ class TratarRupturaEstoqueUseCaseTest {
 
         RupturaEstoqueResponse resposta = useCase.executar(itemId);
 
-        assertEquals(lixaDagua.getId(), resposta.produtoSugeridoId());
-        assertEquals(OrigemSugestao.PROXIMIDADE, resposta.origemSugestao());
+        assertEquals(lixaDagua.getId(), resposta.getProdutoSugeridoId());
+        assertEquals(OrigemSugestao.PROXIMIDADE, resposta.getOrigemSugestao());
     }
 
     @Test
@@ -354,8 +354,8 @@ class TratarRupturaEstoqueUseCaseTest {
 
         RupturaEstoqueResponse resposta = useCase.executar(itemId);
 
-        assertEquals(lixaDagua.getId(), resposta.produtoSugeridoId());
-        assertEquals(OrigemSugestao.ASSISTENTE_IA, resposta.origemSugestao());
+        assertEquals(lixaDagua.getId(), resposta.getProdutoSugeridoId());
+        assertEquals(OrigemSugestao.ASSISTENTE_IA, resposta.getOrigemSugestao());
     }
 
     // ---------------------------------------------------------------- degradacao
@@ -369,9 +369,9 @@ class TratarRupturaEstoqueUseCaseTest {
 
         RupturaEstoqueResponse resposta = useCase.executar(itemId);
 
-        assertEquals(lixaDagua.getId(), resposta.produtoSugeridoId());
-        assertEquals(OrigemSugestao.PROXIMIDADE, resposta.origemSugestao());
-        assertTrue(resposta.justificativa().contains("mais próximo"),
+        assertEquals(lixaDagua.getId(), resposta.getProdutoSugeridoId());
+        assertEquals(OrigemSugestao.PROXIMIDADE, resposta.getOrigemSugestao());
+        assertTrue(resposta.getJustificativa().contains("mais próximo"),
                 "a mensagem precisa ser honesta sobre nao ter havido analise");
         assertEquals(OrigemSugestao.PROXIMIDADE, registroSalvo().getOrigem());
     }
@@ -426,7 +426,7 @@ class TratarRupturaEstoqueUseCaseTest {
 
         RupturaEstoqueResponse resposta = useCase.executar(itemId);
 
-        assertEquals(disjuntor.getId(), resposta.produtoSugeridoId(),
+        assertEquals(disjuntor.getId(), resposta.getProdutoSugeridoId(),
                 "a lixa d'agua ja esta no carrinho e nao pode ser oferecida de novo");
     }
 

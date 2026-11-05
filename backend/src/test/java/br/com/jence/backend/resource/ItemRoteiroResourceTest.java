@@ -1,7 +1,6 @@
 package br.com.jence.backend.resource;
 
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
-import br.com.jence.backend.dto.ProdutoDetalhadoResponse;
 import br.com.jence.backend.dto.ListaRoteiroResponse;
 import br.com.jence.backend.dto.RupturaEstoqueResponse;
 import br.com.jence.backend.service.DesmarcarItemColetadoUseCase;
@@ -180,12 +179,11 @@ class ItemRoteiroResourceTest {
 
     private RupturaEstoqueResponse sugestaoDaIA(UUID produtoOriginalId) {
         UUID sugeridoId = UUID.randomUUID();
-        return new RupturaEstoqueResponse(
+        return RupturaEstoqueResponse.de(
                 produtoOriginalId,
-                sugeridoId,
-                ProdutoDetalhadoResponse.de(new Produto(sugeridoId, "SKU-TIN-004",
+                new Produto(sugeridoId, "SKU-TIN-004",
                         "Lixa d'Agua Grao 150", new BigDecimal("4.20"), 40,
-                        new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 32, 10))),
+                        new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 32, 10)),
                 "A lixa d'agua grao 150 da o mesmo acabamento e esta no mesmo corredor.",
                 OrigemSugestao.ASSISTENTE_IA);
     }
@@ -212,11 +210,11 @@ class ItemRoteiroResourceTest {
     void expoeAOrigemDaSugestao() throws Exception {
         UUID itemId = UUID.randomUUID();
         UUID sugeridoId = UUID.randomUUID();
-        when(tratarRupturaEstoqueUseCase.executar(itemId)).thenReturn(new RupturaEstoqueResponse(
-                UUID.randomUUID(), sugeridoId,
-                ProdutoDetalhadoResponse.de(new Produto(sugeridoId, "SKU-TIN-002",
+        when(tratarRupturaEstoqueUseCase.executar(itemId)).thenReturn(RupturaEstoqueResponse.de(
+                UUID.randomUUID(),
+                new Produto(sugeridoId, "SKU-TIN-002",
                         "Rolo de La 23cm com Cabo", new BigDecimal("34.90"), 25,
-                        new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 32, 10))),
+                        new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 32, 10)),
                 "Este e o produto disponivel mais proximo de onde voce esta.",
                 OrigemSugestao.PROXIMIDADE));
 
