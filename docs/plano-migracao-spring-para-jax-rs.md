@@ -187,7 +187,7 @@ Nesta fase o Spring e o Jersey convivem no `pom.xml` até o passo 10.12. **Aten�
 - [x] **10.6** `ErrosDeRequisicaoTest` e `FalhaDeInfraestruturaTest` reescritos no mesmo formato. Confirmar RF-06 e RF-07; se o JSON malformado não der 400, aplicar a alternativa de RF-07.
 - [x] **10.7** Teste de contrato reescrito sem Spring e sem SnakeYAML: as rotas são lidas por reflexão das anotações `@Path`/`@GET`/... dos Resources, e as do `openapi.yaml`, com leitura linha a linha em Java puro. Sem banco, ele passa a rodar na suíte padrão.
 - [x] **10.8** Os 21 testes de integração restantes: um commit por classe, subindo o servidor com `Main.startServer` numa porta livre e chamando com o `HttpClient` do JDK.
-- [ ] **10.9** 🔒 `mvnw test -Pintegracao` completo.
+- [x] **10.9** 🔒 `mvnw test -Pintegracao` completo. **Resultado (05/11/2026):** 351 testes, 2 falhas. Uma era regressão do 9.3 (`MapaIntegracaoTest.mapaEstavel` comparava DTOs com `equals`), corrigida e confirmada. A outra foi a já conhecida do 7.21: o Gemini respondeu que não havia substituto para a lixa na `JornadaCompletaIntegracaoTest`; o mesmo teste passou nas duas execuções seguintes.
 - [ ] **10.10** Apagar `BackendApplication`, `GlobalExceptionHandler`, `AgendamentoConfig`, os `@Component`/`@Service` provisórios e os `application*.yml`.
 - [ ] **10.11** Apagar as anotações do Swagger (`@Tag`, `@Operation`, `@ApiResponse`, `@Schema`).
 - [ ] **10.12** `pom.xml` final (RC-01, RC-02): sem `spring-boot-starter-parent` e sem nenhuma dependência do Spring, springdoc, Mockito, AssertJ ou SnakeYAML; `junit-jupiter` `5.10.1`; `maven-compiler-plugin` com Java 21; `exec-maven-plugin` apontando para `Main`; `maven-shade-plugin`; JaCoCo e o profile `integracao` mantidos.
