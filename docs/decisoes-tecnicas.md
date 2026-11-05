@@ -209,6 +209,8 @@ Foi por esse critério que no UC-003 optamos por **não** adicionar um campo `di
 
 ### D-30. Dois artefatos de documentação de API, com propósitos diferentes
 
+> **Revista em 05/11/2026, na migração para JAX-RS:** o segundo artefato, gerado pelo springdoc, deixou de existir. O `openapi.yaml` é a única documentação da API, e o `ContratoOpenApiTest` confere as rotas dele contra as anotações dos Resources, por reflexão, na suíte padrão. Ver [D-89](#d-89-o-backend-sai-do-spring-boot-e-segue-o-material-da-fiap-à-risca).
+
 **Contexto.** O projeto tem um contrato OpenAPI escrito à mão (padrão API-First, card 1) **e** o springdoc, que gera documentação automaticamente a partir dos controllers. Ter duas fontes parece redundante e convida à divergência.
 
 **Decisão.** Manter os dois, com papéis distintos e explícitos:
