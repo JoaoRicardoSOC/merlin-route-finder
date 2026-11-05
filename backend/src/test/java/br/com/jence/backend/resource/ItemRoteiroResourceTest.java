@@ -3,46 +3,136 @@ package br.com.jence.backend.resource;
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.dto.ListaRoteiroResponse;
 import br.com.jence.backend.dto.RupturaEstoqueResponse;
-import br.com.jence.backend.service.DesmarcarItemColetadoUseCase;
-import br.com.jence.backend.service.MarcarItemColetadoUseCase;
-import br.com.jence.backend.service.SubstituirItemDoRoteiroUseCase;
-import br.com.jence.backend.service.TratarRupturaEstoqueUseCase;
+import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
+import br.com.jence.backend.exception.RecursoNaoEncontradoException;
+import br.com.jence.backend.exception.SubstitutoIndisponivelException;
 import br.com.jence.backend.model.ItemRoteiro;
 import br.com.jence.backend.model.OrigemSugestao;
 import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.TipoPonto;
-import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
-import br.com.jence.backend.exception.RecursoNaoEncontradoException;
-import br.com.jence.backend.exception.SubstitutoIndisponivelException;
+import br.com.jence.backend.service.DesmarcarItemColetadoUseCase;
+import br.com.jence.backend.service.MarcarItemColetadoUseCase;
+import br.com.jence.backend.service.SubstituirItemDoRoteiroUseCase;
+import br.com.jence.backend.service.TratarRupturaEstoqueUseCase;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@WebMvcTest(ItemRoteiroResource.class)
+/** As acoes sobre um item do roteiro pelo Jersey, com casos de uso falsos. */
 class ItemRoteiroResourceTest {
 
-    @Autowired MockMvc mockMvc;
-    @MockitoBean MarcarItemColetadoUseCase marcarItemColetadoUseCase;
-    @MockitoBean DesmarcarItemColetadoUseCase desmarcarItemColetadoUseCase;
-    @MockitoBean TratarRupturaEstoqueUseCase tratarRupturaEstoqueUseCase;
-    @MockitoBean SubstituirItemDoRoteiroUseCase substituirItemDoRoteiroUseCase;
+    static class MarcarFalso extends MarcarItemColetadoUseCase {
+        ItemRoteiroDetalhadoResponse item;
+        RecursoNaoEncontradoException falha;
+
+        MarcarFalso() {
+            super(null, null);
+        }
+
+        @Override
+        public ItemRoteiroDetalhadoResponse executar(UUID itemId) throws RecursoNaoEncontradoException {
+            if (falha != null) {
+                throw falha;
+            }
+            return item;
+        }
+    }
+
+    static class DesmarcarFalso extends DesmarcarItemColetadoUseCase {
+        final List<UUID> chamadas = new ArrayList<>();
+        ItemRoteiroDetalhadoResponse item;
+        RecursoNaoEncontradoException falha;
+
+        DesmarcarFalso() {
+            super(null, null);
+        }
+
+        @Override
+        public ItemRoteiroDetalhadoResponse executar(UUID itemId) throws RecursoNaoEncontradoException {
+            chamadas.add(itemId);
+            if (falha != null) {
+                throw falha;
+            }
+            return item;
+        }
+    }
+
+    static class SubstituirFalso extends SubstituirItemDoRoteiroUseCase {
+        final List<UUID[]> chamadas = new ArrayList<>();
+        ListaRoteiroResponse lista;
+        OperacaoNaoPermitidaException falha;
+
+        SubstituirFalso() {
+            super(null, null, null);
+        }
+
+        @Override
+        public ListaRoteiroResponse executar(UUID itemId, UUID produtoSubstitutoId)
+                throws OperacaoNaoPermitidaException {
+            chamadas.add(new UUID[] {itemId, produtoSubstitutoId});
+            if (falha != null) {
+                throw falha;
+            }
+            return lista;
+        }
+    }
+
+    static class RupturaFalsa extends TratarRupturaEstoqueUseCase {
+        RupturaEstoqueResponse resposta;
+        Exception falha;
+
+        RupturaFalsa() {
+            super(null, null, null, null, null, null);
+        }
+
+        @Override
+        public RupturaEstoqueResponse executar(UUID itemId) throws RecursoNaoEncontradoException,
+                OperacaoNaoPermitidaException, SubstitutoIndisponivelException {
+            if (falha instanceof RecursoNaoEncontradoException e) {
+                throw e;
+            }
+            if (falha instanceof OperacaoNaoPermitidaException e) {
+                throw e;
+            }
+            if (falha instanceof SubstitutoIndisponivelException e) {
+                throw e;
+            }
+            return resposta;
+        }
+    }
+
+    private final MarcarFalso marcar = new MarcarFalso();
+    private final DesmarcarFalso desmarcar = new DesmarcarFalso();
+    private final RupturaFalsa ruptura = new RupturaFalsa();
+    private final SubstituirFalso substituir = new SubstituirFalso();
+    private ServidorDeTeste servidor;
+
+    @BeforeEach
+    void subir() throws Exception {
+        servidor = ServidorDeTeste.com(new ItemRoteiroResource(marcar, desmarcar, ruptura, substituir));
+    }
+
+    @AfterEach
+    void descer() {
+        servidor.close();
+    }
+
+    private static Produto cano(UUID produtoId) {
+        return new Produto(produtoId, "SKU-ENC-001", "Cano PVC Soldavel 25mm 6m",
+                new BigDecimal("28.90"), 35,
+                new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Encanamento", 50, 50));
+    }
 
     private ListaRoteiroResponse lista(UUID sessaoId, ItemRoteiroDetalhadoResponse... itens) {
         ListaRoteiroResponse lista = new ListaRoteiroResponse();
@@ -53,55 +143,48 @@ class ItemRoteiroResourceTest {
         return lista;
     }
 
+    private String item(Object itemId, String acao) {
+        return "/api/v1/roteiro/itens/" + itemId + "/" + acao;
+    }
+
     // ---------------------------------------------------------------- coleta (UC-014)
 
     @Test
     @DisplayName("PATCH coletar devolve o item marcado")
     void coletarItem() throws Exception {
         UUID itemId = UUID.randomUUID();
-        UUID produtoId = UUID.randomUUID();
-        when(marcarItemColetadoUseCase.executar(itemId)).thenReturn(
-                ItemRoteiroDetalhadoResponse.de(ItemRoteiro.reconstituir(itemId,
-                        new Produto(produtoId, "SKU-ENC-001",
-                                "Cano PVC Soldavel 25mm 6m", new BigDecimal("28.90"), 35,
-                                new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Encanamento", 50, 50)),
-                        LocalDateTime.now())));
+        marcar.item = ItemRoteiroDetalhadoResponse.de(
+                ItemRoteiro.reconstituir(itemId, cano(UUID.randomUUID()), LocalDateTime.now()));
 
-        mockMvc.perform(patch("/api/v1/roteiro/itens/{i}/coletar", itemId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(itemId.toString()))
-                .andExpect(jsonPath("$.coletado").value(true))
-                .andExpect(jsonPath("$.produto.nome").value("Cano PVC Soldavel 25mm 6m"));
+        ServidorDeTeste.Resposta resposta = servidor.semCorpo("PATCH", item(itemId, "coletar"));
+
+        assertEquals(200, resposta.status());
+        assertEquals(itemId.toString(), resposta.texto("id"));
+        assertEquals(true, resposta.json("coletado"));
+        assertEquals("Cano PVC Soldavel 25mm 6m", resposta.texto("produto.nome"));
     }
 
     @Test
     @DisplayName("PATCH desmarcar devolve o item sem coleta")
     void desmarcarItem() throws Exception {
         UUID itemId = UUID.randomUUID();
-        UUID produtoId = UUID.randomUUID();
-        when(desmarcarItemColetadoUseCase.executar(itemId)).thenReturn(
-                ItemRoteiroDetalhadoResponse.de(new ItemRoteiro(itemId,
-                        new Produto(produtoId, "SKU-ENC-001",
-                                "Cano PVC Soldavel 25mm 6m", new BigDecimal("28.90"), 35,
-                                new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Encanamento", 50, 50)))));
+        desmarcar.item = ItemRoteiroDetalhadoResponse.de(new ItemRoteiro(itemId, cano(UUID.randomUUID())));
 
-        mockMvc.perform(patch("/api/v1/roteiro/itens/{i}/desmarcar", itemId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(itemId.toString()))
-                .andExpect(jsonPath("$.coletado").value(false));
+        ServidorDeTeste.Resposta resposta = servidor.semCorpo("PATCH", item(itemId, "desmarcar"));
 
-        verify(desmarcarItemColetadoUseCase).executar(itemId);
+        assertEquals(200, resposta.status());
+        assertEquals(itemId.toString(), resposta.texto("id"));
+        assertEquals(false, resposta.json("coletado"));
+        assertEquals(List.of(itemId), desmarcar.chamadas);
     }
 
     @Test
     @DisplayName("desmarcar item inexistente devolve 404")
     void desmarcarItemInexistente() throws Exception {
         UUID itemId = UUID.randomUUID();
-        when(desmarcarItemColetadoUseCase.executar(itemId))
-                .thenThrow(new RecursoNaoEncontradoException("Item do roteiro", itemId));
+        desmarcar.falha = new RecursoNaoEncontradoException("Item do roteiro", itemId);
 
-        mockMvc.perform(patch("/api/v1/roteiro/itens/{i}/desmarcar", itemId))
-                .andExpect(status().isNotFound());
+        assertEquals(404, servidor.semCorpo("PATCH", item(itemId, "desmarcar")).status());
     }
 
     // ---------------------------------------------------------------- aceitar o substituto
@@ -111,77 +194,71 @@ class ItemRoteiroResourceTest {
     void substituirItem() throws Exception {
         UUID itemId = UUID.randomUUID();
         UUID substitutoId = UUID.randomUUID();
-        UUID novoItemId = UUID.randomUUID();
+        substituir.lista = lista(UUID.randomUUID(), ItemRoteiroDetalhadoResponse.de(new ItemRoteiro(
+                UUID.randomUUID(),
+                new Produto(substitutoId, "SKU-TIN-004", "Lixa d'Agua Grao 150",
+                        new BigDecimal("4.20"), 40,
+                        new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 50, 50)))));
 
-        when(substituirItemDoRoteiroUseCase.executar(itemId, substitutoId)).thenReturn(
-                lista(UUID.randomUUID(), ItemRoteiroDetalhadoResponse.de(new ItemRoteiro(novoItemId,
-                        new Produto(substitutoId, "SKU-TIN-004",
-                                "Lixa d'Agua Grao 150", new BigDecimal("4.20"), 40,
-                                new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 50, 50))))));
+        ServidorDeTeste.Resposta resposta = servidor.json("POST", item(itemId, "substituir"),
+                "{\"produtoSubstitutoId\":\"" + substitutoId + "\"}");
 
-        mockMvc.perform(post("/api/v1/roteiro/itens/{i}/substituir", itemId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"produtoSubstitutoId\":\"" + substitutoId + "\"}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.quantidadeItens").value(1))
-                .andExpect(jsonPath("$.itens[0].produto.sku").value("SKU-TIN-004"))
-                .andExpect(jsonPath("$.itens[0].coletado")
-                        .value(false));
-
-        verify(substituirItemDoRoteiroUseCase).executar(itemId, substitutoId);
+        assertEquals(200, resposta.status());
+        assertEquals(1, resposta.inteiro("quantidadeItens"));
+        assertEquals("SKU-TIN-004", resposta.texto("itens[0].produto.sku"));
+        assertEquals(false, resposta.json("itens[0].coletado"));
+        assertEquals(itemId, substituir.chamadas.get(0)[0]);
+        assertEquals(substitutoId, substituir.chamadas.get(0)[1]);
     }
 
     @Test
     @DisplayName("substituir sem o produto no corpo devolve 400 apontando o campo")
     void substituirSemProduto() throws Exception {
-        mockMvc.perform(post("/api/v1/roteiro/itens/{i}/substituir", UUID.randomUUID())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.validationErrors[0].field").value("produtoSubstitutoId"));
+        ServidorDeTeste.Resposta resposta =
+                servidor.json("POST", item(UUID.randomUUID(), "substituir"), "{}");
+
+        assertEquals(400, resposta.status());
+        assertEquals("produtoSubstitutoId", resposta.texto("validationErrors[0].field"));
+        assertTrue(substituir.chamadas.isEmpty());
     }
 
     @Test
     @DisplayName("trocar um produto por ele mesmo devolve 409")
     void substituirPorSiMesmo() throws Exception {
-        UUID itemId = UUID.randomUUID();
         UUID produtoId = UUID.randomUUID();
-        when(substituirItemDoRoteiroUseCase.executar(any(), any()))
-                .thenThrow(new OperacaoNaoPermitidaException(
-                        "Produto %s nao pode substituir a si mesmo".formatted(produtoId)));
+        substituir.falha = new OperacaoNaoPermitidaException(
+                "Produto %s nao pode substituir a si mesmo".formatted(produtoId));
 
-        mockMvc.perform(post("/api/v1/roteiro/itens/{i}/substituir", itemId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"produtoSubstitutoId\":\"" + produtoId + "\"}"))
-                .andExpect(status().isConflict());
+        ServidorDeTeste.Resposta resposta = servidor.json("POST", item(UUID.randomUUID(), "substituir"),
+                "{\"produtoSubstitutoId\":\"" + produtoId + "\"}");
+
+        assertEquals(409, resposta.status());
     }
 
     @Test
     @DisplayName("item inexistente devolve 404")
     void itemInexistente() throws Exception {
         UUID itemId = UUID.randomUUID();
-        when(marcarItemColetadoUseCase.executar(any()))
-                .thenThrow(new RecursoNaoEncontradoException("Item do roteiro", itemId));
+        marcar.falha = new RecursoNaoEncontradoException("Item do roteiro", itemId);
 
-        mockMvc.perform(patch("/api/v1/roteiro/itens/{i}/coletar", itemId))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Recurso Não Encontrado"));
+        ServidorDeTeste.Resposta resposta = servidor.semCorpo("PATCH", item(itemId, "coletar"));
+
+        assertEquals(404, resposta.status());
+        assertEquals("Recurso Não Encontrado", resposta.texto("error"));
     }
 
     @Test
     @DisplayName("id malformado devolve 400")
     void idMalformado() throws Exception {
-        mockMvc.perform(patch("/api/v1/roteiro/itens/{i}/coletar", "abc"))
-                .andExpect(status().isBadRequest());
+        assertEquals(400, servidor.semCorpo("PATCH", item("abc", "coletar")).status());
     }
 
     // ---------------------------------------------------------------- ruptura (UC-013)
 
     private RupturaEstoqueResponse sugestaoDaIA(UUID produtoOriginalId) {
-        UUID sugeridoId = UUID.randomUUID();
         return RupturaEstoqueResponse.de(
                 produtoOriginalId,
-                new Produto(sugeridoId, "SKU-TIN-004",
+                new Produto(UUID.randomUUID(), "SKU-TIN-004",
                         "Lixa d'Agua Grao 150", new BigDecimal("4.20"), 40,
                         new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 32, 10)),
                 "A lixa d'agua grao 150 da o mesmo acabamento e esta no mesmo corredor.",
@@ -191,89 +268,82 @@ class ItemRoteiroResourceTest {
     @Test
     @DisplayName("POST ruptura devolve o substituto com o corredor onde encontra-lo")
     void relatarRuptura() throws Exception {
-        UUID itemId = UUID.randomUUID();
         UUID produtoOriginalId = UUID.randomUUID();
-        when(tratarRupturaEstoqueUseCase.executar(itemId)).thenReturn(sugestaoDaIA(produtoOriginalId));
+        ruptura.resposta = sugestaoDaIA(produtoOriginalId);
 
-        mockMvc.perform(post("/api/v1/roteiro/itens/{i}/ruptura", itemId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.produtoOriginalId").value(produtoOriginalId.toString()))
-                .andExpect(jsonPath("$.produtoSugerido.sku").value("SKU-TIN-004"))
-                .andExpect(jsonPath("$.produtoSugerido.saldoEstoque").value(40))
-                .andExpect(jsonPath("$.produtoSugerido.pontoMapa.corredor").value("Tintas"))
-                .andExpect(jsonPath("$.justificativa").value(org.hamcrest.Matchers.containsString("acabamento")))
-                .andExpect(jsonPath("$.origemSugestao").value("ASSISTENTE_IA"));
+        ServidorDeTeste.Resposta resposta = servidor.semCorpo("POST", item(UUID.randomUUID(), "ruptura"));
+
+        assertEquals(200, resposta.status());
+        assertEquals(produtoOriginalId.toString(), resposta.texto("produtoOriginalId"));
+        assertEquals("SKU-TIN-004", resposta.texto("produtoSugerido.sku"));
+        assertEquals(40, resposta.inteiro("produtoSugerido.saldoEstoque"));
+        assertEquals("Tintas", resposta.texto("produtoSugerido.pontoMapa.corredor"));
+        assertTrue(resposta.texto("justificativa").contains("acabamento"));
+        assertEquals("ASSISTENTE_IA", resposta.texto("origemSugestao"));
     }
 
     @Test
     @DisplayName("a origem da sugestao chega ao frontend, que nao pode rotular fallback como IA")
     void expoeAOrigemDaSugestao() throws Exception {
-        UUID itemId = UUID.randomUUID();
-        UUID sugeridoId = UUID.randomUUID();
-        when(tratarRupturaEstoqueUseCase.executar(itemId)).thenReturn(RupturaEstoqueResponse.de(
+        ruptura.resposta = RupturaEstoqueResponse.de(
                 UUID.randomUUID(),
-                new Produto(sugeridoId, "SKU-TIN-002",
+                new Produto(UUID.randomUUID(), "SKU-TIN-002",
                         "Rolo de La 23cm com Cabo", new BigDecimal("34.90"), 25,
                         new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 32, 10)),
                 "Este e o produto disponivel mais proximo de onde voce esta.",
-                OrigemSugestao.PROXIMIDADE));
+                OrigemSugestao.PROXIMIDADE);
 
-        mockMvc.perform(post("/api/v1/roteiro/itens/{i}/ruptura", itemId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.origemSugestao").value("PROXIMIDADE"));
+        ServidorDeTeste.Resposta resposta = servidor.semCorpo("POST", item(UUID.randomUUID(), "ruptura"));
+
+        assertEquals(200, resposta.status());
+        assertEquals("PROXIMIDADE", resposta.texto("origemSugestao"));
     }
 
     @Test
     @DisplayName("sem substituto plausivel devolve 422, distinguivel de 404")
     void semSubstitutoPlausivel() throws Exception {
-        UUID itemId = UUID.randomUUID();
-        when(tratarRupturaEstoqueUseCase.executar(itemId)).thenThrow(
-                new SubstitutoIndisponivelException(
-                        "Nenhum substituto plausivel para 'Espelho Redondo 60cm' foi encontrado."));
+        ruptura.falha = new SubstitutoIndisponivelException(
+                "Nenhum substituto plausivel para 'Espelho Redondo 60cm' foi encontrado.");
 
-        mockMvc.perform(post("/api/v1/roteiro/itens/{i}/ruptura", itemId))
-                .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.error").value("Substituto Indisponível"))
-                .andExpect(jsonPath("$.message").value(
-                        org.hamcrest.Matchers.containsString("Espelho Redondo 60cm")));
+        ServidorDeTeste.Resposta resposta = servidor.semCorpo("POST", item(UUID.randomUUID(), "ruptura"));
+
+        assertEquals(422, resposta.status());
+        assertEquals("Substituto Indisponível", resposta.texto("error"));
+        assertTrue(resposta.texto("message").contains("Espelho Redondo 60cm"));
     }
 
     @Test
     @DisplayName("sessao encerrada devolve 409")
     void sessaoInativa() throws Exception {
-        UUID itemId = UUID.randomUUID();
-        when(tratarRupturaEstoqueUseCase.executar(itemId))
-                .thenThrow(new OperacaoNaoPermitidaException("Sessao nao esta mais ativa (status EXPIRED)"));
+        ruptura.falha = new OperacaoNaoPermitidaException("Sessao nao esta mais ativa (status EXPIRED)");
 
-        mockMvc.perform(post("/api/v1/roteiro/itens/{i}/ruptura", itemId))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Operação Não Permitida"));
+        ServidorDeTeste.Resposta resposta = servidor.semCorpo("POST", item(UUID.randomUUID(), "ruptura"));
+
+        assertEquals(409, resposta.status());
+        assertEquals("Operação Não Permitida", resposta.texto("error"));
     }
 
     @Test
     @DisplayName("item inexistente na ruptura devolve 404")
     void rupturaDeItemInexistente() throws Exception {
         UUID itemId = UUID.randomUUID();
-        when(tratarRupturaEstoqueUseCase.executar(itemId))
-                .thenThrow(new RecursoNaoEncontradoException("Item de roteiro", itemId));
+        ruptura.falha = new RecursoNaoEncontradoException("Item de roteiro", itemId);
 
-        mockMvc.perform(post("/api/v1/roteiro/itens/{i}/ruptura", itemId))
-                .andExpect(status().isNotFound());
+        assertEquals(404, servidor.semCorpo("POST", item(itemId, "ruptura")).status());
     }
 
     @Test
     @DisplayName("id malformado na ruptura devolve 400, nao 500")
     void rupturaComIdMalformado() throws Exception {
-        mockMvc.perform(post("/api/v1/roteiro/itens/{i}/ruptura", "nao-e-uuid"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Parâmetro Inválido"));
+        ServidorDeTeste.Resposta resposta = servidor.semCorpo("POST", item("nao-e-uuid", "ruptura"));
+
+        assertEquals(400, resposta.status());
+        assertEquals("Parâmetro Inválido", resposta.texto("error"));
     }
 
     @Test
     @DisplayName("GET no endereco da ruptura devolve 405, nao 500")
     void metodoErradoNaRuptura() throws Exception {
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                        .get("/api/v1/roteiro/itens/{i}/ruptura", UUID.randomUUID()))
-                .andExpect(status().isMethodNotAllowed());
+        assertEquals(405, servidor.get(item(UUID.randomUUID(), "ruptura")).status());
     }
 }
