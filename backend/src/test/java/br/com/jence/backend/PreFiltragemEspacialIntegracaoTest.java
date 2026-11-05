@@ -6,11 +6,10 @@ import br.com.jence.backend.model.AtributoProduto;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.ValorDeAtributo;
 import br.com.jence.backend.model.AfinidadeDeProduto;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Comparator;
 import java.util.List;
@@ -28,8 +27,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * o assistente recebe e, quando ele esta fora do ar, <b>a propria resposta dada ao cliente</b>.
  */
 @Tag("integracao")
-@SpringBootTest
 class PreFiltragemEspacialIntegracaoTest {
+
+    /** A massa de demonstracao no banco, como a Main garante antes de subir. */
+    @BeforeAll
+    static void carregarMassa() throws Exception {
+        BancoDeTeste.carregarMassa();
+    }
 
     private final ProdutoDao produtoDao = BancoDeTeste.produtos();
 
