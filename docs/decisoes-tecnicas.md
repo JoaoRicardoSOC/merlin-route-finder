@@ -645,6 +645,8 @@ O limiar de 70 foi calibrado empiricamente: mais alto perde `"furadera"` → `"F
 
 ### D-16. Carga inicial em Java em vez de SQL
 
+> **Revista em 05/11/2026, na migração para JAX-RS:** a carga continua em Java, mas deixou de ser um `ApplicationRunner` do Spring. A `Main` a chama antes de abrir o servidor, e ela pode ser desligada com `MERLIN_SEED_ENABLED=false`. Ver [D-89](#d-89-o-backend-sai-do-spring-boot-e-segue-o-material-da-fiap-à-risca).
+
 **Contexto.** O esqueleto do repositório tem uma pasta `database/seeds/`, sugerindo scripts SQL. Mas o projeto usa `ddl-auto: update` (sem Flyway), e cada integrante tem seu próprio schema Oracle.
 
 **Decisão.** Um `ApplicationRunner` que popula o banco usando os ports de domínio. Na Fase 0 ele só agia com o catálogo **vazio**; desde 23/08/2026 a carga é **incremental**, item a item, para que produtos acrescentados depois cheguem aos bancos que já tinham a massa antiga — ver [D-47](#d-47-a-massa-ganhou-pares-de-substituição-e-a-carga-passou-a-ser-incremental).
