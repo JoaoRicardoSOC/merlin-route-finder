@@ -1,13 +1,14 @@
 package br.com.jence.backend.seed;
 
 import br.com.jence.backend.BancoDeTeste;
+import br.com.jence.backend.dao.PontoMapaDao;
 import br.com.jence.backend.dao.ProdutoDao;
+import br.com.jence.backend.dao.RestricaoDeEnumDao;
 import br.com.jence.backend.model.Produto;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 import java.util.Map;
@@ -28,11 +29,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Exige banco, nao exige GEMINI_API_KEY.
  */
 @Tag("integracao")
-@SpringBootTest
 class ApresentacaoSincronizadaIntegracaoTest {
 
+    /** A massa de demonstracao no banco, como a Main garante antes de subir. */
+    @BeforeAll
+    static void carregarMassa() throws Exception {
+        BancoDeTeste.carregarMassa();
+    }
+
     private final ProdutoDao produtoDao = BancoDeTeste.produtos();
-    @Autowired CarregadorDadosIniciais carregador;
+    private final CarregadorDadosIniciais carregador = new CarregadorDadosIniciais(
+            new ProdutoDao(),
+            new PontoMapaDao(),
+            new RestricaoDeEnumDao());
 
     private List<Produto> todos() throws Exception {
         return produtoDao.buscarPaginado(0, 1000).conteudo();
