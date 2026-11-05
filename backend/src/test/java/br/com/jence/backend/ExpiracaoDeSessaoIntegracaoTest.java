@@ -1,5 +1,7 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.PontoMapaDao;
 import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
@@ -9,10 +11,9 @@ import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.model.StatusSessao;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,15 +28,26 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Exige banco, nao exige GEMINI_API_KEY.
  */
 @Tag("integracao")
-@SpringBootTest
 class ExpiracaoDeSessaoIntegracaoTest {
 
-    @Autowired InicializarSessaoUseCase inicializar;
-    @Autowired AdicionarProdutoAoRoteiroUseCase adicionar;
-    @Autowired ExpirarSessoesInativasUseCase expirar;
+    /** A massa de demonstracao no banco, como a Main garante antes de subir. */
+    @BeforeAll
+    static void carregarMassa() throws Exception {
+        BancoDeTeste.carregarMassa();
+    }
+
+    private final InicializarSessaoUseCase inicializar = new InicializarSessaoUseCase(
+            new SessaoDao(),
+            new ListaRoteiroDao(),
+            new PontoMapaDao());
+    private final AdicionarProdutoAoRoteiroUseCase adicionar = new AdicionarProdutoAoRoteiroUseCase(
+            new SessaoDao(),
+            new ListaRoteiroDao(),
+            new ProdutoDao());
+    private final ExpirarSessoesInativasUseCase expirar =
+            new ExpirarSessoesInativasUseCase(new SessaoDao(), new ListaRoteiroDao());
     private final SessaoDao sessaoDao = BancoDeTeste.sessoes();
     private final ProdutoDao produtoDao = BancoDeTeste.produtos();
-
 
     private final List<UUID> criadas = new ArrayList<>();
 
