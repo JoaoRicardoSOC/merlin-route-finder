@@ -1,7 +1,10 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.PontoMapaDao;
 import br.com.jence.backend.dao.RegistroRupturaDao;
 import br.com.jence.backend.dao.ProdutoDao;
+import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.dto.ListaRoteiroResponse;
 import br.com.jence.backend.dto.SessaoResponse;
@@ -16,11 +19,10 @@ import br.com.jence.backend.model.RegistroRuptura;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,18 +42,33 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Exige banco, nao exige GEMINI_API_KEY.
  */
 @Tag("integracao")
-@SpringBootTest
 class SubstituicaoDeItemIntegracaoTest {
 
-    @Autowired InicializarSessaoUseCase inicializar;
-    @Autowired AdicionarProdutoAoRoteiroUseCase adicionar;
-    @Autowired MarcarItemColetadoUseCase marcarColetado;
-    @Autowired SubstituirItemDoRoteiroUseCase substituir;
-    @Autowired ConsultarSessaoUseCase consultar;
-    @Autowired ConcluirRotaUseCase concluir;
+    /** A massa de demonstracao no banco, como a Main garante antes de subir. */
+    @BeforeAll
+    static void carregarMassa() throws Exception {
+        BancoDeTeste.carregarMassa();
+    }
+
+    private final InicializarSessaoUseCase inicializar = new InicializarSessaoUseCase(
+            new SessaoDao(),
+            new ListaRoteiroDao(),
+            new PontoMapaDao());
+    private final AdicionarProdutoAoRoteiroUseCase adicionar = new AdicionarProdutoAoRoteiroUseCase(
+            new SessaoDao(),
+            new ListaRoteiroDao(),
+            new ProdutoDao());
+    private final MarcarItemColetadoUseCase marcarColetado =
+            new MarcarItemColetadoUseCase(new ListaRoteiroDao(), new SessaoDao());
+    private final SubstituirItemDoRoteiroUseCase substituir = new SubstituirItemDoRoteiroUseCase(
+            new ListaRoteiroDao(),
+            new SessaoDao(),
+            new ProdutoDao());
+    private final ConsultarSessaoUseCase consultar =
+            new ConsultarSessaoUseCase(new SessaoDao(), new ListaRoteiroDao());
+    private final ConcluirRotaUseCase concluir = new ConcluirRotaUseCase(new SessaoDao());
     private final ProdutoDao produtoDao = BancoDeTeste.produtos();
     private final RegistroRupturaDao registroRupturaDao = BancoDeTeste.rupturas();
-
 
     /** A lixa grao 120 e o item que some da prateleira; a lixa d'agua e o substituto. */
     private static final String EM_FALTA = "SKU-TIN-003";
