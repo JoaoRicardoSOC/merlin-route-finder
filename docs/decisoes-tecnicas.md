@@ -108,6 +108,9 @@
 - [D-41. Sessão encerrada continua legível, mas não gravável](#d-41-sessão-encerrada-continua-legível-mas-não-gravável)
 - [D-42. A varredura de TTL distingue carrinho abandonado de quem só encostou no totem](#d-42-a-varredura-de-ttl-distingue-carrinho-abandonado-de-quem-só-encostou-no-totem)
 
+**Migração para JAX-RS**
+- [D-89. O backend sai do Spring Boot e segue o material da FIAP à risca](#d-89-o-backend-sai-do-spring-boot-e-segue-o-material-da-fiap-à-risca)
+
 ---
 
 ## Arquitetura
@@ -2428,6 +2431,37 @@ o perfil de integração, 150 testes e 35%.
 ---
 
 ---
+
+---
+
+## Migração para JAX-RS
+
+### D-89. O backend sai do Spring Boot e segue o material da FIAP à risca
+
+**Contexto.** O material de *Estudo de API* do curso (cap. 17) ensina uma pilha própria: JAX-RS com
+Jersey sobre o Grizzly, JSON-B, DAO com JDBC e `ConnectionFactory`, DTO com ModelMapper e exceções
+checadas. O backend tinha sido escrito em Spring Boot, com JPA, Bean Validation, Lombok e Swagger.
+O time decidiu (04/11/2026) alinhar o código ao que o curso ensina, mesmo pagando mais por isso.
+
+**A regra adotada: exatamente como o material, inclusive para o que não é Spring.** Saíram Spring,
+JPA/Hibernate, Spring Data, HikariCP, Bean Validation, Lombok, SLF4J, springdoc/Swagger, Mockito,
+AssertJ e SnakeYAML. Classes do próprio JDK são permitidas (`HttpClient`,
+`ScheduledExecutorService`, `com.sun.net.httpserver` nos testes).
+
+**Como ficou.** A `Main` sobe o Grizzly com os Resources do pacote `resource`; os casos de uso
+recebem os DAOs pelo construtor; cada Resource tem um construtor sem argumentos (o Jersey o usa) e
+outro que recebe os casos de uso (os testes o usam, com casos de uso falsos). Os pacotes seguem os
+do material: `model`, `dto`, `exception`, `service`, `resource`, `dao`, `factory`, mais `ia`,
+`scheduler`, `seed` e `config`.
+
+**O que se perdeu, e foi aceito.** O Swagger UI e o `/v3/api-docs`; a injeção de dependências; o
+tratamento central de erros; o pool de conexões. Cada perda tem a sua decisão abaixo.
+
+**O que se mediu para não regredir.** Contrato de rotas (18 = 18), 195 testes na suíte padrão e
+351 na de integração, rodada contra o Oracle em 05/11/2026.
+
+**Onde está o porquê de cada passo.** [`requisitos-migracao-spring-para-jax-rs.md`](requisitos-migracao-spring-para-jax-rs.md)
+e [`plano-migracao-spring-para-jax-rs.md`](plano-migracao-spring-para-jax-rs.md).
 
 ---
 
