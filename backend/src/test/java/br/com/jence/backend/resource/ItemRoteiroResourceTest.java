@@ -45,6 +45,15 @@ class ItemRoteiroResourceTest {
     @MockitoBean TratarRupturaEstoqueUseCase tratarRupturaEstoqueUseCase;
     @MockitoBean SubstituirItemDoRoteiroUseCase substituirItemDoRoteiroUseCase;
 
+    private ListaRoteiroResponse lista(UUID sessaoId, ItemRoteiroDetalhadoResponse... itens) {
+        ListaRoteiroResponse lista = new ListaRoteiroResponse();
+        lista.setId(UUID.randomUUID());
+        lista.setSessaoId(sessaoId);
+        lista.setQuantidadeItens(itens.length);
+        lista.setItens(List.of(itens));
+        return lista;
+    }
+
     // ---------------------------------------------------------------- coleta (UC-014)
 
     @Test
@@ -106,11 +115,10 @@ class ItemRoteiroResourceTest {
         UUID novoItemId = UUID.randomUUID();
 
         when(substituirItemDoRoteiroUseCase.executar(itemId, substitutoId)).thenReturn(
-                new ListaRoteiroResponse(UUID.randomUUID(), UUID.randomUUID(), 1, List.of(
-                        ItemRoteiroDetalhadoResponse.de(new ItemRoteiro(novoItemId,
-                                new Produto(substitutoId, "SKU-TIN-004",
-                                        "Lixa d'Agua Grao 150", new BigDecimal("4.20"), 40,
-                                        new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 50, 50)))))));
+                lista(UUID.randomUUID(), ItemRoteiroDetalhadoResponse.de(new ItemRoteiro(novoItemId,
+                        new Produto(substitutoId, "SKU-TIN-004",
+                                "Lixa d'Agua Grao 150", new BigDecimal("4.20"), 40,
+                                new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 50, 50))))));
 
         mockMvc.perform(post("/api/v1/roteiro/itens/{i}/substituir", itemId)
                         .contentType(MediaType.APPLICATION_JSON)

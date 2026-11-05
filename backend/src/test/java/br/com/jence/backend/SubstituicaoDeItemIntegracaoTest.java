@@ -88,7 +88,7 @@ class SubstituicaoDeItemIntegracaoTest {
     }
 
     private List<String> skusDaLista(ListaRoteiroResponse lista) {
-        return lista.itens().stream().map(item -> item.getProduto().getSku()).sorted().toList();
+        return lista.getItens().stream().map(item -> item.getProduto().getSku()).sorted().toList();
     }
 
     // ---------------------------------------------------------------- a troca
@@ -103,7 +103,7 @@ class SubstituicaoDeItemIntegracaoTest {
         ListaRoteiroResponse depois = substituir.executar(lixaEmFalta, idDe(SUBSTITUTO));
 
         assertEquals(List.of("SKU-ENC-001", SUBSTITUTO), skusDaLista(depois));
-        assertEquals(2, depois.quantidadeItens(), "trocar nao pode mudar o tamanho da lista");
+        assertEquals(2, depois.getQuantidadeItens(), "trocar nao pode mudar o tamanho da lista");
     }
 
     @Test
@@ -120,8 +120,8 @@ class SubstituicaoDeItemIntegracaoTest {
 
         ListaRoteiroResponse depois = substituir.executar(lixaEmFalta, idDe(SUBSTITUTO));
 
-        assertEquals(1, depois.itens().size());
-        ItemRoteiroDetalhadoResponse item = depois.itens().get(0);
+        assertEquals(1, depois.getItens().size());
+        ItemRoteiroDetalhadoResponse item = depois.getItens().get(0);
         assertEquals(SUBSTITUTO, item.getProduto().getSku());
         assertFalse(item.isColetado());
     }

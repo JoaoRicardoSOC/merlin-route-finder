@@ -47,13 +47,22 @@ class RoteiroResourceTest {
                         new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 50, 50))));
     }
 
+    private ListaRoteiroResponse lista(UUID sessaoId, ItemRoteiroDetalhadoResponse... itens) {
+        ListaRoteiroResponse lista = new ListaRoteiroResponse();
+        lista.setId(UUID.randomUUID());
+        lista.setSessaoId(sessaoId);
+        lista.setQuantidadeItens(itens.length);
+        lista.setItens(List.of(itens));
+        return lista;
+    }
+
     @Test
     @DisplayName("GET do roteiro devolve a lista no formato do contrato")
     void consultarRoteiro() throws Exception {
         UUID itemId = UUID.randomUUID();
         UUID produtoId = UUID.randomUUID();
         when(consultarListaRoteiroUseCase.executar(sessaoId)).thenReturn(
-                new ListaRoteiroResponse(UUID.randomUUID(), sessaoId, 1, List.of(item(itemId, produtoId))));
+                lista(sessaoId, item(itemId, produtoId)));
 
         mockMvc.perform(get("/api/v1/sessoes/{s}/roteiro", sessaoId))
                 .andExpect(status().isOk())
