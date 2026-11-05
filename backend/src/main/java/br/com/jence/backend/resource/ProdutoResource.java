@@ -149,6 +149,6 @@ public class ProdutoResource {
             @PathVariable UUID produtoId,
             @Valid @RequestBody EstoqueUpdateRequest request) throws SQLException, RecursoNaoEncontradoException {
 
-        return ResponseEntity.ok(simularEstoqueUseCase.executar(produtoId, request.saldoEstoque()));
+        return ResponseEntity.ok(simularEstoqueUseCase.executar(produtoId, request.getSaldoEstoque()));
     }
 }
