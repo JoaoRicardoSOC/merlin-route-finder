@@ -39,7 +39,7 @@ class AssistenteIntegracaoTest {
     @BeforeEach
     void criarSessao() throws Exception {
         Thread.sleep(5_000);
-        sessaoId = inicializar.executar(null).id();
+        sessaoId = inicializar.executar(null).getId();
     }
 
     @AfterEach

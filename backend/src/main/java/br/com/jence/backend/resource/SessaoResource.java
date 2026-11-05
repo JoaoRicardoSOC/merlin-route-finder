@@ -64,7 +64,7 @@ public class SessaoResource {
                 requisicao == null ? null : requisicao.codigoPonto());
 
         return ResponseEntity
-                .created(URI.create("/api/v1/sessoes/" + sessao.id()))
+                .created(URI.create("/api/v1/sessoes/" + sessao.getId()))
                 .body(sessao);
     }
 

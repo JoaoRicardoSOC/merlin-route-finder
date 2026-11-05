@@ -58,7 +58,7 @@ class EscritaObsoletaIntegracaoTest {
 
     @BeforeEach
     void montarRoteiro() throws Exception {
-        sessaoId = inicializar.executar(null).id();
+        sessaoId = inicializar.executar(null).getId();
         adicionarAoRoteiro("SKU-TIN-001");
         adicionarAoRoteiro("SKU-ENC-001");
         adicionarAoRoteiro("SKU-JAR-001");

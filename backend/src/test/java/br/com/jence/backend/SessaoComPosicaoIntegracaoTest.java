@@ -64,7 +64,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     private SessaoResponse iniciarEm(String codigo) throws Exception {
         SessaoResponse sessao = inicializar.executar(codigo);
-        criadas.add(sessao.id());
+        criadas.add(sessao.getId());
         return sessao;
     }
 
@@ -82,17 +82,17 @@ class SessaoComPosicaoIntegracaoTest {
     void nasceComPosicao() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
 
-        assertNotNull(sessao.posicaoAtual());
-        assertEquals("ENT01", sessao.posicaoAtual().getCodigoCurto());
-        assertEquals(TipoPonto.QR_CODE, sessao.posicaoAtual().getTipo());
+        assertNotNull(sessao.getPosicaoAtual());
+        assertEquals("ENT01", sessao.getPosicaoAtual().getCodigoCurto());
+        assertEquals(TipoPonto.QR_CODE, sessao.getPosicaoAtual().getTipo());
     }
 
     @Test
     @DisplayName("o plano B chega pelo mesmo caminho: codigo digitado em qualquer grafia")
     void codigoDigitado() throws Exception {
         // O cliente que nao conseguiu escanear digita o que le na placa, do jeito que le.
-        assertEquals("ENT01", iniciarEm("ent 01").posicaoAtual().getCodigoCurto());
-        assertEquals("TIN02", iniciarEm("Tin-02").posicaoAtual().getCodigoCurto());
+        assertEquals("ENT01", iniciarEm("ent 01").getPosicaoAtual().getCodigoCurto());
+        assertEquals("TIN02", iniciarEm("Tin-02").getPosicaoAtual().getCodigoCurto());
     }
 
     @Test
@@ -104,18 +104,18 @@ class SessaoComPosicaoIntegracaoTest {
          */
         SessaoResponse sessao = iniciarEm("ZZZ-99");
 
-        assertNull(sessao.posicaoAtual());
-        assertNotNull(sessao.id());
+        assertNull(sessao.getPosicaoAtual());
+        assertNotNull(sessao.getId());
 
         UUID produtoId = produtoDao.buscarPorSku("SKU-TIN-001").orElseThrow().getId();
-        assertNotNull(adicionar.executar(sessao.id(), produtoId));
-        assertTrue(listaRoteiroDao.buscarPorSessao(sessao.id()).isPresent());
+        assertNotNull(adicionar.executar(sessao.getId(), produtoId));
+        assertTrue(listaRoteiroDao.buscarPorSessao(sessao.getId()).isPresent());
     }
 
     @Test
     @DisplayName("sem codigo algum a sessao tambem nasce, so que sem posicao")
     void semCodigo() throws Exception {
-        assertNull(iniciarEm(null).posicaoAtual());
+        assertNull(iniciarEm(null).getPosicaoAtual());
     }
 
     // ---------------------------------------------------------------- a posicao acompanha a coleta
@@ -124,9 +124,9 @@ class SessaoComPosicaoIntegracaoTest {
     @DisplayName("coletar um item move a posicao para a prateleira dele")
     void coletaMoveAPosicao() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
-        coletar(sessao.id(), "SKU-TIN-001");
+        coletar(sessao.getId(), "SKU-TIN-001");
 
-        assertEquals("Tintas", consultar.executar(sessao.id()).posicaoAtual().getCorredor(),
+        assertEquals("Tintas", consultar.executar(sessao.getId()).getPosicaoAtual().getCorredor(),
                 "depois de pegar a tinta, o cliente esta em Tintas, nao na entrada");
     }
 
@@ -135,10 +135,10 @@ class SessaoComPosicaoIntegracaoTest {
     void ultimoColetadoVence() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
 
-        coletar(sessao.id(), "SKU-TIN-001");
-        coletar(sessao.id(), "SKU-JAR-001");
+        coletar(sessao.getId(), "SKU-TIN-001");
+        coletar(sessao.getId(), "SKU-JAR-001");
 
-        String corredor = consultar.executar(sessao.id()).posicaoAtual().getCorredor();
+        String corredor = consultar.executar(sessao.getId()).getPosicaoAtual().getCorredor();
 
         System.out.println(">>> posicao apos duas coletas: " + corredor);
         assertEquals("Jardim", corredor);
@@ -150,13 +150,13 @@ class SessaoComPosicaoIntegracaoTest {
     @DisplayName("recentrar move a posicao e vence o ultimo item coletado")
     void recentrarVenceAColeta() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
-        coletar(sessao.id(), "SKU-TIN-001");
+        coletar(sessao.getId(), "SKU-TIN-001");
 
-        SessaoResponse depois = recentrar.executar(sessao.id(), "CEN-03");
+        SessaoResponse depois = recentrar.executar(sessao.getId(), "CEN-03");
 
-        assertEquals("CEN03", depois.posicaoAtual().getCodigoCurto(),
+        assertEquals("CEN03", depois.getPosicaoAtual().getCodigoCurto(),
                 "quem leu uma placa agora nao esta mais na prateleira de antes");
-        assertEquals("CEN03", consultar.executar(sessao.id()).posicaoAtual().getCodigoCurto());
+        assertEquals("CEN03", consultar.executar(sessao.getId()).getPosicaoAtual().getCodigoCurto());
     }
 
     @Test
@@ -167,13 +167,13 @@ class SessaoComPosicaoIntegracaoTest {
          * aqui seria pior do que nao ter o recurso.
          */
         SessaoResponse sessao = iniciarEm("ENT-01");
-        coletar(sessao.id(), "SKU-TIN-001");
-        UUID naoColetado = adicionar.executar(sessao.id(),
+        coletar(sessao.getId(), "SKU-TIN-001");
+        UUID naoColetado = adicionar.executar(sessao.getId(),
                 produtoDao.buscarPorSku("SKU-JAR-001").orElseThrow().getId()).getId();
 
-        recentrar.executar(sessao.id(), "CEN-03");
+        recentrar.executar(sessao.getId(), "CEN-03");
 
-        List<ItemRoteiro> itens = listaRoteiroDao.buscarPorSessao(sessao.id())
+        List<ItemRoteiro> itens = listaRoteiroDao.buscarPorSessao(sessao.getId())
                 .orElseThrow().getItens();
 
         assertEquals(2, itens.size());
@@ -187,9 +187,9 @@ class SessaoComPosicaoIntegracaoTest {
         SessaoResponse sessao = iniciarEm("ENT-01");
 
         assertThrows(RecursoNaoEncontradoException.class,
-                () -> recentrar.executar(sessao.id(), "ZZZ-99"));
+                () -> recentrar.executar(sessao.getId(), "ZZZ-99"));
 
-        assertEquals("ENT01", consultar.executar(sessao.id()).posicaoAtual().getCodigoCurto(),
+        assertEquals("ENT01", consultar.executar(sessao.getId()).getPosicaoAtual().getCodigoCurto(),
                 "errar a digitacao nao pode apagar o que o sistema ja sabia");
     }
 
@@ -197,10 +197,10 @@ class SessaoComPosicaoIntegracaoTest {
     @DisplayName("sessao encerrada recusa o recentrar")
     void sessaoEncerradaRecusa() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
-        concluir.executar(sessao.id());
+        concluir.executar(sessao.getId());
 
         assertThrows(OperacaoNaoPermitidaException.class,
-                () -> recentrar.executar(sessao.id(), "CEN-03"));
+                () -> recentrar.executar(sessao.getId(), "CEN-03"));
     }
 
     @Test
@@ -208,10 +208,10 @@ class SessaoComPosicaoIntegracaoTest {
     void recentrarRenovaOTtl() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
 
-        SessaoResponse depois = recentrar.executar(sessao.id(), "CEN-03");
+        SessaoResponse depois = recentrar.executar(sessao.getId(), "CEN-03");
 
-        assertTrue(depois.expiracaoTtl().isAfter(sessao.expiracaoTtl())
-                || depois.expiracaoTtl().isEqual(sessao.expiracaoTtl()));
+        assertTrue(depois.getExpiracaoTtl().isAfter(sessao.getExpiracaoTtl())
+                || depois.getExpiracaoTtl().isEqual(sessao.getExpiracaoTtl()));
     }
 
     // ---------------------------------------------------------------- desfazer uma coleta
@@ -220,14 +220,14 @@ class SessaoComPosicaoIntegracaoTest {
     @DisplayName("desmarcar devolve a posicao ao item coletado antes dele")
     void desmarcarVoltaAoAnterior() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
-        coletar(sessao.id(), "SKU-TIN-001");
-        UUID jardim = coletar(sessao.id(), "SKU-JAR-001");
+        coletar(sessao.getId(), "SKU-TIN-001");
+        UUID jardim = coletar(sessao.getId(), "SKU-JAR-001");
 
-        assertEquals("Jardim", consultar.executar(sessao.id()).posicaoAtual().getCorredor());
+        assertEquals("Jardim", consultar.executar(sessao.getId()).getPosicaoAtual().getCorredor());
 
         desmarcar.executar(jardim);
 
-        assertEquals("Tintas", consultar.executar(sessao.id()).posicaoAtual().getCorredor(),
+        assertEquals("Tintas", consultar.executar(sessao.getId()).getPosicaoAtual().getCorredor(),
                 "desfazer a coleta em Jardim devolve o cliente a Tintas");
     }
 
@@ -235,22 +235,22 @@ class SessaoComPosicaoIntegracaoTest {
     @DisplayName("desmarcar o unico coletado devolve a posicao a placa de entrada")
     void desmarcarOUnico() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
-        UUID tinta = coletar(sessao.id(), "SKU-TIN-001");
+        UUID tinta = coletar(sessao.getId(), "SKU-TIN-001");
 
         desmarcar.executar(tinta);
 
-        assertEquals("ENT01", consultar.executar(sessao.id()).posicaoAtual().getCodigoCurto());
+        assertEquals("ENT01", consultar.executar(sessao.getId()).getPosicaoAtual().getCodigoCurto());
     }
 
     @Test
     @DisplayName("desmarcar tambem desfaz o estado do item, e nao so a posicao")
     void desmarcarDesfazOItem() throws Exception {
         SessaoResponse sessao = iniciarEm("ENT-01");
-        UUID tinta = coletar(sessao.id(), "SKU-TIN-001");
+        UUID tinta = coletar(sessao.getId(), "SKU-TIN-001");
 
         assertFalse(desmarcar.executar(tinta).isColetado());
 
-        List<ItemRoteiro> itens = listaRoteiroDao.buscarPorSessao(sessao.id())
+        List<ItemRoteiro> itens = listaRoteiroDao.buscarPorSessao(sessao.getId())
                 .orElseThrow().getItens();
         assertEquals(1, itens.size(), "o item continua na lista, apenas nao coletado");
         assertTrue(itens.stream().noneMatch(ItemRoteiro::isColetado),
@@ -262,12 +262,12 @@ class SessaoComPosicaoIntegracaoTest {
     void desmarcarEIdempotente() throws Exception {
         // Rede reenviando, ou o cliente tocando duas vezes: nada disso pode virar erro.
         SessaoResponse sessao = iniciarEm("ENT-01");
-        UUID tinta = coletar(sessao.id(), "SKU-TIN-001");
+        UUID tinta = coletar(sessao.getId(), "SKU-TIN-001");
 
         desmarcar.executar(tinta);
 
         assertFalse(desmarcar.executar(tinta).isColetado());
-        assertEquals("ENT01", consultar.executar(sessao.id()).posicaoAtual().getCodigoCurto());
+        assertEquals("ENT01", consultar.executar(sessao.getId()).getPosicaoAtual().getCodigoCurto());
     }
 
     @Test
@@ -278,12 +278,12 @@ class SessaoComPosicaoIntegracaoTest {
          * continuasse guardando a hora da primeira vez, a posicao nao acompanharia.
          */
         SessaoResponse sessao = iniciarEm("ENT-01");
-        UUID tinta = coletar(sessao.id(), "SKU-TIN-001");
+        UUID tinta = coletar(sessao.getId(), "SKU-TIN-001");
 
         desmarcar.executar(tinta);
         marcarColetado.executar(tinta);
 
-        assertEquals("Tintas", consultar.executar(sessao.id()).posicaoAtual().getCorredor());
+        assertEquals("Tintas", consultar.executar(sessao.getId()).getPosicaoAtual().getCorredor());
     }
 
     // ---------------------------------------------------------------- persistencia
@@ -294,6 +294,6 @@ class SessaoComPosicaoIntegracaoTest {
         // O celular guarda so o id da sessao no localStorage; tudo o mais volta do banco.
         SessaoResponse sessao = iniciarEm("TIN-02");
 
-        assertEquals("TIN02", consultar.executar(sessao.id()).posicaoAtual().getCodigoCurto());
+        assertEquals("TIN02", consultar.executar(sessao.getId()).getPosicaoAtual().getCodigoCurto());
     }
 }

@@ -75,8 +75,8 @@ class SubstituicaoDeItemIntegracaoTest {
 
     private UUID novaSessao() throws Exception {
         SessaoResponse sessao = inicializar.executar("ENT-01");
-        criadas.add(sessao.id());
-        return sessao.id();
+        criadas.add(sessao.getId());
+        return sessao.getId();
     }
 
     private UUID idDe(String sku) throws Exception {
@@ -149,7 +149,7 @@ class SubstituicaoDeItemIntegracaoTest {
 
         substituir.executar(lixaEmFalta, idDe(SUBSTITUTO));
 
-        assertEquals("ENT01", consultar.executar(sessaoId).posicaoAtual().getCodigoCurto());
+        assertEquals("ENT01", consultar.executar(sessaoId).getPosicaoAtual().getCodigoCurto());
     }
 
     // ---------------------------------------------------------------- o que a troca nao apaga

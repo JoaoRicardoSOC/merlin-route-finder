@@ -49,7 +49,7 @@ class ExpiracaoDeSessaoIntegracaoTest {
 
     /** Sessao real, com o TTL empurrado para o passado como se o cliente tivesse sumido. */
     private UUID sessaoAbandonadaHaUmaHora(boolean comItem) throws Exception {
-        UUID sessaoId = inicializar.executar(null).id();
+        UUID sessaoId = inicializar.executar(null).getId();
         criadas.add(sessaoId);
 
         if (comItem) {
@@ -89,7 +89,7 @@ class ExpiracaoDeSessaoIntegracaoTest {
 
     @Test
     void sessaoAindaValidaNaoEVarrida() throws Exception {
-        UUID ativa = inicializar.executar(null).id();
+        UUID ativa = inicializar.executar(null).getId();
         criadas.add(ativa);
 
         expirar.executar();

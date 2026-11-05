@@ -5,6 +5,7 @@ import br.com.jence.backend.service.ConcluirRotaUseCase;
 import br.com.jence.backend.service.ConsultarSessaoUseCase;
 import br.com.jence.backend.service.InicializarSessaoUseCase;
 import br.com.jence.backend.service.RecentrarSessaoUseCase;
+import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.model.StatusSessao;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
@@ -43,7 +44,8 @@ class SessaoResourceTest {
 
     private SessaoResponse sessaoAtiva(UUID id) {
         LocalDateTime agora = LocalDateTime.now();
-        return new SessaoResponse(id, StatusSessao.ACTIVE, agora, agora.plusMinutes(30), null);
+        return SessaoResponse.de(Sessao.reconstituir(
+                id, StatusSessao.ACTIVE, agora, agora.plusMinutes(30), null, null));
     }
 
     @Test
@@ -95,7 +97,8 @@ class SessaoResourceTest {
         UUID id = UUID.randomUUID();
         LocalDateTime agora = LocalDateTime.now();
         when(concluirRotaUseCase.executar(id)).thenReturn(
-                new SessaoResponse(id, StatusSessao.COMPLETED, agora.minusMinutes(40), agora.plusMinutes(20), null));
+                SessaoResponse.de(Sessao.reconstituir(id, StatusSessao.COMPLETED,
+                        agora.minusMinutes(40), agora.plusMinutes(20), null, null)));
 
         mockMvc.perform(post("/api/v1/sessoes/{id}/concluir", id))
                 .andExpect(status().isOk())
