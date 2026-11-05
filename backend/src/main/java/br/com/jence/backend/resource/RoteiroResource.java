@@ -68,7 +68,7 @@ public class RoteiroResource {
             @Valid @RequestBody AdicionarItemRequest request) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
 
         ItemRoteiroDetalhadoResponse item =
-                adicionarProdutoAoRoteiroUseCase.executar(sessaoId, request.produtoId());
+                adicionarProdutoAoRoteiroUseCase.executar(sessaoId, request.getProdutoId());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(item);
     }
