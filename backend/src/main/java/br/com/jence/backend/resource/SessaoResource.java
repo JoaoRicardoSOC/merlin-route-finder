@@ -61,7 +61,7 @@ public class SessaoResource {
     public ResponseEntity<SessaoResponse> inicializar(
             @RequestBody(required = false) IniciarSessaoRequest requisicao) throws SQLException {
         SessaoResponse sessao = inicializarSessaoUseCase.executar(
-                requisicao == null ? null : requisicao.codigoPonto());
+                requisicao == null ? null : requisicao.getCodigoPonto());
 
         return ResponseEntity
                 .created(URI.create("/api/v1/sessoes/" + sessao.getId()))
