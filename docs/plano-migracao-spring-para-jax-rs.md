@@ -181,7 +181,7 @@ Nesta fase o Spring e o Jersey convivem no `pom.xml` até o passo 10.12. **Aten�
 
 - [x] **10.1** Adicionar `jersey-bom` `4.0.3`, `jersey-container-grizzly2-http` e `jersey-hk2`.
 - [x] **10.2** Criar `Main` a partir da do material: `startServer(porta)` estático (usado também pelos testes), `0.0.0.0`, porta de `PORT`, fuso UTC, `ResourceConfig().packages("br.com.jence.backend.resource")`, thread principal aguardando, *shutdown hook* que para o servidor e o agendador. Ordem de subida: restrição de enum → carga de dados → agendador → servidor.
-- [ ] **10.3** `HealthResource` (`GET /health`, sem tocar no banco).
+- [x] **10.3** `HealthResource` (`GET /health`, sem tocar no banco).
 - [ ] **10.4** Agendador com `ScheduledExecutorService.scheduleWithFixedDelay`, iniciado pela `Main`.
 - [ ] **10.5** Um Resource por commit (6), junto com o seu teste web: anotações do Spring → JAX-RS; `try/catch` em cada método montando `StandardError` com o status certo (mesmos status do `GlobalExceptionHandler`); `@PathParam` como `String` convertido com `UUID.fromString`; `Location` com `UriBuilder` só onde existe hoje; segundo construtor que recebe os services. O teste sobe o Grizzly com o Resource registrado com services falsos e chama com o `HttpClient` do JDK.
 - [ ] **10.6** `ErrosDeRequisicaoTest` e `FalhaDeInfraestruturaTest` reescritos no mesmo formato. Confirmar RF-06 e RF-07; se o JSON malformado não der 400, aplicar a alternativa de RF-07.
