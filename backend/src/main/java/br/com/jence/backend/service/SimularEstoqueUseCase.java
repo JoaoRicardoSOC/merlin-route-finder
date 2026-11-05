@@ -5,7 +5,6 @@ import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.factory.Transacao;
-import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.UUID;
@@ -20,7 +19,6 @@ import java.util.UUID;
  * <p>
  * Ver D-40 sobre o que isso expoe e por que foi aceito.
  */
-@Service
 public class SimularEstoqueUseCase {
 
     private final ProdutoDao produtoDao;

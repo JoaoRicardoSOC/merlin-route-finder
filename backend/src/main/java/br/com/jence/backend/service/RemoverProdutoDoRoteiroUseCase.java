@@ -7,7 +7,6 @@ import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dao.ListaRoteiroDao;
 import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.factory.Transacao;
-import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.UUID;
@@ -15,7 +14,6 @@ import java.util.UUID;
 /**
  * UC-006: remove um produto da lista de roteiro.
  */
-@Service
 public class RemoverProdutoDoRoteiroUseCase {
 
     private final SessaoDao sessaoDao;

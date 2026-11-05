@@ -8,7 +8,6 @@ import br.com.jence.backend.dao.ListaRoteiroDao;
 import br.com.jence.backend.dao.PontoMapaDao;
 import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.factory.Transacao;
-import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.UUID;
@@ -19,7 +18,6 @@ import java.util.UUID;
  * O codigo da placa chega das duas formas previstas no fluxo: embutido na URL do QR Code, ou
  * digitado pelo cliente quando escanear nao deu certo. Para o caso de uso e o mesmo caminho.
  */
-@Service
 public class InicializarSessaoUseCase {
 
     private final SessaoDao sessaoDao;

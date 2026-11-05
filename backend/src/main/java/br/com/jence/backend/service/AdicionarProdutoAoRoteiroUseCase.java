@@ -11,7 +11,6 @@ import br.com.jence.backend.dao.ListaRoteiroDao;
 import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.factory.Transacao;
-import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.UUID;
@@ -19,7 +18,6 @@ import java.util.UUID;
 /**
  * UC-004: adiciona um produto ao roteiro em montagem no Totem.
  */
-@Service
 public class AdicionarProdutoAoRoteiroUseCase {
 
     private final SessaoDao sessaoDao;

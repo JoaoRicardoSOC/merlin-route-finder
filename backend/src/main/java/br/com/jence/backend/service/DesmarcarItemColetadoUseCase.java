@@ -8,7 +8,6 @@ import br.com.jence.backend.dao.ListaRoteiroDao;
 import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.factory.Transacao;
 import br.com.jence.backend.model.Sessao;
-import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.Optional;
@@ -24,7 +23,6 @@ import java.util.UUID;
  * Espelho de {@link MarcarItemColetadoUseCase}, inclusive na renovacao da sessao: corrigir um
  * engano e atividade do cliente como qualquer outra.
  */
-@Service
 public class DesmarcarItemColetadoUseCase {
 
     private final ListaRoteiroDao listaRoteiroDao;

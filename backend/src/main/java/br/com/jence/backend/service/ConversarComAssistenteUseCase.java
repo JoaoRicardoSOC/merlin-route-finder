@@ -14,7 +14,6 @@ import br.com.jence.backend.ia.GeminiClient;
 import br.com.jence.backend.model.MensagemIA;
 import br.com.jence.backend.factory.Transacao;
 import br.com.jence.backend.ia.InstrucaoDoAssistente;
-import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -28,7 +27,6 @@ import java.util.UUID;
  * Ataca a assimetria de informacao descrita no desafio: o conhecimento tecnico deixa de estar
  * so com o vendedor.
  */
-@Service
 public class ConversarComAssistenteUseCase {
 
     /** Quantas buscas o assistente recebe por consulta, para a resposta nao virar catalogo. */

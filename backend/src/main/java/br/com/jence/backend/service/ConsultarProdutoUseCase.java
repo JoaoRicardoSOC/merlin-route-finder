@@ -5,7 +5,6 @@ import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.factory.Transacao;
-import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.UUID;
@@ -20,7 +19,6 @@ import java.util.UUID;
  * E a unica tela que traz as caracteristicas do produto - marca, medidas, material -, que sao
  * o que o cliente compara antes de decidir.
  */
-@Service
 public class ConsultarProdutoUseCase {
 
     private final ProdutoDao produtoDao;

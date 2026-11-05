@@ -9,7 +9,6 @@ import br.com.jence.backend.dao.ListaRoteiroDao;
 import br.com.jence.backend.dao.PontoMapaDao;
 import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.factory.Transacao;
-import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -21,7 +20,6 @@ import java.util.UUID;
  * Nao cria sessao nova: a lista que ele montou continua inteira, com o que ja foi coletado
  * preservado. Muda apenas onde ele esta.
  */
-@Service
 public class RecentrarSessaoUseCase {
 
     private final SessaoDao sessaoDao;

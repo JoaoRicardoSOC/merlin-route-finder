@@ -5,7 +5,6 @@ import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dao.ChatMensagemDao;
 import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.factory.Transacao;
-import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -22,7 +21,6 @@ import java.util.UUID;
  * negar acesso a ele depois que a jornada termina nao protege nada e quebraria o celular que
  * reabre a conversa para reler uma recomendacao.
  */
-@Service
 public class ConsultarHistoricoChatUseCase {
 
     private final SessaoDao sessaoDao;

@@ -4,7 +4,6 @@ import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.dao.ListaRoteiroDao;
 import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.factory.Transacao;
-import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -18,7 +17,6 @@ import java.util.List;
  * que o banco reflita a realidade: sem isso, sessoes mortas ficariam {@code ACTIVE} para
  * sempre, e qualquer contagem de jornadas em andamento seria ficcao.
  */
-@Service
 public class ExpirarSessoesInativasUseCase {
 
     private final SessaoDao sessaoDao;

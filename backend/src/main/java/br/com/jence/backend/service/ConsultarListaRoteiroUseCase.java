@@ -4,7 +4,6 @@ import br.com.jence.backend.dto.ListaRoteiroResponse;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dao.ListaRoteiroDao;
 import br.com.jence.backend.factory.Transacao;
-import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.UUID;
@@ -15,7 +14,6 @@ import java.util.UUID;
  * Nao renova o TTL da sessao: consultar e uma leitura e nao deveria gravar nada. A renovacao
  * acontece nas acoes que de fato indicam o cliente montando a lista (adicionar e remover).
  */
-@Service
 public class ConsultarListaRoteiroUseCase {
 
     private final ListaRoteiroDao listaRoteiroDao;

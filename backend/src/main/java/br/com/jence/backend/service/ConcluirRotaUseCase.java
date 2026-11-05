@@ -6,7 +6,6 @@ import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.factory.Transacao;
-import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.UUID;
@@ -18,7 +17,6 @@ import java.util.UUID;
  * ao caixa. Tambem nao e disparado automaticamente ao coletar o ultimo item - depois de pegar
  * tudo ele ainda precisa chegar ao caixa, e encerrar ali mataria a navegacao no trecho final.
  */
-@Service
 public class ConcluirRotaUseCase {
 
     private final SessaoDao sessaoDao;

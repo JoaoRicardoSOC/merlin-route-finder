@@ -22,7 +22,6 @@ import br.com.jence.backend.ia.GeminiClient;
 import br.com.jence.backend.model.MensagemIA;
 import br.com.jence.backend.ia.InstrucaoDeRuptura;
 import br.com.jence.backend.factory.Transacao;
-import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -41,7 +40,6 @@ import java.util.stream.Collectors;
  * filtra no banco o que a loja tem disponivel fisicamente perto dali e deixa o assistente
  * eleger, entre esses candidatos e somente eles, o que cumpre a mesma funcao.
  */
-@Service
 public class TratarRupturaEstoqueUseCase {
 
     /*

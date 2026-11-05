@@ -3,13 +3,11 @@ package br.com.jence.backend.service;
 import br.com.jence.backend.dto.SecaoResponse;
 import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.factory.Transacao;
-import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.List;
 
 /** As secoes da loja, para o menu de navegacao do catalogo. */
-@Service
 public class ListarSecoesUseCase {
 
     private final ProdutoDao produtoDao;

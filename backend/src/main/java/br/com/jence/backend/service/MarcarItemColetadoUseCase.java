@@ -8,7 +8,6 @@ import br.com.jence.backend.dao.ListaRoteiroDao;
 import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.factory.Transacao;
 import br.com.jence.backend.model.Sessao;
-import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -22,7 +21,6 @@ import java.util.UUID;
  * onde o cliente esta</b>: quem acabou de pegar um produto esta na prateleira dele. Ver
  * {@link br.com.jence.backend.service.PosicaoDoCliente}.
  */
-@Service
 public class MarcarItemColetadoUseCase {
 
     private final ListaRoteiroDao listaRoteiroDao;

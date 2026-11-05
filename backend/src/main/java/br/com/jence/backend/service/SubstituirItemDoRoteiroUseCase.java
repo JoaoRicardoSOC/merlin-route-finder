@@ -11,7 +11,6 @@ import br.com.jence.backend.dao.ListaRoteiroDao;
 import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.factory.Transacao;
-import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.UUID;
@@ -34,7 +33,6 @@ import java.util.UUID;
  * continua valendo tenha o cliente aceitado a troca ou nao - inclusive porque comparar as
  * duas coisas e o que diz a loja se as sugestoes estao boas.
  */
-@Service
 public class SubstituirItemDoRoteiroUseCase {
 
     private final ListaRoteiroDao listaRoteiroDao;

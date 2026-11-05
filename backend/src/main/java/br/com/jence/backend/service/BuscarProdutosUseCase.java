@@ -11,7 +11,6 @@ import br.com.jence.backend.model.FiltroDeProdutos;
 import br.com.jence.backend.model.Pagina;
 import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.factory.Transacao;
-import org.springframework.stereotype.Service;
 
 /**
  * UC-002: busca e filtragem do catalogo.
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
  * Um caminho so para navegar e para buscar: sem termo, o cliente esta navegando; com termo,
  * buscando. Os filtros de secao e disponibilidade valem nos dois casos.
  */
-@Service
 public class BuscarProdutosUseCase {
 
     static final int TAMANHO_PADRAO = 20;

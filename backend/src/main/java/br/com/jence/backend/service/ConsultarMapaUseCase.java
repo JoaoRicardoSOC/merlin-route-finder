@@ -8,7 +8,6 @@ import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.dao.PontoMapaDao;
 import br.com.jence.backend.factory.Transacao;
 import br.com.jence.backend.model.PontoMapa;
-import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -23,7 +22,6 @@ import java.util.List;
  * independente permite que o frontend o busque uma vez e o guarde, inclusive para funcionar
  * com a conexao caindo dentro da loja.
  */
-@Service
 public class ConsultarMapaUseCase {
 
     /** O grid em que tudo no mapa e expresso. Vai junto para o frontend nao precisar supor. */
