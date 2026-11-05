@@ -556,6 +556,8 @@ Mas existe um caminho de recuperação já disponível: a resposta traz o `sessa
 
 ### D-11. UUID gravado como `varchar2(36)`, não `raw(16)`
 
+> **Revista em 05/11/2026, na migração para JAX-RS:** a regra continua: o UUID é gravado e lido como texto, agora com `setString` e `getString` nos DAOs JDBC. Ver [D-90](#d-90-jdbc-sem-pool-cada-transação-abre-e-fecha-a-própria-conexão).
+
 **Contexto.** O padrão do Hibernate para `UUID` no Oracle é `raw(16)` — compacto, porém ilegível: consultar vira `where id = hextoraw('A1B2...')`.
 
 **Decisão.** `@JdbcTypeCode(SqlTypes.VARCHAR)` em todos os ids, resultando em `varchar2(36)`.
