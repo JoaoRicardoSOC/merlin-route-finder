@@ -65,6 +65,25 @@ public class StandardError {
         this.validationErrors = validationErrors;
     }
 
+    public static StandardError de(int status, String error, String message, String path,
+                                   List<ValidationError> validationErrors) {
+        StandardError erro = new StandardError();
+        erro.setTimestamp(LocalDateTime.now());
+        erro.setStatus(status);
+        erro.setError(error);
+        erro.setMessage(message);
+        erro.setPath(path);
+        erro.setValidationErrors(validationErrors);
+        return erro;
+    }
+
+    /** O 400 de um corpo que chegou legivel, mas com campos que nao passam na validacao. */
+    public static StandardError falhaDeValidacao(String path, List<ValidationError> erros) {
+        return de(400, "Falha de Validação",
+                "Os dados enviados na requisição estão inválidos. Verifique a lista de erros.",
+                path, erros);
+    }
+
     /** Um campo com problema (ex.: field="nome", message="nao pode ser vazio"). */
     public static class ValidationError {
 

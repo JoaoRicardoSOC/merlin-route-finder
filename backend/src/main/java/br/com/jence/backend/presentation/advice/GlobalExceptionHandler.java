@@ -34,13 +34,7 @@ public class GlobalExceptionHandler {
                 .map(error -> ValidationError.de(error.getField(), error.getDefaultMessage()))
                 .collect(Collectors.toList());
 
-        StandardError response = erro(
-                HttpStatus.BAD_REQUEST,
-                "Falha de Validação",
-                "Os dados enviados na requisição estão inválidos. Verifique a lista de erros.",
-                request.getRequestURI(),
-                errors
-        );
+        StandardError response = StandardError.falhaDeValidacao(request.getRequestURI(), errors);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
@@ -235,13 +229,6 @@ public class GlobalExceptionHandler {
 
     private static StandardError erro(HttpStatus status, String error, String message,
                                       String path, List<ValidationError> validationErrors) {
-        StandardError erro = new StandardError();
-        erro.setTimestamp(LocalDateTime.now());
-        erro.setStatus(status.value());
-        erro.setError(error);
-        erro.setMessage(message);
-        erro.setPath(path);
-        erro.setValidationErrors(validationErrors);
-        return erro;
+        return StandardError.de(status.value(), error, message, path, validationErrors);
     }
 }
