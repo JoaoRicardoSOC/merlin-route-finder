@@ -1878,6 +1878,8 @@ Foi o único ponto do plano marcado como *verificar antes de escrever*, e era me
 
 ### D-74. Requisição indecodificável é 400, e o tratador é acoplado ao Tomcat de propósito
 
+> **Revista em 05/11/2026, na migração para JAX-RS:** o Tomcat saiu, e com ele o tratador acoplado a ele. O Grizzly aceita os bytes inválidos e os troca pelo caractere U+FFFD; o `ProdutoResource` detecta esse caractere nos parâmetros de texto e devolve o mesmo 400, com a mesma mensagem. Ver [D-92](#d-92-exceções-checadas-tratadas-no-catch-de-cada-resource).
+
 **Contexto.** Um cliente que mandasse a query string em latin-1 recebia **500** com *"Ocorreu um erro inesperado. Tente novamente em instantes."* — a mensagem joga no cliente a impressão de defeito no servidor e esconde a causa real, que é o pedido estar mal codificado.
 
 A auditoria de respostas de erro, feita em 25/08, não tinha alcançado esse caso porque **a exceção não é do Spring: é do Tomcat**, e nasce antes de qualquer controlador existir. Nenhum teste que passasse pela camada de aplicação chegaria nela.
