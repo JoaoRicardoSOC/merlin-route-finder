@@ -1069,6 +1069,8 @@ Verificado sobre HTTP: com o primeiro item já coletado, o QR regenerado devolve
 
 ### D-45. O deploy mudou quais avisos do Hibernate importavam
 
+> **Revista em 05/11/2026, na migração para JAX-RS:** **deixou de se aplicar.** O Hibernate saiu do projeto; não há mais avisos dele no log. Ver [D-90](#d-90-jdbc-sem-pool-cada-transação-abre-e-fecha-a-própria-conexão).
+
 **Contexto.** Três avisos apareciam no log desde a Fase 0 e eram ruído tolerável enquanto tudo rodava na mesma máquina. O primeiro deploy mudou a topologia — **aplicação em Ohio, banco em São Paulo, ~130 ms por ida e volta, e um décimo de núcleo de CPU** — e dois deles deixaram de ser cosméticos.
 
 ```
