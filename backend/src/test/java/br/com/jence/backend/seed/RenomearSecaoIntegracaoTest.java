@@ -3,16 +3,16 @@ package br.com.jence.backend.seed;
 import br.com.jence.backend.BancoDeTeste;
 import br.com.jence.backend.dao.PontoMapaDao;
 import br.com.jence.backend.dao.ProdutoDao;
+import br.com.jence.backend.dao.RestricaoDeEnumDao;
 import br.com.jence.backend.model.BlocoMapa;
 import br.com.jence.backend.model.PlantaDaLoja;
 import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.TipoPonto;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 import java.util.Map;
@@ -34,12 +34,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Exige banco, nao exige GEMINI_API_KEY.
  */
 @Tag("integracao")
-@SpringBootTest
 class RenomearSecaoIntegracaoTest {
+
+    /** A massa de demonstracao no banco, como a Main garante antes de subir. */
+    @BeforeAll
+    static void carregarMassa() throws Exception {
+        BancoDeTeste.carregarMassa();
+    }
 
     private final ProdutoDao produtoDao = BancoDeTeste.produtos();
     private final PontoMapaDao pontoMapaDao = BancoDeTeste.pontos();
-    @Autowired CarregadorDadosIniciais carregador;
+    private final CarregadorDadosIniciais carregador = new CarregadorDadosIniciais(
+            new ProdutoDao(),
+            new PontoMapaDao(),
+            new RestricaoDeEnumDao());
 
     private List<PontoMapa> prateleiras() throws Exception {
         return pontoMapaDao.buscarPorTipo(TipoPonto.PRATELEIRA);
