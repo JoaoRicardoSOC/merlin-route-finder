@@ -114,6 +114,7 @@
 - [D-91. O CORS sai do backend: a Vercel repassa `/api/*` para o Render](#d-91-o-cors-sai-do-backend-a-vercel-repassa-api-para-o-render)
 - [D-92. Exceções checadas, tratadas no `catch` de cada Resource](#d-92-exceções-checadas-tratadas-no-catch-de-cada-resource)
 - [D-93. DTOs são classes, copiadas pelo ModelMapper onde a cópia é direta](#d-93-dtos-são-classes-copiadas-pelo-modelmapper-onde-a-cópia-é-direta)
+- [D-94. O schema do banco passa a ser mantido por script](#d-94-o-schema-do-banco-passa-a-ser-mantido-por-script)
 
 ---
 
@@ -2540,6 +2541,24 @@ valor errado sem ninguém ver.
 
 **Um efeito colateral que a integração pegou.** Com `record`, dois DTOs iguais eram `equals`; com
 classe, não. O teste que conferia que o mapa é estável passou a comparar o JSON gerado.
+
+---
+
+### D-94. O schema do banco passa a ser mantido por script
+
+**Contexto.** O Hibernate criava e alterava as tabelas sozinho (`ddl-auto`). Sem ele, alguém
+precisa fazer isso.
+
+**A decisão.** O DDL completo está em `database/migrations/V001__schema_inicial.sql`, no formato do
+material. Cada mudança futura é um script novo, numerado, rodado no SQL Developer **antes** de
+publicar o código que depende dele. O passo a passo está em [`deploy.md`](deploy.md).
+
+**A exceção.** As restrições `CHECK` dos enums continuam se ajustando sozinhas no startup, pelo
+`RestricaoDeEnumDao`, chamado pela carga de dados (RF-15).
+
+**O risco.** Um integrante esquecer de rodar um script. O schema é compartilhado entre a instância
+publicada, os testes de integração e a máquina de cada um, então o esquecimento aparece rápido -
+mas aparece como erro de SQL, e não como mensagem clara.
 
 ---
 
