@@ -179,7 +179,7 @@ Um commit por service (19). Em cada um: passa a receber os DAOs concretos pelo c
 
 Nesta fase o Spring e o Jersey convivem no `pom.xml` até o passo 10.12. **Atenção:** a partir de 10.4, os testes de integração (tag `integracao`) deixam de passar até 10.9, porque os endpoints vão saindo do Spring um a um. A suíte padrão continua passando em todo commit. Não há push no meio desta fase.
 
-- [ ] **10.1** Adicionar `jersey-bom` `4.0.3`, `jersey-container-grizzly2-http` e `jersey-hk2`.
+- [x] **10.1** Adicionar `jersey-bom` `4.0.3`, `jersey-container-grizzly2-http` e `jersey-hk2`.
 - [ ] **10.2** Criar `Main` a partir da do material: `startServer(porta)` estático (usado também pelos testes), `0.0.0.0`, porta de `PORT`, fuso UTC, `ResourceConfig().packages("br.com.jence.backend.resource")`, thread principal aguardando, *shutdown hook* que para o servidor e o agendador. Ordem de subida: restrição de enum → carga de dados → agendador → servidor.
 - [ ] **10.3** `HealthResource` (`GET /health`, sem tocar no banco).
 - [ ] **10.4** Agendador com `ScheduledExecutorService.scheduleWithFixedDelay`, iniciado pela `Main`.

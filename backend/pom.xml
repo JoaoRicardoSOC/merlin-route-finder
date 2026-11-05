@@ -31,10 +31,31 @@
 		<!-- Sobrescrito para vazio pelo profile "integracao". -->
 		<excluded.test.groups>integracao</excluded.test.groups>
 	</properties>
+	<!-- Versoes do Jersey alinhadas pelo BOM, como no material. -->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.glassfish.jersey</groupId>
+				<artifactId>jersey-bom</artifactId>
+				<version>4.0.3</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc</artifactId>
+		</dependency>
+		<!-- Servidor HTTP do material: Jersey sobre o Grizzly, com o hk2 para injecao. -->
+		<dependency>
+			<groupId>org.glassfish.jersey.containers</groupId>
+			<artifactId>jersey-container-grizzly2-http</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.inject</groupId>
+			<artifactId>jersey-hk2</artifactId>
 		</dependency>
 		<!-- JSON-B, como no material: converte objeto Java em JSON e vice-versa. -->
 		<dependency>
