@@ -5,6 +5,7 @@ import br.com.jence.backend.dao.ListaRoteiroDao;
 import br.com.jence.backend.dao.PontoMapaDao;
 import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.dao.RegistroRupturaDao;
+import br.com.jence.backend.dao.RestricaoDeEnumDao;
 import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.factory.ConnectionFactory;
 import br.com.jence.backend.factory.Transacao;
@@ -21,6 +22,7 @@ import br.com.jence.backend.model.SecaoDoCatalogo;
 import br.com.jence.backend.model.Sessao;
 import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.model.ValorDeAtributo;
+import br.com.jence.backend.seed.CarregadorDadosIniciais;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -38,7 +40,25 @@ import java.util.UUID;
  */
 public final class BancoDeTeste {
 
+    private static boolean massaCarregada;
+
     private BancoDeTeste() {
+    }
+
+    /**
+     * Garante a massa de demonstracao no banco, como a Main faz antes de abrir o servidor.
+     * Roda a carga uma vez por execucao da suite; as chamadas seguintes nao fazem nada.
+     * <p>
+     * Substitui o que o {@code @SpringBootTest} fazia ao subir o contexto: rodar o
+     * {@code CarregadorDadosIniciais} antes do primeiro teste.
+     */
+    public static synchronized void carregarMassa() throws SQLException {
+        if (massaCarregada) {
+            return;
+        }
+        new CarregadorDadosIniciais(new ProdutoDao(), new PontoMapaDao(), new RestricaoDeEnumDao())
+                .executar();
+        massaCarregada = true;
     }
 
     public static ProdutoDao produtos() {
