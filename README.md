@@ -6,7 +6,7 @@
 [![Deploy Vercel](https://img.shields.io/badge/Frontend-Vercel-black?logo=vercel&logoColor=white)](https://merlin-route-finder.vercel.app)
 [![Deploy Render](https://img.shields.io/badge/Backend-Render-46E3B7?logo=render&logoColor=white)](https://merlin-route-finder-api.onrender.com)
 [![Java 21](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Jersey](https://img.shields.io/badge/JAX--RS-Jersey%204.0.3-F8981D)](https://eclipse-ee4j.github.io/jersey/)
 [![Oracle Database](https://img.shields.io/badge/Oracle%20DB-19c-F80000?logo=oracle&logoColor=white)](https://www.oracle.com/database/)
 [![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![Google Gemini](https://img.shields.io/badge/AI-Gemini%20Flash--Lite-8E75B2?logo=google&logoColor=white)](https://ai.google.dev/)
@@ -19,8 +19,8 @@
 |---|---|---|
 | 📱 **Mobile Web App** | [**merlin-route-finder.vercel.app**](https://merlin-route-finder.vercel.app) | Aplicação PWA para smartphone (zero instalação necessária). |
 | 📍 **Acesso com Ponto de Loja** | [**merlin-route-finder.vercel.app/?code=TIN-02**](https://merlin-route-finder.vercel.app/?code=TIN-02) | Simula a leitura de QR Code no corredor de Tintas. |
-| ⚙️ **Backend REST API** | [**merlin-route-finder-api.onrender.com**](https://merlin-route-finder-api.onrender.com) | API REST com arquitetura hexagonal em Spring Boot e Oracle 19c. |
-| 📄 **Documentação Swagger** | [**merlin-route-finder-api.onrender.com/swagger.html**](https://merlin-route-finder-api.onrender.com/swagger.html) | Especificação OpenAPI 3.0 de todos os endpoints. |
+| ⚙️ **Backend REST API** | [**merlin-route-finder-api.onrender.com**](https://merlin-route-finder-api.onrender.com) | API REST em JAX-RS (Jersey sobre Grizzly), com JDBC e Oracle 19c. |
+| 📄 **Contrato da API** | [**openapi.yaml**](backend/src/main/resources/openapi/openapi.yaml) | Especificação OpenAPI 3.0 de todos os endpoints. |
 
 > [!NOTE]
 > **Aviso sobre o Backend:** Hospedado no plano gratuito do Render, o backend entra em modo de suspensão após períodos de inatividade. A primeira chamada do dia pode levar cerca de 90 a 110 segundos (partida a frio). Uma vez acordado, o tempo de resposta é imediato (~150ms).
@@ -77,14 +77,14 @@ Consulte o dossiê completo em: [**Dossiê de Coleta de Dados e Telemetria**](do
 - Node.js 20+ e npm
 - Maven 3.9+ (ou utilizar o wrapper `./mvnw`)
 
-### 2. Back-end (Spring Boot)
+### 2. Back-end (JAX-RS com Jersey)
 ```bash
 cd backend
-# Compilar e rodar os testes unitários (150 testes)
+# Compilar e rodar os testes que nao precisam de banco
 ./mvnw clean test
 
-# Executar a aplicação localmente
-./mvnw spring-boot:run
+# Executar a aplicação localmente (precisa de DB_URL, DB_USER e DB_PASSWORD)
+./mvnw compile exec:java
 ```
 
 ### 3. Front-end (React + Vite)
