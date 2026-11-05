@@ -58,10 +58,11 @@ public class ConsultarMapaUseCase {
                 .map(PontoMapaResponse::de)
                 .toList();
 
-        return new MapaResponse(
-                LADO_DO_GRID,
-                LADO_DO_GRID,
-                PlantaDaLoja.blocos().stream().map(BlocoMapaResponse::de).toList(),
-                pontos);
+        MapaResponse mapa = new MapaResponse();
+        mapa.setLargura(LADO_DO_GRID);
+        mapa.setAltura(LADO_DO_GRID);
+        mapa.setBlocos(PlantaDaLoja.blocos().stream().map(BlocoMapaResponse::de).toList());
+        mapa.setPontos(pontos);
+        return mapa;
     }
 }

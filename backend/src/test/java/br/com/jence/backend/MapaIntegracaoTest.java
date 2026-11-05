@@ -114,16 +114,16 @@ class MapaIntegracaoTest {
         MapaResponse mapa = consultarMapa.executar();
 
         System.out.printf(">>> mapa: %d bloco(s), %d ponto(s)%n",
-                mapa.blocos().size(), mapa.pontos().size());
+                mapa.getBlocos().size(), mapa.getPontos().size());
 
-        assertEquals(100, mapa.largura());
-        assertEquals(100, mapa.altura());
-        assertEquals(PlantaDaLoja.blocos().size(), mapa.blocos().size());
+        assertEquals(100, mapa.getLargura());
+        assertEquals(100, mapa.getAltura());
+        assertEquals(PlantaDaLoja.blocos().size(), mapa.getBlocos().size());
 
-        assertFalse(mapa.pontos().isEmpty());
-        assertTrue(mapa.pontos().stream().noneMatch(ponto -> ponto.getTipo() == TipoPonto.PRATELEIRA),
+        assertFalse(mapa.getPontos().isEmpty());
+        assertTrue(mapa.getPontos().stream().noneMatch(ponto -> ponto.getTipo() == TipoPonto.PRATELEIRA),
                 "prateleira ja e representada pelo bloco; repeti-la como ponto duplicaria a secao");
-        List<TipoPonto> tipos = mapa.pontos().stream().map(PontoMapaResponse::getTipo).toList();
+        List<TipoPonto> tipos = mapa.getPontos().stream().map(PontoMapaResponse::getTipo).toList();
         assertTrue(tipos.contains(TipoPonto.CAIXA));
         assertTrue(tipos.contains(TipoPonto.BANHEIRO));
         assertTrue(tipos.contains(TipoPonto.QR_CODE));
