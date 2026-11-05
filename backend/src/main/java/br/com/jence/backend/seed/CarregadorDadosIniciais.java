@@ -360,6 +360,11 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws SQLException {
+        executar();
+    }
+
+    /** Carrega o que falta da massa de demonstracao. Chamado pela Main antes do servidor subir. */
+    public void executar() throws SQLException {
         Pagina<Produto> existentes;
         try (Transacao transacao = Transacao.iniciarSomenteLeitura()) {
             existentes = produtoDao.buscarPaginado(0, LIMITE_DE_LEITURA);
