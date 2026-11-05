@@ -199,7 +199,7 @@ Nesta fase o Spring e o Jersey convivem no `pom.xml` até o passo 10.12. **Aten�
 - [x] **11.1** `render.yaml`: `healthCheckPath: /health`; sem `SPRING_PROFILES_ACTIVE`.
 - [x] **11.2** `docs/deploy.md` atualizado (variáveis, *health check*, execução manual de scripts de schema).
 - [x] **11.3** `decisoes-tecnicas.md`: novas decisões (migração para JAX-RS com adesão total ao material; JDBC sem pool; CORS por rewrite; exceções checadas; DTOs com ModelMapper; schema por script) e revisão das que mudam: D-01, D-03, D-10, D-11, D-16, D-30, D-33, D-34, D-45 e D-46. Um commit por decisão.
-- [ ] **11.4** `docs/arquitetura` (C4) atualizado com a nova estrutura.
+- [x] **11.4** `docs/arquitetura` (C4) atualizado com a nova estrutura.
 - [ ] **11.5** Push e deploy (perguntar antes).
 - [ ] **11.6** 🔒 Coleção do Insomnia contra a produção, comparada com `base-antes.md`; medição de tempo de resposta comparada com a 0.6.
 - [ ] **11.7** Marcar a definição de pronto dos requisitos.

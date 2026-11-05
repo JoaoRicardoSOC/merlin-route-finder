@@ -1,6 +1,6 @@
 # C4 Model — Arquitetura Atual do Merlin Route Finder
 
-> **Versão:** 2.0 (Pós-Mentoria de 24/08/2026)  
+> **Versão:** 2.1 (05/11/2026: backend migrado do Spring Boot para JAX-RS, ver D-89)  
 > **Status:** Atualizado para refletir o MVP real em produção (`https://merlin-route-finder.vercel.app`).  
 > **Substitui:** O diagrama preliminar da Sprint 1 (`docs/diagramas/C4Model.pdf`), que previa totem físico e transição por handoff JWT.
 
@@ -52,7 +52,7 @@ graph TB
     end
 
     subgraph Nuvem_Render["Serviços de Backend (Render)"]
-        API["Backend API REST\n[Java 21, Spring Boot 4.1.0]\n- Arquitetura Hexagonal (Ports & Adapters)\n- Agendador de Expiração de Sessão (TTL 4h)\n- Endpoints REST (/produtos, /sessoes, /mapa, /roteiro, /chat)\n- Spring Validation & GlobalExceptionHandler"]
+        API["Backend API REST\n[Java 21, JAX-RS: Jersey 4 sobre Grizzly]\n- Pacotes do material FIAP (resource, service, dao, dto, model)\n- Agendador de Expiração de Sessão (TTL 4h)\n- Endpoints REST (/produtos, /sessoes, /mapa, /roteiro, /chat) e /health\n- Validação manual nos DTOs e tratamento de erro em cada Resource"]
     end
 
     subgraph Provedores_Externos["Serviços em Nuvem & Dados"]
@@ -61,8 +61,8 @@ graph TB
     end
 
     Browser -->|"1. Escaneia QR da coluna ou digita URL"| WebApp
-    WebApp -->|"2. Requisições REST / JSON (HTTPS)"| API
-    API -->|"3. Consultas e Telemetria via HikariCP (JDBC)"| OracleDB
+    WebApp -->|"2. Requisições REST / JSON (HTTPS), repassadas pelo rewrite /api da Vercel"| API
+    API -->|"3. Consultas e Telemetria via JDBC (DAO + ConnectionFactory, sem pool)"| OracleDB
     API -->|"4. Chamadas de IA com Tool-Grounding (HTTPS)"| GeminiAPI
 
     classDef client fill:#E1F5FE,stroke:#0288D1,stroke-width:2px,color:#01579B;
@@ -83,8 +83,8 @@ graph TB
 | Contêiner | Tecnologia | Responsabilidade Principal | Decisões Críticas Associadas |
 |---|---|---|---|
 | **Mobile Web App** | React 19, Vite 8, CSS3 | Interface com o cliente na loja. Fornece catálogo com facetas dinâmicas, mapa SVG interativo com grid unificado (0..100), chat flutuante e lista de compras com suporte *local-first* e fila de sincronização para áreas sem sinal. | • **D-79 / D-80:** Acessibilidade WCAG e suporte a `prefers-reduced-motion`.<br>• **D-86:** Fila offline para envio de coletas pendentes.<br>• **D-81:** Barra inferior permanente com 4 destinos. |
-| **Backend REST API** | Java 21, Spring Boot 4.1.0, JPA/Hibernate | Orquestração das regras de negócio em Arquitetura Hexagonal. Processa o ciclo de vida das sessões, gerencia o roteiro de compras, calcula geometria da loja e coordena o motor de sugestão de ruptura. | • **D-24:** TTL de sessão de 4 horas com renovação a cada interação.<br>• **D-39:** Registro de ruptura em transação independente (`REQUIRES_NEW`).<br>• **D-45:** `open-in-view: false` e `fetch_size: 100` otimizados para conexão remota. |
-| **Banco de Dados** | Oracle Database 19c Enterprise | Persistência transacional com integridade referencial. Executa busca textual tolerante a erros de digitação via pacote nativo `UTL_MATCH`. | • **D-46:** Limitação do pool Hikari a 3 conexões (dev) e 5 (prod) respeitando as cotas institucionais.<br>• **D-47:** Carga de 111 produtos reais da Leroy Merlin com coordenadas em grid de gôndola. |
+| **Backend REST API** | Java 21, JAX-RS (Jersey 4 + Grizzly), JSON-B, JDBC, ModelMapper | Orquestração das regras de negócio, na estrutura de pacotes do material da FIAP. Processa o ciclo de vida das sessões, gerencia o roteiro de compras, calcula geometria da loja e coordena o motor de sugestão de ruptura. | • **D-89:** Saída do Spring Boot para seguir o material à risca.<br>• **D-24:** TTL de sessão de 4 horas com renovação a cada interação.<br>• **D-39:** Registro de ruptura em transação própria (`Transacao.iniciarNova()`).<br>• **D-91:** Sem CORS: o frontend chama a API pelo rewrite da Vercel. |
+| **Banco de Dados** | Oracle Database 19c Enterprise | Persistência transacional com integridade referencial. Executa busca textual tolerante a erros de digitação via pacote nativo `UTL_MATCH`. | • **D-90:** Sem pool: cada transação abre e fecha a própria conexão, ocupando sessões do schema só enquanto executa.<br>• **D-94:** Schema mantido por script em `database/migrations`.<br>• **D-47:** Carga de 111 produtos reais da Leroy Merlin com coordenadas em grid de gôndola. |
 | **Inteligência Artificial** | Google Gemini (3.5 Flash-Lite) | Interpretação de linguagem natural no chat consultivo e recomendação de produtos substitutos em caso de ruptura de estoque. | • **D-37:** Uso do modelo *Flash-Lite* para latência de ~1s contra >20s de modelos maiores.<br>• **D-38:** Restrição absoluta de grounding: o modelo escolhe apenas entre candidatos reais com saldo em estoque. Em caso de indisponibilidade ou cota, aciona fallback de proximidade. |
 
 ---
