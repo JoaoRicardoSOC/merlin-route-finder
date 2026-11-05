@@ -83,7 +83,7 @@ public class ChatResource {
             @Valid @RequestBody EnviarMensagemRequest request) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
 
         ChatMensagemResponse resposta =
-                conversarComAssistenteUseCase.executar(sessaoId, request.conteudo());
+                conversarComAssistenteUseCase.executar(sessaoId, request.getConteudo());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(resposta);
     }
