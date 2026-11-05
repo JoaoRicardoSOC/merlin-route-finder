@@ -4,8 +4,6 @@ import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.factory.ConnectionFactory;
 
-import org.springframework.stereotype.Component;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -23,7 +21,6 @@ import java.util.UUID;
  * fecha: quem abre e fecha a conexao e a transacao. Aqui so se fecham os comandos e resultados.
  */
 // Provisorio: so enquanto o Spring injeta as dependencias. Sai na fase 10 do plano.
-@Component
 public class PontoMapaDao {
 
     /** Colunas na ordem que {@link #ler(ResultSet, String)} espera, com o prefixo da tabela. */

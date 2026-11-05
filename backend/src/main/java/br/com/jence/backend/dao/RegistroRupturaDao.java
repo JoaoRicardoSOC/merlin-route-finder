@@ -5,8 +5,6 @@ import br.com.jence.backend.factory.Transacao;
 import br.com.jence.backend.model.OrigemSugestao;
 import br.com.jence.backend.model.RegistroRuptura;
 
-import org.springframework.stereotype.Component;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -19,7 +17,6 @@ import java.util.UUID;
 
 /** Acesso a tabela {@code tb_registro_ruptura}: os relatos de gondola vazia. */
 // Provisorio: so enquanto o Spring injeta as dependencias. Sai na fase 10 do plano.
-@Component
 public class RegistroRupturaDao {
 
     /**

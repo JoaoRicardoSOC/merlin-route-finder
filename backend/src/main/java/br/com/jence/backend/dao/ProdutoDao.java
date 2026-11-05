@@ -11,8 +11,6 @@ import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.SecaoDoCatalogo;
 import br.com.jence.backend.model.ValorDeAtributo;
 
-import org.springframework.stereotype.Component;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -34,7 +32,6 @@ import java.util.UUID;
  * parametro ({@code ?}); o SQL so cresce com trechos constantes.
  */
 // Provisorio: so enquanto o Spring injeta as dependencias. Sai na fase 10 do plano.
-@Component
 public class ProdutoDao {
 
     /** Colunas do produto com o prefixo {@code p}, mais as do ponto com o prefixo {@code m}. */

@@ -4,8 +4,6 @@ import br.com.jence.backend.factory.ConnectionFactory;
 import br.com.jence.backend.model.AtributoProduto;
 import br.com.jence.backend.model.TipoPonto;
 
-import org.springframework.stereotype.Component;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -39,7 +37,6 @@ import java.util.stream.Collectors;
  * inicio de uma transacao, antes de qualquer gravacao.
  */
 // Provisorio: so enquanto o Spring injeta as dependencias. Sai na fase 10 do plano.
-@Component
 public class RestricaoDeEnumDao {
 
     /** Uma coluna de enum sob cuidado deste mecanismo. */
