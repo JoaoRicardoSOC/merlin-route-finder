@@ -106,6 +106,6 @@ npm run build
 
 - **João Ricardo:** Arquitetura e Back-end
 - **Caio:** Back-end e Integrações
-- **Bielecky:** Front-end e UI/UX Design
+- **Bielecky:** Back-end, Arquitetura, Front-end e UI/UX Design
 - **Marcela:** Front-end e UI/UX Design
 - **Vicentini:** Modelagem e Banco de Dados
