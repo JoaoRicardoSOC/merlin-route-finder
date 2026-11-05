@@ -192,7 +192,7 @@ Nesta fase o Spring e o Jersey convivem no `pom.xml` até o passo 10.12. **Aten�
 - [x] **10.11** Apagar as anotações do Swagger (`@Tag`, `@Operation`, `@ApiResponse`, `@Schema`).
 - [x] **10.12** `pom.xml` final (RC-01, RC-02): sem `spring-boot-starter-parent` e sem nenhuma dependência do Spring, springdoc, Mockito, AssertJ ou SnakeYAML; `junit-jupiter` `5.10.1`; `maven-compiler-plugin` com Java 21; `exec-maven-plugin` apontando para `Main`; `maven-shade-plugin`; JaCoCo e o profile `integracao` mantidos.
 - [x] **10.13** `Dockerfile`: mesmo `java -jar`, agora com o jar do shade.
-- [ ] **10.14** Verificações de RNF-01 por busca no código; `mvnw test`; subir a imagem Docker localmente e chamar `/health`.
+- [x] **10.14** Verificações de RNF-01 por busca no código; `mvnw test`; subir a imagem Docker localmente e chamar `/health`. **Resultado (05/11/2026):** nenhuma importação do RNF-01 em `backend/src`; `mvnw test` com 195 testes passando. Sem Docker nesta máquina, a imagem não foi construída: o jar do shade foi rodado com o mesmo `java -jar` e os mesmos `JAVA_OPTS` do container, contra o Oracle, e `/health`, mapa, seções, busca, sessão, roteiro, conclusão e os 400 de UUID e JSON malformados responderam como esperado. Falta construir a imagem uma vez antes do deploy.
 
 ### Fase 11 — Documentação e publicação
 
