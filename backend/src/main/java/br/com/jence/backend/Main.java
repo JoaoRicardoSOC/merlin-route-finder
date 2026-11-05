@@ -1,10 +1,14 @@
 package br.com.jence.backend;
 
 import br.com.jence.backend.config.Configuracao;
+import br.com.jence.backend.dao.ListaRoteiroDao;
 import br.com.jence.backend.dao.PontoMapaDao;
 import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.dao.RestricaoDeEnumDao;
+import br.com.jence.backend.dao.SessaoDao;
+import br.com.jence.backend.scheduler.AgendadorDeExpiracao;
 import br.com.jence.backend.seed.CarregadorDadosIniciais;
+import br.com.jence.backend.service.ExpirarSessoesInativasUseCase;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -13,7 +17,7 @@ import java.net.URI;
 import java.util.TimeZone;
 
 /**
- * Sobe a aplicacao: carrega a massa de dados e abre o servidor HTTP.
+ * Sobe a aplicacao: carrega a massa de dados, liga o agendador e abre o servidor HTTP.
  * <p>
  * Segue a {@code Main} do material, com tres diferencas:
  * <ul>
@@ -56,11 +60,19 @@ public class Main {
                     .executar();
         }
 
+        final AgendadorDeExpiracao agendador = new AgendadorDeExpiracao(
+                new ExpirarSessoesInativasUseCase(new SessaoDao(), new ListaRoteiroDao()));
+        if (configuracao.isAgendadorLigado()) {
+            agendador.iniciar(configuracao.getAgendadorAtrasoInicialMs(),
+                    configuracao.getAgendadorIntervaloMs());
+        }
+
         final HttpServer server = startServer(configuracao.getPorta());
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Desligando o servidor...");
             server.shutdownNow();
+            agendador.parar();
         }));
 
         System.out.println(String.format("Servidor no ar na porta %s.", configuracao.getPorta()));
