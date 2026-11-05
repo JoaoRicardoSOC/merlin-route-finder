@@ -1,7 +1,9 @@
 package br.com.jence.backend;
 
 import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.PontoMapaDao;
 import br.com.jence.backend.dao.ProdutoDao;
+import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.factory.ConnectionFactory;
 import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.service.InicializarSessaoUseCase;
@@ -9,12 +11,11 @@ import br.com.jence.backend.service.MarcarItemColetadoUseCase;
 import br.com.jence.backend.service.RemoverProdutoDoRoteiroUseCase;
 import br.com.jence.backend.model.ItemRoteiro;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -51,16 +52,28 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * {@code delete} em {@code tb_item_roteiro} diz ter afetado.
  */
 @Tag("integracao")
-@SpringBootTest
 class AmplitudeDeEscritaIntegracaoTest {
 
-    @Autowired InicializarSessaoUseCase inicializar;
-    @Autowired AdicionarProdutoAoRoteiroUseCase adicionar;
-    @Autowired MarcarItemColetadoUseCase marcarColetado;
-    @Autowired RemoverProdutoDoRoteiroUseCase remover;
+    /** A massa de demonstracao no banco, como a Main garante antes de subir. */
+    @BeforeAll
+    static void carregarMassa() throws Exception {
+        BancoDeTeste.carregarMassa();
+    }
+
+    private final InicializarSessaoUseCase inicializar = new InicializarSessaoUseCase(
+            new SessaoDao(),
+            new ListaRoteiroDao(),
+            new PontoMapaDao());
+    private final AdicionarProdutoAoRoteiroUseCase adicionar = new AdicionarProdutoAoRoteiroUseCase(
+            new SessaoDao(),
+            new ListaRoteiroDao(),
+            new ProdutoDao());
+    private final MarcarItemColetadoUseCase marcarColetado =
+            new MarcarItemColetadoUseCase(new ListaRoteiroDao(), new SessaoDao());
+    private final RemoverProdutoDoRoteiroUseCase remover =
+            new RemoverProdutoDoRoteiroUseCase(new SessaoDao(), new ListaRoteiroDao());
     private final ListaRoteiroDao listaRoteiroDao = BancoDeTeste.listas();
     private final ProdutoDao produtoDao = BancoDeTeste.produtos();
-
 
     private UUID sessaoId;
 
