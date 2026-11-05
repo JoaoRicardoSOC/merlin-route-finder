@@ -1,49 +1,82 @@
 package br.com.jence.backend.resource;
 
 import br.com.jence.backend.dto.ChatMensagemResponse;
-import br.com.jence.backend.service.ConsultarHistoricoChatUseCase;
-import br.com.jence.backend.service.ConversarComAssistenteUseCase;
-import br.com.jence.backend.model.Remetente;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
+import br.com.jence.backend.model.Remetente;
+import br.com.jence.backend.service.ConsultarHistoricoChatUseCase;
+import br.com.jence.backend.service.ConversarComAssistenteUseCase;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@WebMvcTest(ChatResource.class)
+/** As rotas do chat pelo Jersey, com casos de uso falsos. */
 class ChatResourceTest {
 
-    @Autowired MockMvc mockMvc;
+    /** Anota cada pergunta; devolve a resposta combinada ou lanca a falha combinada. */
+    static class ConversarFalso extends ConversarComAssistenteUseCase {
+        final List<String> perguntas = new ArrayList<>();
+        ChatMensagemResponse resposta;
+        Exception falha;
 
-    @MockitoBean ConversarComAssistenteUseCase conversarComAssistenteUseCase;
-    @MockitoBean ConsultarHistoricoChatUseCase consultarHistoricoChatUseCase;
+        ConversarFalso() {
+            super(null, null, null, null);
+        }
 
-    private UUID sessaoId;
+        @Override
+        public ChatMensagemResponse executar(UUID sessaoId, String pergunta)
+                throws RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+            perguntas.add(pergunta);
+            if (falha instanceof RecursoNaoEncontradoException e) {
+                throw e;
+            }
+            if (falha instanceof OperacaoNaoPermitidaException e) {
+                throw e;
+            }
+            return resposta;
+        }
+    }
+
+    static class HistoricoFalso extends ConsultarHistoricoChatUseCase {
+        List<ChatMensagemResponse> mensagens = List.of();
+        RecursoNaoEncontradoException falha;
+
+        HistoricoFalso() {
+            super(null, null);
+        }
+
+        @Override
+        public List<ChatMensagemResponse> executar(UUID sessaoId) throws RecursoNaoEncontradoException {
+            if (falha != null) {
+                throw falha;
+            }
+            return mensagens;
+        }
+    }
+
+    private final UUID sessaoId = UUID.randomUUID();
+    private final ConversarFalso conversar = new ConversarFalso();
+    private final HistoricoFalso historico = new HistoricoFalso();
+    private ServidorDeTeste servidor;
 
     @BeforeEach
-    void preparar() {
-        sessaoId = UUID.randomUUID();
+    void subir() throws Exception {
+        servidor = ServidorDeTeste.com(new ChatResource(conversar, historico));
+    }
+
+    @AfterEach
+    void descer() {
+        servidor.close();
     }
 
     private ChatMensagemResponse mensagem(Remetente remetente, String conteudo) {
@@ -56,10 +89,12 @@ class ChatResourceTest {
         return mensagem;
     }
 
-    private MockHttpServletRequestBuilder enviar(String corpo) {
-        return post("/api/v1/sessoes/{s}/chat/mensagens", sessaoId)
-                .contentType(APPLICATION_JSON)
-                .content(corpo);
+    private String mensagens() {
+        return "/api/v1/sessoes/" + sessaoId + "/chat/mensagens";
+    }
+
+    private ServidorDeTeste.Resposta enviar(String corpo) throws Exception {
+        return servidor.json("POST", mensagens(), corpo);
     }
 
     // ---------------------------------------------------------------- envio
@@ -67,87 +102,76 @@ class ChatResourceTest {
     @Test
     @DisplayName("POST devolve 201 com a resposta do assistente, nao com a pergunta")
     void enviarMensagem() throws Exception {
-        when(conversarComAssistenteUseCase.executar(eq(sessaoId), any())).thenReturn(
-                mensagem(Remetente.ASSISTANT,
-                        "Voce vai precisar de tinta, rolo e lixa. Tudo no corredor Tintas."));
+        conversar.resposta = mensagem(Remetente.ASSISTANT,
+                "Voce vai precisar de tinta, rolo e lixa. Tudo no corredor Tintas.");
 
-        mockMvc.perform(enviar("""
-                        {"conteudo": "o que preciso para pintar uma parede?"}"""))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.remetente").value("ASSISTANT"))
-                .andExpect(jsonPath("$.sessaoId").value(sessaoId.toString()))
-                .andExpect(jsonPath("$.conteudo").value(
-                        org.hamcrest.Matchers.containsString("corredor Tintas")))
-                .andExpect(jsonPath("$.enviadoEm").exists());
+        ServidorDeTeste.Resposta resposta = enviar("""
+                {"conteudo": "o que preciso para pintar uma parede?"}""");
+
+        assertEquals(201, resposta.status());
+        assertEquals("ASSISTANT", resposta.texto("remetente"));
+        assertEquals(sessaoId.toString(), resposta.texto("sessaoId"));
+        assertTrue(resposta.texto("conteudo").contains("corredor Tintas"));
+        assertNotNull(resposta.json("enviadoEm"));
     }
 
     @Test
     @DisplayName("o conteudo enviado chega intacto ao caso de uso")
     void repassaOConteudo() throws Exception {
-        when(conversarComAssistenteUseCase.executar(any(), any()))
-                .thenReturn(mensagem(Remetente.ASSISTANT, "resposta"));
+        conversar.resposta = mensagem(Remetente.ASSISTANT, "resposta");
 
-        mockMvc.perform(enviar("""
-                        {"conteudo": "quanto custa a torneira cromada?"}"""))
-                .andExpect(status().isCreated());
+        assertEquals(201, enviar("""
+                {"conteudo": "quanto custa a torneira cromada?"}""").status());
 
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(conversarComAssistenteUseCase).executar(eq(sessaoId), captor.capture());
-
-        assertEquals("quanto custa a torneira cromada?", captor.getValue());
+        assertEquals(List.of("quanto custa a torneira cromada?"), conversar.perguntas);
     }
 
     @Test
     @DisplayName("conteudo em branco devolve 400 sem gastar chamada de IA")
     void conteudoEmBranco() throws Exception {
-        mockMvc.perform(enviar("""
-                        {"conteudo": "   "}"""))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.validationErrors[0].field").value("conteudo"));
+        ServidorDeTeste.Resposta resposta = enviar("""
+                {"conteudo": "   "}""");
 
-        verify(conversarComAssistenteUseCase, never()).executar(any(), any());
+        assertEquals(400, resposta.status());
+        assertEquals("conteudo", resposta.texto("validationErrors[0].field"));
+        assertTrue(conversar.perguntas.isEmpty());
     }
 
     @Test
     @DisplayName("conteudo acima do limite devolve 400 sem gastar chamada de IA")
     void conteudoLongoDemais() throws Exception {
-        String gigante = "a".repeat(1001);
+        ServidorDeTeste.Resposta resposta = enviar("{\"conteudo\": \"" + "a".repeat(1001) + "\"}");
 
-        mockMvc.perform(enviar("{\"conteudo\": \"" + gigante + "\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.validationErrors[0].field").value("conteudo"));
-
-        verify(conversarComAssistenteUseCase, never()).executar(any(), any());
+        assertEquals(400, resposta.status());
+        assertEquals("conteudo", resposta.texto("validationErrors[0].field"));
+        assertTrue(conversar.perguntas.isEmpty());
     }
 
     @Test
     @DisplayName("sessao encerrada devolve 409")
     void sessaoInativa() throws Exception {
-        when(conversarComAssistenteUseCase.executar(any(), any())).thenThrow(
-                new OperacaoNaoPermitidaException("Sessao nao esta mais ativa (status COMPLETED)"));
+        conversar.falha = new OperacaoNaoPermitidaException("Sessao nao esta mais ativa (status COMPLETED)");
 
-        mockMvc.perform(enviar("""
-                        {"conteudo": "oi"}"""))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Operação Não Permitida"));
+        ServidorDeTeste.Resposta resposta = enviar("""
+                {"conteudo": "oi"}""");
+
+        assertEquals(409, resposta.status());
+        assertEquals("Operação Não Permitida", resposta.texto("error"));
     }
 
     @Test
     @DisplayName("sessao inexistente devolve 404")
     void sessaoInexistente() throws Exception {
-        when(conversarComAssistenteUseCase.executar(any(), any()))
-                .thenThrow(new RecursoNaoEncontradoException("Sessao", sessaoId));
+        conversar.falha = new RecursoNaoEncontradoException("Sessao", sessaoId);
 
-        mockMvc.perform(enviar("""
-                        {"conteudo": "oi"}"""))
-                .andExpect(status().isNotFound());
+        assertEquals(404, enviar("""
+                {"conteudo": "oi"}""").status());
     }
 
     @Test
     @DisplayName("corpo ilegivel devolve 400, nao 500")
     void corpoIlegivel() throws Exception {
-        mockMvc.perform(enviar("{isso nao e json"))
-                .andExpect(status().isBadRequest());
+        assertEquals(400, enviar("{isso nao e json").status());
     }
 
     // ---------------------------------------------------------------- historico
@@ -155,48 +179,48 @@ class ChatResourceTest {
     @Test
     @DisplayName("GET devolve a conversa na ordem em que aconteceu")
     void historicoEmOrdem() throws Exception {
-        when(consultarHistoricoChatUseCase.executar(sessaoId)).thenReturn(List.of(
+        historico.mensagens = List.of(
                 mensagem(Remetente.USER, "quero reformar o banheiro"),
                 mensagem(Remetente.ASSISTANT, "comece pela torneira e pelo sifao"),
                 mensagem(Remetente.USER, "e a parte hidraulica?"),
-                mensagem(Remetente.ASSISTANT, "cano PVC e cola, no corredor Encanamento")));
+                mensagem(Remetente.ASSISTANT, "cano PVC e cola, no corredor Encanamento"));
 
-        mockMvc.perform(get("/api/v1/sessoes/{s}/chat/mensagens", sessaoId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(4))
-                .andExpect(jsonPath("$[0].remetente").value("USER"))
-                .andExpect(jsonPath("$[0].conteudo").value("quero reformar o banheiro"))
-                .andExpect(jsonPath("$[1].remetente").value("ASSISTANT"))
-                .andExpect(jsonPath("$[3].conteudo").value(
-                        org.hamcrest.Matchers.containsString("Encanamento")));
+        ServidorDeTeste.Resposta resposta = servidor.get(mensagens());
+
+        assertEquals(200, resposta.status());
+        assertEquals(4, resposta.tamanho(""));
+        assertEquals("USER", resposta.texto("[0].remetente"));
+        assertEquals("quero reformar o banheiro", resposta.texto("[0].conteudo"));
+        assertEquals("ASSISTANT", resposta.texto("[1].remetente"));
+        assertTrue(resposta.texto("[3].conteudo").contains("Encanamento"));
     }
 
     @Test
     @DisplayName("conversa que ainda nao comecou devolve 200 com lista vazia")
     void historicoVazio() throws Exception {
-        when(consultarHistoricoChatUseCase.executar(sessaoId)).thenReturn(List.of());
+        ServidorDeTeste.Resposta resposta = servidor.get(mensagens());
 
-        mockMvc.perform(get("/api/v1/sessoes/{s}/chat/mensagens", sessaoId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+        assertEquals(200, resposta.status());
+        assertEquals(0, resposta.tamanho(""));
     }
 
     @Test
     @DisplayName("sessao inexistente devolve 404, distinguivel de conversa vazia")
     void historicoDeSessaoInexistente() throws Exception {
-        when(consultarHistoricoChatUseCase.executar(sessaoId))
-                .thenThrow(new RecursoNaoEncontradoException("Sessao", sessaoId));
+        historico.falha = new RecursoNaoEncontradoException("Sessao", sessaoId);
 
-        mockMvc.perform(get("/api/v1/sessoes/{s}/chat/mensagens", sessaoId))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Recurso Não Encontrado"));
+        ServidorDeTeste.Resposta resposta = servidor.get(mensagens());
+
+        assertEquals(404, resposta.status());
+        assertEquals("Recurso Não Encontrado", resposta.texto("error"));
     }
 
     @Test
     @DisplayName("sessaoId malformado devolve 400, nao 500")
     void sessaoIdMalformado() throws Exception {
-        mockMvc.perform(get("/api/v1/sessoes/{s}/chat/mensagens", "nao-e-uuid"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Parâmetro Inválido"));
+        ServidorDeTeste.Resposta resposta = servidor.get("/api/v1/sessoes/nao-e-uuid/chat/mensagens");
+
+        assertEquals(400, resposta.status());
+        assertEquals("Parâmetro Inválido", resposta.texto("error"));
     }
 }
