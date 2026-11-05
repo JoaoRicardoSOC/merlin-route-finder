@@ -7,6 +7,7 @@ import br.com.jence.backend.dto.PaginaResponse;
 import br.com.jence.backend.dto.ProdutoDetalhadoResponse;
 import br.com.jence.backend.dto.ProdutoResponse;
 import br.com.jence.backend.dto.SecaoResponse;
+import br.com.jence.backend.dto.StandardError;
 import br.com.jence.backend.service.BuscarProdutosUseCase;
 import br.com.jence.backend.service.ConsultarProdutoUseCase;
 import br.com.jence.backend.service.ListarSecoesUseCase;
@@ -14,7 +15,7 @@ import br.com.jence.backend.service.SimularEstoqueUseCase;
 import br.com.jence.backend.model.AtributoProduto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -145,9 +146,16 @@ public class ProdutoResource {
                     + "o fluxo de ruptura (UC-013) de forma confiavel durante uma gravacao ou "
                     + "apresentacao ao vivo. Envie 0 para provocar a ruptura e qualquer valor "
                     + "positivo para restaurar.")
-    public ResponseEntity<ProdutoResponse> simularEstoque(
+    public ResponseEntity<?> simularEstoque(
             @PathVariable UUID produtoId,
-            @Valid @RequestBody EstoqueUpdateRequest request) throws SQLException, RecursoNaoEncontradoException {
+            @RequestBody EstoqueUpdateRequest request,
+            HttpServletRequest http) throws SQLException, RecursoNaoEncontradoException {
+
+        List<StandardError.ValidationError> erros = request.validar();
+        if (!erros.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(StandardError.falhaDeValidacao(http.getRequestURI(), erros));
+        }
 
         return ResponseEntity.ok(simularEstoqueUseCase.executar(produtoId, request.getSaldoEstoque()));
     }

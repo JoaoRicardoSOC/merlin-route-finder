@@ -1,7 +1,6 @@
 package br.com.jence.backend.dto;
-
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Espelha o schema {@code EstoqueUpdateRequest} do contrato OpenAPI.
@@ -11,8 +10,6 @@ import jakarta.validation.constraints.NotNull;
  */
 public class EstoqueUpdateRequest {
 
-    @NotNull(message = "saldoEstoque e obrigatorio")
-    @Min(value = 0, message = "saldoEstoque nao pode ser negativo")
     private Integer saldoEstoque;
 
     public EstoqueUpdateRequest() {
@@ -24,5 +21,21 @@ public class EstoqueUpdateRequest {
 
     public void setSaldoEstoque(Integer saldoEstoque) {
         this.saldoEstoque = saldoEstoque;
+    }
+
+    /**
+     * Confere o corpo com as mesmas regras e mensagens que as anotacoes de validacao tinham.
+     *
+     * @return os campos com problema; vazia quando o corpo esta certo
+     */
+    public List<StandardError.ValidationError> validar() {
+        List<StandardError.ValidationError> erros = new ArrayList<>();
+        if (saldoEstoque == null) {
+            erros.add(StandardError.ValidationError.de("saldoEstoque", "saldoEstoque e obrigatorio"));
+        }
+        if (saldoEstoque != null && saldoEstoque < 0) {
+            erros.add(StandardError.ValidationError.de("saldoEstoque", "saldoEstoque nao pode ser negativo"));
+        }
+        return erros;
     }
 }
