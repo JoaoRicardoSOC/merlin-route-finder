@@ -17,17 +17,9 @@ services:
 
     # Responde sem tocar no banco: serve para o provedor saber que a aplicacao subiu, sem
     # gastar uma conexao Oracle a cada verificacao.
-    healthCheckPath: /v3/api-docs
+    healthCheckPath: /health
 
     envVars:
-      - key: SPRING_PROFILES_ACTIVE
-        value: prod
-
-      # O schema da FIAP permite 20 sessoes por usuario, divididas entre esta instancia e a
-      # maquina de quem cedeu a credencial. Ver D-46.
-      - key: DB_POOL_SIZE
-        value: "5"
-
       # --- credenciais: definir no painel, nunca aqui ---
       - key: DB_URL
         sync: false
