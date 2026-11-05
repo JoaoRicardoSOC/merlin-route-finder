@@ -8,9 +8,34 @@ import br.com.jence.backend.model.SecaoDoCatalogo;
  * A quantidade vai junto porque e o que faz um menu valer: "Tintas (5)" diz ao cliente se
  * vale entrar antes de ele gastar um toque para descobrir.
  */
-public record SecaoResponse(String nome, long quantidadeProdutos) {
+public class SecaoResponse {
+
+    private String nome;
+    private long quantidadeProdutos;
+
+    public SecaoResponse() {
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public long getQuantidadeProdutos() {
+        return quantidadeProdutos;
+    }
+
+    public void setQuantidadeProdutos(long quantidadeProdutos) {
+        this.quantidadeProdutos = quantidadeProdutos;
+    }
 
     public static SecaoResponse de(SecaoDoCatalogo secao) {
-        return new SecaoResponse(secao.nome(), secao.quantidadeProdutos());
+        SecaoResponse resposta = new SecaoResponse();
+        resposta.setNome(secao.nome());
+        resposta.setQuantidadeProdutos(secao.quantidadeProdutos());
+        return resposta;
     }
 }

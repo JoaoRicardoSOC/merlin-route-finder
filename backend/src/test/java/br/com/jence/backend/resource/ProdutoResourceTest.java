@@ -7,6 +7,7 @@ import br.com.jence.backend.dto.ProdutoDetalhadoResponse;
 import br.com.jence.backend.dto.ProdutoResponse;
 import br.com.jence.backend.dto.SecaoResponse;
 import br.com.jence.backend.model.AtributoProduto;
+import br.com.jence.backend.model.SecaoDoCatalogo;
 import br.com.jence.backend.service.BuscarProdutosUseCase;
 import br.com.jence.backend.service.ConsultarProdutoUseCase;
 import br.com.jence.backend.service.ListarSecoesUseCase;
@@ -171,7 +172,8 @@ class ProdutoResourceTest {
          * casasse "secoes" com {produtoId}, a resposta seria 400 por UUID malformado.
          */
         when(listarSecoesUseCase.executar())
-                .thenReturn(List.of(new SecaoResponse("Tintas", 5), new SecaoResponse("Jardim", 2)));
+                .thenReturn(List.of(SecaoResponse.de(new SecaoDoCatalogo("Tintas", 5)),
+                        SecaoResponse.de(new SecaoDoCatalogo("Jardim", 2))));
 
         mockMvc.perform(get("/api/v1/produtos/secoes"))
                 .andExpect(status().isOk())
