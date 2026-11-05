@@ -4,7 +4,7 @@ package br.com.jence.backend.exception;
  * Lancada quando o recurso existe, mas seu estado atual nao permite a operacao pedida -
  * por exemplo, adicionar produto ao roteiro de uma sessao ja encerrada ou expirada.
  * <p>
- * Convertida em HTTP 409 pelo {@code GlobalExceptionHandler}. Nao confundir com
+ * Convertida em HTTP 409 pelos Resources, com o {@code RespostaDeErro}. Nao confundir com
  * {@link RecursoNaoEncontradoException} (404): aqui o recurso existe.
  */
 public class OperacaoNaoPermitidaException extends Exception {

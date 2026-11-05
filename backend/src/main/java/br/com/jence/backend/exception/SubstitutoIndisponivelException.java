@@ -5,7 +5,7 @@ package br.com.jence.backend.exception;
  * seja porque nenhum produto disponivel esta fisicamente perto, seja porque nenhum dos
  * candidatos proximos serve ao mesmo proposito.
  * <p>
- * Convertida em HTTP 422 pelo {@code GlobalExceptionHandler}: a requisicao esta correta e foi
+ * Convertida em HTTP 422 pelos Resources, com o {@code RespostaDeErro}: a requisicao esta correta e foi
  * processada, mas o resultado util nao existe. Nao e 404 (o item existe) nem 409 (nada no
  * estado impede a operacao).
  */

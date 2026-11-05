@@ -7,7 +7,7 @@ package br.com.jence.backend.exception;
  * que diferem apenas no nome seriam repeticao, nao design. O contexto necessario vai na
  * mensagem.
  * <p>
- * Convertida em HTTP 404 pelo {@code GlobalExceptionHandler}.
+ * Convertida em HTTP 404 pelos Resources, com o {@code RespostaDeErro}.
  */
 public class RecursoNaoEncontradoException extends Exception {
 
