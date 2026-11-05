@@ -7,7 +7,6 @@ import br.com.jence.backend.model.PapelIA;
 import br.com.jence.backend.config.Configuracao;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URI;
@@ -30,7 +29,6 @@ import java.util.Map;
  * responde com {@code functionCall{name, args, id}}, e o turno dele precisa ser devolvido
  * <b>inteiro</b> no historico da chamada seguinte.
  */
-@Component
 public class GeminiClient {
 
     /** Limite de idas e voltas com o modelo, para uma conversa nunca virar laco infinito. */
