@@ -2,16 +2,16 @@ package br.com.jence.backend;
 
 import br.com.jence.backend.dao.PontoMapaDao;
 import br.com.jence.backend.dao.ProdutoDao;
+import br.com.jence.backend.dao.RestricaoDeEnumDao;
 import br.com.jence.backend.service.TratarRupturaEstoqueUseCase;
 import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.model.AfinidadeDeProduto;
 import br.com.jence.backend.seed.CarregadorDadosIniciais;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -32,12 +32,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Exige banco, nao exige GEMINI_API_KEY.
  */
 @Tag("integracao")
-@SpringBootTest
 class CargaDeDadosIntegracaoTest {
+
+    /** A massa de demonstracao no banco, como a Main garante antes de subir. */
+    @BeforeAll
+    static void carregarMassa() throws Exception {
+        BancoDeTeste.carregarMassa();
+    }
 
     private final ProdutoDao produtoDao = BancoDeTeste.produtos();
     private final PontoMapaDao pontoMapaDao = BancoDeTeste.pontos();
-    @Autowired CarregadorDadosIniciais carregador;
+    private final CarregadorDadosIniciais carregador = new CarregadorDadosIniciais(
+            new ProdutoDao(),
+            new PontoMapaDao(),
+            new RestricaoDeEnumDao());
 
     /** Cada produto e o substituto que a demonstracao espera encontrar quando ele zerar. */
     private static final Map<String, String> PARES_DE_SUBSTITUICAO = Map.of(
