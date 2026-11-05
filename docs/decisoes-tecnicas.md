@@ -110,6 +110,7 @@
 
 **Migração para JAX-RS**
 - [D-89. O backend sai do Spring Boot e segue o material da FIAP à risca](#d-89-o-backend-sai-do-spring-boot-e-segue-o-material-da-fiap-à-risca)
+- [D-90. JDBC sem pool: cada transação abre e fecha a própria conexão](#d-90-jdbc-sem-pool-cada-transação-abre-e-fecha-a-própria-conexão)
 
 ---
 
@@ -2462,6 +2463,26 @@ tratamento central de erros; o pool de conexões. Cada perda tem a sua decisão 
 
 **Onde está o porquê de cada passo.** [`requisitos-migracao-spring-para-jax-rs.md`](requisitos-migracao-spring-para-jax-rs.md)
 e [`plano-migracao-spring-para-jax-rs.md`](plano-migracao-spring-para-jax-rs.md).
+
+---
+
+### D-90. JDBC sem pool: cada transação abre e fecha a própria conexão
+
+**Contexto.** O material usa uma `ConnectionFactory` que abre a conexão quando alguém pede, sem
+pool. O HikariCP do Spring saiu junto.
+
+**A decisão.** `ConnectionFactory` abre a conexão e a guarda na thread enquanto a `Transacao`
+estiver aberta; os DAOs pegam a conexão da thread. Ao confirmar ou desfazer, a conexão é fechada.
+Nenhuma conexão fica aberta fora de uma transação (RNF-02).
+
+**O custo.** Cada requisição paga a abertura de uma conexão com o Oracle da FIAP, que fica a
+milhares de quilômetros do Render. Na máquina de desenvolvimento, as rotas responderam entre
+150 ms e 600 ms em 05/11/2026. No Render, o número precisa ser medido (passo 11.6) e comparado
+com o de antes; se ficar inaceitável, o assunto volta ao time.
+
+**O que melhora.** O limite de 20 sessões por usuário no schema da FIAP deixa de ser dividido
+com um pool que segurava conexões paradas: só ocupa sessão quem está executando. Ver a revisão
+da [D-46](#d-46-o-pool-de-conexões-é-dimensionado-pelos-limites-reais-do-schema-da-fiap).
 
 ---
 
