@@ -13,10 +13,21 @@ import java.util.UUID;
  * precisa valer sobre o que o cliente <b>viu na tela</b>. O segundo e que ele nao esta preso
  * a sugestao: se encontrou outra coisa na prateleira que resolve, pode trocar por ela.
  */
-public record SubstituirItemRequest(
-        @NotNull(message = "informe o produto substituto")
-        @Schema(description = "Produto que entra no lugar do que faltou.",
-                requiredMode = Schema.RequiredMode.REQUIRED)
-        UUID produtoSubstitutoId
-) {
+public class SubstituirItemRequest {
+
+    @NotNull(message = "informe o produto substituto")
+    @Schema(description = "Produto que entra no lugar do que faltou.",
+            requiredMode = Schema.RequiredMode.REQUIRED)
+    private UUID produtoSubstitutoId;
+
+    public SubstituirItemRequest() {
+    }
+
+    public UUID getProdutoSubstitutoId() {
+        return produtoSubstitutoId;
+    }
+
+    public void setProdutoSubstitutoId(UUID produtoSubstitutoId) {
+        this.produtoSubstitutoId = produtoSubstitutoId;
+    }
 }

@@ -92,7 +92,7 @@ public class ItemRoteiroResource {
             @Valid @RequestBody SubstituirItemRequest requisicao) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
 
         return ResponseEntity.ok(substituirItemDoRoteiroUseCase.executar(
-                itemId, requisicao.produtoSubstitutoId()));
+                itemId, requisicao.getProdutoSubstitutoId()));
     }
 
     /*
