@@ -1,8 +1,9 @@
 package br.com.jence.backend.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -15,7 +16,6 @@ import java.util.UUID;
  */
 public class SubstituirItemRequest {
 
-    @NotNull(message = "informe o produto substituto")
     @Schema(description = "Produto que entra no lugar do que faltou.",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private UUID produtoSubstitutoId;
@@ -29,5 +29,18 @@ public class SubstituirItemRequest {
 
     public void setProdutoSubstitutoId(UUID produtoSubstitutoId) {
         this.produtoSubstitutoId = produtoSubstitutoId;
+    }
+
+    /**
+     * Confere o corpo com as mesmas regras e mensagens que as anotacoes de validacao tinham.
+     *
+     * @return os campos com problema; vazia quando o corpo esta certo
+     */
+    public List<StandardError.ValidationError> validar() {
+        List<StandardError.ValidationError> erros = new ArrayList<>();
+        if (produtoSubstitutoId == null) {
+            erros.add(StandardError.ValidationError.de("produtoSubstitutoId", "informe o produto substituto"));
+        }
+        return erros;
     }
 }

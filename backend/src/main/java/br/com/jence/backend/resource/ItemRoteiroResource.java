@@ -7,6 +7,7 @@ import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.dto.ListaRoteiroResponse;
 import br.com.jence.backend.dto.SubstituirItemRequest;
 import br.com.jence.backend.dto.RupturaEstoqueResponse;
+import br.com.jence.backend.dto.StandardError;
 import br.com.jence.backend.service.DesmarcarItemColetadoUseCase;
 import br.com.jence.backend.service.MarcarItemColetadoUseCase;
 import br.com.jence.backend.service.SubstituirItemDoRoteiroUseCase;
@@ -15,7 +16,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -87,9 +89,16 @@ public class ItemRoteiroResource {
             @ApiResponse(responseCode = "409",
                     description = "Sessao encerrada, ou tentativa de trocar o produto por ele mesmo")
     })
-    public ResponseEntity<ListaRoteiroResponse> substituir(
+    public ResponseEntity<?> substituir(
             @PathVariable UUID itemId,
-            @Valid @RequestBody SubstituirItemRequest requisicao) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+            @RequestBody SubstituirItemRequest requisicao,
+            HttpServletRequest http) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+
+        List<StandardError.ValidationError> erros = requisicao.validar();
+        if (!erros.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(StandardError.falhaDeValidacao(http.getRequestURI(), erros));
+        }
 
         return ResponseEntity.ok(substituirItemDoRoteiroUseCase.executar(
                 itemId, requisicao.getProdutoSubstitutoId()));
