@@ -33,9 +33,10 @@ RUN useradd --system --create-home --shell /usr/sbin/nologin merlin
 USER merlin
 
 WORKDIR /app
+# O jar do shade, com as dependencias dentro. O original-backend-*.jar (sem elas) nao casa.
 COPY --from=build /build/target/backend-*.jar app.jar
 
-# O provedor injeta a porta em PORT; application.yml ja a respeita.
+# O provedor injeta a porta em PORT, que a Main le.
 EXPOSE 8080
 
 # MaxRAMPercentage porque o container tem limite de memoria proprio e a JVM, sozinha,
