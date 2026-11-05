@@ -542,6 +542,8 @@ Mas existe um caminho de recuperação já disponível: a resposta traz o `sessa
 
 ### D-10. Entidades JPA espelho, separadas das de domínio
 
+> **Revista em 05/11/2026, na migração para JAX-RS:** as entidades JPA espelho foram apagadas junto com o JPA. Os DAOs leem o `ResultSet` e montam direto os objetos do `model`. Ver [D-90](#d-90-jdbc-sem-pool-cada-transação-abre-e-fecha-a-própria-conexão).
+
 **Contexto.** Consequência direta da D-01: o Hibernate precisa de construtor sem argumentos, setters e campos mutáveis.
 
 **Decisão.** Classes `*Entity` em `infrastructure/database/entity`, anotadas com JPA e com `@Getter @Setter @NoArgsConstructor @AllArgsConstructor`. Os mapeadores (`*Factory`) traduzem nos dois sentidos.
