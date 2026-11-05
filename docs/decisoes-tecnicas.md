@@ -113,6 +113,7 @@
 - [D-90. JDBC sem pool: cada transação abre e fecha a própria conexão](#d-90-jdbc-sem-pool-cada-transação-abre-e-fecha-a-própria-conexão)
 - [D-91. O CORS sai do backend: a Vercel repassa `/api/*` para o Render](#d-91-o-cors-sai-do-backend-a-vercel-repassa-api-para-o-render)
 - [D-92. Exceções checadas, tratadas no `catch` de cada Resource](#d-92-exceções-checadas-tratadas-no-catch-de-cada-resource)
+- [D-93. DTOs são classes, copiadas pelo ModelMapper onde a cópia é direta](#d-93-dtos-são-classes-copiadas-pelo-modelmapper-onde-a-cópia-é-direta)
 
 ---
 
@@ -2520,6 +2521,25 @@ pela `LeituraDaRequisicao`. Os 400 de antes voltaram, com o mesmo corpo.
 **O que ficou diferente, e foi aceito (RF-04).** Rota inexistente, método não permitido e
 `Content-Type` errado são respondidos pelo Jersey antes de chegar ao Resource: o status é o mesmo
 (404, 405, 415), mas a resposta vem sem corpo. O frontend só lê o status nesses casos.
+
+---
+
+### D-93. DTOs são classes, copiadas pelo ModelMapper onde a cópia é direta
+
+**Contexto.** Os DTOs eram `record`. O material usa classes com construtor sem argumentos,
+getters e setters, e o ModelMapper para copiar o objeto do domínio.
+
+**A decisão.** Os 21 DTOs viraram classes. O `de(...)` de cada um usa o ModelMapper (instância
+única, em `MapperFactory`) quando todos os campos vêm de getters do `model`, e setters quando o
+campo é calculado ou a origem é um `record` - o ModelMapper 3.0.0 não lê acessores que não
+começam com `get`.
+
+**A proteção que veio junto.** O ModelMapper casa campos pelo nome, implicitamente. Cada DTO que o
+usa tem um teste que confere campo a campo, para um campo novo de nome parecido não receber o
+valor errado sem ninguém ver.
+
+**Um efeito colateral que a integração pegou.** Com `record`, dois DTOs iguais eram `equals`; com
+classe, não. O teste que conferia que o mapa é estável passou a comparar o JSON gerado.
 
 ---
 
