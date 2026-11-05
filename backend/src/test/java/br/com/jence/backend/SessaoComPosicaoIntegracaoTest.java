@@ -1,7 +1,9 @@
 package br.com.jence.backend;
 
 import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.PontoMapaDao;
 import br.com.jence.backend.dao.ProdutoDao;
+import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.dto.SessaoResponse;
 import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
 import br.com.jence.backend.service.ConsultarSessaoUseCase;
@@ -15,11 +17,10 @@ import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,19 +39,33 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Exige banco, nao exige GEMINI_API_KEY.
  */
 @Tag("integracao")
-@SpringBootTest
 class SessaoComPosicaoIntegracaoTest {
 
-    @Autowired InicializarSessaoUseCase inicializar;
-    @Autowired ConsultarSessaoUseCase consultar;
-    @Autowired AdicionarProdutoAoRoteiroUseCase adicionar;
-    @Autowired MarcarItemColetadoUseCase marcarColetado;
-    @Autowired RecentrarSessaoUseCase recentrar;
-    @Autowired DesmarcarItemColetadoUseCase desmarcar;
-    @Autowired ConcluirRotaUseCase concluir;
+    /** A massa de demonstracao no banco, como a Main garante antes de subir. */
+    @BeforeAll
+    static void carregarMassa() throws Exception {
+        BancoDeTeste.carregarMassa();
+    }
+
+    private final InicializarSessaoUseCase inicializar = new InicializarSessaoUseCase(
+            new SessaoDao(),
+            new ListaRoteiroDao(),
+            new PontoMapaDao());
+    private final ConsultarSessaoUseCase consultar =
+            new ConsultarSessaoUseCase(new SessaoDao(), new ListaRoteiroDao());
+    private final AdicionarProdutoAoRoteiroUseCase adicionar = new AdicionarProdutoAoRoteiroUseCase(
+            new SessaoDao(),
+            new ListaRoteiroDao(),
+            new ProdutoDao());
+    private final MarcarItemColetadoUseCase marcarColetado =
+            new MarcarItemColetadoUseCase(new ListaRoteiroDao(), new SessaoDao());
+    private final RecentrarSessaoUseCase recentrar =
+            new RecentrarSessaoUseCase(new SessaoDao(), new ListaRoteiroDao(), new PontoMapaDao());
+    private final DesmarcarItemColetadoUseCase desmarcar =
+            new DesmarcarItemColetadoUseCase(new ListaRoteiroDao(), new SessaoDao());
+    private final ConcluirRotaUseCase concluir = new ConcluirRotaUseCase(new SessaoDao());
     private final ProdutoDao produtoDao = BancoDeTeste.produtos();
     private final ListaRoteiroDao listaRoteiroDao = BancoDeTeste.listas();
-
 
     private final List<UUID> criadas = new ArrayList<>();
 
