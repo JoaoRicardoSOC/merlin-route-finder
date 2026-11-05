@@ -232,6 +232,8 @@ Foi por esse critério que no UC-003 optamos por **não** adicionar um campo `di
 
 ### D-33. Suíte de testes roda sem banco; integração fica separada por tag
 
+> **Revista em 05/11/2026, na migração para JAX-RS:** a separação continua. Os testes web passaram a subir o Grizzly com casos de uso falsos escritos à mão, sem Mockito, e o teste de contrato saiu da integração para a suíte padrão, porque não precisa mais da aplicação no ar. Ver [D-89](#d-89-o-backend-sai-do-spring-boot-e-segue-o-material-da-fiap-à-risca).
+
 **Contexto.** O `BackendApplicationTests`, herdado do esqueleto inicial, sobe o contexto Spring inteiro — inclusive a conexão com o Oracle. Com ele na execução padrão, `./mvnw test` **falhava** na máquina de quem ainda não tinha credencial configurada, e inviabilizaria qualquer CI.
 
 **Decisão.** Testes que exigem banco são marcados com `@Tag("integracao")` e excluídos por padrão pelo Surefire. Um profile Maven os reativa:
