@@ -33,7 +33,12 @@ public final class ServidorDeTeste implements AutoCloseable {
 
     private final HttpServer server;
     private final String base;
-    private final HttpClient cliente = HttpClient.newHttpClient();
+    /*
+     * HTTP/1.1 fixo: por padrao o cliente do JDK tenta o upgrade para HTTP/2 (h2c), o Grizzly
+     * nao aceita, e o corpo do POST nunca chega - a chamada fica presa ate o tempo limite.
+     */
+    private final HttpClient cliente =
+            HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
 
     private ServidorDeTeste(Object... resources) throws IOException {
         int porta;
