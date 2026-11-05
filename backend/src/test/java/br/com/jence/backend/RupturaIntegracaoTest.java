@@ -1,7 +1,11 @@
 package br.com.jence.backend;
 
+import br.com.jence.backend.dao.ItemRoteiroDao;
+import br.com.jence.backend.dao.ListaRoteiroDao;
+import br.com.jence.backend.dao.PontoMapaDao;
 import br.com.jence.backend.dao.RegistroRupturaDao;
 import br.com.jence.backend.dao.ProdutoDao;
+import br.com.jence.backend.dao.SessaoDao;
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.dto.RupturaEstoqueResponse;
 import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
@@ -11,13 +15,13 @@ import br.com.jence.backend.model.OrigemSugestao;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.RegistroRuptura;
 import br.com.jence.backend.exception.SubstitutoIndisponivelException;
+import br.com.jence.backend.ia.GeminiClient;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 import java.util.UUID;
@@ -35,19 +39,35 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * E o card inteiro em um teste - e o mesmo roteiro que sera mostrado na banca.
  */
 @Tag("integracao")
-@SpringBootTest
 @EnabledIfEnvironmentVariable(named = "GEMINI_API_KEY", matches = ".+")
 class RupturaIntegracaoTest {
+
+    /** A massa de demonstracao no banco, como a Main garante antes de subir. */
+    @BeforeAll
+    static void carregarMassa() throws Exception {
+        BancoDeTeste.carregarMassa();
+    }
 
     private static final String LIXA_EM_FALTA = "SKU-TIN-003";
     private static final String LIXA_SUBSTITUTA = "SKU-TIN-004";
 
-    @Autowired InicializarSessaoUseCase inicializar;
-    @Autowired AdicionarProdutoAoRoteiroUseCase adicionar;
-    @Autowired TratarRupturaEstoqueUseCase tratarRuptura;
+    private final InicializarSessaoUseCase inicializar = new InicializarSessaoUseCase(
+            new SessaoDao(),
+            new ListaRoteiroDao(),
+            new PontoMapaDao());
+    private final AdicionarProdutoAoRoteiroUseCase adicionar = new AdicionarProdutoAoRoteiroUseCase(
+            new SessaoDao(),
+            new ListaRoteiroDao(),
+            new ProdutoDao());
+    private final TratarRupturaEstoqueUseCase tratarRuptura = new TratarRupturaEstoqueUseCase(
+            new ItemRoteiroDao(),
+            new ListaRoteiroDao(),
+            new SessaoDao(),
+            new ProdutoDao(),
+            new RegistroRupturaDao(),
+            new GeminiClient());
     private final ProdutoDao produtoDao = BancoDeTeste.produtos();
     private final RegistroRupturaDao registroRupturaDao = BancoDeTeste.rupturas();
-
 
     private UUID sessaoId;
 
