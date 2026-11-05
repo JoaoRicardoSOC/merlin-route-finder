@@ -269,6 +269,8 @@ O terceiro nível existe porque os dois primeiros são cegos ao que acontece **e
 
 ### D-34. Swagger UI permanece exposto em produção
 
+> **Revista em 05/11/2026, na migração para JAX-RS:** **revogada.** O Swagger UI saiu com o springdoc (mudança aceita nos requisitos da migração). A vitrine da API para a banca é o `openapi.yaml`. Ver [D-89](#d-89-o-backend-sai-do-spring-boot-e-segue-o-material-da-fiap-à-risca).
+
 **Contexto.** A prática usual é desabilitar documentação interativa de API em produção: ela revela a superfície de ataque e facilita exploração.
 
 **Decisão.** Manter `/swagger.html` acessível no ambiente publicado.
