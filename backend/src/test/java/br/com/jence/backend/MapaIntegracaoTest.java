@@ -11,11 +11,10 @@ import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.TipoPonto;
 import br.com.jence.backend.model.Pagina;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,10 +30,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Exige banco, nao exige GEMINI_API_KEY.
  */
 @Tag("integracao")
-@SpringBootTest
 class MapaIntegracaoTest {
 
-    @Autowired ConsultarMapaUseCase consultarMapa;
+    /** A massa de demonstracao no banco, como a Main garante antes de subir. */
+    @BeforeAll
+    static void carregarMassa() throws Exception {
+        BancoDeTeste.carregarMassa();
+    }
+
+    private final ConsultarMapaUseCase consultarMapa = new ConsultarMapaUseCase(new PontoMapaDao());
     private final ProdutoDao produtoDao = BancoDeTeste.produtos();
     private final PontoMapaDao pontoMapaDao = BancoDeTeste.pontos();
 
