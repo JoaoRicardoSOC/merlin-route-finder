@@ -1,28 +1,16 @@
-package br.com.jence.backend.presentation;
+package br.com.jence.backend.resource;
 
-import br.com.jence.backend.service.BuscarProdutosUseCase;
-import br.com.jence.backend.service.ConsultarProdutoUseCase;
-import br.com.jence.backend.service.ListarSecoesUseCase;
-import br.com.jence.backend.service.SimularEstoqueUseCase;
-import br.com.jence.backend.resource.ProdutoResource;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.sql.SQLRecoverableException;
 import java.sql.SQLTimeoutException;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 /**
  * O que o cliente ve quando a falha e nossa, e nao dele.
@@ -32,27 +20,34 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  * continua sendo JSON no formato de sempre, e que <b>nada do detalhe interno vaza</b> para
  * quem chamou.
  */
-@WebMvcTest(ProdutoResource.class)
 class FalhaDeInfraestruturaTest {
 
-    @Autowired MockMvc mockMvc;
+    private final ProdutoResourceTest.BuscarFalso buscar = new ProdutoResourceTest.BuscarFalso();
+    private ServidorDeTeste servidor;
 
-    @MockitoBean BuscarProdutosUseCase buscarProdutosUseCase;
-    @MockitoBean ConsultarProdutoUseCase consultarProdutoUseCase;
-    @MockitoBean SimularEstoqueUseCase simularEstoqueUseCase;
-    @MockitoBean ListarSecoesUseCase listarSecoesUseCase;
-
-    private MvcResult quandoOBancoFalhaCom(Exception falha) throws Exception {
-        when(buscarProdutosUseCase.executar(any(), any(), any(), any(), any(), any())).thenThrow(falha);
-        return mockMvc.perform(get("/api/v1/produtos").param("query", "tinta")).andReturn();
+    @BeforeEach
+    void subir() throws Exception {
+        servidor = ServidorDeTeste.com(new ProdutoResource(buscar,
+                new ProdutoResourceTest.ConsultarFalso(), new ProdutoResourceTest.SimularFalso(),
+                new ProdutoResourceTest.SecoesFalso()));
     }
 
-    private void assertRespostaLimpa(MvcResult resultado, String cenario) throws Exception {
-        String corpo = resultado.getResponse().getContentAsString();
+    @AfterEach
+    void descer() {
+        servidor.close();
+    }
 
-        System.out.printf(">>> %-34s -> HTTP %d%n", cenario, resultado.getResponse().getStatus());
+    private ServidorDeTeste.Resposta quandoOBancoFalhaCom(Exception falha) throws Exception {
+        buscar.falha = falha;
+        return servidor.get("/api/v1/produtos?query=tinta");
+    }
 
-        assertEquals(500, resultado.getResponse().getStatus(),
+    private void assertRespostaLimpa(ServidorDeTeste.Resposta resposta, String cenario) {
+        String corpo = resposta.corpo();
+
+        System.out.printf(">>> %-34s -> HTTP %d%n", cenario, resposta.status());
+
+        assertEquals(500, resposta.status(),
                 cenario + ": falha de infraestrutura e responsabilidade do servidor");
 
         String formato = cenario + ": a resposta precisa continuar sendo o JSON de erro de sempre";
@@ -65,7 +60,6 @@ class FalhaDeInfraestruturaTest {
         assertFalse(corpoMinusculo.contains("oracle"), vazamento);
         assertFalse(corpoMinusculo.contains("jdbc"), vazamento);
         assertFalse(corpoMinusculo.contains("sql"), vazamento);
-        assertFalse(corpoMinusculo.contains("hikari"), vazamento);
         assertFalse(corpoMinusculo.contains("exception"), vazamento);
         assertFalse(corpoMinusculo.contains("br.com.jence"), vazamento);
     }

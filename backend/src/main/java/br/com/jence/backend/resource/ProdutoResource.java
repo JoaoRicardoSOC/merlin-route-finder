@@ -1,31 +1,29 @@
 package br.com.jence.backend.resource;
 
-import br.com.jence.backend.exception.RecursoNaoEncontradoException;
-import br.com.jence.backend.dto.CatalogoResponse;
+import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.dto.EstoqueUpdateRequest;
-import br.com.jence.backend.dto.PaginaResponse;
-import br.com.jence.backend.dto.ProdutoDetalhadoResponse;
-import br.com.jence.backend.dto.ProdutoResponse;
-import br.com.jence.backend.dto.SecaoResponse;
 import br.com.jence.backend.dto.StandardError;
+import br.com.jence.backend.exception.RecursoNaoEncontradoException;
+import br.com.jence.backend.model.AtributoProduto;
+import br.com.jence.backend.resource.LeituraDaRequisicao.RequisicaoInvalida;
 import br.com.jence.backend.service.BuscarProdutosUseCase;
 import br.com.jence.backend.service.ConsultarProdutoUseCase;
 import br.com.jence.backend.service.ListarSecoesUseCase;
 import br.com.jence.backend.service.SimularEstoqueUseCase;
-import br.com.jence.backend.model.AtributoProduto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,8 +37,7 @@ import java.util.UUID;
  * Segue o padrao do {@code SessaoResource}: apenas recebe, delega e devolve. Os limites de
  * paginacao e o tratamento de termo em branco ficam no caso de uso, que ja e dono dessa regra.
  */
-@RestController
-@RequestMapping("/api/v1/produtos")
+@Path("/api/v1/produtos")
 @Tag(name = "Catalogo", description = "Busca e detalhamento de produtos")
 public class ProdutoResource {
 
@@ -49,17 +46,30 @@ public class ProdutoResource {
     private final SimularEstoqueUseCase simularEstoqueUseCase;
     private final ListarSecoesUseCase listarSecoesUseCase;
 
+    @Context
+    private UriInfo uriInfo;
+
+    /** Usado pelo Jersey: monta os casos de uso com o DAO de verdade. */
+    public ProdutoResource() {
+        this(new BuscarProdutosUseCase(new ProdutoDao()),
+                new ConsultarProdutoUseCase(new ProdutoDao()),
+                new SimularEstoqueUseCase(new ProdutoDao()),
+                new ListarSecoesUseCase(new ProdutoDao()));
+    }
+
+    /** Usado pelos testes, com casos de uso falsos. */
     public ProdutoResource(BuscarProdutosUseCase buscarProdutosUseCase,
-                             ConsultarProdutoUseCase consultarProdutoUseCase,
-                             SimularEstoqueUseCase simularEstoqueUseCase,
-                             ListarSecoesUseCase listarSecoesUseCase) {
+                           ConsultarProdutoUseCase consultarProdutoUseCase,
+                           SimularEstoqueUseCase simularEstoqueUseCase,
+                           ListarSecoesUseCase listarSecoesUseCase) {
         this.buscarProdutosUseCase = buscarProdutosUseCase;
         this.consultarProdutoUseCase = consultarProdutoUseCase;
         this.simularEstoqueUseCase = simularEstoqueUseCase;
         this.listarSecoesUseCase = listarSecoesUseCase;
     }
 
-    @GetMapping
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Busca e filtragem do catalogo (UC-002)",
             description = "Sem termo, navega o catalogo. Com termo, filtra por nome tolerando "
                     + "busca parcial e pequenos erros de digitacao. Os filtros de secao e de "
@@ -67,17 +77,27 @@ public class ProdutoResource {
                     + "'atributo' vem no formato CHAVE:valor. Valores da mesma chave sao 'ou', "
                     + "chaves diferentes sao 'e'. A resposta traz as facetas disponiveis para o "
                     + "recorte atual. Combinacao sem resultado devolve pagina vazia, nao erro.")
-    public ResponseEntity<CatalogoResponse> buscar(
-            @RequestParam(required = false) String query,
-            @RequestParam(required = false) String secao,
-            @RequestParam(required = false) Boolean apenasDisponiveis,
-            @RequestParam(required = false) List<String> atributo,
-            @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size) throws SQLException {
-
-        // 'query' e o nome publico no contrato; 'termo' e o vocabulario interno.
-        return ResponseEntity.ok(buscarProdutosUseCase.executar(
-                query, secao, apenasDisponiveis, interpretarAtributos(atributo), page, size));
+    public Response buscar(
+            @QueryParam("query") String query,
+            @QueryParam("secao") String secao,
+            @QueryParam("apenasDisponiveis") String apenasDisponiveis,
+            @QueryParam("atributo") List<String> atributo,
+            @QueryParam("page") String page,
+            @QueryParam("size") String size) {
+        String path = uriInfo.getRequestUri().getPath();
+        try {
+            // 'query' e o nome publico no contrato; 'termo' e o vocabulario interno.
+            return Response.ok(buscarProdutosUseCase.executar(
+                    query, secao,
+                    LeituraDaRequisicao.logico("apenasDisponiveis", apenasDisponiveis, path),
+                    interpretarAtributos(atributo),
+                    LeituraDaRequisicao.inteiro("page", page, path),
+                    LeituraDaRequisicao.inteiro("size", size, path))).build();
+        } catch (RequisicaoInvalida e) {
+            return e.getResposta();
+        } catch (Exception e) {
+            return RespostaDeErro.erroInterno(e, path);
+        }
     }
 
     /*
@@ -116,21 +136,39 @@ public class ProdutoResource {
         return escolhas;
     }
 
-    @GetMapping("/secoes")
+    @GET
+    @Path("/secoes")
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Listar as secoes do catalogo",
             description = "O menu de navegacao por corredor, com a quantidade de produtos de "
                     + "cada secao. So aparecem secoes que tem produto: uma secao vazia seria "
                     + "um beco sem saida no menu.")
-    public ResponseEntity<List<SecaoResponse>> listarSecoes() throws SQLException {
-        return ResponseEntity.ok(listarSecoesUseCase.executar());
+    public Response listarSecoes() {
+        String path = uriInfo.getRequestUri().getPath();
+        try {
+            return Response.ok(listarSecoesUseCase.executar()).build();
+        } catch (Exception e) {
+            return RespostaDeErro.erroInterno(e, path);
+        }
     }
 
-    @GetMapping("/{produtoId}")
+    @GET
+    @Path("/{produtoId}")
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Detalhamento de produto (UC-003)",
             description = "Inclui o ponto de mapa onde o produto esta fisicamente na loja.")
-    public ResponseEntity<ProdutoDetalhadoResponse> consultar(@PathVariable UUID produtoId)
-            throws SQLException, RecursoNaoEncontradoException {
-        return ResponseEntity.ok(consultarProdutoUseCase.executar(produtoId));
+    public Response consultar(@PathParam("produtoId") String produtoId) {
+        String path = uriInfo.getRequestUri().getPath();
+        try {
+            UUID produto = LeituraDaRequisicao.uuid("produtoId", produtoId, path);
+            return Response.ok(consultarProdutoUseCase.executar(produto)).build();
+        } catch (RequisicaoInvalida e) {
+            return e.getResposta();
+        } catch (RecursoNaoEncontradoException e) {
+            return RespostaDeErro.recursoNaoEncontrado(e, path);
+        } catch (Exception e) {
+            return RespostaDeErro.erroInterno(e, path);
+        }
     }
 
     /*
@@ -139,24 +177,35 @@ public class ProdutoResource {
      * coloca sob /produtos - e um controller "interno" isolado daria a impressao de haver uma
      * area protegida, que nao existe. O que protege este endpoint hoje e nada; ver D-40.
      */
-    @PatchMapping("/{produtoId}/estoque")
+    @PATCH
+    @Path("/{produtoId}/estoque")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "[Demonstracao] Simular alteracao de estoque",
             description = "FERRAMENTA INTERNA - nao faz parte de nenhum caso de uso do cliente "
                     + "final. Zera ou restaura o saldo de um produto sob demanda, para disparar "
                     + "o fluxo de ruptura (UC-013) de forma confiavel durante uma gravacao ou "
                     + "apresentacao ao vivo. Envie 0 para provocar a ruptura e qualquer valor "
                     + "positivo para restaurar.")
-    public ResponseEntity<?> simularEstoque(
-            @PathVariable UUID produtoId,
-            @RequestBody EstoqueUpdateRequest request,
-            HttpServletRequest http) throws SQLException, RecursoNaoEncontradoException {
+    public Response simularEstoque(@PathParam("produtoId") String produtoId, String corpo) {
+        String path = uriInfo.getRequestUri().getPath();
+        try {
+            UUID produto = LeituraDaRequisicao.uuid("produtoId", produtoId, path);
+            EstoqueUpdateRequest request =
+                    LeituraDaRequisicao.corpo(corpo, EstoqueUpdateRequest.class, path);
 
-        List<StandardError.ValidationError> erros = request.validar();
-        if (!erros.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(StandardError.falhaDeValidacao(http.getRequestURI(), erros));
+            List<StandardError.ValidationError> erros = request.validar();
+            if (!erros.isEmpty()) {
+                return RespostaDeErro.validacao(path, erros);
+            }
+
+            return Response.ok(simularEstoqueUseCase.executar(produto, request.getSaldoEstoque())).build();
+        } catch (RequisicaoInvalida e) {
+            return e.getResposta();
+        } catch (RecursoNaoEncontradoException e) {
+            return RespostaDeErro.recursoNaoEncontrado(e, path);
+        } catch (Exception e) {
+            return RespostaDeErro.erroInterno(e, path);
         }
-
-        return ResponseEntity.ok(simularEstoqueUseCase.executar(produtoId, request.getSaldoEstoque()));
     }
 }
