@@ -1,20 +1,13 @@
 package br.com.jence.backend;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import br.com.jence.backend.resource.ServidorDeTeste;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClient;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,23 +25,35 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * erro com formato diferente dos outros, o frontend precisa de um tratamento por endpoint em
  * vez de um so - e vai descobrir isso na integracao, um caso de cada vez.
  * <p>
- * Cada resposta de erro precisa: ser {@code application/json}, trazer os cinco campos do
- * contrato, ter o {@code status} igual ao codigo HTTP, apontar o {@code path} que foi chamado,
- * e <b>nunca vazar detalhe interno</b> - nome de classe, pacote ou pilha.
+ * Cada resposta de erro tratada pelos Resources precisa: ser {@code application/json}, trazer
+ * os cinco campos do contrato, ter o {@code status} igual ao codigo HTTP, apontar o
+ * {@code path} que foi chamado, e <b>nunca vazar detalhe interno</b> - nome de classe, pacote
+ * ou pilha.
+ * <p>
+ * Os erros que o Jersey responde antes de chegar a um Resource - metodo nao permitido,
+ * {@code Content-Type} errado, endereco inexistente - mantem o status, mas vem sem corpo. Isso
+ * e aceito pelo RF-04: o frontend so le o status nesses casos. Para eles, verifica-se o status.
  * <p>
  * Exige banco, nao exige GEMINI_API_KEY.
  */
 @Tag("integracao")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class RespostasDeErroIntegracaoTest {
 
-    @LocalServerPort int porta;
-    // Criado aqui: o RestClientConfig saiu junto com o RestClient do cliente do Gemini.
-    private final RestClient.Builder builder = RestClient.builder();
+    /** A aplicacao de verdade, subida pela Main, com a massa de dados ja carregada. */
+    private static ServidorDeTeste servidor;
 
-
-    private final ObjectMapper json = new ObjectMapper();
     private final List<UUID> sessoesCriadas = new ArrayList<>();
+
+    @BeforeAll
+    static void subir() throws Exception {
+        BancoDeTeste.carregarMassa();
+        servidor = ServidorDeTeste.daAplicacao();
+    }
+
+    @AfterAll
+    static void descer() {
+        servidor.close();
+    }
 
     @AfterEach
     void limpar() throws Exception {
@@ -60,45 +65,41 @@ class RespostasDeErroIntegracaoTest {
 
     // ---------------------------------------------------------------- ferramentas
 
-    private ResponseEntity<String> chamar(HttpMethod metodo, String caminho, String corpo,
-                                          MediaType tipo) {
-        RestClient.RequestBodySpec pedido = builder.build()
-                .method(metodo)
-                .uri("http://localhost:" + porta + caminho);
-
-        if (corpo != null) {
-            pedido.contentType(tipo == null ? MediaType.APPLICATION_JSON : tipo).body(corpo);
+    /** Nunca lanca: o status faz parte do que se quer verificar. */
+    private ServidorDeTeste.Resposta chamar(String metodo, String caminho, String corpo, String tipo) {
+        try {
+            return servidor.enviar(metodo, caminho,
+                    corpo == null ? null : (tipo == null ? "application/json" : tipo), corpo);
+        } catch (Exception e) {
+            throw new AssertionError("chamada falhou: " + metodo + " " + caminho, e);
         }
-        return pedido.retrieve().onStatus(status -> true, (req, res) -> { }).toEntity(String.class);
     }
 
-    private ResponseEntity<String> chamar(HttpMethod metodo, String caminho, String corpo) {
+    private ServidorDeTeste.Resposta chamar(String metodo, String caminho, String corpo) {
         return chamar(metodo, caminho, corpo, null);
     }
 
-    private JsonNode corpoDe(ResponseEntity<String> resposta) {
+    private NoJson corpoDe(ServidorDeTeste.Resposta resposta) {
         try {
-            return json.readTree(resposta.getBody());
+            return NoJson.ler(resposta.corpo());
         } catch (Exception e) {
-            throw new AssertionError("resposta nao era JSON: " + resposta.getBody(), e);
+            throw new AssertionError("resposta nao era JSON: " + resposta.corpo(), e);
         }
     }
 
     /**
      * A verificacao central: um erro so esta certo se tiver a forma que todos os outros tem.
      */
-    private JsonNode erroBemFormado(ResponseEntity<String> resposta, int statusEsperado,
-                                    String caminhoChamado) {
-        assertEquals(statusEsperado, resposta.getStatusCode().value(),
-                "codigo HTTP de " + caminhoChamado);
+    private NoJson erroBemFormado(ServidorDeTeste.Resposta resposta, int statusEsperado,
+                                  String caminhoChamado) {
+        assertEquals(statusEsperado, resposta.status(), "codigo HTTP de " + caminhoChamado);
 
-        MediaType tipo = resposta.getHeaders().getContentType();
-        assertNotNull(tipo,
-                "erro precisa ser JSON, senao o frontend nem consegue ler a mensagem");
-        assertTrue(tipo.includes(MediaType.APPLICATION_JSON),
+        String tipo = resposta.tipo().orElse(null);
+        assertNotNull(tipo, "erro precisa ser JSON, senao o frontend nem consegue ler a mensagem");
+        assertTrue(tipo.startsWith("application/json"),
                 "erro precisa ser JSON, senao o frontend nem consegue ler a mensagem");
 
-        JsonNode corpo = corpoDe(resposta);
+        NoJson corpo = corpoDe(resposta);
 
         assertTrue(corpo.has("timestamp"), "campo timestamp em " + caminhoChamado);
         assertTrue(corpo.has("status"), "campo status em " + caminhoChamado);
@@ -114,14 +115,14 @@ class RespostasDeErroIntegracaoTest {
         String message = corpo.get("message").asText();
         assertFalse(message == null || message.isBlank(), "message em " + caminhoChamado);
 
-        assertEquals(caminhoChamado, corpo.get("path").asText(),
+        assertEquals(caminhoChamado.replaceAll("\\?.*", ""), corpo.get("path").asText(),
                 "o path precisa dizer qual chamada falhou, ou o log do frontend fica cego");
 
-        String tudo = resposta.getBody();
+        String tudo = resposta.corpo();
         String semVazamento = "erro nao pode vazar detalhe interno em " + caminhoChamado;
         assertNotNull(tudo, semVazamento);
         assertFalse(tudo.contains("br.com.jence"), semVazamento);
-        assertFalse(tudo.contains("org.springframework"), semVazamento);
+        assertFalse(tudo.contains("org.glassfish"), semVazamento);
         assertFalse(tudo.contains("java.lang"), semVazamento);
         assertFalse(tudo.contains("Exception"), semVazamento);
         assertFalse(tudo.contains("at "), semVazamento);
@@ -130,14 +131,14 @@ class RespostasDeErroIntegracaoTest {
     }
 
     private UUID sessaoAberta() {
-        ResponseEntity<String> r = chamar(HttpMethod.POST, "/api/v1/sessoes", null);
+        ServidorDeTeste.Resposta r = chamar("POST", "/api/v1/sessoes", null);
         UUID id = UUID.fromString(corpoDe(r).get("id").asText());
         sessoesCriadas.add(id);
         return id;
     }
 
     private String algumProdutoDe(String secao) {
-        return corpoDe(chamar(HttpMethod.GET,
+        return corpoDe(chamar("GET",
                 "/api/v1/produtos?size=1&secao=" + secao.replace(" ", "%20"), null))
                 .get("content").get(0).get("id").asText();
     }
@@ -150,7 +151,7 @@ class RespostasDeErroIntegracaoTest {
         UUID sessao = sessaoAberta();
         String caminho = "/api/v1/sessoes/" + sessao + "/roteiro/itens";
 
-        JsonNode erro = erroBemFormado(chamar(HttpMethod.POST, caminho, "{}"), 400, caminho);
+        NoJson erro = erroBemFormado(chamar("POST", caminho, "{}"), 400, caminho);
 
         assertTrue(erro.get("validationErrors").isArray());
         assertFalse(erro.get("validationErrors").isEmpty());
@@ -164,8 +165,7 @@ class RespostasDeErroIntegracaoTest {
         UUID sessao = sessaoAberta();
         String caminho = "/api/v1/sessoes/" + sessao + "/roteiro/itens";
 
-        JsonNode erro = erroBemFormado(
-                chamar(HttpMethod.POST, caminho, "{\"produtoId\": "), 400, caminho);
+        NoJson erro = erroBemFormado(chamar("POST", caminho, "{\"produtoId\": "), 400, caminho);
 
         assertTrue(erro.get("validationErrors") == null || erro.get("validationErrors").isNull(),
                 "lista de campos so faz sentido quando o corpo pode ser lido");
@@ -175,7 +175,7 @@ class RespostasDeErroIntegracaoTest {
     @DisplayName("400 de identificador malformado na URL")
     void idMalformado() {
         String caminho = "/api/v1/produtos/nao-e-um-uuid";
-        JsonNode erro = erroBemFormado(chamar(HttpMethod.GET, caminho, null), 400, caminho);
+        NoJson erro = erroBemFormado(chamar("GET", caminho, null), 400, caminho);
 
         assertTrue(erro.get("message").asText().contains("nao-e-um-uuid"),
                 "a mensagem precisa dizer qual valor foi recusado");
@@ -185,31 +185,14 @@ class RespostasDeErroIntegracaoTest {
     @DisplayName("400 quando a query string nao e texto valido, e nao 500")
     void queryIndecodificavel() {
         /*
-         * %E2 e o "â" em latin-1, e nao forma um caractere valido em UTF-8. Um cliente que
-         * codifique errado cai aqui. Antes a resposta era 500 com "Ocorreu um erro
-         * inesperado" - jogava no cliente a impressao de defeito no servidor, e ainda escondia
-         * a causa. E erro do pedido.
-         *
-         * A URI vai como objeto, e nao como String: o RestClient trata String como template e
-         * escaparia o proprio sinal de porcentagem, transformando %E2 em %25E2 - que e texto
-         * valido e nao reproduziria nada. Foi assim que este teste falhou na primeira tentativa.
-         *
-         * A excecao nasce no Tomcat, antes de qualquer controlador existir, e por isso a
-         * auditoria de respostas de erro nao a tinha alcancado. Ver D-74.
+         * %E2 e o "a" com circunflexo em latin-1, e nao forma um caractere valido em UTF-8. Um
+         * cliente que codifique errado cai aqui. E erro do pedido (D-74). O caminho vai cru: o
+         * ServidorDeTeste monta a URI sem escapar de novo o sinal de porcentagem.
          */
-        URI uri = URI.create("http://localhost:" + porta + "/api/v1/produtos?query=L%E2mpada");
+        String caminho = "/api/v1/produtos?query=L%E2mpada";
 
-        ResponseEntity<String> resposta = builder.build()
-                .method(HttpMethod.GET).uri(uri)
-                .retrieve().onStatus(status -> true, (req, res) -> { })
-                .toEntity(String.class);
+        NoJson erro = erroBemFormado(chamar("GET", caminho, null), 400, caminho);
 
-        assertEquals(400, resposta.getStatusCode().value(),
-                "parametro mal codificado e erro do cliente, nao do servidor");
-
-        JsonNode erro = corpoDe(resposta);
-        assertEquals(400, erro.get("status").asInt());
-        assertEquals("/api/v1/produtos", erro.get("path").asText());
         assertTrue(erro.get("message").asText().toLowerCase().contains("utf-8"),
                 "a mensagem precisa apontar a codificacao, que e onde esta o problema");
     }
@@ -220,15 +203,14 @@ class RespostasDeErroIntegracaoTest {
     @DisplayName("404 de recurso inexistente")
     void recursoInexistente() {
         String caminho = "/api/v1/produtos/" + UUID.randomUUID();
-        erroBemFormado(chamar(HttpMethod.GET, caminho, null), 404, caminho);
+        erroBemFormado(chamar("GET", caminho, null), 404, caminho);
     }
 
     @Test
-    @DisplayName("404 de endereco que nao existe na API")
+    @DisplayName("404 de endereco que nao existe na API, respondido pelo Jersey")
     void enderecoInexistente() {
         // O caso que aparece quando alguem abre a raiz da API no navegador.
-        String caminho = "/api/v1/nao-existe";
-        erroBemFormado(chamar(HttpMethod.GET, caminho, null), 404, caminho);
+        assertEquals(404, chamar("GET", "/api/v1/nao-existe", null).status());
     }
 
     @Test
@@ -237,26 +219,24 @@ class RespostasDeErroIntegracaoTest {
         UUID sessao = sessaoAberta();
         String caminho = "/api/v1/sessoes/" + sessao + "/posicao";
 
-        erroBemFormado(chamar(HttpMethod.PUT, caminho, "{\"codigoPonto\":\"ZZZ-99\"}"), 404, caminho);
+        erroBemFormado(chamar("PUT", caminho, "{\"codigoPonto\":\"ZZZ-99\"}"), 404, caminho);
     }
 
     // ---------------------------------------------------------------- 405 e 415
 
     @Test
-    @DisplayName("405 quando o metodo nao e aceito naquele endereco")
+    @DisplayName("405 quando o metodo nao e aceito naquele endereco, respondido pelo Jersey")
     void metodoErrado() {
-        String caminho = "/api/v1/mapa";
-        erroBemFormado(chamar(HttpMethod.DELETE, caminho, null), 405, caminho);
+        assertEquals(405, chamar("DELETE", "/api/v1/mapa", null).status());
     }
 
     @Test
-    @DisplayName("415 quando o corpo nao vem como JSON")
+    @DisplayName("415 quando o corpo nao vem como JSON, respondido pelo Jersey")
     void formatoErrado() {
         UUID sessao = sessaoAberta();
         String caminho = "/api/v1/sessoes/" + sessao + "/roteiro/itens";
 
-        erroBemFormado(
-                chamar(HttpMethod.POST, caminho, "produtoId=1", MediaType.TEXT_PLAIN), 415, caminho);
+        assertEquals(415, chamar("POST", caminho, "produtoId=1", "text/plain").status());
     }
 
     // ---------------------------------------------------------------- 409
@@ -265,10 +245,10 @@ class RespostasDeErroIntegracaoTest {
     @DisplayName("409 ao escrever numa sessao encerrada")
     void sessaoEncerrada() {
         UUID sessao = sessaoAberta();
-        chamar(HttpMethod.POST, "/api/v1/sessoes/" + sessao + "/concluir", null);
+        chamar("POST", "/api/v1/sessoes/" + sessao + "/concluir", null);
 
         String caminho = "/api/v1/sessoes/" + sessao + "/roteiro/itens";
-        JsonNode erro = erroBemFormado(chamar(HttpMethod.POST, caminho,
+        NoJson erro = erroBemFormado(chamar("POST", caminho,
                 "{\"produtoId\":\"" + algumProdutoDe("Tintas") + "\"}"), 409, caminho);
 
         assertTrue(erro.get("message").asText().toLowerCase().contains("ativa"),
@@ -281,11 +261,11 @@ class RespostasDeErroIntegracaoTest {
         UUID sessao = sessaoAberta();
         String produto = algumProdutoDe("Tintas");
 
-        String item = corpoDe(chamar(HttpMethod.POST, "/api/v1/sessoes/" + sessao + "/roteiro/itens",
+        String item = corpoDe(chamar("POST", "/api/v1/sessoes/" + sessao + "/roteiro/itens",
                 "{\"produtoId\":\"" + produto + "\"}")).get("id").asText();
 
         String caminho = "/api/v1/roteiro/itens/" + item + "/substituir";
-        erroBemFormado(chamar(HttpMethod.POST, caminho,
+        erroBemFormado(chamar("POST", caminho,
                 "{\"produtoSubstitutoId\":\"" + produto + "\"}"), 409, caminho);
     }
 
@@ -301,29 +281,25 @@ class RespostasDeErroIntegracaoTest {
          */
         UUID sessao = sessaoAberta();
 
-        /*
-         * O nome da secao ganhou acento (D-70) e vai cru: o RestClient trata a string como
-         * template de URI e codifica sozinho. Codificar antes produz %25C3%25A7 - o sinal de
-         * porcentagem escapado de novo -, e a secao nao casa com nada.
-         */
-        JsonNode decoracao = corpoDe(chamar(HttpMethod.GET,
-                "/api/v1/produtos?size=50&secao=Decoração", null)).get("content");
+        // O nome da secao tem acento (D-70) e vai ja codificado em UTF-8.
+        NoJson decoracao = corpoDe(chamar("GET",
+                "/api/v1/produtos?size=50&secao=Decora%C3%A7%C3%A3o", null)).get("content");
 
         String itemEmFalta = null;
-        for (JsonNode produto : decoracao) {
-            String item = corpoDe(chamar(HttpMethod.POST,
+        for (NoJson produto : decoracao) {
+            String item = corpoDe(chamar("POST",
                     "/api/v1/sessoes/" + sessao + "/roteiro/itens",
                     "{\"produtoId\":\"" + produto.get("id").asText() + "\"}")).get("id").asText();
             if (itemEmFalta == null) {
                 itemEmFalta = item;
-                chamar(HttpMethod.PATCH, "/api/v1/produtos/" + produto.get("id").asText()
+                chamar("PATCH", "/api/v1/produtos/" + produto.get("id").asText()
                         + "/estoque", "{\"saldoEstoque\":0}");
             }
         }
 
         try {
             String caminho = "/api/v1/roteiro/itens/" + itemEmFalta + "/ruptura";
-            JsonNode erro = erroBemFormado(chamar(HttpMethod.POST, caminho, null), 422, caminho);
+            NoJson erro = erroBemFormado(chamar("POST", caminho, null), 422, caminho);
 
             String mensagem = erro.get("message").asText();
             assertFalse(mensagem == null || mensagem.isBlank(),
@@ -334,7 +310,7 @@ class RespostasDeErroIntegracaoTest {
 
         } finally {
             String primeiro = decoracao.get(0).get("id").asText();
-            chamar(HttpMethod.PATCH, "/api/v1/produtos/" + primeiro + "/estoque",
+            chamar("PATCH", "/api/v1/produtos/" + primeiro + "/estoque",
                     "{\"saldoEstoque\":9}");
         }
     }
@@ -342,33 +318,33 @@ class RespostasDeErroIntegracaoTest {
     // ---------------------------------------------------------------- a forma, vista de cima
 
     @Test
-    @DisplayName("todos os erros da API tem exatamente a mesma forma")
+    @DisplayName("todos os erros tratados pela API tem exatamente a mesma forma")
     void formaUnica() {
         /*
          * O teste que resume o proposito deste arquivo. Se um endpoint novo devolver um erro
          * com outro formato, e aqui que aparece - antes de o frontend descobrir na integracao.
+         *
+         * O JSON-B omite campo nulo: validationErrors so aparece no erro de validacao, e os
+         * outros trazem os cinco campos do contrato.
          */
         UUID sessao = sessaoAberta();
         String caminho404 = "/api/v1/produtos/" + UUID.randomUUID();
         String caminho400 = "/api/v1/sessoes/" + sessao + "/roteiro/itens";
-        String caminho405 = "/api/v1/mapa";
+        String caminhoId = "/api/v1/sessoes/nao-e-uuid";
 
-        List<JsonNode> erros = List.of(
-                corpoDe(chamar(HttpMethod.GET, caminho404, null)),
-                corpoDe(chamar(HttpMethod.POST, caminho400, "{}")),
-                corpoDe(chamar(HttpMethod.DELETE, caminho405, null)),
-                corpoDe(chamar(HttpMethod.GET, "/api/v1/nao-existe", null)));
+        List<String> cinco = List.of("error", "message", "path", "status", "timestamp");
+        List<String> comValidacao = List.of(
+                "error", "message", "path", "status", "timestamp", "validationErrors");
 
-        for (JsonNode erro : erros) {
-            List<String> campos = new ArrayList<>();
-            erro.fieldNames().forEachRemaining(campos::add);
+        assertEquals(cinco, campos(corpoDe(chamar("GET", caminho404, null))), caminho404);
+        assertEquals(cinco, campos(corpoDe(chamar("GET", caminhoId, null))), caminhoId);
+        assertEquals(comValidacao, campos(corpoDe(chamar("POST", caminho400, "{}"))), caminho400);
+    }
 
-            List<String> esperados = new ArrayList<>(List.of(
-                    "timestamp", "status", "error", "message", "path", "validationErrors"));
-            List<String> obtidos = new ArrayList<>(campos);
-            Collections.sort(esperados);
-            Collections.sort(obtidos);
-            assertEquals(esperados, obtidos, "campos de " + erro.get("path").asText());
-        }
+    private static List<String> campos(NoJson erro) {
+        List<String> campos = new ArrayList<>();
+        erro.fieldNames().forEachRemaining(campos::add);
+        Collections.sort(campos);
+        return campos;
     }
 }

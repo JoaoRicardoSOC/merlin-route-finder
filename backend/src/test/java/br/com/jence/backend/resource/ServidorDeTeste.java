@@ -101,7 +101,8 @@ public final class ServidorDeTeste implements AutoCloseable {
         HttpResponse<String> resposta =
                 cliente.send(requisicao.build(), HttpResponse.BodyHandlers.ofString());
         return new Resposta(resposta.statusCode(), resposta.body(),
-                resposta.headers().firstValue("Location"));
+                resposta.headers().firstValue("Location"),
+                resposta.headers().firstValue("Content-Type"));
     }
 
     @Override
@@ -110,7 +111,8 @@ public final class ServidorDeTeste implements AutoCloseable {
     }
 
     /** O que voltou da chamada, com leitura de campos do JSON por caminho ({@code a.b[0].c}). */
-    public record Resposta(int status, String corpo, Optional<String> location) {
+    public record Resposta(int status, String corpo, Optional<String> location,
+                           Optional<String> tipo) {
 
         /** O valor no caminho, ou {@code null} se algum trecho do caminho nao existir. */
         public Object json(String caminho) {
