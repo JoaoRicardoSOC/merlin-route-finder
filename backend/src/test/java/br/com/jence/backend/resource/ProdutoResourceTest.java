@@ -227,6 +227,29 @@ class ProdutoResourceTest {
     }
 
     @Test
+    @DisplayName("query que nao e UTF-8 valido devolve 400, e nao uma busca com termo corrompido")
+    void queryIndecodificavel() throws Exception {
+        // %E2 e o "a" com acento circunflexo em latin-1; em UTF-8 nao forma caractere (D-74).
+        ServidorDeTeste.Resposta resposta = servidor.get("/api/v1/produtos?query=L%E2mpada");
+
+        assertEquals(400, resposta.status());
+        assertEquals("/api/v1/produtos", resposta.texto("path"));
+        assertTrue(resposta.texto("message").toLowerCase().contains("utf-8"));
+        assertTrue(buscar.chamadas.isEmpty());
+    }
+
+    @Test
+    @DisplayName("acento em UTF-8 chega intacto ao caso de uso")
+    void acentoEmUtf8() throws Exception {
+        buscar.catalogo = catalogo(List.of(), 0, 20, 0L, 0, List.of());
+
+        assertEquals(200, servidor.get("/api/v1/produtos?query=L%C3%A2mpada&secao=Decora%C3%A7%C3%A3o").status());
+
+        assertEquals("Lâmpada", buscar.chamadas.get(0).get(0));
+        assertEquals("Decoração", buscar.chamadas.get(0).get(1));
+    }
+
+    @Test
     @DisplayName("apenasDisponiveis aceita as grafias que o Spring aceitava")
     void apenasDisponiveisComOutrasGrafias() throws Exception {
         buscar.catalogo = catalogo(List.of(), 0, 20, 0L, 0, List.of());

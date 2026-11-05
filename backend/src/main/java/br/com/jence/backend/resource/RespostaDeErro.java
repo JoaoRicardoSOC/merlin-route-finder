@@ -41,6 +41,17 @@ public final class RespostaDeErro {
                 path, null));
     }
 
+    /**
+     * 400: a query chegou com bytes que nao formam texto em UTF-8, como um "a" com acento
+     * codificado em latin-1. Erro do pedido, e nao nosso (D-74).
+     */
+    public static Response textoIndecodificavel(String path) {
+        return montar(StandardError.de(400, "Requisição Inválida",
+                "Não foi possível ler os parâmetros enviados. Verifique se a requisição está "
+                        + "codificada em UTF-8.",
+                path, null));
+    }
+
     /** 404: o recurso pedido nao existe. */
     public static Response recursoNaoEncontrado(Exception e, String path) {
         return montar(StandardError.de(404, "Recurso Não Encontrado", e.getMessage(), path, null));

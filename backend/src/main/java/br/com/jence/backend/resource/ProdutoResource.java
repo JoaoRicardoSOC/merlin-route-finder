@@ -86,9 +86,15 @@ public class ProdutoResource {
             @QueryParam("size") String size) {
         String path = uriInfo.getRequestUri().getPath();
         try {
+            if (atributo != null) {
+                for (String escolha : atributo) {
+                    LeituraDaRequisicao.texto(escolha, path);
+                }
+            }
             // 'query' e o nome publico no contrato; 'termo' e o vocabulario interno.
             return Response.ok(buscarProdutosUseCase.executar(
-                    query, secao,
+                    LeituraDaRequisicao.texto(query, path),
+                    LeituraDaRequisicao.texto(secao, path),
                     LeituraDaRequisicao.logico("apenasDisponiveis", apenasDisponiveis, path),
                     interpretarAtributos(atributo),
                     LeituraDaRequisicao.inteiro("page", page, path),

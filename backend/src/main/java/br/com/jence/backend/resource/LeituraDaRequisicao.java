@@ -33,6 +33,19 @@ public final class LeituraDaRequisicao {
     }
 
     /**
+     * O texto da query, conferido. Com Tomcat, bytes que nao formavam UTF-8 eram recusados
+     * antes de chegar ao controlador (D-74); o Grizzly os aceita e troca cada um pelo caractere
+     * de substituicao (U+FFFD), e a busca seguiria com um termo corrompido. Aqui o caractere
+     * volta a ser o 400 de antes.
+     */
+    public static String texto(String valor, String path) throws RequisicaoInvalida {
+        if (valor != null && valor.indexOf('�') >= 0) {
+            throw new RequisicaoInvalida(RespostaDeErro.textoIndecodificavel(path));
+        }
+        return valor;
+    }
+
+    /**
      * O valor da query como inteiro, ou {@code null} se ausente ou vazio; se nao for um
      * numero, o 400 de parametro invalido. Recebido como texto pelo mesmo motivo do UUID: com
      * {@code Integer} no {@code @QueryParam}, o Jersey responderia 404.
