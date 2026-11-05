@@ -32,6 +32,41 @@ public final class LeituraDaRequisicao {
         }
     }
 
+    /**
+     * O valor da query como inteiro, ou {@code null} se ausente ou vazio; se nao for um
+     * numero, o 400 de parametro invalido. Recebido como texto pelo mesmo motivo do UUID: com
+     * {@code Integer} no {@code @QueryParam}, o Jersey responderia 404.
+     */
+    public static Integer inteiro(String nome, String valor, String path) throws RequisicaoInvalida {
+        if (valor == null || valor.isBlank()) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(valor.trim());
+        } catch (NumberFormatException e) {
+            throw new RequisicaoInvalida(RespostaDeErro.parametroInvalido(nome, valor, path));
+        }
+    }
+
+    /**
+     * O valor da query como logico, ou {@code null} se ausente ou vazio. Aceita as mesmas
+     * grafias que o Spring aceitava (true/false, on/off, yes/no, 1/0, sem diferenciar
+     * maiusculas), para nenhum link que funcionava antes passar a dar 400.
+     */
+    public static Boolean logico(String nome, String valor, String path) throws RequisicaoInvalida {
+        if (valor == null || valor.isBlank()) {
+            return null;
+        }
+        switch (valor.trim().toLowerCase()) {
+            case "true", "on", "yes", "1":
+                return Boolean.TRUE;
+            case "false", "off", "no", "0":
+                return Boolean.FALSE;
+            default:
+                throw new RequisicaoInvalida(RespostaDeErro.parametroInvalido(nome, valor, path));
+        }
+    }
+
     /** O corpo JSON como o DTO pedido; se nao der para ler, o 400 de corpo ilegivel. */
     public static <T> T corpo(String json, Class<T> tipo, String path) throws RequisicaoInvalida {
         T lido = corpoOpcional(json, tipo, path);
