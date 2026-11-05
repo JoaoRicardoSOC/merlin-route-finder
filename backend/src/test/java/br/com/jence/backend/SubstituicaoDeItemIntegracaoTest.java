@@ -84,11 +84,11 @@ class SubstituicaoDeItemIntegracaoTest {
     }
 
     private UUID adicionar(UUID sessaoId, String sku) throws Exception {
-        return adicionar.executar(sessaoId, idDe(sku)).id();
+        return adicionar.executar(sessaoId, idDe(sku)).getId();
     }
 
     private List<String> skusDaLista(ListaRoteiroResponse lista) {
-        return lista.itens().stream().map(item -> item.produto().getSku()).sorted().toList();
+        return lista.itens().stream().map(item -> item.getProduto().getSku()).sorted().toList();
     }
 
     // ---------------------------------------------------------------- a troca
@@ -122,8 +122,8 @@ class SubstituicaoDeItemIntegracaoTest {
 
         assertEquals(1, depois.itens().size());
         ItemRoteiroDetalhadoResponse item = depois.itens().get(0);
-        assertEquals(SUBSTITUTO, item.produto().getSku());
-        assertFalse(item.coletado());
+        assertEquals(SUBSTITUTO, item.getProduto().getSku());
+        assertFalse(item.isColetado());
     }
 
     @Test

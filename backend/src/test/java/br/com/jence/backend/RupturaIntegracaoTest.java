@@ -72,9 +72,9 @@ class RupturaIntegracaoTest {
     void elegeOSubstitutoSemanticoEntreOsVizinhosDisponiveis() throws Exception {
         ItemRoteiroDetalhadoResponse item = adicionarAoRoteiro(LIXA_EM_FALTA);
 
-        RupturaEstoqueResponse resposta = tratarRuptura.executar(item.id());
+        RupturaEstoqueResponse resposta = tratarRuptura.executar(item.getId());
 
-        System.out.println(">>> em falta:   " + item.produto().getNome());
+        System.out.println(">>> em falta:   " + item.getProduto().getNome());
         System.out.println(">>> sugerido:   " + resposta.produtoSugerido().getNome()
                 + " (" + resposta.produtoSugerido().getSku() + ")");
         System.out.println(">>> corredor:   " + resposta.produtoSugerido().getPontoMapa().getCorredor());
@@ -95,12 +95,12 @@ class RupturaIntegracaoTest {
     void registraARupturaParaAOperacaoDaLoja() throws Exception {
         ItemRoteiroDetalhadoResponse item = adicionarAoRoteiro(LIXA_EM_FALTA);
 
-        tratarRuptura.executar(item.id());
+        tratarRuptura.executar(item.getId());
 
         List<RegistroRuptura> registros = registroRupturaDao.buscarPorSessao(sessaoId);
 
         assertEquals(1, registros.size());
-        assertEquals(item.id(), registros.getFirst().getItemRoteiroId());
+        assertEquals(item.getId(), registros.getFirst().getItemRoteiroId());
         assertTrue(registros.getFirst().temSugestao());
         assertFalse(registros.getFirst().getJustificativa() == null
                 || registros.getFirst().getJustificativa().isBlank());
@@ -115,7 +115,7 @@ class RupturaIntegracaoTest {
         // secao: nao ha vizinho dentro do raio, e a ruptura precisa ser registrada mesmo assim.
         ItemRoteiroDetalhadoResponse item = adicionarAoRoteiro("SKU-DEC-001");
 
-        assertThrows(SubstitutoIndisponivelException.class, () -> tratarRuptura.executar(item.id()));
+        assertThrows(SubstitutoIndisponivelException.class, () -> tratarRuptura.executar(item.getId()));
 
         List<RegistroRuptura> registros = registroRupturaDao.buscarPorSessao(sessaoId);
 

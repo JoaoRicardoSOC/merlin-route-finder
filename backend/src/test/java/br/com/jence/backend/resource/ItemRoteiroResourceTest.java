@@ -3,12 +3,12 @@ package br.com.jence.backend.resource;
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.dto.ProdutoDetalhadoResponse;
 import br.com.jence.backend.dto.ListaRoteiroResponse;
-import br.com.jence.backend.dto.ProdutoResponse;
 import br.com.jence.backend.dto.RupturaEstoqueResponse;
 import br.com.jence.backend.service.DesmarcarItemColetadoUseCase;
 import br.com.jence.backend.service.MarcarItemColetadoUseCase;
 import br.com.jence.backend.service.SubstituirItemDoRoteiroUseCase;
 import br.com.jence.backend.service.TratarRupturaEstoqueUseCase;
+import br.com.jence.backend.model.ItemRoteiro;
 import br.com.jence.backend.model.OrigemSugestao;
 import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Produto;
@@ -25,6 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -52,10 +53,11 @@ class ItemRoteiroResourceTest {
         UUID itemId = UUID.randomUUID();
         UUID produtoId = UUID.randomUUID();
         when(marcarItemColetadoUseCase.executar(itemId)).thenReturn(
-                new ItemRoteiroDetalhadoResponse(itemId, produtoId, true,
-                        ProdutoResponse.de(new Produto(produtoId, "SKU-ENC-001",
+                ItemRoteiroDetalhadoResponse.de(ItemRoteiro.reconstituir(itemId,
+                        new Produto(produtoId, "SKU-ENC-001",
                                 "Cano PVC Soldavel 25mm 6m", new BigDecimal("28.90"), 35,
-                                new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Encanamento", 50, 50)))));
+                                new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Encanamento", 50, 50)),
+                        LocalDateTime.now())));
 
         mockMvc.perform(patch("/api/v1/roteiro/itens/{i}/coletar", itemId))
                 .andExpect(status().isOk())
@@ -70,8 +72,8 @@ class ItemRoteiroResourceTest {
         UUID itemId = UUID.randomUUID();
         UUID produtoId = UUID.randomUUID();
         when(desmarcarItemColetadoUseCase.executar(itemId)).thenReturn(
-                new ItemRoteiroDetalhadoResponse(itemId, produtoId, false,
-                        ProdutoResponse.de(new Produto(produtoId, "SKU-ENC-001",
+                ItemRoteiroDetalhadoResponse.de(new ItemRoteiro(itemId,
+                        new Produto(produtoId, "SKU-ENC-001",
                                 "Cano PVC Soldavel 25mm 6m", new BigDecimal("28.90"), 35,
                                 new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Encanamento", 50, 50)))));
 
@@ -105,8 +107,8 @@ class ItemRoteiroResourceTest {
 
         when(substituirItemDoRoteiroUseCase.executar(itemId, substitutoId)).thenReturn(
                 new ListaRoteiroResponse(UUID.randomUUID(), UUID.randomUUID(), 1, List.of(
-                        new ItemRoteiroDetalhadoResponse(novoItemId, substitutoId, false,
-                                ProdutoResponse.de(new Produto(substitutoId, "SKU-TIN-004",
+                        ItemRoteiroDetalhadoResponse.de(new ItemRoteiro(novoItemId,
+                                new Produto(substitutoId, "SKU-TIN-004",
                                         "Lixa d'Agua Grao 150", new BigDecimal("4.20"), 40,
                                         new PontoMapa(UUID.randomUUID(), TipoPonto.PRATELEIRA, "Tintas", 50, 50)))))));
 

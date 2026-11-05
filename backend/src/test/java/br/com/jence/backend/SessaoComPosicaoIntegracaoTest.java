@@ -70,7 +70,7 @@ class SessaoComPosicaoIntegracaoTest {
 
     private UUID coletar(UUID sessaoId, String sku) throws Exception {
         UUID produtoId = produtoDao.buscarPorSku(sku).orElseThrow().getId();
-        UUID itemId = adicionar.executar(sessaoId, produtoId).id();
+        UUID itemId = adicionar.executar(sessaoId, produtoId).getId();
         marcarColetado.executar(itemId);
         return itemId;
     }
@@ -169,7 +169,7 @@ class SessaoComPosicaoIntegracaoTest {
         SessaoResponse sessao = iniciarEm("ENT-01");
         coletar(sessao.id(), "SKU-TIN-001");
         UUID naoColetado = adicionar.executar(sessao.id(),
-                produtoDao.buscarPorSku("SKU-JAR-001").orElseThrow().getId()).id();
+                produtoDao.buscarPorSku("SKU-JAR-001").orElseThrow().getId()).getId();
 
         recentrar.executar(sessao.id(), "CEN-03");
 
@@ -248,7 +248,7 @@ class SessaoComPosicaoIntegracaoTest {
         SessaoResponse sessao = iniciarEm("ENT-01");
         UUID tinta = coletar(sessao.id(), "SKU-TIN-001");
 
-        assertFalse(desmarcar.executar(tinta).coletado());
+        assertFalse(desmarcar.executar(tinta).isColetado());
 
         List<ItemRoteiro> itens = listaRoteiroDao.buscarPorSessao(sessao.id())
                 .orElseThrow().getItens();
@@ -266,7 +266,7 @@ class SessaoComPosicaoIntegracaoTest {
 
         desmarcar.executar(tinta);
 
-        assertFalse(desmarcar.executar(tinta).coletado());
+        assertFalse(desmarcar.executar(tinta).isColetado());
         assertEquals("ENT01", consultar.executar(sessao.id()).posicaoAtual().getCodigoCurto());
     }
 
