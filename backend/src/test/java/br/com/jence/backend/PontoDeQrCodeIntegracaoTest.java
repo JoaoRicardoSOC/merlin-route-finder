@@ -3,13 +3,12 @@ package br.com.jence.backend;
 import br.com.jence.backend.dao.PontoMapaDao;
 import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.TipoPonto;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.HashSet;
 import java.util.List;
@@ -26,8 +25,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Exige banco, nao exige GEMINI_API_KEY.
  */
 @Tag("integracao")
-@SpringBootTest
 class PontoDeQrCodeIntegracaoTest {
+
+    /** A massa de demonstracao no banco, como a Main garante antes de subir. */
+    @BeforeAll
+    static void carregarMassa() throws Exception {
+        BancoDeTeste.carregarMassa();
+    }
 
     private final PontoMapaDao pontoMapaDao = BancoDeTeste.pontos();
 
