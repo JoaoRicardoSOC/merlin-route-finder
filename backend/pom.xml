@@ -2,35 +2,22 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.1.0</version>
-		<relativePath/> <!-- lookup parent from repository -->
-	</parent>
+
 	<groupId>br.com.jence</groupId>
 	<artifactId>backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
+	<name>merlin-route-finder</name>
+
 	<properties>
-		<java.version>21</java.version>
+		<maven.compiler.release>21</maven.compiler.release>
+		<!-- Os fontes tem acento (mensagens de erro, nomes de secao); sem isto o compilador
+		     usaria o charset da maquina, que no Windows nao e UTF-8. -->
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<!-- Sobrescrito para vazio pelo profile "integracao". -->
 		<excluded.test.groups>integracao</excluded.test.groups>
 	</properties>
+
 	<!-- Versoes do Jersey alinhadas pelo BOM, como no material. -->
 	<dependencyManagement>
 		<dependencies>
@@ -43,11 +30,8 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+
 	<dependencies>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc</artifactId>
-		</dependency>
 		<!-- Servidor HTTP do material: Jersey sobre o Grizzly, com o hk2 para injecao. -->
 		<dependency>
 			<groupId>org.glassfish.jersey.containers</groupId>
@@ -62,13 +46,6 @@
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-json-binding</artifactId>
 		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-			<scope>runtime</scope>
-			<optional>true</optional>
-		</dependency>
 		<!-- Driver JDBC do Oracle, na versao do material. -->
 		<dependency>
 			<groupId>com.oracle.database.jdbc</groupId>
@@ -81,23 +58,20 @@
 			<artifactId>modelmapper</artifactId>
 			<version>3.0.0</version>
 		</dependency>
+
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>5.10.1</version>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-    		<groupId>org.springdoc</groupId>
-    		<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-    		<version>3.1.0</version>
 		</dependency>
 	</dependencies>
 
 	<profiles>
 		<!--
-			Testes marcados com @Tag("integracao") sobem o contexto contra o Oracle e exigem
-			credenciais. Ficam de fora da execucao padrao para que `mvnw test` passe em
-			qualquer maquina; rodar com `mvnw test -Pintegracao` quando houver banco.
+			Testes marcados com @Tag("integracao") rodam contra o Oracle e exigem credenciais.
+			Ficam de fora da execucao padrao para que `mvnw test` passe em qualquer maquina;
+			rodar com `mvnw test -Pintegracao` quando houver banco.
 		-->
 		<profile>
 			<id>integracao</id>
@@ -109,11 +83,21 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.15.0</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.5.6</version>
+				<configuration>
+					<excludedGroups>${excluded.test.groups}</excludedGroups>
+				</configuration>
+			</plugin>
 			<!--
-			  Cobertura de testes. A suite tem 150 testes e ninguem sabia que fracao do codigo
-			  eles tocam - 19 casos de uso em producao contra 5 testes unitarios de caso de uso,
-			  com o resto vindo dos testes de integracao. Sem medida, "temos testes" e uma
-			  afirmacao sem tamanho.
+			  Cobertura de testes. Sem medida, "temos testes" e uma afirmacao sem tamanho.
 
 			  Nao ha limite minimo configurado de proposito: por ora o numero serve para
 			  encontrar o que ninguem exercita, nao para reprovar a construcao.
@@ -138,20 +122,52 @@
 					</execution>
 				</executions>
 			</plugin>
+			<!-- `mvnw exec:java` sobe a aplicacao pela Main, como no material. -->
 			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>3.5.0</version>
 				<configuration>
-					<excludedGroups>${excluded.test.groups}</excludedGroups>
+					<mainClass>br.com.jence.backend.Main</mainClass>
 				</configuration>
 			</plugin>
+			<!--
+			  Um jar so, com as dependencias dentro, para o Dockerfile rodar com java -jar.
+			  O ServicesResourceTransformer junta os META-INF/services das bibliotecas: sem ele,
+			  o Jersey nao acha o JSON-B nem o hk2 dentro do jar.
+			-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.6.0</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<createDependencyReducedPom>false</createDependencyReducedPom>
+							<transformers>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>br.com.jence.backend.Main</mainClass>
+								</transformer>
+							</transformers>
+							<filters>
+								<!-- Assinaturas das bibliotecas deixam de valer dentro do jar unico. -->
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/*.SF</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+									</excludes>
+								</filter>
+							</filters>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

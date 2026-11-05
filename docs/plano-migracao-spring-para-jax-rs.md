@@ -190,7 +190,7 @@ Nesta fase o Spring e o Jersey convivem no `pom.xml` até o passo 10.12. **Aten�
 - [x] **10.9** 🔒 `mvnw test -Pintegracao` completo. **Resultado (05/11/2026):** 351 testes, 2 falhas. Uma era regressão do 9.3 (`MapaIntegracaoTest.mapaEstavel` comparava DTOs com `equals`), corrigida e confirmada. A outra foi a já conhecida do 7.21: o Gemini respondeu que não havia substituto para a lixa na `JornadaCompletaIntegracaoTest`; o mesmo teste passou nas duas execuções seguintes.
 - [x] **10.10** Apagar `BackendApplication`, `GlobalExceptionHandler`, `AgendamentoConfig`, os `@Component`/`@Service` provisórios e os `application*.yml`.
 - [x] **10.11** Apagar as anotações do Swagger (`@Tag`, `@Operation`, `@ApiResponse`, `@Schema`).
-- [ ] **10.12** `pom.xml` final (RC-01, RC-02): sem `spring-boot-starter-parent` e sem nenhuma dependência do Spring, springdoc, Mockito, AssertJ ou SnakeYAML; `junit-jupiter` `5.10.1`; `maven-compiler-plugin` com Java 21; `exec-maven-plugin` apontando para `Main`; `maven-shade-plugin`; JaCoCo e o profile `integracao` mantidos.
+- [x] **10.12** `pom.xml` final (RC-01, RC-02): sem `spring-boot-starter-parent` e sem nenhuma dependência do Spring, springdoc, Mockito, AssertJ ou SnakeYAML; `junit-jupiter` `5.10.1`; `maven-compiler-plugin` com Java 21; `exec-maven-plugin` apontando para `Main`; `maven-shade-plugin`; JaCoCo e o profile `integracao` mantidos.
 - [ ] **10.13** `Dockerfile`: mesmo `java -jar`, agora com o jar do shade.
 - [ ] **10.14** Verificações de RNF-01 por busca no código; `mvnw test`; subir a imagem Docker localmente e chamar `/health`.
 
