@@ -4,13 +4,14 @@ import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dto.ChatMensagemResponse;
 import br.com.jence.backend.dto.EnviarMensagemRequest;
+import br.com.jence.backend.dto.StandardError;
 import br.com.jence.backend.service.ConsultarHistoricoChatUseCase;
 import br.com.jence.backend.service.ConversarComAssistenteUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -78,9 +79,16 @@ public class ChatResource {
             @ApiResponse(responseCode = "404", description = "Sessao inexistente"),
             @ApiResponse(responseCode = "409", description = "Sessao encerrada ou expirada")
     })
-    public ResponseEntity<ChatMensagemResponse> enviar(
+    public ResponseEntity<?> enviar(
             @PathVariable UUID sessaoId,
-            @Valid @RequestBody EnviarMensagemRequest request) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+            @RequestBody EnviarMensagemRequest request,
+            HttpServletRequest http) throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+
+        List<StandardError.ValidationError> erros = request.validar();
+        if (!erros.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(StandardError.falhaDeValidacao(http.getRequestURI(), erros));
+        }
 
         ChatMensagemResponse resposta =
                 conversarComAssistenteUseCase.executar(sessaoId, request.getConteudo());
