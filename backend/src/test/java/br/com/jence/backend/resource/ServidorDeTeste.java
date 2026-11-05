@@ -1,5 +1,6 @@
 package br.com.jence.backend.resource;
 
+import br.com.jence.backend.Main;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -40,22 +41,35 @@ public final class ServidorDeTeste implements AutoCloseable {
     private final HttpClient cliente =
             HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
 
-    private ServidorDeTeste(Object... resources) throws IOException {
-        int porta;
+    private ServidorDeTeste(int porta, HttpServer server) {
+        this.base = "http://localhost:" + porta;
+        this.server = server;
+    }
+
+    private static int portaLivre() throws IOException {
         try (ServerSocket socket = new ServerSocket(0)) {
-            porta = socket.getLocalPort();
+            return socket.getLocalPort();
         }
-        ResourceConfig rc = new ResourceConfig();
-        for (Object resource : resources) {
-            rc.register(resource);
-        }
-        base = "http://localhost:" + porta;
-        server = GrizzlyHttpServerFactory.createHttpServer(URI.create(base + "/"), rc);
     }
 
     /** Sobe o servidor com estas instancias de Resource. */
     public static ServidorDeTeste com(Object... resources) throws IOException {
-        return new ServidorDeTeste(resources);
+        int porta = portaLivre();
+        ResourceConfig rc = new ResourceConfig();
+        for (Object resource : resources) {
+            rc.register(resource);
+        }
+        return new ServidorDeTeste(porta,
+                GrizzlyHttpServerFactory.createHttpServer(URI.create("http://localhost:" + porta + "/"), rc));
+    }
+
+    /**
+     * Sobe a aplicacao de verdade, pela {@code Main.startServer}, com os Resources e DAOs reais.
+     * Usado pelos testes de integracao, que precisam do banco.
+     */
+    public static ServidorDeTeste daAplicacao() throws IOException {
+        int porta = portaLivre();
+        return new ServidorDeTeste(porta, Main.startServer(porta));
     }
 
     public Resposta get(String caminho) throws Exception {
