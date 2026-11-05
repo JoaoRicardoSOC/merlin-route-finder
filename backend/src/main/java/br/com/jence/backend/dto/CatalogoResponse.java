@@ -17,21 +17,74 @@ import java.util.List;
  * separado de facetas obrigaria o celular a repetir os filtros na URL e a fazer duas viagens
  * a cada toque - dentro de uma loja, com sinal ruim.
  */
-public record CatalogoResponse(
-        List<ProdutoResponse> content,
-        int page,
-        int size,
-        long totalElements,
-        int totalPages,
-        List<FacetaResponse> facetas
-) {
+public class CatalogoResponse {
+
+    private List<ProdutoResponse> content;
+    private int page;
+    private int size;
+    private long totalElements;
+    private int totalPages;
+    private List<FacetaResponse> facetas;
+
+    public CatalogoResponse() {
+    }
+
+    public List<ProdutoResponse> getContent() {
+        return content;
+    }
+
+    public void setContent(List<ProdutoResponse> content) {
+        this.content = content;
+    }
+
+    public int getPage() {
+        return page;
+    }
+
+    public void setPage(int page) {
+        this.page = page;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public void setSize(int size) {
+        this.size = size;
+    }
+
+    public long getTotalElements() {
+        return totalElements;
+    }
+
+    public void setTotalElements(long totalElements) {
+        this.totalElements = totalElements;
+    }
+
+    public int getTotalPages() {
+        return totalPages;
+    }
+
+    public void setTotalPages(int totalPages) {
+        this.totalPages = totalPages;
+    }
+
+    public List<FacetaResponse> getFacetas() {
+        return facetas;
+    }
+
+    public void setFacetas(List<FacetaResponse> facetas) {
+        this.facetas = facetas;
+    }
+
     public static CatalogoResponse de(Pagina<Produto> pagina, List<FacetaDeProdutos> facetas) {
-        return new CatalogoResponse(
-                pagina.conteudo().stream().map(ProdutoResponse::de).toList(),
-                pagina.pagina(),
-                pagina.tamanho(),
-                pagina.totalElementos(),
-                pagina.totalPaginas(),
-                facetas.stream().map(FacetaResponse::de).toList());
+        CatalogoResponse resposta = new CatalogoResponse();
+        resposta.setContent(pagina.conteudo().stream().map(ProdutoResponse::de).toList());
+        resposta.setPage(pagina.pagina());
+        resposta.setSize(pagina.tamanho());
+        resposta.setTotalElements(pagina.totalElementos());
+        resposta.setTotalPages(pagina.totalPaginas());
+        resposta.setFacetas(facetas.stream().map(FacetaResponse::de).toList());
+        return resposta;
     }
 }

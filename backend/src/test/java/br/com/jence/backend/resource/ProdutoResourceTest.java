@@ -50,6 +50,19 @@ class ProdutoResourceTest {
     @MockitoBean SimularEstoqueUseCase simularEstoqueUseCase;
     @MockitoBean ListarSecoesUseCase listarSecoesUseCase;
 
+    private CatalogoResponse catalogo(List<ProdutoResponse> produtos, int page, int size,
+                                      long totalElements, int totalPages,
+                                      List<FacetaResponse> facetas) {
+        CatalogoResponse catalogo = new CatalogoResponse();
+        catalogo.setContent(produtos);
+        catalogo.setPage(page);
+        catalogo.setSize(size);
+        catalogo.setTotalElements(totalElements);
+        catalogo.setTotalPages(totalPages);
+        catalogo.setFacetas(facetas);
+        return catalogo;
+    }
+
     private ProdutoResponse produto(UUID id) {
         return ProdutoResponse.de(new Produto(id, "SKU-TIN-001",
                 "Tinta Acrilica Fosca Branca 18L", new BigDecimal("289.90"), 12,
@@ -60,7 +73,7 @@ class ProdutoResourceTest {
     @DisplayName("busca sem parametros repassa nulos para o caso de uso decidir os padroes")
     void buscaSemParametros() throws Exception {
         when(buscarProdutosUseCase.executar(any(), any(), any(), any(), any(), any()))
-                .thenReturn(new CatalogoResponse(List.of(produto(UUID.randomUUID())), 0, 20, 1L, 1, List.of()));
+                .thenReturn(catalogo(List.of(produto(UUID.randomUUID())), 0, 20, 1L, 1, List.of()));
 
         mockMvc.perform(get("/api/v1/produtos"))
                 .andExpect(status().isOk())
@@ -78,7 +91,7 @@ class ProdutoResourceTest {
          * generico no lugar do corredor. Ver D-71.
          */
         when(buscarProdutosUseCase.executar(any(), any(), any(), any(), any(), any()))
-                .thenReturn(new CatalogoResponse(List.of(produto(UUID.randomUUID())), 0, 20, 1L, 1, List.of()));
+                .thenReturn(catalogo(List.of(produto(UUID.randomUUID())), 0, 20, 1L, 1, List.of()));
 
         mockMvc.perform(get("/api/v1/produtos"))
                 .andExpect(status().isOk())
@@ -90,7 +103,7 @@ class ProdutoResourceTest {
     @DisplayName("busca repassa todos os filtros exatamente como recebidos")
     void buscaComParametros() throws Exception {
         when(buscarProdutosUseCase.executar(any(), any(), any(), any(), any(), any()))
-                .thenReturn(new CatalogoResponse(List.of(), 1, 5, 0L, 0, List.of()));
+                .thenReturn(catalogo(List.of(), 1, 5, 0L, 0, List.of()));
 
         mockMvc.perform(get("/api/v1/produtos")
                         .param("query", "tinta").param("secao", "Tintas")
@@ -131,7 +144,7 @@ class ProdutoResourceTest {
          * um parametro que ele nem sabe que existe.
          */
         when(buscarProdutosUseCase.executar(any(), any(), any(), any(), any(), any()))
-                .thenReturn(new CatalogoResponse(List.of(), 0, 20, 0L, 0, List.of()));
+                .thenReturn(catalogo(List.of(), 0, 20, 0L, 0, List.of()));
 
         mockMvc.perform(get("/api/v1/produtos")
                         .param("atributo", "NAO_EXISTE:algo")
@@ -153,7 +166,7 @@ class ProdutoResourceTest {
     @DisplayName("a resposta da busca traz as facetas do recorte atual")
     void respostaTrazFacetas() throws Exception {
         when(buscarProdutosUseCase.executar(any(), any(), any(), any(), any(), any()))
-                .thenReturn(new CatalogoResponse(List.of(), 0, 20, 0L, 0, List.of(
+                .thenReturn(catalogo(List.of(), 0, 20, 0L, 0, List.of(
                         FacetaResponse.de(new FacetaDeProdutos(AtributoProduto.MARCA, "Marca", List.of(
                                 new FacetaDeProdutos.Valor("Tigre", 2),
                                 new FacetaDeProdutos.Valor("Docol", 1)))))));
@@ -189,7 +202,7 @@ class ProdutoResourceTest {
     void formatoDaPagina() throws Exception {
         UUID id = UUID.randomUUID();
         when(buscarProdutosUseCase.executar(any(), any(), any(), any(), any(), any()))
-                .thenReturn(new CatalogoResponse(List.of(produto(id)), 0, 10, 25L, 3, List.of()));
+                .thenReturn(catalogo(List.of(produto(id)), 0, 10, 25L, 3, List.of()));
 
         mockMvc.perform(get("/api/v1/produtos"))
                 .andExpect(status().isOk())
