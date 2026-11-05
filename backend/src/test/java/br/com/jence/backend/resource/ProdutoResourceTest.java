@@ -6,6 +6,7 @@ import br.com.jence.backend.dto.ProdutoDetalhadoResponse;
 import br.com.jence.backend.dto.ProdutoResponse;
 import br.com.jence.backend.dto.SecaoResponse;
 import br.com.jence.backend.model.AtributoProduto;
+import br.com.jence.backend.model.FacetaDeProdutos;
 import br.com.jence.backend.model.SecaoDoCatalogo;
 import br.com.jence.backend.service.BuscarProdutosUseCase;
 import br.com.jence.backend.service.ConsultarProdutoUseCase;
@@ -153,9 +154,9 @@ class ProdutoResourceTest {
     void respostaTrazFacetas() throws Exception {
         when(buscarProdutosUseCase.executar(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new CatalogoResponse(List.of(), 0, 20, 0L, 0, List.of(
-                        new FacetaResponse(AtributoProduto.MARCA, "Marca", List.of(
-                                new FacetaResponse.ValorResponse("Tigre", 2),
-                                new FacetaResponse.ValorResponse("Docol", 1))))));
+                        FacetaResponse.de(new FacetaDeProdutos(AtributoProduto.MARCA, "Marca", List.of(
+                                new FacetaDeProdutos.Valor("Tigre", 2),
+                                new FacetaDeProdutos.Valor("Docol", 1)))))));
 
         mockMvc.perform(get("/api/v1/produtos"))
                 .andExpect(status().isOk())
