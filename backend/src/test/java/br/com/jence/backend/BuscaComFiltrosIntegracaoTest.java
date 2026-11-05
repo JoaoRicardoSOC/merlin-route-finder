@@ -5,11 +5,10 @@ import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.FiltroDeProdutos;
 import br.com.jence.backend.model.Pagina;
 import br.com.jence.backend.model.SecaoDoCatalogo;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,8 +26,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Exige banco, nao exige GEMINI_API_KEY.
  */
 @Tag("integracao")
-@SpringBootTest
 class BuscaComFiltrosIntegracaoTest {
+
+    /** A massa de demonstracao no banco, como a Main garante antes de subir. */
+    @BeforeAll
+    static void carregarMassa() throws Exception {
+        BancoDeTeste.carregarMassa();
+    }
 
     private final ProdutoDao produtoDao = BancoDeTeste.produtos();
 
