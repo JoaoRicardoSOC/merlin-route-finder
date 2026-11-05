@@ -122,6 +122,8 @@
 
 ### D-01. Arquitetura hexagonal com domínio livre de framework
 
+> **Revista em 05/11/2026, na migração para JAX-RS:** a arquitetura hexagonal deu lugar aos pacotes do material (`model`, `dto`, `service`, `dao`, `resource`...). O que esta decisão protegia continua valendo: as classes do `model` não importam nenhum framework. Ver [D-89](#d-89-o-backend-sai-do-spring-boot-e-segue-o-material-da-fiap-à-risca).
+
 **Contexto.** O caminho comum em Spring Boot é anotar a entidade de negócio com `@Entity` e usá-la em todas as camadas. É mais rápido de escrever, mas amarra as regras de negócio ao Hibernate: a entidade precisa de construtor vazio, de setters e de campos mutáveis para o framework popular por reflexão — exatamente o oposto do que uma entidade com invariantes deveria permitir.
 
 **Decisão.** Duas hierarquias separadas. As entidades de domínio (`domain/entity`) são POJOs puros, sem nenhuma anotação, com métodos de comportamento e imutabilidade onde faz sentido. A persistência tem classes espelho próprias (`infrastructure/database/entity`), e mapeadores traduzem entre os dois mundos.
