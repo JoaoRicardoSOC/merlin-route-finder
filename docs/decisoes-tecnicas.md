@@ -1109,6 +1109,8 @@ O valor 100 não é arbitrário: é o teto de página que a busca de produtos pe
 
 ### D-46. O pool de conexões é dimensionado pelos limites reais do schema da FIAP
 
+> **Revista em 05/11/2026, na migração para JAX-RS:** **não há mais pool.** Cada transação abre e fecha a própria conexão, então o número de sessões ocupadas no Oracle passa a ser o de transações em andamento, e não o tamanho do pool. A variável `DB_POOL_SIZE` não tem mais efeito. Ver [D-90](#d-90-jdbc-sem-pool-cada-transação-abre-e-fecha-a-própria-conexão).
+
 **Contexto.** O pool ficou no padrão do Hikari — **10 conexões** — até o primeiro deploy. Com a aplicação publicada usando a credencial de um integrante, passou a existir um segundo consumidor da mesma cota.
 
 **Os limites, medidos e não presumidos.** Consultando `user_resource_limits` no próprio schema:
