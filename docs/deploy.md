@@ -14,7 +14,7 @@
 
 ## Por que container, e por que separado do frontend
 
-O backend é uma **aplicação Spring Boot: um processo Java que fica de pé o tempo todo**, mantendo um pool de conexões com o Oracle e rodando o agendador de TTL. Isso não cabe no modelo serverless da Vercel, que liga e desliga a cada requisição — por isso o backend vai para o Render e o frontend (build estático do Vite) para a Vercel.
+O backend é uma **aplicação Java com Jersey sobre o Grizzly** (desde 05/11/2026, no lugar do Spring Boot): **um processo que fica de pé o tempo todo**, atendendo HTTP e rodando o agendador de TTL. Isso não cabe no modelo serverless da Vercel, que liga e desliga a cada requisição — por isso o backend vai para o Render e o frontend (build estático do Vite) para a Vercel.
 
 Não é gambiarra: **frontend e backend já são dois programas separados hoje**, conversando por HTTP em `localhost:5173` e `localhost:8080`. O deploy só troca `localhost` por URLs públicas.
 
@@ -41,7 +41,7 @@ Se preferir criar como **Web Service** avulso, os valores são:
 | Runtime | Docker |
 | Root Directory | `backend` |
 | Dockerfile Path | `./Dockerfile` |
-| Health Check Path | `/v3/api-docs` |
+| Health Check Path | `/health` |
 | Plan | Free |
 
 ### 3. Escolher a região
@@ -60,9 +60,14 @@ No painel do serviço, em *Environment*. As marcadas com `sync: false` no bluepr
 | `DB_USER` | seu RM | credencial pessoal da FIAP |
 | `DB_PASSWORD` | sua senha | **ver [O-02](observacoes.md#o-02-senha-do-oracle-passou-por-canal-de-conversa)** — trocar antes de usar aqui |
 | `GEMINI_API_KEY` | chave do Google AI Studio | **usar a chave nova** ([O-01](observacoes.md#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada)) |
-| `SPRING_PROFILES_ACTIVE` | `prod` | já vem do blueprint |
-| `DB_POOL_SIZE` | `5` | o schema da FIAP permite **20 sessões por usuário**, divididas entre a instância publicada e a máquina de quem cedeu a credencial ([D-46](decisoes-tecnicas.md#d-46-o-pool-de-conexões-é-dimensionado-pelos-limites-reais-do-schema-da-fiap)) |
-| `PORT` | **não definir** | o Render injeta sozinho |
+| `PORT` | **não definir** | o Render injeta sozinho; a `Main` lê |
+| `GEMINI_MODEL` | opcional | padrão `gemini-3.5-flash-lite` (D-37) |
+| `MERLIN_SEED_ENABLED` | opcional | `false` desliga a carga de dados no startup; padrão ligada |
+| `MERLIN_AGENDADOR_ENABLED` | opcional | `false` desliga a varredura de TTL; padrão ligada |
+| `AGENDADOR_INTERVALO_MS` / `AGENDADOR_ATRASO_INICIAL_MS` | opcionais | padrões 1.800.000 (30 min) e 60.000 |
+| `MERLIN_HTTP_CONNECT_TIMEOUT_SECONDS` / `MERLIN_HTTP_READ_TIMEOUT_SECONDS` | opcionais | tempos limite do Gemini; padrões 5 e 20 |
+
+**Variáveis que sobraram da versão Spring e podem ser apagadas do painel:** `SPRING_PROFILES_ACTIVE`, `DB_POOL_SIZE` (sem pool, cada transação abre e fecha a própria conexão), `CORS_ALLOWED_ORIGINS` (o CORS saiu; o rewrite da Vercel o substitui) e `JWT_SECRET` (nenhum código a lê). Deixá-las não quebra nada, mas engana quem ler o painel.
 
 Nenhum desses valores vai para o repositório. O `render.yaml` declara apenas os nomes.
 
@@ -73,14 +78,13 @@ Nenhum desses valores vai para o repositório. O `render.yaml` declara apenas os
 **Deu certo** — o log traz, nesta ordem:
 
 ```
-The following 1 profile is active: "prod"
-HikariPool-1 - Start completed.
-Catalogo ja possui dados. Carga inicial ignorada.
-Tomcat started on port ...
-Started BackendApplication in 134.503 seconds
+Massa de demonstracao ja esta completa. Nada a carregar.
+Started listener bound to [0.0.0.0:...]
+[HttpServer] Started.
+Servidor no ar na porta ...
 ```
 
-`Catalogo ja possui dados` é a prova definitiva: a aplicação consultou a tabela `TB_PRODUTO` no Oracle da FIAP a partir do servidor.
+`Massa de demonstracao ja esta completa` (ou `Carga incremental: ...`) é a prova definitiva: a aplicação consultou o catálogo no Oracle da FIAP a partir do servidor, antes de abrir a porta.
 
 **Não deu** — o log fica preso em erro de conexão (`IO Error`, `Connection refused`, `ORA-12170`) e a aplicação não sobe. Ver a seção seguinte.
 
@@ -88,8 +92,24 @@ Started BackendApplication in 134.503 seconds
 
 Com a URL que o Render atribuir (algo como `https://merlin-route-finder-api.onrender.com`):
 
-- `/swagger.html` — a documentação navegável da API
+- `/health` — responde `OK`, sem tocar no banco
 - `/api/v1/produtos?query=tinta` — deve devolver a Tinta Acrílica da massa de demonstração
+
+O Swagger UI e o `/v3/api-docs` não existem mais. A documentação da API é o [`openapi.yaml`](../backend/src/main/resources/openapi/openapi.yaml), conferido contra os Resources pelo `ContratoOpenApiTest`.
+
+---
+
+## Mudanças no schema do banco
+
+Desde a saída do Hibernate, **a aplicação não cria nem altera tabelas**. O schema está em [`database/migrations`](../database/migrations), um arquivo por mudança, no formato do material (`CREATE SEQUENCE`/`CREATE TABLE`).
+
+Quem muda o schema:
+
+1. cria um script novo em `database/migrations`, com o número seguinte (`V002__...sql`);
+2. roda o script no SQL Developer, no schema usado pela instância publicada, **antes** de publicar o código que depende dele;
+3. avisa no commit e aqui, porque o schema é compartilhado: a instância publicada, os testes de integração e a máquina de cada integrante usam o mesmo.
+
+A exceção são as restrições de enum (`CHECK ... IN (...)`): a carga de dados as refaz sozinha no startup, pelo `RestricaoDeEnumDao`, quando um enum ganha ou perde um valor (RF-15).
 
 ---
 
@@ -109,7 +129,7 @@ Se ainda assim falhar, a causa mais provável é **filtro por país de origem**.
 Started BackendApplication in 134.503 seconds
 ```
 
-**Dois minutos e quinze**, contra 21 segundos na máquina de desenvolvimento. A causa é o plano gratuito dar **0.1 CPU** — um décimo de núcleo — e o Spring inicializar na mesma proporção.
+**Dois minutos e quinze**, contra 21 segundos na máquina de desenvolvimento. A causa é o plano gratuito dar **0.1 CPU** — um décimo de núcleo — e o Spring inicializar na mesma proporção. **As medições desta seção são da versão Spring**; a versão com Jersey ainda precisa ser medida no Render (passo 11.6 do plano de migração). Na máquina de desenvolvimento ela sobe em poucos segundos.
 
 > **Medido de novo em 25/08/2026, depois de o catálogo crescer: 176 segundos** — quase três minutos até a primeira resposta. A carga inicial passou a percorrer 111 produtos em vez de 29, e cada verificação é uma ida ao Oracle a 5.000 km.
 >
@@ -142,9 +162,8 @@ Depois de apagar a variável, publicar o frontend de novo: o valor das variávei
 
 Sem Docker nesta máquina, a imagem em si só será construída pelo Render. O que dava para verificar localmente foi verificado:
 
-- `./mvnw clean package -DskipTests` gera `target/backend-0.0.1-SNAPSHOT.jar`, que casa com o `backend-*.jar` que o `Dockerfile` copia;
-- `./mvnw dependency:go-offline`, a camada de cache do build, funciona;
-- o jar empacotado sobe com **os mesmos parâmetros de JVM do container** (`-XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC`), respeita `PORT`, ativa o perfil `prod`, e não emite log de SQL;
-- `/v3/api-docs`, o caminho do health check, responde `200`.
+- `./mvnw clean package` gera `target/backend-0.0.1-SNAPSHOT.jar` pelo `maven-shade-plugin`, com as dependências dentro, e casa com o `backend-*.jar` que o `Dockerfile` copia (o `original-backend-*.jar`, sem as dependências, não casa);
+- o jar sobe com **os mesmos parâmetros de JVM do container** (`-XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC`), respeita `PORT` e escuta em `0.0.0.0`;
+- `/health`, o caminho do health check, responde `200`, e as rotas de mapa, catálogo, sessão e roteiro respondem contra o Oracle (05/11/2026).
 
 O que só o build do Render confirma: disponibilidade das imagens base e a conexão com o Oracle a partir de fora do país.
