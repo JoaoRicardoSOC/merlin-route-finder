@@ -159,6 +159,8 @@ grep -rn "org.springframework\|jakarta.persistence\|org.hibernate" backend/src/m
 
 ### D-03. Tipo de paginação próprio em vez de `Page` do Spring
 
+> **Revista em 05/11/2026, na migração para JAX-RS:** o Spring saiu, e com ele o `Page` que motivava esta decisão. O tipo próprio `Pagina` continua, agora sem alternativa de framework para comparar. Ver [D-89](#d-89-o-backend-sai-do-spring-boot-e-segue-o-material-da-fiap-à-risca).
+
 **Contexto.** A busca paginada de produtos precisa devolver conteúdo mais metadados (página atual, total). O tipo natural em Spring seria `Page<T>`.
 
 **Decisão.** Um `record Pagina<T>` declarado em `domain/repository`. O adaptador traduz o `Page` do Spring para ele, num ponto só.
