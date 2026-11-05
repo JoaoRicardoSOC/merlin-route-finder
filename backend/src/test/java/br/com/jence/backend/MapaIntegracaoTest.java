@@ -18,6 +18,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Optional;
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -137,6 +139,9 @@ class MapaIntegracaoTest {
     @DisplayName("o mapa e igual entre chamadas: nao depende de sessao nem de estado")
     void mapaEstavel() throws Exception {
         // E o que permite ao frontend busca-lo uma vez e guardar no aparelho.
-        assertEquals(consultarMapa.executar(), consultarMapa.executar());
+        // Compara o JSON que o frontend recebe: o DTO e classe, sem equals por valor.
+        try (Jsonb jsonb = JsonbBuilder.create()) {
+            assertEquals(jsonb.toJson(consultarMapa.executar()), jsonb.toJson(consultarMapa.executar()));
+        }
     }
 }
