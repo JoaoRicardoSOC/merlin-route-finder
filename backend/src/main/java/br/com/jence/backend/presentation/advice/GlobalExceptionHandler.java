@@ -31,12 +31,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<StandardError> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
 
         List<ValidationError> errors = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> new ValidationError(error.getField(), error.getDefaultMessage()))
+                .map(error -> ValidationError.de(error.getField(), error.getDefaultMessage()))
                 .collect(Collectors.toList());
 
-        StandardError response = new StandardError(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
+        StandardError response = erro(
+                HttpStatus.BAD_REQUEST,
                 "Falha de Validação",
                 "Os dados enviados na requisição estão inválidos. Verifique a lista de erros.",
                 request.getRequestURI(),
@@ -54,9 +53,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<StandardError> handleParametroInvalido(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
 
-        StandardError response = new StandardError(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
+        StandardError response = erro(
+                HttpStatus.BAD_REQUEST,
                 "Parâmetro Inválido",
                 "O valor '%s' não é válido para o parâmetro '%s'.".formatted(ex.getValue(), ex.getName()),
                 request.getRequestURI(),
@@ -73,9 +71,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<StandardError> handleCorpoIlegivel(HttpMessageNotReadableException ex, HttpServletRequest request) {
 
-        StandardError response = new StandardError(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
+        StandardError response = erro(
+                HttpStatus.BAD_REQUEST,
                 "Corpo da Requisição Inválido",
                 "O corpo enviado não pode ser lido. Verifique se é um JSON válido.",
                 request.getRequestURI(),
@@ -93,9 +90,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<StandardError> handleParametroAusente(MissingServletRequestParameterException ex, HttpServletRequest request) {
 
-        StandardError response = new StandardError(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
+        StandardError response = erro(
+                HttpStatus.BAD_REQUEST,
                 "Parâmetro Obrigatório Ausente",
                 "O parâmetro '%s' é obrigatório.".formatted(ex.getParameterName()),
                 request.getRequestURI(),
@@ -108,9 +104,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<StandardError> handleMetodoNaoSuportado(HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
 
-        StandardError response = new StandardError(
-                LocalDateTime.now(),
-                HttpStatus.METHOD_NOT_ALLOWED.value(),
+        StandardError response = erro(
+                HttpStatus.METHOD_NOT_ALLOWED,
                 "Método Não Suportado",
                 "O método %s não é aceito neste endereço.".formatted(ex.getMethod()),
                 request.getRequestURI(),
@@ -123,9 +118,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<StandardError> handleMediaTypeNaoSuportado(HttpMediaTypeNotSupportedException ex, HttpServletRequest request) {
 
-        StandardError response = new StandardError(
-                LocalDateTime.now(),
-                HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(),
+        StandardError response = erro(
+                HttpStatus.UNSUPPORTED_MEDIA_TYPE,
                 "Formato Não Suportado",
                 "O formato %s não é aceito. Envie application/json.".formatted(ex.getContentType()),
                 request.getRequestURI(),
@@ -138,9 +132,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<StandardError> handleCaminhoInexistente(NoResourceFoundException ex, HttpServletRequest request) {
 
-        StandardError response = new StandardError(
-                LocalDateTime.now(),
-                HttpStatus.NOT_FOUND.value(),
+        StandardError response = erro(
+                HttpStatus.NOT_FOUND,
                 "Endereço Não Encontrado",
                 "Não existe endpoint em %s.".formatted(request.getRequestURI()),
                 request.getRequestURI(),
@@ -153,9 +146,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RecursoNaoEncontradoException.class)
     public ResponseEntity<StandardError> handleRecursoNaoEncontrado(RecursoNaoEncontradoException ex, HttpServletRequest request) {
 
-        StandardError response = new StandardError(
-                LocalDateTime.now(),
-                HttpStatus.NOT_FOUND.value(),
+        StandardError response = erro(
+                HttpStatus.NOT_FOUND,
                 "Recurso Não Encontrado",
                 ex.getMessage(),
                 request.getRequestURI(),
@@ -168,9 +160,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(OperacaoNaoPermitidaException.class)
     public ResponseEntity<StandardError> handleOperacaoNaoPermitida(OperacaoNaoPermitidaException ex, HttpServletRequest request) {
 
-        StandardError response = new StandardError(
-                LocalDateTime.now(),
-                HttpStatus.CONFLICT.value(),
+        StandardError response = erro(
+                HttpStatus.CONFLICT,
                 "Operação Não Permitida",
                 ex.getMessage(),
                 request.getRequestURI(),
@@ -188,9 +179,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SubstitutoIndisponivelException.class)
     public ResponseEntity<StandardError> handleSubstitutoIndisponivel(SubstitutoIndisponivelException ex, HttpServletRequest request) {
 
-        StandardError response = new StandardError(
-                LocalDateTime.now(),
-                HttpStatus.UNPROCESSABLE_ENTITY.value(),
+        StandardError response = erro(
+                HttpStatus.UNPROCESSABLE_ENTITY,
                 "Substituto Indisponível",
                 ex.getMessage(),
                 request.getRequestURI(),
@@ -220,9 +210,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidParameterException.class)
     public ResponseEntity<StandardError> handleTextoIndecodificavel(InvalidParameterException ex,
                                                                     HttpServletRequest request) {
-        StandardError response = new StandardError(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
+        StandardError response = erro(
+                HttpStatus.BAD_REQUEST,
                 "Requisição Inválida",
                 "Não foi possível ler os parâmetros enviados. Verifique se a requisição está "
                         + "codificada em UTF-8.",
@@ -234,14 +223,25 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<StandardError> handleGenericException(Exception ex, HttpServletRequest request) {
-        StandardError response = new StandardError(
-                LocalDateTime.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+        StandardError response = erro(
+                HttpStatus.INTERNAL_SERVER_ERROR,
                 "Erro Interno do Servidor",
                 "Ocorreu um erro inesperado. Tente novamente em instantes.",
                 request.getRequestURI(),
                 null
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    private static StandardError erro(HttpStatus status, String error, String message,
+                                      String path, List<ValidationError> validationErrors) {
+        StandardError erro = new StandardError();
+        erro.setTimestamp(LocalDateTime.now());
+        erro.setStatus(status.value());
+        erro.setError(error);
+        erro.setMessage(message);
+        erro.setPath(path);
+        erro.setValidationErrors(validationErrors);
+        return erro;
     }
 }
