@@ -75,19 +75,19 @@ class RupturaIntegracaoTest {
         RupturaEstoqueResponse resposta = tratarRuptura.executar(item.id());
 
         System.out.println(">>> em falta:   " + item.produto().getNome());
-        System.out.println(">>> sugerido:   " + resposta.produtoSugerido().nome()
-                + " (" + resposta.produtoSugerido().sku() + ")");
-        System.out.println(">>> corredor:   " + resposta.produtoSugerido().pontoMapa().getCorredor());
+        System.out.println(">>> sugerido:   " + resposta.produtoSugerido().getNome()
+                + " (" + resposta.produtoSugerido().getSku() + ")");
+        System.out.println(">>> corredor:   " + resposta.produtoSugerido().getPontoMapa().getCorredor());
         System.out.println(">>> origem:     " + resposta.origemSugestao());
         System.out.println(">>> justifica.: " + resposta.justificativa());
 
         assertEquals(OrigemSugestao.ASSISTENTE_IA, resposta.origemSugestao(),
                 "se cair em PROXIMIDADE, o assistente nao respondeu - verifique a cota da chave");
 
-        assertEquals(LIXA_SUBSTITUTA, resposta.produtoSugerido().sku(),
+        assertEquals(LIXA_SUBSTITUTA, resposta.produtoSugerido().getSku(),
                 "no mesmo raio ha disjuntor, cabo e parafuso; so a lixa d'agua cumpre a funcao");
 
-        assertTrue(resposta.produtoSugerido().saldoEstoque() > 0);
+        assertTrue(resposta.produtoSugerido().getSaldoEstoque() > 0);
         assertFalse(resposta.justificativa() == null || resposta.justificativa().isBlank());
     }
 

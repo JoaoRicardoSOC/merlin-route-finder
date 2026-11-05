@@ -246,8 +246,8 @@ class TratarRupturaEstoqueUseCaseTest {
 
         assertEquals(lixaEmFalta.getId(), resposta.produtoOriginalId());
         assertEquals(lixaDagua.getId(), resposta.produtoSugeridoId());
-        assertEquals("SKU-TIN-004", resposta.produtoSugerido().sku());
-        assertEquals(0, resposta.produtoSugerido().preco().compareTo(new BigDecimal("4.20")));
+        assertEquals("SKU-TIN-004", resposta.produtoSugerido().getSku());
+        assertEquals(0, resposta.produtoSugerido().getPreco().compareTo(new BigDecimal("4.20")));
         assertTrue(resposta.justificativa().startsWith("A lixa d'agua"));
         assertEquals(OrigemSugestao.ASSISTENTE_IA, resposta.origemSugestao());
     }

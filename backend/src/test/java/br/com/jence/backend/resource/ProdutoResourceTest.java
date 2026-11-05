@@ -2,7 +2,6 @@ package br.com.jence.backend.resource;
 
 import br.com.jence.backend.dto.CatalogoResponse;
 import br.com.jence.backend.dto.FacetaResponse;
-import br.com.jence.backend.dto.PontoMapaResponse;
 import br.com.jence.backend.dto.ProdutoDetalhadoResponse;
 import br.com.jence.backend.dto.ProdutoResponse;
 import br.com.jence.backend.dto.SecaoResponse;
@@ -207,9 +206,10 @@ class ProdutoResourceTest {
     void detalhamento() throws Exception {
         UUID id = UUID.randomUUID();
         UUID pontoId = UUID.randomUUID();
-        when(consultarProdutoUseCase.executar(id)).thenReturn(new ProdutoDetalhadoResponse(
-                id, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L", null, null, new BigDecimal("289.90"), 12,
-                pontoId, "Tintas", PontoMapaResponse.de(new PontoMapa(pontoId, TipoPonto.PRATELEIRA, "Tintas", 32, 10)), List.of()));
+        when(consultarProdutoUseCase.executar(id)).thenReturn(ProdutoDetalhadoResponse.de(
+                new Produto(id, "SKU-TIN-001", "Tinta Acrilica Fosca Branca 18L",
+                        new BigDecimal("289.90"), 12,
+                        new PontoMapa(pontoId, TipoPonto.PRATELEIRA, "Tintas", 32, 10))));
 
         mockMvc.perform(get("/api/v1/produtos/{id}", id))
                 .andExpect(status().isOk())

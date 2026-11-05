@@ -79,8 +79,8 @@ class ProdutoResponseTest {
 
         ProdutoDetalhadoResponse detalhe = ProdutoDetalhadoResponse.de(produtoEm(tintas));
 
-        assertEquals("Tintas", detalhe.corredor());
-        assertEquals(detalhe.pontoMapa().getCorredor(), detalhe.corredor(),
+        assertEquals("Tintas", detalhe.getCorredor());
+        assertEquals(detalhe.getPontoMapa().getCorredor(), detalhe.getCorredor(),
                 "os dois caminhos precisam concordar");
     }
 
