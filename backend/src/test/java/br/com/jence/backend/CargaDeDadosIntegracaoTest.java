@@ -94,7 +94,7 @@ class CargaDeDadosIntegracaoTest {
         int pontosAntes = todosOsPontos().size();
 
         // Rodar a carga de novo e exatamente o que acontece a cada reinicio da aplicacao.
-        carregador.run(null);
+        carregador.executar();
 
         assertEquals(produtosAntes, produtoDao.buscarPaginado(0, 1).totalElementos(),
                 "um produto que ja existe nao pode ser inserido outra vez");

@@ -101,7 +101,7 @@ class RenomearSecaoIntegracaoTest {
         pontoMapaDao.renomearCorredor("Decoração", "Decoracao");
         assertEquals(idOriginal, porCorredor("Decoracao").getId());
 
-        carregador.run(null);
+        carregador.executar();
 
         PontoMapa depois = porCorredor("Decoração");
         assertEquals(idOriginal, depois.getId(),

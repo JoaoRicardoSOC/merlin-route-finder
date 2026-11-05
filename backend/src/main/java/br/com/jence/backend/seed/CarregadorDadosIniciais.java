@@ -11,10 +11,6 @@ import br.com.jence.backend.dao.PontoMapaDao;
 import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.dao.RestricaoDeEnumDao;
 import br.com.jence.backend.factory.Transacao;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
@@ -40,11 +36,9 @@ import static java.util.Map.entry;
  * ainda nao existir. Assim um produto novo acrescentado aqui chega tambem aos bancos que ja
  * tinham a massa antiga - inclusive o da instancia publicada. Ver D-47.
  * <p>
- * Pode ser desligado com {@code merlin.seed.enabled=false}.
+ * A Main so a roda se {@code MERLIN_SEED_ENABLED} nao for {@code false}.
  */
-@Component
-@ConditionalOnProperty(name = "merlin.seed.enabled", havingValue = "true", matchIfMissing = true)
-public class CarregadorDadosIniciais implements ApplicationRunner {
+public class CarregadorDadosIniciais {
 
     /*
      * Teto da leitura que descobre o que ja existe. Precisa ser maior que o catalogo de
@@ -356,11 +350,6 @@ public class CarregadorDadosIniciais implements ApplicationRunner {
         this.produtoDao = produtoDao;
         this.pontoMapaDao = pontoMapaDao;
         this.restricaoDeEnum = restricaoDeEnum;
-    }
-
-    @Override
-    public void run(ApplicationArguments args) throws SQLException {
-        executar();
     }
 
     /** Carrega o que falta da massa de demonstracao. Chamado pela Main antes do servidor subir. */

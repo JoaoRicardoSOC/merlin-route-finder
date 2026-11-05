@@ -86,7 +86,7 @@ class ApresentacaoSincronizadaIntegracaoTest {
                 "Nome trocado a mao", "Descricao trocada a mao", null));
         assertEquals("Nome trocado a mao", porSku("SKU-DEC-001").getNome());
 
-        carregador.run(null);
+        carregador.executar();
 
         Produto depois = porSku("SKU-DEC-001");
         assertEquals(antes.getNome(), depois.getNome());
@@ -109,7 +109,7 @@ class ApresentacaoSincronizadaIntegracaoTest {
         produtoDao.salvar(antes.comSaldoEstoque(declarado + 7));
         assertEquals(declarado + 7, porSku("SKU-TIN-003").getSaldoEstoque());
 
-        carregador.run(null);
+        carregador.executar();
 
         assertEquals(declarado, porSku("SKU-TIN-003").getSaldoEstoque(),
                 "a carga precisa devolver o estoque ensaiado");
