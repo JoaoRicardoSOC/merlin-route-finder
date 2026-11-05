@@ -2,43 +2,97 @@ package br.com.jence.backend.resource;
 
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.dto.ListaRoteiroResponse;
-import br.com.jence.backend.dto.PontoMapaResponse;
-import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
-import br.com.jence.backend.service.ConsultarListaRoteiroUseCase;
-import br.com.jence.backend.service.RemoverProdutoDoRoteiroUseCase;
+import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
+import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.model.ItemRoteiro;
 import br.com.jence.backend.model.PontoMapa;
 import br.com.jence.backend.model.Produto;
 import br.com.jence.backend.model.TipoPonto;
-import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
-import br.com.jence.backend.exception.RecursoNaoEncontradoException;
+import br.com.jence.backend.service.AdicionarProdutoAoRoteiroUseCase;
+import br.com.jence.backend.service.ConsultarListaRoteiroUseCase;
+import br.com.jence.backend.service.RemoverProdutoDoRoteiroUseCase;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@WebMvcTest(RoteiroResource.class)
+/** As rotas do roteiro no Totem pelo Jersey, com casos de uso falsos. */
 class RoteiroResourceTest {
 
-    @Autowired MockMvc mockMvc;
+    static class ConsultarFalso extends ConsultarListaRoteiroUseCase {
+        ListaRoteiroResponse lista;
 
-    @MockitoBean ConsultarListaRoteiroUseCase consultarListaRoteiroUseCase;
-    @MockitoBean AdicionarProdutoAoRoteiroUseCase adicionarProdutoAoRoteiroUseCase;
-    @MockitoBean RemoverProdutoDoRoteiroUseCase removerProdutoDoRoteiroUseCase;
+        ConsultarFalso() {
+            super(null);
+        }
+
+        @Override
+        public ListaRoteiroResponse executar(UUID sessaoId) {
+            return lista;
+        }
+    }
+
+    /** Anota cada chamada; devolve o item combinado ou lanca a falha combinada. */
+    static class AdicionarFalso extends AdicionarProdutoAoRoteiroUseCase {
+        final List<UUID[]> chamadas = new ArrayList<>();
+        ItemRoteiroDetalhadoResponse item;
+        Exception falha;
+
+        AdicionarFalso() {
+            super(null, null, null);
+        }
+
+        @Override
+        public ItemRoteiroDetalhadoResponse executar(UUID sessaoId, UUID produtoId)
+                throws RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+            chamadas.add(new UUID[] {sessaoId, produtoId});
+            if (falha instanceof OperacaoNaoPermitidaException e) {
+                throw e;
+            }
+            return item;
+        }
+    }
+
+    static class RemoverFalso extends RemoverProdutoDoRoteiroUseCase {
+        final List<UUID[]> chamadas = new ArrayList<>();
+        RecursoNaoEncontradoException falha;
+
+        RemoverFalso() {
+            super(null, null);
+        }
+
+        @Override
+        public void executar(UUID sessaoId, UUID itemId) throws RecursoNaoEncontradoException {
+            chamadas.add(new UUID[] {sessaoId, itemId});
+            if (falha != null) {
+                throw falha;
+            }
+        }
+    }
 
     private final UUID sessaoId = UUID.randomUUID();
+    private final ConsultarFalso consultar = new ConsultarFalso();
+    private final AdicionarFalso adicionar = new AdicionarFalso();
+    private final RemoverFalso remover = new RemoverFalso();
+    private ServidorDeTeste servidor;
+
+    @BeforeEach
+    void subir() throws Exception {
+        servidor = ServidorDeTeste.com(new RoteiroResource(consultar, adicionar, remover));
+    }
+
+    @AfterEach
+    void descer() {
+        servidor.close();
+    }
 
     private ItemRoteiroDetalhadoResponse item(UUID itemId, UUID produtoId) {
         return ItemRoteiroDetalhadoResponse.de(new ItemRoteiro(itemId,
@@ -56,21 +110,24 @@ class RoteiroResourceTest {
         return lista;
     }
 
+    private String itens() {
+        return "/api/v1/sessoes/" + sessaoId + "/roteiro/itens";
+    }
+
     @Test
     @DisplayName("GET do roteiro devolve a lista no formato do contrato")
     void consultarRoteiro() throws Exception {
         UUID itemId = UUID.randomUUID();
-        UUID produtoId = UUID.randomUUID();
-        when(consultarListaRoteiroUseCase.executar(sessaoId)).thenReturn(
-                lista(sessaoId, item(itemId, produtoId)));
+        consultar.lista = lista(sessaoId, item(itemId, UUID.randomUUID()));
 
-        mockMvc.perform(get("/api/v1/sessoes/{s}/roteiro", sessaoId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sessaoId").value(sessaoId.toString()))
-                .andExpect(jsonPath("$.quantidadeItens").value(1))
-                .andExpect(jsonPath("$.itens[0].id").value(itemId.toString()))
-                .andExpect(jsonPath("$.itens[0].coletado").value(false))
-                .andExpect(jsonPath("$.itens[0].produto.nome").value("Tinta Acrilica Fosca Branca 18L"));
+        ServidorDeTeste.Resposta resposta = servidor.get("/api/v1/sessoes/" + sessaoId + "/roteiro");
+
+        assertEquals(200, resposta.status());
+        assertEquals(sessaoId.toString(), resposta.texto("sessaoId"));
+        assertEquals(1, resposta.inteiro("quantidadeItens"));
+        assertEquals(itemId.toString(), resposta.texto("itens[0].id"));
+        assertEquals(false, resposta.json("itens[0].coletado"));
+        assertEquals("Tinta Acrilica Fosca Branca 18L", resposta.texto("itens[0].produto.nome"));
     }
 
     @Test
@@ -78,65 +135,73 @@ class RoteiroResourceTest {
     void adicionarProduto() throws Exception {
         UUID produtoId = UUID.randomUUID();
         UUID itemId = UUID.randomUUID();
-        when(adicionarProdutoAoRoteiroUseCase.executar(sessaoId, produtoId))
-                .thenReturn(item(itemId, produtoId));
+        adicionar.item = item(itemId, produtoId);
 
-        mockMvc.perform(post("/api/v1/sessoes/{s}/roteiro/itens", sessaoId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"produtoId\":\"" + produtoId + "\"}"))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(itemId.toString()))
-                .andExpect(jsonPath("$.produtoId").value(produtoId.toString()))
-                .andExpect(jsonPath("$.produto.sku").value("SKU-TIN-001"));
+        ServidorDeTeste.Resposta resposta =
+                servidor.json("POST", itens(), "{\"produtoId\":\"" + produtoId + "\"}");
 
-        verify(adicionarProdutoAoRoteiroUseCase).executar(sessaoId, produtoId);
+        assertEquals(201, resposta.status());
+        assertEquals(itemId.toString(), resposta.texto("id"));
+        assertEquals(produtoId.toString(), resposta.texto("produtoId"));
+        assertEquals("SKU-TIN-001", resposta.texto("produto.sku"));
+        assertEquals(sessaoId, adicionar.chamadas.get(0)[0]);
+        assertEquals(produtoId, adicionar.chamadas.get(0)[1]);
     }
 
-    /** Primeira execucao real do handler de validacao, que existe desde o esqueleto do projeto. */
     @Test
     @DisplayName("POST sem produtoId devolve 400 apontando o campo invalido")
     void adicionarSemProdutoId() throws Exception {
-        mockMvc.perform(post("/api/v1/sessoes/{s}/roteiro/itens", sessaoId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Falha de Validação"))
-                .andExpect(jsonPath("$.validationErrors[0].field").value("produtoId"))
-                .andExpect(jsonPath("$.validationErrors[0].message")
-                        .value(org.hamcrest.Matchers.containsString("obrigatorio")));
+        ServidorDeTeste.Resposta resposta = servidor.json("POST", itens(), "{}");
 
-        verifyNoInteractions(adicionarProdutoAoRoteiroUseCase);
+        assertEquals(400, resposta.status());
+        assertEquals(400, resposta.inteiro("status"));
+        assertEquals("Falha de Validação", resposta.texto("error"));
+        assertEquals("produtoId", resposta.texto("validationErrors[0].field"));
+        assertTrue(resposta.texto("validationErrors[0].message").contains("obrigatorio"));
+        assertTrue(adicionar.chamadas.isEmpty());
     }
 
     @Test
     @DisplayName("POST com JSON malformado devolve 400, nao 500")
     void adicionarComJsonInvalido() throws Exception {
-        mockMvc.perform(post("/api/v1/sessoes/{s}/roteiro/itens", sessaoId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{ isso nao e json }"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Corpo da Requisição Inválido"));
+        ServidorDeTeste.Resposta resposta = servidor.json("POST", itens(), "{ isso nao e json }");
 
-        verifyNoInteractions(adicionarProdutoAoRoteiroUseCase);
+        assertEquals(400, resposta.status());
+        assertEquals("Corpo da Requisição Inválido", resposta.texto("error"));
+        assertTrue(adicionar.chamadas.isEmpty());
     }
 
-    /** Primeira vez que o 409 do card 14 vira status HTTP. */
+    @Test
+    @DisplayName("POST com corpo que nao e JSON devolve 415, e o caso de uso nem e chamado")
+    void adicionarComOutroTipoDeConteudo() throws Exception {
+        ServidorDeTeste.Resposta resposta = servidor.enviar("POST", itens(), "application/xml", "<xml/>");
+
+        assertEquals(415, resposta.status());
+        assertTrue(adicionar.chamadas.isEmpty());
+    }
+
+    @Test
+    @DisplayName("POST sem corpo devolve 400, nao 500")
+    void adicionarSemCorpo() throws Exception {
+        ServidorDeTeste.Resposta resposta = servidor.json("POST", itens(), "");
+
+        assertEquals(400, resposta.status());
+        assertEquals("Corpo da Requisição Inválido", resposta.texto("error"));
+    }
+
     @Test
     @DisplayName("sessao inativa devolve 409, nao 404")
     void sessaoInativa() throws Exception {
-        when(adicionarProdutoAoRoteiroUseCase.executar(any(), any()))
-                .thenThrow(new OperacaoNaoPermitidaException(
-                        "Sessao %s nao esta mais ativa (status COMPLETED)".formatted(sessaoId)));
+        adicionar.falha = new OperacaoNaoPermitidaException(
+                "Sessao %s nao esta mais ativa (status COMPLETED)".formatted(sessaoId));
 
-        mockMvc.perform(post("/api/v1/sessoes/{s}/roteiro/itens", sessaoId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"produtoId\":\"" + UUID.randomUUID() + "\"}"))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.status").value(409))
-                .andExpect(jsonPath("$.error").value("Operação Não Permitida"))
-                .andExpect(jsonPath("$.message")
-                        .value(org.hamcrest.Matchers.containsString("nao esta mais ativa")));
+        ServidorDeTeste.Resposta resposta =
+                servidor.json("POST", itens(), "{\"produtoId\":\"" + UUID.randomUUID() + "\"}");
+
+        assertEquals(409, resposta.status());
+        assertEquals(409, resposta.inteiro("status"));
+        assertEquals("Operação Não Permitida", resposta.texto("error"));
+        assertTrue(resposta.texto("message").contains("nao esta mais ativa"));
     }
 
     @Test
@@ -144,22 +209,33 @@ class RoteiroResourceTest {
     void removerItem() throws Exception {
         UUID itemId = UUID.randomUUID();
 
-        mockMvc.perform(delete("/api/v1/sessoes/{s}/roteiro/itens/{i}", sessaoId, itemId))
-                .andExpect(status().isNoContent())
-                .andExpect(content().string(""));
+        ServidorDeTeste.Resposta resposta = servidor.delete(itens() + "/" + itemId);
 
-        verify(removerProdutoDoRoteiroUseCase).executar(sessaoId, itemId);
+        assertEquals(204, resposta.status());
+        assertEquals("", resposta.corpo());
+        assertEquals(sessaoId, remover.chamadas.get(0)[0]);
+        assertEquals(itemId, remover.chamadas.get(0)[1]);
     }
 
     @Test
     @DisplayName("DELETE de item inexistente devolve 404")
     void removerItemInexistente() throws Exception {
         UUID itemId = UUID.randomUUID();
-        doThrow(new RecursoNaoEncontradoException("Item do roteiro", itemId))
-                .when(removerProdutoDoRoteiroUseCase).executar(any(), any());
+        remover.falha = new RecursoNaoEncontradoException("Item do roteiro", itemId);
 
-        mockMvc.perform(delete("/api/v1/sessoes/{s}/roteiro/itens/{i}", sessaoId, itemId))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Recurso Não Encontrado"));
+        ServidorDeTeste.Resposta resposta = servidor.delete(itens() + "/" + itemId);
+
+        assertEquals(404, resposta.status());
+        assertEquals("Recurso Não Encontrado", resposta.texto("error"));
+    }
+
+    @Test
+    @DisplayName("UUID malformado no caminho devolve 400, e nao 404")
+    void uuidMalformado() throws Exception {
+        ServidorDeTeste.Resposta resposta = servidor.get("/api/v1/sessoes/nao-e-uuid/roteiro");
+
+        assertEquals(400, resposta.status());
+        assertEquals("Parâmetro Inválido", resposta.texto("error"));
+        assertTrue(resposta.texto("message").contains("sessaoId"));
     }
 }
