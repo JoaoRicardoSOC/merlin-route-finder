@@ -1,22 +1,16 @@
 package br.com.jence.backend;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import br.com.jence.backend.resource.ServidorDeTeste;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -41,20 +35,23 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * qualquer integrante com credencial de banco.
  */
 @Tag("integracao")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class JornadaCompletaIntegracaoTest {
 
-    @LocalServerPort int porta;
-    // Criado aqui: o RestClientConfig saiu junto com o RestClient do cliente do Gemini.
-    private final RestClient.Builder builder = RestClient.builder();
-
-    /* Leitor proprio: o teste so precisa navegar o JSON da resposta, e nao depender da
-     * configuracao de serializacao da aplicacao - que e justamente uma das coisas que
-     * ele existe para verificar. */
-    private final ObjectMapper json = new ObjectMapper();
-
+    /** A aplicacao de verdade, subida pela Main, com a massa de dados ja carregada. */
+    private static ServidorDeTeste servidor;
 
     private final List<UUID> sessoesCriadas = new ArrayList<>();
+
+    @BeforeAll
+    static void subir() throws Exception {
+        BancoDeTeste.carregarMassa();
+        servidor = ServidorDeTeste.daAplicacao();
+    }
+
+    @AfterAll
+    static void descer() {
+        servidor.close();
+    }
 
     /**
      * A lixa grao 120: entra no roteiro com estoque e, na prateleira, o cliente nao a acha.
@@ -73,36 +70,35 @@ class JornadaCompletaIntegracaoTest {
     // ---------------------------------------------------------------- ferramentas HTTP
 
     /** Nunca lanca: o status faz parte do que se quer verificar. */
-    private ResponseEntity<String> chamar(HttpMethod metodo, String caminho, String corpo) {
-        RestClient.RequestBodySpec pedido = builder.build()
-                .method(metodo)
-                .uri("http://localhost:" + porta + "/api/v1" + caminho);
-
-        if (corpo != null) {
-            pedido.contentType(MediaType.APPLICATION_JSON).body(corpo);
-        }
-
-        return pedido.retrieve()
-                .onStatus(status -> true, (req, res) -> { })
-                .toEntity(String.class);
-    }
-
-    private JsonNode corpoDe(ResponseEntity<String> resposta) {
+    private ServidorDeTeste.Resposta chamar(String metodo, String caminho, String corpo) {
         try {
-            return json.readTree(resposta.getBody());
+            return corpo == null
+                    ? servidor.semCorpo(metodo, "/api/v1" + caminho)
+                    : servidor.json(metodo, "/api/v1" + caminho, corpo);
         } catch (Exception e) {
-            throw new AssertionError("resposta nao era JSON: " + resposta.getBody(), e);
+            throw new AssertionError("chamada falhou: " + metodo + " " + caminho, e);
         }
     }
 
-    private JsonNode get(String caminho) {
-        ResponseEntity<String> r = chamar(HttpMethod.GET, caminho, null);
-        assertEquals(200, r.getStatusCode().value(), "GET " + caminho);
+    /* Leitor proprio: o teste so precisa navegar o JSON da resposta, e nao depender da
+     * configuracao de serializacao da aplicacao - que e justamente uma das coisas que
+     * ele existe para verificar. */
+    private NoJson corpoDe(ServidorDeTeste.Resposta resposta) {
+        try {
+            return NoJson.ler(resposta.corpo());
+        } catch (Exception e) {
+            throw new AssertionError("resposta nao era JSON: " + resposta.corpo(), e);
+        }
+    }
+
+    private NoJson get(String caminho) {
+        ServidorDeTeste.Resposta r = chamar("GET", caminho, null);
+        assertEquals(200, r.status(), "GET " + caminho);
         return corpoDe(r);
     }
 
-    private int status(HttpMethod metodo, String caminho, String corpo) {
-        return chamar(metodo, caminho, corpo).getStatusCode().value();
+    private int status(String metodo, String caminho, String corpo) {
+        return chamar(metodo, caminho, corpo).status();
     }
 
     private void passo(String descricao) {
@@ -113,8 +109,8 @@ class JornadaCompletaIntegracaoTest {
 
     private UUID entrarPelaPlaca(String codigo) {
         String corpo = codigo == null ? null : "{\"codigoPonto\":\"" + codigo + "\"}";
-        ResponseEntity<String> r = chamar(HttpMethod.POST, "/sessoes", corpo);
-        assertEquals(201, r.getStatusCode().value());
+        ServidorDeTeste.Resposta r = chamar("POST", "/sessoes", corpo);
+        assertEquals(201, r.status());
 
         UUID id = UUID.fromString(corpoDe(r).get("id").asText());
         sessoesCriadas.add(id);
@@ -122,14 +118,14 @@ class JornadaCompletaIntegracaoTest {
     }
 
     private String idDoProduto(String sku) {
-        for (JsonNode produto : get("/produtos?size=100&query=" + sku.substring(8)).get("content")) {
+        for (NoJson produto : get("/produtos?size=100&query=" + sku.substring(8)).get("content")) {
             if (sku.equals(produto.get("sku").asText())) {
                 return produto.get("id").asText();
             }
         }
         // O SKU nao serve de termo de busca para todo produto; cai para a varredura por secao.
-        for (JsonNode secao : get("/produtos/secoes")) {
-            for (JsonNode produto : get("/produtos?size=100&secao="
+        for (NoJson secao : get("/produtos/secoes")) {
+            for (NoJson produto : get("/produtos?size=100&secao="
                     + secao.get("nome").asText().replace(" ", "%20")).get("content")) {
                 if (sku.equals(produto.get("sku").asText())) {
                     return produto.get("id").asText();
@@ -139,16 +135,16 @@ class JornadaCompletaIntegracaoTest {
         throw new AssertionError("produto ausente na massa: " + sku);
     }
 
-    private JsonNode adicionar(UUID sessaoId, String produtoId) {
-        ResponseEntity<String> r = chamar(HttpMethod.POST, "/sessoes/" + sessaoId + "/roteiro/itens",
+    private NoJson adicionar(UUID sessaoId, String produtoId) {
+        ServidorDeTeste.Resposta r = chamar("POST", "/sessoes/" + sessaoId + "/roteiro/itens",
                 "{\"produtoId\":\"" + produtoId + "\"}");
-        assertEquals(201, r.getStatusCode().value());
+        assertEquals(201, r.status());
         return corpoDe(r);
     }
 
     private String corredorAtual(UUID sessaoId) {
-        JsonNode posicao = get("/sessoes/" + sessaoId).get("posicaoAtual");
-        return posicao.isNull() ? null : posicao.get("corredor").asText();
+        NoJson posicao = get("/sessoes/" + sessaoId).get("posicaoAtual");
+        return posicao == null || posicao.isNull() ? null : posicao.get("corredor").asText();
     }
 
     // ---------------------------------------------------------------- a jornada inteira
@@ -159,14 +155,14 @@ class JornadaCompletaIntegracaoTest {
 
         // ---- 1. entra escaneando a placa da entrada
         UUID sessao = entrarPelaPlaca("ENT-01");
-        JsonNode aberta = get("/sessoes/" + sessao);
+        NoJson aberta = get("/sessoes/" + sessao);
 
         assertEquals("ACTIVE", aberta.get("status").asText());
         assertEquals("ENT01", aberta.get("posicaoAtual").get("codigoCurto").asText());
         passo("entrou pela placa " + aberta.get("posicaoAtual").get("corredor").asText());
 
         // ---- 2. abre o mapa, que nao depende da sessao
-        JsonNode mapa = get("/mapa");
+        NoJson mapa = get("/mapa");
 
         assertEquals(100, mapa.get("largura").asInt());
         assertFalse(mapa.get("blocos").isEmpty());
@@ -175,17 +171,17 @@ class JornadaCompletaIntegracaoTest {
                 + mapa.get("pontos").size() + " pontos de servico");
 
         // ---- 3. navega pelo menu de secoes
-        JsonNode secoes = get("/produtos/secoes");
+        NoJson secoes = get("/produtos/secoes");
         assertFalse(secoes.isEmpty());
         assertTrue(secoes.get(0).get("quantidadeProdutos").asInt() > 0);
 
-        JsonNode emTintas = get("/produtos?secao=Tintas&size=50");
+        NoJson emTintas = get("/produtos?secao=Tintas&size=50");
         assertFalse(emTintas.get("content").isEmpty());
         passo("Tintas tem " + emTintas.get("totalElements").asInt() + " produtos");
 
         // ---- 4. usa uma faceta que a propria resposta ofereceu
-        JsonNode facetaMarca = null;
-        for (JsonNode faceta : emTintas.get("facetas")) {
+        NoJson facetaMarca = null;
+        for (NoJson faceta : emTintas.get("facetas")) {
             if ("MARCA".equals(faceta.get("atributo").asText())) {
                 facetaMarca = faceta;
             }
@@ -195,20 +191,20 @@ class JornadaCompletaIntegracaoTest {
         String marca = facetaMarca.get("valores").get(0).get("valor").asText();
         long esperados = facetaMarca.get("valores").get(0).get("quantidade").asLong();
 
-        JsonNode filtrado = get("/produtos?secao=Tintas&size=50&atributo=MARCA:" + marca);
+        NoJson filtrado = get("/produtos?secao=Tintas&size=50&atributo=MARCA:" + marca);
 
         assertEquals(esperados, filtrado.get("totalElements").asLong(),
                 "a contagem da faceta precisa bater com o filtro que ela oferece");
         passo("filtrou Tintas por marca " + marca + " -> " + esperados + " produto(s)");
 
         // ---- 5. busca errando a digitacao
-        JsonNode busca = get("/produtos?query=tnta&size=20");
+        NoJson busca = get("/produtos?query=tnta&size=20");
         assertFalse(busca.get("content").isEmpty());
         passo("busca por 'tnta' -> " + busca.get("content").get(0).get("nome").asText());
 
         // ---- 6. abre o detalhe e ve as especificacoes
         String tinta = busca.get("content").get(0).get("id").asText();
-        JsonNode detalhe = get("/produtos/" + tinta);
+        NoJson detalhe = get("/produtos/" + tinta);
 
         String descricao = detalhe.get("descricao").asText();
         assertFalse(descricao == null || descricao.isBlank());
@@ -227,36 +223,36 @@ class JornadaCompletaIntegracaoTest {
         String itemCano = adicionar(sessao, cano).get("id").asText();
         String itemLixa = adicionar(sessao, lixaZerada).get("id").asText();
 
-        JsonNode lista = get("/sessoes/" + sessao + "/roteiro");
+        NoJson lista = get("/sessoes/" + sessao + "/roteiro");
         assertEquals(3, lista.get("quantidadeItens").asInt());
         passo("lista montada com 3 itens");
 
         // ---- 8. caminha e coleta: a posicao acompanha
-        assertEquals(200, status(HttpMethod.PATCH, "/roteiro/itens/" + itemCano + "/coletar", null));
+        assertEquals(200, status("PATCH", "/roteiro/itens/" + itemCano + "/coletar", null));
 
         assertEquals("Encanamento", corredorAtual(sessao),
                 "depois de pegar o cano, o cliente esta em Encanamento");
         passo("coletou o cano -> posicao em Encanamento");
 
         // ---- 9. tocou por engano: desmarca e a posicao volta
-        assertEquals(200, status(HttpMethod.PATCH, "/roteiro/itens/" + itemCano + "/desmarcar", null));
+        assertEquals(200, status("PATCH", "/roteiro/itens/" + itemCano + "/desmarcar", null));
 
         assertEquals("Entrada da loja", corredorAtual(sessao),
                 "desfeita a coleta, ele volta a estar na placa de entrada");
         passo("desmarcou -> posicao de volta na entrada");
 
         // recoloca, porque ele de fato pegou o cano
-        chamar(HttpMethod.PATCH, "/roteiro/itens/" + itemCano + "/coletar", null);
+        chamar("PATCH", "/roteiro/itens/" + itemCano + "/coletar", null);
 
         // ---- 10. chega na prateleira da lixa e ela esta vazia
-        ResponseEntity<String> respostaRuptura =
-                chamar(HttpMethod.POST, "/roteiro/itens/" + itemLixa + "/ruptura", null);
+        ServidorDeTeste.Resposta respostaRuptura =
+                chamar("POST", "/roteiro/itens/" + itemLixa + "/ruptura", null);
 
-        assertEquals(200, respostaRuptura.getStatusCode().value(),
+        assertEquals(200, respostaRuptura.status(),
                 "a massa garante um substituto plausivel para a lixa");
 
-        JsonNode ruptura = corpoDe(respostaRuptura);
-        JsonNode sugerido = ruptura.get("produtoSugerido");
+        NoJson ruptura = corpoDe(respostaRuptura);
+        NoJson sugerido = ruptura.get("produtoSugerido");
 
         assertTrue(sugerido.get("saldoEstoque").asInt() > 0,
                 "nao adianta sugerir algo que tambem acabou");
@@ -266,12 +262,12 @@ class JornadaCompletaIntegracaoTest {
                 + " (" + ruptura.get("origemSugestao").asText() + ")");
 
         // ---- 11. aceita o substituto: uma acao so
-        ResponseEntity<String> troca = chamar(HttpMethod.POST,
+        ServidorDeTeste.Resposta troca = chamar("POST",
                 "/roteiro/itens/" + itemLixa + "/substituir",
                 "{\"produtoSubstitutoId\":\"" + sugerido.get("id").asText() + "\"}");
 
-        assertEquals(200, troca.getStatusCode().value());
-        JsonNode depoisDaTroca = corpoDe(troca);
+        assertEquals(200, troca.status());
+        NoJson depoisDaTroca = corpoDe(troca);
 
         assertEquals(3, depoisDaTroca.get("quantidadeItens").asInt(),
                 "trocar nao muda o tamanho da lista");
@@ -284,7 +280,7 @@ class JornadaCompletaIntegracaoTest {
         passo("substituto aceito numa chamada; a lixa em falta saiu da lista");
 
         // ---- 12. se perde e le outra placa
-        assertEquals(200, status(HttpMethod.PUT, "/sessoes/" + sessao + "/posicao",
+        assertEquals(200, status("PUT", "/sessoes/" + sessao + "/posicao",
                 "{\"codigoPonto\":\"CEN-03\"}"));
 
         assertEquals("Cruzamento central", corredorAtual(sessao));
@@ -293,15 +289,15 @@ class JornadaCompletaIntegracaoTest {
         passo("recentrou no cruzamento central, com a lista intacta");
 
         // ---- 13. encerra
-        JsonNode encerrada = corpoDe(chamar(HttpMethod.POST, "/sessoes/" + sessao + "/concluir", null));
+        NoJson encerrada = corpoDe(chamar("POST", "/sessoes/" + sessao + "/concluir", null));
         assertEquals("COMPLETED", encerrada.get("status").asText());
         passo("jornada concluida");
 
         // ---- 14. depois de encerrar: le, mas nao escreve
-        assertEquals(200, status(HttpMethod.GET, "/sessoes/" + sessao + "/roteiro", null),
+        assertEquals(200, status("GET", "/sessoes/" + sessao + "/roteiro", null),
                 "a lista continua legivel depois de encerrada (D-41)");
 
-        assertEquals(409, status(HttpMethod.POST, "/sessoes/" + sessao + "/roteiro/itens",
+        assertEquals(409, status("POST", "/sessoes/" + sessao + "/roteiro/itens",
                         "{\"produtoId\":\"" + tinta + "\"}"),
                 "escrever numa sessao encerrada e 409, e o frontend traduz isso");
         passo("sessao encerrada: leitura sim, escrita 409");
@@ -320,10 +316,11 @@ class JornadaCompletaIntegracaoTest {
          */
         UUID sessao = entrarPelaPlaca("ZZZ-99");
 
-        assertTrue(get("/sessoes/" + sessao).get("posicaoAtual").isNull());
+        NoJson posicao = get("/sessoes/" + sessao).get("posicaoAtual");
+        assertTrue(posicao == null || posicao.isNull(), "o JSON-B omite o campo nulo");
 
         String produto = idDoProduto("SKU-ENC-001");
-        assertEquals(201, status(HttpMethod.POST, "/sessoes/" + sessao + "/roteiro/itens",
+        assertEquals(201, status("POST", "/sessoes/" + sessao + "/roteiro/itens",
                         "{\"produtoId\":\"" + produto + "\"}"),
                 "sem posicao, mas com o sistema inteiro disponivel");
 
@@ -336,7 +333,7 @@ class JornadaCompletaIntegracaoTest {
         // O outro lado da mesma assimetria: aqui o cliente ja tem sessao, e avisar e acionavel.
         UUID sessao = entrarPelaPlaca("ENT-01");
 
-        assertEquals(404, status(HttpMethod.PUT, "/sessoes/" + sessao + "/posicao",
+        assertEquals(404, status("PUT", "/sessoes/" + sessao + "/posicao",
                 "{\"codigoPonto\":\"ZZZ-99\"}"));
 
         assertEquals("Entrada da loja", corredorAtual(sessao),
@@ -370,11 +367,11 @@ class JornadaCompletaIntegracaoTest {
         UUID sessao = entrarPelaPlaca("ENT-01");
         String cano = idDoProduto("SKU-ENC-001");
         String item = adicionar(sessao, cano).get("id").asText();
-        chamar(HttpMethod.PATCH, "/roteiro/itens/" + item + "/coletar", null);
+        chamar("PATCH", "/roteiro/itens/" + item + "/coletar", null);
 
         // ---- daqui para baixo, o app so tem o id da sessao
-        JsonNode estado = get("/sessoes/" + sessao);
-        JsonNode lista = get("/sessoes/" + sessao + "/roteiro");
+        NoJson estado = get("/sessoes/" + sessao);
+        NoJson lista = get("/sessoes/" + sessao + "/roteiro");
 
         assertEquals("ACTIVE", estado.get("status").asText());
         assertEquals("Encanamento", estado.get("posicaoAtual").get("corredor").asText());
@@ -391,15 +388,15 @@ class JornadaCompletaIntegracaoTest {
         int saldoOriginal = get("/produtos/" + trena).get("saldoEstoque").asInt();
 
         try {
-            ResponseEntity<String> zerado = chamar(HttpMethod.PATCH,
+            ServidorDeTeste.Resposta zerado = chamar("PATCH",
                     "/produtos/" + trena + "/estoque", "{\"saldoEstoque\":0}");
-            assertEquals(200, zerado.getStatusCode().value());
+            assertEquals(200, zerado.status());
             assertEquals(0, corpoDe(zerado).get("saldoEstoque").asInt());
 
             UUID sessao = entrarPelaPlaca("ENT-01");
             String item = adicionar(sessao, trena).get("id").asText();
 
-            JsonNode ruptura = corpoDe(chamar(HttpMethod.POST,
+            NoJson ruptura = corpoDe(chamar("POST",
                     "/roteiro/itens/" + item + "/ruptura", null));
 
             passo("cenario criado sob demanda -> " + ruptura.get("produtoSugerido").get("nome").asText());
@@ -408,7 +405,7 @@ class JornadaCompletaIntegracaoTest {
 
         } finally {
             // Sem isto, o proximo teste - e a proxima demonstracao - encontraria o catalogo torto.
-            chamar(HttpMethod.PATCH, "/produtos/" + trena + "/estoque",
+            chamar("PATCH", "/produtos/" + trena + "/estoque",
                     "{\"saldoEstoque\":" + saldoOriginal + "}");
         }
     }
