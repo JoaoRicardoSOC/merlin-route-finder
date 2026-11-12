@@ -87,11 +87,13 @@
 
 ## [LIMPEZA] — antes de enviar ao portal
 
-### L-3. Remover os documentos de trabalho da migração
+### L-3. Remover o briefing do vídeo depois da gravação
 
-**O que fazer.** Decidir e aplicar o destino de cada documento listado em `O-17` ([`observacoes.md`](observacoes.md)): os dois diários `progresso-migracao-*.md` saem; o plano e os requisitos da migração ficam ou saem por decisão do time; o `prompt-video-apresentacao.md` sai depois da gravação.
+**O que fazer.** Depois da gravação, apagar o `prompt-video-apresentacao.md` e tirar os links que apontam para ele (o card E-5 e a `O-17` em [`observacoes.md`](observacoes.md)).
 
-**Verificar:** nenhum link quebrado depois (`grep -rn` pelo nome de cada arquivo apagado).
+**Já feito em 12/11/2026:** saíram os diários da migração, o protótipo do Stitch, as imagens do template do Vite, as pastas vazias e a configuração do editor. O plano e os requisitos da migração ficam, porque as decisões os citam.
+
+**Verificar:** `grep -rn prompt-video` sem resultado.
 
 **De quem:** time.
 
