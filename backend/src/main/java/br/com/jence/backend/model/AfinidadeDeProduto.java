@@ -1,7 +1,9 @@
 package br.com.jence.backend.model;
 
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * O que faz um produto se parecer com outro, para efeito de substituicao.
@@ -19,6 +21,15 @@ import java.util.List;
  * @param marca fabricante
  */
 public record AfinidadeDeProduto(String tipo, String marca) {
+
+    /**
+     * Caracteristicas que so dizem como o produto e vendido, e nao como ele funciona. No
+     * desempate entre candidatos do mesmo tipo (D-99), cada uma em comum vale 1; as demais, que
+     * mudam o uso (cor da luz, potencia, grao, bitola, medidas...), valem 2. Duas lampadas de
+     * mesma cor sao mais parecidas que duas vendidas em kits do mesmo tamanho.
+     */
+    public static final Set<AtributoProduto> DE_EMBALAGEM =
+            EnumSet.of(AtributoProduto.QUANTIDADE, AtributoProduto.PESO, AtributoProduto.VOLUME);
 
     /** Sem afinidade conhecida: a ordenacao cai de volta para distancia e nome. */
     public static AfinidadeDeProduto nenhuma() {

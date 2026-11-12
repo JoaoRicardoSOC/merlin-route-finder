@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Acesso ao catalogo: {@code tb_ch26_produto} e as caracteristicas em {@code tb_ch26_produto_atributo}.
@@ -40,7 +41,15 @@ public class ProdutoDao {
             + PontoMapaDao.COLUNAS.formatted("m");
 
     /* Comeca com espaco porque e concatenado logo depois da lista de colunas. */
-    private static final String DE = " from tb_ch26_produto p join tb_ch26_ponto_mapa m on m.id = p.ponto_mapa_id";
+    /**
+     * As chaves de {@link AfinidadeDeProduto#DE_EMBALAGEM} prontas para um {@code in (...)}. Vem
+     * de um enum, e nao do usuario, entao entrar no texto do SQL nao abre brecha para injecao.
+     */
+    private static final String CHAVES_DE_EMBALAGEM = AfinidadeDeProduto.DE_EMBALAGEM.stream()
+            .map(chave -> "'" + chave.name() + "'")
+            .collect(Collectors.joining(", "));
+
+    private static final String DE =" from tb_ch26_produto p join tb_ch26_ponto_mapa m on m.id = p.ponto_mapa_id";
 
     /*
      * Dobra acento para a letra base, dos dois lados de toda comparacao de texto.
@@ -298,10 +307,18 @@ public class ProdutoDao {
      * sistema pode nao refletir a prateleira vazia, apareceria como o "melhor" substituto de si
      * proprio.
      * <p>
-     * A ordem poe AFINIDADE antes de distancia: mesmo tipo primeiro, depois mesma marca, e so
-     * entao proximidade. Sem isso, produtos da mesma secao empatam em distancia e o desempate vira
-     * o nome. Ver D-68. Tipo e marca nulos nao quebram nada: a comparacao com nulo nunca e
-     * verdadeira, e a ordem cai para distancia e nome.
+     * A ordem poe AFINIDADE antes de distancia: mesmo tipo primeiro, depois mesma marca, depois as
+     * outras caracteristicas em comum com o produto em falta, e so entao proximidade. Sem isso,
+     * produtos da mesma secao empatam em distancia e o desempate vira o nome. Ver D-68.
+     * <p>
+     * As caracteristicas em comum pesam 2 quando mudam o uso (cor, acabamento, bitola...) e 1
+     * quando so dizem a embalagem ({@link AfinidadeDeProduto#DE_EMBALAGEM}), e <b>so contam entre
+     * produtos do mesmo tipo</b>: entre tipos diferentes, um "Branco" em comum fazia um alicate de
+     * poda sugerir um sifao. Sem esse criterio, produtos do mesmo tipo e de marcas diferentes
+     * empatavam, e o escolhido era o primeiro em ordem alfabetica. Ver D-99.
+     * <p>
+     * Tipo e marca nulos nao quebram nada: a comparacao com nulo nunca e verdadeira, e a ordem
+     * cai para as caracteristicas, a distancia e o nome.
      */
     public List<Produto> buscarDisponiveisProximosDe(PontoMapa referencia, UUID excluido,
                                                      AfinidadeDeProduto afinidade,
@@ -317,19 +334,31 @@ public class ProdutoDao {
                    case when exists (select 1 from tb_ch26_produto_atributo a
                                       where a.produto_id = p.id
                                         and a.chave = 'MARCA' and a.valor = ?) then 0 else 1 end,
+                   case when exists (select 1 from tb_ch26_produto_atributo t
+                                      where t.produto_id = p.id
+                                        and t.chave = 'TIPO' and t.valor = ?)
+                        then (select coalesce(sum(case when a.chave in (%s) then 1 else 2 end), 0)
+                                from tb_ch26_produto_atributo a
+                                join tb_ch26_produto_atributo f on f.chave = a.chave and f.valor = a.valor
+                               where a.produto_id = p.id
+                                 and f.produto_id = ?
+                                 and a.chave not in ('TIPO', 'MARCA'))
+                        else 0 end desc,
                    sqrt(power(m.coordenada_x - ?, 2) + power(m.coordenada_y - ?, 2)),
                    p.nome
                  fetch first ? rows only
-                """;
+                """.formatted(CHAVES_DE_EMBALAGEM);
         try (PreparedStatement stm = conexao().prepareStatement(sql)) {
             vincular(stm, List.<Object>of(
                     excluido.toString(),
                     referencia.getCoordenadaX(), referencia.getCoordenadaY(), raio));
             texto(stm, 5, afinidade.tipo());
             texto(stm, 6, afinidade.marca());
-            stm.setInt(7, referencia.getCoordenadaX());
-            stm.setInt(8, referencia.getCoordenadaY());
-            stm.setInt(9, limite);
+            texto(stm, 7, afinidade.tipo());
+            stm.setString(8, excluido.toString());
+            stm.setInt(9, referencia.getCoordenadaX());
+            stm.setInt(10, referencia.getCoordenadaY());
+            stm.setInt(11, limite);
             return lista(stm);
         }
     }

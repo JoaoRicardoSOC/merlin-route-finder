@@ -117,6 +117,29 @@ class PreFiltragemEspacialIntegracaoTest {
     }
 
     @Test
+    @DisplayName("entre candidatos do mesmo tipo, desempata pelas caracteristicas em comum, e nao pelo nome")
+    void desempataPelasCaracteristicasEmComum() throws Exception {
+        /*
+         * D-99. Para a tinta acrilica fosca branca da Qualyvinil (TIN-006) em falta, as outras
+         * tintas acrilicas com estoque sao da Coral e ficam no mesmo bloco: empatam em tipo,
+         * marca e distancia. Pelo nome, ganhava a acetinada (TIN-007). Pelas caracteristicas,
+         * ganha a fosca (TIN-001), que divide o acabamento alem da cor.
+         *
+         * Medido antes de mudar, comparando a consulta antiga e a nova para os 111 produtos: o
+         * primeiro candidato so muda em dois, e nos dois para um substituto mais parecido.
+         */
+        List<String> tintas = candidatosPara(porSku("SKU-TIN-006"), TratarRupturaEstoqueUseCase.LIMITE_DE_CANDIDATOS)
+                .stream()
+                .map(Produto::getSku)
+                .toList();
+
+        assertEquals("SKU-TIN-001", tintas.getFirst(),
+                "a tinta fosca divide acabamento e cor com a TIN-006, e precisa vir primeiro: " + tintas);
+        assertTrue(tintas.indexOf("SKU-TIN-001") < tintas.indexOf("SKU-TIN-007"),
+                "a acetinada so divide a cor, e precisa vir depois: " + tintas);
+    }
+
+    @Test
     @DisplayName("respeita o teto de candidatos")
     void respeitaOTetoDeCandidatos() throws Exception {
         assertEquals(2, candidatosPara(lixaEmFalta(), 2).size());
