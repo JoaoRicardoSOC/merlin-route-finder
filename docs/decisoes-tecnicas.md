@@ -119,6 +119,7 @@
 - [D-96. Conexões reaproveitadas entre transações, em Java puro](#d-96-conexões-reaproveitadas-entre-transações-em-java-puro)
 - [D-97. Um workflow do GitHub mantém o backend acordado](#d-97-um-workflow-do-github-mantém-o-backend-acordado)
 - [D-98. Tabelas e chaves com o ID da atividade: `TB_CH26_`](#d-98-tabelas-e-chaves-com-o-id-da-atividade-tb_ch26_)
+- [D-99. O substituto desempata pelas características em comum, só entre produtos do mesmo tipo](#d-99-o-substituto-desempata-pelas-características-em-comum-só-entre-produtos-do-mesmo-tipo)
 
 ---
 
@@ -2746,6 +2747,42 @@ pela condição. Os documentos históricos (este registro, o planejamento, o pla
 `V001`) mantêm os nomes da época.
 
 **Onde no código.** `database/migrations/V002__prefixo_ch26.sql` e o SQL de todos os DAOs.
+
+---
+
+### D-99. O substituto desempata pelas características em comum, só entre produtos do mesmo tipo
+
+**Contexto.** A consulta de candidatos da ruptura ordena por tipo igual, marca igual, distância e
+nome (D-68). Todos os produtos de uma seção ficam no mesmo ponto do mapa, então, entre produtos
+do mesmo tipo e de marcas diferentes, o desempate caía no nome em ordem alfabética. É esse
+primeiro candidato que o cliente recebe quando o assistente está fora do ar ou sem cota.
+
+**A decisão.** Um critério novo, entre a marca e a distância: a soma das características em
+comum com o produto em falta. Cada uma vale **2 quando muda o uso** (cor, acabamento, bitola,
+potência, medidas...) e **1 quando só diz a embalagem** (quantidade, peso, volume:
+`AfinidadeDeProduto.DE_EMBALAGEM`). **E o critério só conta entre produtos do mesmo tipo.**
+
+**Por que só no mesmo tipo, e como isso foi descoberto.** A primeira versão contava as
+características de qualquer candidato. Antes de publicar, a consulta antiga e a nova foram
+comparadas para os 111 produtos do catálogo: o primeiro candidato mudava em 20, e vários para
+pior, como o alicate de poda passando a sugerir um sifão porque os dois são "Branco". Restrito ao
+mesmo tipo, muda em **dois, e os dois para melhor**:
+
+| Em falta | Antes | Agora |
+|---|---|---|
+| Bucha de nylon 6 mm (FRG-005) | bucha de 10 mm | bucha de **8 mm**, que divide material e pacote |
+| Tinta acrílica fosca branca 3,6 L (TIN-006) | tinta **acetinada** branca 20 L | tinta **fosca** branca 18 L |
+
+Os cinco pares de ruptura da demonstração (lixa, lâmpada, sifão, trena, argamassa) continuam
+com o mesmo substituto.
+
+**Uma premissa que estava errada.** A O-35 dizia que a lâmpada ILU-001 ganhava a ILU-005 "por
+ordem alfabética". Medido, a ordenação do Oracle nesta sessão é linguística, não binária, e o
+caso da lâmpada já dava a resposta certa. O teste novo usa o caso da tinta, que **falha com a
+consulta antiga e passa com a nova** (conferido rodando os dois).
+
+**Onde no código.** `ProdutoDao.buscarDisponiveisProximosDe`, `AfinidadeDeProduto.DE_EMBALAGEM` e
+`PreFiltragemEspacialIntegracaoTest.desempataPelasCaracteristicasEmComum`.
 
 ---
 

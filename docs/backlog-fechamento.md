@@ -15,11 +15,12 @@
 | Entrega | 1 (E-5) | Time |
 | Credenciais e banco | 3 (O-1 a O-3) | João Ricardo |
 | Limpeza do repositório | 1 (L-3) | Time |
-| Acabamentos de código, se houver tempo | 2 (F-12, O-4) | Frontend e backend |
 
 **Nada aqui bloqueia o app.** O sistema roda de ponta a ponta em produção: entrar pela placa, buscar, montar a lista, ver no mapa, coletar, relatar prateleira vazia, aceitar o substituto e encerrar. O que falta é a entrega em si e a arrumação antes dela.
 
-**Ordem sugerida:** O-1 e O-2 (credenciais) → O-3 (limpar o banco) → E-5 (gravar) → L-3 (limpar o repositório) → enviar ao portal. F-12 e O-4 entram se sobrar tempo, e **antes** da gravação, para o vídeo mostrar a versão final.
+**Ordem sugerida:** O-1 e O-2 (credenciais) → O-3 (limpar o banco) → E-5 (gravar) → L-3 (limpar o repositório) → enviar ao portal.
+
+*F-12 (lint do frontend) e O-4 (desempate da ruptura) foram concluídos em 12/11/2026.*
 
 ---
 
@@ -96,30 +97,6 @@
 **Verificar:** `grep -rn prompt-video` sem resultado.
 
 **De quem:** time.
-
----
-
-## [ACABAMENTOS] — se houver tempo, antes da gravação
-
-### F-12. Zerar o lint do frontend
-
-**O que fazer.** `npm run lint` acusa 37 problemas: 31 variáveis sem uso e 6 regras de hooks do React. Ver `O-38` em [`observacoes.md`](observacoes.md).
-
-**Verificar:** `npm run lint` sem erro, e o app publicado percorrendo a jornada inteira como antes. Os 6 de hooks mexem em quando a tela renderiza, então cada um pede um teste no navegador.
-
-**De quem:** Bielecky e Marcela.
-
----
-
-### O-4. Desempatar a afinidade da ruptura por atributos em comum
-
-**O que fazer.** Quando vários candidatos a substituto têm o mesmo `TIPO`, ordenar o empate pela quantidade de atributos em comum com o produto em falta, em vez de pelo nome.
-
-**Por quê.** É o substituto que o cliente recebe quando o assistente está fora do ar ou sem cota. Hoje ele acerta a lâmpada por ordem alfabética, e renomear um produto quebra isso. Ver `O-35` em [`observacoes.md`](observacoes.md).
-
-**Verificar:** `mvnw test -Pintegracao` antes e depois, e os cinco pares de ruptura (lixa, lâmpada, sifão, trena, argamassa) continuam sugerindo o mesmo substituto.
-
-**De quem:** backend.
 
 ---
 

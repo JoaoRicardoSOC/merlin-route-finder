@@ -30,7 +30,7 @@ O app abre em `http://localhost:5173`. Para entrar já posicionado num corredor,
 |---|---|
 | `npm run build` | Gera a versão de produção em `dist/` |
 | `npm run preview` | Serve o `dist/` localmente, para conferir a build |
-| `npm run lint` | Roda o ESLint (há problemas conhecidos, ver O-38 em [`../docs/observacoes.md`](../docs/observacoes.md)) |
+| `npm run lint` | Roda o ESLint; termina sem nenhum problema |
 
 ## Estrutura
 

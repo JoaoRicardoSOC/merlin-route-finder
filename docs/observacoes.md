@@ -20,10 +20,8 @@
 | [O-20](#o-20-rodar-a-suíte-deixa-um-resto-de-sessões-no-banco-de-demonstração) | Limpar sessões de teste antes de gravar o vídeo | Backend | Média |
 | [O-21](#o-21-desenvolvimento-testes-e-demonstração-usam-o-mesmo-schema) | Um schema só para tudo | Time | Média |
 | [O-23](#o-23-processo-java-abandonado-trava-a-suíte-inteira-no-oracle) | Encerrar Maven e servidor local pela raiz | Backend | Média |
-| [O-38](#o-38-o-lint-do-frontend-acusa-37-problemas) | Lint do frontend com 37 problemas | Frontend | Baixa |
 | [O-37](#o-37-quatro-famílias-tipográficas-seguram-a-primeira-pintura-por-quase-nove-segundos) | Quatro fontes seguram a primeira pintura | Frontend e time | Média |
 | [O-22](#o-22-a-tela-inicial-do-catálogo-leva-24-segundos-no-ambiente-publicado) | Catálogo caiu de 2,4 s para 1,2 s; abrir sem filtro ainda é a tela mais lenta | Frontend | Baixa |
-| [O-35](#o-35-a-afinidade-empata-quando-muitos-produtos-dividem-o-tipo-e-o-desempate-é-alfabético) | Afinidade empata e desempata por ordem alfabética | Backend, depois do prazo | Média |
 | [O-31](#o-31-o-assistente-não-nomeia-produtos-por-extenso-e-por-isso-nenhum-cartão-aparece) | Cartões do chat estão dormentes — **medido** | Backend, se o time quiser | Baixa |
 | [O-36](#o-36-a-suíte-padrão-não-roda-os-testes-de-integração-e-isso-já-deixou-passar-oito-falhas) | A suíte padrão não roda os testes de integração | Time | Média |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — dizer no vídeo | Time | aceita |
@@ -157,23 +155,6 @@ Foi exatamente isso: uma sessão ociosa bloqueando outra, que bloqueava mais dua
 
 ## Acabamentos de código, se houver tempo
 
-### O-38. O lint do frontend acusa 37 problemas
-
-**O quê.** `npm run lint` termina com 36 erros e 1 aviso, e já terminava assim antes de 12/11/2026. A build não depende dele, então a Vercel publica normalmente.
-
-| Regra | Quantos | O que é |
-|---|---|---|
-| `no-unused-vars` | 31 | Variáveis, importações e parâmetros de `catch` sem uso, espalhados por vários arquivos (`AIChatModal.jsx` tem 5) |
-| `react-hooks/set-state-in-effect` | 4 | `setState` chamado direto num efeito, o que provoca uma renderização a mais |
-| `react-hooks/exhaustive-deps` | 1 | Efeito com dependência faltando |
-| `react-hooks/purity` | 1 | Valor impuro (como `Date.now()`) calculado durante a renderização |
-
-**Por que importa.** Pouco para o usuário. Mas um lint que sempre falha deixa de ser olhado, e o próximo erro de verdade passa no meio dos 37. Os 31 de variável sem uso saem em minutos; os 6 de hooks pedem olhar caso a caso, porque mexem em quando a tela renderiza.
-
-**De quem.** Frontend.
-
----
-
 ### O-37. Quatro famílias tipográficas seguram a primeira pintura por quase nove segundos
 
 **Medido em 01/09/2026** com o Lighthouse 12.8 contra o ambiente publicado, perfil de celular:
@@ -257,36 +238,6 @@ A tela de entrada é a mais lenta de todas, e é a única de 2,4 segundos. Abrir
 **O que não vale.** Aumentar o plano do Render resolveria de vez, e o time já decidiu ficar no gratuito. Vale lembrar que **a partida a frio (163–176 s) continua sendo o número dominante** para qualquer demonstração: 2,4 segundos incomoda, três minutos inviabiliza.
 
 **De quem.** Frontend (itens 1 e 2), time (item 3). **Urgência:** baixa depois da D-96, mas a tela lenta continua sendo a primeira que o avaliador vê.
-
----
-
-### O-35. A afinidade empata quando muitos produtos dividem o TIPO, e o desempate é alfabético
-
-**O quê.** `AfinidadeDeProduto` é um par `(tipo, marca)`. Depois do [D-88](decisoes-tecnicas.md)
-o `TIPO` virou o elo dos pares de substituição — mas quando **muitos** produtos compartilham o
-mesmo tipo, todos empatam, e o desempate cai no nome em ordem alfabética.
-
-**O caso concreto, medido.** São **cinco** lâmpadas LED. Para a ILU-001 em falta, a afinidade
-não distingue a ILU-003 da ILU-005: mesmo tipo, marcas diferentes das duas. Quem vence é quem
-vem antes no alfabeto — *"Kit 10…"* antes de *"Kit 3…"*.
-
-**A resposta está certa e a razão está errada.** A ILU-005 é de fato o melhor substituto,
-porque tem a mesma cor de luz. Mas a afinidade **não olha cor de luz** — ela acertou por sorte.
-Renomear um produto quebra isso de novo.
-
-**Por que importa:** o primeiro candidato é o que o cliente recebe quando o assistente está
-fora do ar ou a cota gratuita estourou — cinco chamadas por minuto.
-
-**A saída, quando houver tempo.** Ordenar os empates por **quantidade de atributos em comum**,
-em vez de por nome. A ILU-003 divide `QUANTIDADE` com a ILU-001 e a ILU-005 não; a cor de luz
-entraria na conta sozinha. Como o teto de candidatos já limita a lista a 20, a reordenação pode
-acontecer em memória, sem tocar na consulta.
-
-**Não foi feito em setembro** porque podia reordenar os outros quatro pares, que acertam, perto de
-uma apresentação.
-
-**De quem.** Backend. O prazo que impedia passou; vale fazer com a suíte de integração rodando
-antes e depois, porque são os testes de ruptura que dizem se os outros pares continuam certos.
 
 ---
 
@@ -429,6 +380,8 @@ Resolvidas, sem objeto ou ligadas às apresentações ao vivo, que já acontecer
 | <a id="o-32-a-paleta-de-cores-por-setor-reprova-no-contraste--três-tons-escurecidos"></a>O-32 | A paleta por setor passou no contraste. |
 | <a id="o-33-oito-alvos-de-toque-abaixo-de-44px--corrigidos"></a>O-33 | Alvos de toque com 44 px. |
 | <a id="o-34-a-aba-do-qr-code-manda-apontar-uma-câmera-que-não-existe--corrigida"></a>O-34 | O texto da aba do QR Code foi corrigido. |
+| <a id="o-35-a-afinidade-empata-quando-muitos-produtos-dividem-o-tipo-e-o-desempate-é-alfabético"></a>O-35 | Resolvida em 12/11/2026: entre produtos do mesmo tipo, o desempate é pelas características em comum, e não pelo nome (D-99). |
+| <a id="o-38-o-lint-do-frontend-acusa-37-problemas"></a>O-38 | Resolvida em 12/11/2026: `npm run lint` sem nenhum problema. |
 | <a id="o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo"></a>O-13 | Sem objeto: a Fase 3 foi superada pela virada de escopo. |
 
 ---
