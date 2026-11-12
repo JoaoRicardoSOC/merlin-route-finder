@@ -8,7 +8,7 @@
 >
 > **Para executar**, e não só entender: [`backlog-fechamento.md`](backlog-fechamento.md) transforma tudo que está aberto aqui — mais o que não é observação, como a publicação do frontend e o vídeo — em cards prontos para o Trello.
 >
-> Última atualização: **30/08/2026** — depois de fechar dez dos onze acabamentos de tela. Das trinta quebras de fluxo, **27 estão resolvidas**; a única de tela que resta é reenviar as marcações feitas offline, que é funcionalidade nova e não acabamento.
+> Última atualização: **12/11/2026**, depois da migração para JAX-RS (D-89) e do reaproveitamento de conexões (D-96). Os prazos de setembro (seletiva em 13/09, banca em 21/09) já passaram; o que pressiona agora é a **entrega final ao portal, no fim do ano**. Encerradas nesta revisão: O-08 e O-24 (diagramas vigentes em Markdown) e O-11 (o Swagger saiu). A O-22 foi remedida. Reaberta: O-17, por causa dos documentos da migração. Nova: O-38, o lint do frontend.
 
 ---
 
@@ -16,27 +16,25 @@
 
 | # | Observação | De quem | Urgência |
 |---|---|---|---|
-| [O-01](#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada) | Chave do Gemini e cota gratuita (afeta a suíte) | João Ricardo | **Alta — 13/09** |
+| [O-01](#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada) | Chave do Gemini e cota gratuita (afeta a suíte) | João Ricardo | **Alta — antes da entrega final** |
 | [O-02](#o-02-senha-do-oracle-passou-por-canal-de-conversa) | Senha do Oracle exposta | João Ricardo | Média |
-| [O-08](#o-08-o-der-não-tem-a-tabela-de-registro-de-ruptura) | DER desatualizado | Vicentini | **Alta** |
-| [O-24](#o-24-os-diagramas-da-sprint-1-desenham-o-produto-que-a-mentoria-derrubou) | Diagramas desenham totem, handoff e rota | Vicentini e time | **Alta — antes da banca** |
+| [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final--reaberta) | Documentos da migração e do vídeo antes da entrega | Time | **fim do ano** |
+| [O-38](#o-38-o-lint-do-frontend-acusa-37-problemas) | Lint do frontend com 37 problemas | Frontend | Baixa |
 | [O-30](#o-30-a-sessão-duplicada-na-abertura-é-do-strictmode-e-só-em-desenvolvimento) | Sessão duplicada é do StrictMode, **não é defeito** | — | esclarecida |
 | [O-31](#o-31-o-assistente-não-nomeia-produtos-por-extenso-e-por-isso-nenhum-cartão-aparece) | Cartões do chat estão dormentes — **medido** | Backend, se o time quiser | Baixa |
 | [O-35](#o-35-a-afinidade-empata-quando-muitos-produtos-dividem-o-tipo-e-o-desempate-é-alfabético) | Afinidade empata e desempata por ordem alfabética | Backend, depois do prazo | Média |
-| [O-36](#o-36-a-suíte-padrão-não-roda-os-testes-de-integração-e-isso-já-deixou-passar-oito-falhas) | A suíte padrão não roda os testes de integração | Time | **Alta** |
+| [O-36](#o-36-a-suíte-padrão-não-roda-os-testes-de-integração-e-isso-já-deixou-passar-oito-falhas) | A suíte padrão não roda os testes de integração | Time | Média |
 | [O-37](#o-37-quatro-famílias-tipográficas-seguram-a-primeira-pintura-por-quase-nove-segundos) | Quatro fontes seguram a primeira pintura | Frontend e time | Média |
 | [O-19](#o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe) | ~~Tela de código manual~~ — **feita**; falta a **arte da placa** | Time | Alta |
 | [O-10](#o-10-o-estoque-exibido-é-o-do-nosso-banco-e-só) | Estoque sem ERP — argumento de banca | Time (discurso) | Média |
-| [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final--feito) | Limpar documentos de trabalho | Time | fim do ano |
 | [O-20](#o-20-rodar-a-suíte-deixa-um-resto-de-sessões-no-banco-de-demonstração) | Limpar sessões de teste antes da banca | Backend | Baixa |
 | [O-21](#o-21-desenvolvimento-testes-e-demonstração-usam-o-mesmo-schema) | Um schema só para tudo | Time | Média |
-| [O-22](#o-22-a-tela-inicial-do-catálogo-leva-24-segundos-no-ambiente-publicado) | Catálogo leva 2,4 s — a **espera longa** já avisa | Time | Baixa |
-| [O-23](#o-23-processo-java-abandonado-trava-a-suíte-inteira-no-oracle) | Encerrar servidor e Maven pela raiz | Backend | Alta |
-| [O-11](#o-11-o-swagger-fica-exposto-no-ambiente-publicado) | Swagger em produção | — | aceita |
+| [O-22](#o-22-a-tela-inicial-do-catálogo-leva-24-segundos-no-ambiente-publicado) | Catálogo caiu de 2,4 s para 1,2 s; abrir sem filtro ainda é a tela mais lenta | Frontend | Baixa |
+| [O-23](#o-23-processo-java-abandonado-trava-a-suíte-inteira-no-oracle) | Encerrar Maven e servidor local pela raiz | Backend | Média |
 | [O-12](#o-12-o-raio-de-busca-da-ruptura-é-um-palpite-informado--agora-medido) | Raio de 25 unidades — medido | — | aceita |
 | [O-15](#o-15-o-endpoint-de-simulação-de-estoque-não-tem-proteção-nenhuma) | Simulação de estoque sem proteção | — | aceita |
 
-**Encerradas:** [O-03](#o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado) (deploy no ar) · [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela) (selo da ruptura) · [O-27](#o-27-as-22-imagens-coletadas-não-têm-para-onde-ir--medição-errada-o-mecanismo-já-existia) (imagens já aplicadas) · [O-25](#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai--apagado) (catálogo inventado apagado) · [O-28](#o-28-a-visão-todos-do-catálogo-não-pagina--os-111-passaram-a-ser-alcançáveis) (catálogo pagina) · [O-26](#o-26-o-convite-do-mapa-vazio-promete-uma-rota-que-não-existe--corrigido) (texto do mapa) · [O-05](#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição--resolvida-com-trava-síncrona) (trava da ruptura) · [O-34](#o-34-a-aba-do-qr-code-manda-apontar-uma-câmera-que-não-existe--corrigida) (texto do QR) · [O-06](#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar--já-existia-e-foi-verificada) (retomar sessão) · [O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens) (111 fotos no ar) · [O-29](#o-29-duas-pastas-de-documentação-estão-vazias-desde-o-primeiro-dia--viraram-índices) (pastas vazias) · [O-32](#o-32-a-paleta-de-cores-por-setor-reprova-no-contraste--três-tons-escurecidos) (paleta por setor) · [O-33](#o-33-oito-alvos-de-toque-abaixo-de-44px--corrigidos) (alvos de toque) · [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar--sem-objeto) · [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado--sem-objeto) · [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo) · [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) · [O-16](#o-16-o-token-continua-na-url-do-pwa--a-preocupação-deixou-de-existir)
+**Encerradas:** [O-08](#o-08-o-der-não-tem-a-tabela-de-registro-de-ruptura--resolvida-em-markdown) e [O-24](#o-24-os-diagramas-da-sprint-1-desenham-o-produto-que-a-mentoria-derrubou--resolvida-em-markdown) (diagramas vigentes) · [O-11](#o-11-o-swagger-fica-exposto-no-ambiente-publicado--sem-objeto) (o Swagger saiu) · [O-03](#o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado) (deploy no ar) · [O-04](#o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela) (selo da ruptura) · [O-27](#o-27-as-22-imagens-coletadas-não-têm-para-onde-ir--medição-errada-o-mecanismo-já-existia) (imagens já aplicadas) · [O-25](#o-25-o-frontend-carrega-um-catálogo-inventado-e-o-mostra-quando-a-api-cai--apagado) (catálogo inventado apagado) · [O-28](#o-28-a-visão-todos-do-catálogo-não-pagina--os-111-passaram-a-ser-alcançáveis) (catálogo pagina) · [O-26](#o-26-o-convite-do-mapa-vazio-promete-uma-rota-que-não-existe--corrigido) (texto do mapa) · [O-05](#o-05-o-botão-prateleira-vazia-precisa-travar-durante-a-requisição--resolvida-com-trava-síncrona) (trava da ruptura) · [O-34](#o-34-a-aba-do-qr-code-manda-apontar-uma-câmera-que-não-existe--corrigida) (texto do QR) · [O-06](#o-06-o-celular-tem-um-caminho-de-recuperação-se-a-aba-fechar--já-existia-e-foi-verificada) (retomar sessão) · [O-18](#o-18-o-catálogo-de-29-produtos-é-pequeno-demais-para-a-banca--resolvido-no-volume-pendente-nas-imagens) (111 fotos no ar) · [O-29](#o-29-duas-pastas-de-documentação-estão-vazias-desde-o-primeiro-dia--viraram-índices) (pastas vazias) · [O-32](#o-32-a-paleta-de-cores-por-setor-reprova-no-contraste--três-tons-escurecidos) (paleta por setor) · [O-33](#o-33-oito-alvos-de-toque-abaixo-de-44px--corrigidos) (alvos de toque) · [O-07](#o-07-ponto-de-interesse-some-se-a-página-recarregar--sem-objeto) · [O-09](#o-09-a-rota-sempre-parte-do-primeiro-totem-encontrado--sem-objeto) · [O-13](#o-13-a-fase-3-inteira-continua-planejada-e-não-feita--superada-pela-virada-de-escopo) · [O-14](#o-14-a-massa-de-dados-só-tem-um-par-de-substitutos-que-faz-sentido--resolvida) · [O-16](#o-16-o-token-continua-na-url-do-pwa--a-preocupação-deixou-de-existir)
 
 ---
 
@@ -62,7 +60,7 @@ Enquanto a cota não subir, valem dois cuidados:
 
 Habilitar o faturamento resolveria os dois problemas de uma vez.
 
-**De quem.** João Ricardo. **Prazo que pressiona:** 13/09 (vídeo da seletiva, com o MVP funcionando).
+**De quem.** João Ricardo. **Prazo que pressiona:** a gravação do vídeo da entrega final. O de 13/09 passou com a chave ainda pendente.
 
 ---
 
@@ -70,7 +68,9 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 
 **O quê.** Trocar a senha do usuário `rm563609` no Oracle da FIAP.
 
-**Por que importa.** A credencial foi compartilhada por chat durante a verificação de conectividade. Ela nunca foi escrita em arquivo nem versionada — sempre passada como variável de ambiente de linha de comando, e `backend/.gitignore` cobre `.env` e `application-local.yml`. Ainda assim, uma credencial que trafegou por um canal de conversa não deveria continuar valendo.
+**Por que importa.** A credencial foi compartilhada por chat durante a verificação de conectividade. Ela nunca foi versionada: hoje vive no painel do Render e num `.env` na raiz do repositório, na máquina de desenvolvimento, coberto pelo `.gitignore`. Ainda assim, uma credencial que trafegou por um canal de conversa não deveria continuar valendo.
+
+**Ao trocar, atualizar os dois lugares:** o painel do Render (`DB_PASSWORD`) e o `.env` local. Sem o segundo, a suíte de integração para de rodar nesta máquina.
 
 **De quem.** João Ricardo (é a credencial pessoal dele; cada integrante usa a sua).
 
@@ -85,6 +85,8 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 
 **O que sobrou de aprendizado, e continua valendo.** O plano gratuito dá 0,1 CPU, e a partida a frio **subiu de 134 para 176 segundos** com o catálogo maior — quase três minutos até a primeira resposta. Acordar a instância antes de qualquer demonstração deixou de ser recomendação e virou obrigação; ver [`deploy.md`](deploy.md).
 
+**Com o backend em JAX-RS (12/11/2026),** a primeira chamada a `/health` depois de a instância dormir levou **64 s**: sem o Spring, a subida ficou bem mais leve. Continua valendo acordar antes.
+
 **Verificado antes de escolher o provedor:** `oracle.fiap.com.br` resolve para IP público e aceita conexão de fora sem VPN — não há lista de IPs autorizados. O plano B era Fly.io, com região em São Paulo, caso houvesse filtro por país. Não houve.
 
 ### O-19. A entrada tem um plano B, e ele é uma tela que ainda não existe
@@ -96,7 +98,7 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 >
 > **E um defeito maior apareceu no caminho:** o chip de localização tinha `ENT-01 / Entrada da Loja` como valor inicial fixo, então afirmava que o cliente estava na entrada **antes de qualquer placa ser lida** — e continuava afirmando com código desconhecido. O aviso dizia a verdade e o chip ao lado dizia o contrário. A posição passa a nascer **nula**, e o chip a dizer *"Ainda não sabemos onde você está"*.
 >
-> **Continua aberto, e é do time:** a **arte da placa** com QR, URL curta e código legível.
+> **Continua aberto, e é do time:** a **arte da placa** com QR, URL curta e código legível. O QR deve levar a `https://merlin-route-finder.vercel.app/?ponto=TIN-02` (o app também aceita `?codigo=` e `?code=`). Ver [`arquitetura/placa-sinalizacao-loja.md`](arquitetura/placa-sinalizacao-loja.md).
 
 <details><summary>O registro original, de quando a tela não existia</summary>
 
@@ -308,7 +310,10 @@ O backend já pagina: a resposta traz total, página atual e tamanho. É trabalh
 
 ## Para o banco e os diagramas (Vicentini)
 
-### O-08. O DER não tem a tabela de registro de ruptura
+### O-08. O DER não tem a tabela de registro de ruptura — resolvida em Markdown
+
+> [!NOTE]
+> **Encerrada (conferido em 12/11/2026).** O DER vigente é [`dados/der-atualizado.md`](dados/der-atualizado.md), com `TB_REGISTRO_RUPTURA`, `TB_CHAT_MENSAGEM` e `TB_PRODUTO_ATRIBUTO`. O `DER.pdf` ficou como acervo da Sprint 1, e o [`README` da pasta de diagramas](diagramas/README.md) avisa isso aos avaliadores antes de qualquer outro conteúdo.
 
 **O quê.** O card de ruptura criou `TB_REGISTRO_RUPTURA` (sessão, item, produto em falta, produto sugerido, justificativa, origem, data). A tabela **já existe no Oracle** — o `ddl-auto: update` a criou automaticamente —, então não há trabalho de banco. Falta apenas atualizar o diagrama.
 
@@ -328,7 +333,19 @@ O backend já pagina: a resposta traz total, página atual e tamanho. É trabalh
 > Ficar no histórico do navegador não expõe nada, porque ele não autoriza nada: informar uma placa não dá acesso a sessão alguma, apenas diz onde a pessoa está. **Limpar a URL deixou de ser hardening e virou preferência estética.**
 
 
-### O-17. ~~Documentos de trabalho precisam sair antes da entrega final~~ — feito
+### O-17. Documentos de trabalho precisam sair antes da entrega final — reaberta
+
+> [!WARNING]
+> **Reaberta em 12/11/2026.** A migração para JAX-RS deixou documentos novos da mesma natureza:
+>
+> | Documento | Sugestão |
+> |---|---|
+> | `progresso-migracao-2026-11-04.md` e `progresso-migracao-2026-11-05.md` | **Sair.** São o diário de dois dias de trabalho; o que importa está nas decisões D-89 a D-96 |
+> | `plano-migracao-spring-para-jax-rs.md` e `requisitos-migracao-spring-para-jax-rs.md` | **Decidir.** Estão concluídos, mas mostram como a troca foi verificada, o que defende a D-89 |
+> | `insomnia/base-antes.md` | **Ficar**, talvez com outro nome: traz a comparação de tempos que defende a D-96 |
+> | `prompt-video-apresentacao.md` | **Sair depois da gravação**: é ferramenta para produzir o vídeo |
+>
+> Ao apagar, procurar os links que apontam para eles (`grep -rn` pelo nome do arquivo), como foi feito em 01/09.
 
 > [!NOTE]
 > **Encerrada em 01/09/2026, antes do prazo que ela própria pedia.** Saíram cinco documentos,
@@ -365,7 +382,10 @@ A distinção vale a pena manter em mente conforme o repositório cresce:
 
 ---
 
-### O-24. Os diagramas da Sprint 1 desenham o produto que a mentoria derrubou
+### O-24. Os diagramas da Sprint 1 desenham o produto que a mentoria derrubou — resolvida em Markdown
+
+> [!NOTE]
+> **Encerrada (conferido em 12/11/2026).** Foi o "caminho mais barato" descrito abaixo: o C4 e o DER foram refeitos ([`arquitetura/c4-model-atual.md`](arquitetura/c4-model-atual.md), já com o backend em JAX-RS, e [`dados/der-atualizado.md`](dados/der-atualizado.md)), e os cinco PDFs ficaram rotulados como Sprint 1 no [`README` da pasta](diagramas/README.md).
 
 **O quê.** Os cinco PDFs em `docs/diagramas/` — C4, DER, casos de uso, classes e sequência — são de antes de 24/08/2026. Precisam ser refeitos ou explicitamente rotulados como Sprint 1.
 
@@ -373,7 +393,7 @@ A distinção vale a pena manter em mente conforme o repositório cresce:
 
 E o problema não é interno: **diagrama é o que a banca olha primeiro**, antes de qualquer código. Um avaliador que compare o C4 com a demonstração vai ver dois produtos diferentes — e a conclusão natural dele será que não entregamos o que projetamos, quando o que aconteceu foi o contrário: mudamos o projeto porque a Leroy mandou.
 
-**O DER tem um problema a mais**, já registrado em separado: falta a tabela de registro de ruptura ([O-08](#o-08-o-der-não-tem-a-tabela-de-registro-de-ruptura)).
+**O DER tem um problema a mais**, já registrado em separado: falta a tabela de registro de ruptura ([O-08](#o-08-o-der-não-tem-a-tabela-de-registro-de-ruptura--resolvida-em-markdown)).
 
 **O caminho mais barato**, se refazer os cinco não couber no prazo: carimbar cada um como "Sprint 1 — anterior à revisão de escopo" e refazer só o **C4** e o **DER**, que são os dois que a banca costuma abrir.
 
@@ -461,7 +481,9 @@ Qualquer um deles pode ser disparado pela ferramenta de simulação ([D-40](deci
 
 **O que fazer.** Nada urgente no código. Antes da gravação do vídeo e da banca, vale **limpar as sessões de teste** para que qualquer número citado seja verdade. Um `delete` das sessões finalizadas resolve, respeitando a ordem das chaves estrangeiras: registros de ruptura, mensagens de chat, itens, lista, sessão.
 
-**De quem.** Backend. **Urgência:** baixa até a véspera da demonstração.
+**De quem.** Backend. **Urgência:** baixa até a véspera da gravação.
+
+**Aumentou em 12/11/2026:** a coleção de paridade, a suíte de integração e as conferências em produção criaram e concluíram mais sessões de teste no schema. Antes de gravar o vídeo final, vale rodar a limpeza.
 
 ---
 
@@ -477,9 +499,12 @@ Qualquer um deles pode ser disparado pela ferramenta de simulação ([D-40](deci
 
 Não há integração com ERP ou WMS — não temos acesso a sistema real da Leroy Merlin, e a restrição de custo zero inviabiliza qualquer intermediário. **Vale dizer isso na apresentação antes de perguntarem**, porque a resposta é forte: o sistema resolve o problema de *localizar* o produto, e o fluxo de ruptura física existe justamente por assumir que a divergência entre sistema e prateleira **vai** acontecer — em vez de fingir que o estoque é confiável. Ver [D-23](decisoes-tecnicas.md#d-23-resolução-síncrona-de-inventário-não-é-integração-com-erp).
 
-### O-11. O Swagger fica exposto no ambiente publicado
+### O-11. O Swagger fica exposto no ambiente publicado — sem objeto
 
-Decisão deliberada: a documentação navegável é o que permite ao time e aos avaliadores explorarem a API sem cliente HTTP, e não há dado sensível atrás dela. Num sistema real com dados de cliente, seria fechado. Ver [D-34](decisoes-tecnicas.md#d-34-swagger-ui-permanece-exposto-em-produção).
+> [!NOTE]
+> **Encerrada em 05/11/2026.** O Swagger saiu com o Spring, na migração para JAX-RS. O contrato continua no repositório, em `backend/src/main/resources/openapi/openapi.yaml`, e é conferido contra os Resources pelo `ContratoOpenApiTest`. Ver a revisão da [D-34](decisoes-tecnicas.md#d-34-swagger-ui-permanece-exposto-em-produção).
+
+Decisão deliberada, quando ele existia: a documentação navegável é o que permite ao time e aos avaliadores explorarem a API sem cliente HTTP, e não há dado sensível atrás dela. Num sistema real com dados de cliente, seria fechado. Ver [D-34](decisoes-tecnicas.md#d-34-swagger-ui-permanece-exposto-em-produção).
 
 ### O-12. O raio de busca da ruptura é um palpite informado — agora medido
 
@@ -505,7 +530,7 @@ As 25 unidades do grid 0–100 foram escolhidas por julgamento: é a ordem de gr
 
 Aceito por três motivos: a API não tem autenticação em endpoint nenhum, então ele não abre uma categoria nova de exposição; desligá-lo em produção derrotaria o propósito, já que é justamente o ambiente publicado que será demonstrado; e o dano é reversível pelo próprio endpoint, sobre massa de demonstração.
 
-O que existe no lugar de proteção: marcação explícita como `[Demonstracao]` no Swagger e log em nível **WARN** a cada alteração. **Se o projeto ganhar autenticação em algum momento, este endpoint é o primeiro que precisa entrar atrás dela.** Ver [D-40](decisoes-tecnicas.md#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido).
+O que existe no lugar de proteção: marcação explícita como demonstração no contrato OpenAPI e uma linha de log com `AVISO:` a cada alteração. **Se o projeto ganhar autenticação em algum momento, este endpoint é o primeiro que precisa entrar atrás dela.** Ver [D-40](decisoes-tecnicas.md#d-40-existe-um-endpoint-que-só-serve-à-demonstração-e-ele-é-assumidamente-desprotegido).
 
 ---
 
@@ -728,14 +753,20 @@ em vez de por nome. A ILU-003 divide `QUANTIDADE` com a ILU-001 e a ILU-005 não
 entraria na conta sozinha. Como o teto de candidatos já limita a lista a 20, a reordenação pode
 acontecer em memória, sem tocar na consulta.
 
-**Não foi feito agora** porque mexe na ordenação a doze dias da entrega e pode reordenar os
-outros quatro pares, que hoje acertam.
+**Não foi feito em setembro** porque mexia na ordenação a doze dias da seletiva e podia reordenar
+os outros quatro pares, que acertam.
 
-**De quem.** Backend, depois de 13/09.
+**De quem.** Backend. O prazo que impedia passou; vale fazer com a suíte de integração rodando
+antes e depois, porque são os testes de ruptura que dizem se os outros pares continuam certos.
 
 ---
 
 ### O-36. A suíte padrão não roda os testes de integração, e isso já deixou passar oito falhas
+
+> **Números de 12/11/2026:** `mvnw test` roda **208** testes; com `-Pintegracao`, **365**, todos
+> passando (8 pulados sem `GEMINI_API_KEY`). O JaCoCo, citado em outros documentos como quem revelou
+> isto, saiu do projeto (D-95). O resto do texto continua valendo: a suíte padrão ainda não avisa o
+> que deixou de rodar.
 
 **O quê.** `mvnw test` roda **150 testes**. A suíte inteira tem **285**. Os 19 testes de
 integração ficam de fora por padrão — exigem `-Pintegracao` e credenciais do Oracle, e a
@@ -758,13 +789,42 @@ substituto oferecido durante a banca faz sentido. Nenhuma delas era visível pel
 3. **Integração contínua** rodando o perfil completo a cada envio. É o certo, e é o único que
    não depende de ninguém lembrar.
 
-**De quem.** Time — e vale decidir antes de 13/09, porque a massa de dados ainda vai mudar.
+**De quem.** Time.
+
+---
+
+### O-38. O lint do frontend acusa 37 problemas
+
+**O quê.** `npm run lint` termina com 36 erros e 1 aviso, e já terminava assim antes de 12/11/2026. A build não depende dele, então a Vercel publica normalmente.
+
+| Regra | Quantos | O que é |
+|---|---|---|
+| `no-unused-vars` | 31 | Variáveis, importações e parâmetros de `catch` sem uso, espalhados por vários arquivos (`AIChatModal.jsx` tem 5) |
+| `react-hooks/set-state-in-effect` | 4 | `setState` chamado direto num efeito, o que provoca uma renderização a mais |
+| `react-hooks/exhaustive-deps` | 1 | Efeito com dependência faltando |
+| `react-hooks/purity` | 1 | Valor impuro (como `Date.now()`) calculado durante a renderização |
+
+**Por que importa.** Pouco para o usuário. Mas um lint que sempre falha deixa de ser olhado, e o próximo erro de verdade passa no meio dos 37. Os 31 de variável sem uso saem em minutos; os 6 de hooks pedem olhar caso a caso, porque mexem em quando a tela renderiza.
+
+**De quem.** Frontend.
 
 ---
 
 ## Riscos de ambiente
 
 ### O-22. A tela inicial do catálogo leva 2,4 segundos no ambiente publicado
+
+> [!NOTE]
+> **Remedida em 12/11/2026, depois da D-96** (conexões reaproveitadas), cinco amostras com a instância quente:
+>
+> | Endpoint | 25/08 (Spring) | 12/11 (JAX-RS + D-96) |
+> |---|---|---|
+> | `GET /produtos?page=0&size=50` (o que a tela inicial pede) | ~2.421 ms | **1.221 ms** |
+> | `GET /produtos?secao=Tintas` | 814 ms | 1.052 ms |
+> | `GET /produtos/secoes` | 355 ms | 562 ms |
+> | `GET /mapa` | 669 ms | 628 ms |
+>
+> A tela inicial ficou duas vezes mais rápida e continua sendo a mais lenta. Os itens 1 e 2 abaixo continuam abertos: o app ainda abre pedindo o catálogo sem filtro.
 
 **Medido em 25/08/2026** contra a instância no Render, já quente, sete amostras por endpoint:
 
@@ -797,7 +857,7 @@ A tela de entrada é a mais lenta de todas, e é a única de 2,4 segundos. Abrir
 
 **O que não vale.** Aumentar o plano do Render resolveria de vez, e o time já decidiu ficar no gratuito. Vale lembrar que **a partida a frio (163–176 s) continua sendo o número dominante** para qualquer demonstração: 2,4 segundos incomoda, três minutos inviabiliza.
 
-**De quem.** Frontend (itens 1 e 2), time (item 3). **Urgência:** média — a tela lenta é a primeira que a banca vê.
+**De quem.** Frontend (itens 1 e 2), time (item 3). **Urgência:** baixa depois da D-96, mas a tela lenta continua sendo a primeira que o avaliador vê.
 
 ---
 
@@ -809,17 +869,17 @@ A tela de entrada é a mais lenta de todas, e é a única de 2,4 segundos. Abrir
 
 Foi exatamente isso: uma sessão ociosa bloqueando outra, que bloqueava mais duas. A suíte ficou **20 minutos parada** sem sair do lugar e sem falhar — o pior formato de erro, porque não avisa.
 
-**O servidor de desenvolvimento recarrega sozinho.** Com o `spring-boot:run` aberto, o DevTools reinicia a aplicação a cada compilação — e **cada reinício executa a carga inicial**. Numa dessas, a planta já estava acentuada e a migração de renomeação ainda não existia: a carga criou as quatro seções novas vazias, e o banco ficou com a seção duplicada. Ver [D-70](decisoes-tecnicas.md#d-70-renomear-uma-seção-é-migração-não-edição-de-string), que passou a apagar a prateleira vazia justamente por causa disso.
+**O servidor de desenvolvimento recarregava sozinho** (vale para a versão com Spring; o DevTools saiu na migração, mas a carga inicial continua rodando a cada subida da `Main`). Com o `spring-boot:run` aberto, o DevTools reinicia a aplicação a cada compilação — e **cada reinício executa a carga inicial**. Numa dessas, a planta já estava acentuada e a migração de renomeação ainda não existia: a carga criou as quatro seções novas vazias, e o banco ficou com a seção duplicada. Ver [D-70](decisoes-tecnicas.md#d-70-renomear-uma-seção-é-migração-não-edição-de-string), que passou a apagar a prateleira vazia justamente por causa disso.
 
 **Por que dói aqui e não doeria em outro projeto.** Porque o schema é um só para tudo ([O-21](#o-21-desenvolvimento-testes-e-demonstração-usam-o-mesmo-schema)). Num banco local descartável, um lock preso se resolve derrubando o banco. No da FIAP, **não temos privilégio para derrubar sessão** — `alter system kill session` responde `ORA-01031`. Só resta esperar o Oracle colher a conexão morta, o que levou cerca de meia hora.
 
 **O que fazer.**
 
-- **Fechar o servidor de desenvolvimento antes de editar o backend.** Se ele estiver no ar durante as edições, ele executa versões intermediárias do código contra o banco de verdade.
+- **Não deixar o servidor local subindo e descendo enquanto edita o backend.** Cada subida da `Main` executa a carga inicial contra o banco de verdade, com a versão do código daquele momento. Para medir ou depurar sem isso, `MERLIN_SEED_ENABLED=false`.
 - **Ao interromper a suíte, conferir se sobrou JVM.** No Windows: `Get-CimInstance Win32_Process -Filter "Name='java.exe'"` mostra o horário de início e a linha de comando — as do Surefire aparecem com `-jar ...\surefire`. Encerrar essas pela raiz libera o lock na hora.
 - **Não confundir com falha de teste.** Suíte parada sem sair do lugar por mais de dois minutos é lock, não lentidão. `select sid, blocking_session from v$session where username = user` responde em um segundo.
 
-**De quem.** Backend. **Urgência:** alta — um lock preso na véspera da gravação custaria meia hora que não vamos ter.
+**De quem.** Backend. **Urgência:** média — vale lembrar na véspera de qualquer gravação.
 
 ---
 
@@ -841,7 +901,7 @@ Foi exatamente isso: uma sessão ociosa bloqueando outra, que bloqueava mais dua
 
 **O que fazer.** Combinar uma regra simples: **ninguém roda a suíte de integração enquanto alguém estiver gravando ou apresentando.** Não custa nada e elimina o único cenário que machuca.
 
-**De quem.** Time. **Urgência:** média — até a gravação de 13/09.
+**De quem.** Time. **Urgência:** média — vale para qualquer gravação ou apresentação.
 
 ---
 
