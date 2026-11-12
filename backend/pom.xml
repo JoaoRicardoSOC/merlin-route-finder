@@ -96,32 +96,6 @@
 					<excludedGroups>${excluded.test.groups}</excludedGroups>
 				</configuration>
 			</plugin>
-			<!--
-			  Cobertura de testes. Sem medida, "temos testes" e uma afirmacao sem tamanho.
-
-			  Nao ha limite minimo configurado de proposito: por ora o numero serve para
-			  encontrar o que ninguem exercita, nao para reprovar a construcao.
-			-->
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.13</version>
-				<executions>
-					<execution>
-						<id>preparar-agente</id>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>relatorio</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 			<!-- `mvnw exec:java` sobe a aplicacao pela Main, como no material. -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
