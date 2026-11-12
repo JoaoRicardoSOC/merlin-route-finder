@@ -8,8 +8,14 @@ poupar o próximo que pensar em instalar alguma delas.
 
 | Ferramenta | O que mede | Achou | Adotada? |
 |---|---|---|---|
-| **axe-core 4.13** | Acessibilidade em tempo de execução | **3 problemas reais** + 2 numa segunda varredura | **sim**, devDependency |
-| **JaCoCo 0.8.13** | Cobertura de testes | Que a suíte padrão **não roda os testes de integração** | **sim**, no `pom` |
+| **axe-core 4.13** | Acessibilidade em tempo de execução | **3 problemas reais** + 2 numa segunda varredura | foi devDependency; **removida em 12/11/2026** |
+| **JaCoCo 0.8.13** | Cobertura de testes | Que a suíte padrão **não roda os testes de integração** | esteve no `pom`; **removido em 12/11/2026** |
+
+> **Removidas em 12/11/2026 ([D-95](decisoes-tecnicas.md#d-95-jacoco-e-axe-core-saem-por-não-estarem-no-material)).**
+> O Challenge só permite tecnologias do material da FIAP, e nenhuma das duas está nele. Os
+> achados abaixo continuam valendo: as correções que eles motivaram ficaram no código. Os
+> comandos de "como rodar" passam a exigir instalar a ferramenta antes, de forma pontual e sem
+> commit.
 | **Lighthouse 12.8** | Performance, acessibilidade, boas práticas, SEO | Acessibilidade **100**; performance **56** | pontual |
 | **eslint-plugin-jsx-a11y** | Acessibilidade no JSX | 45 avisos, **1 defeito real** | **não** — ver abaixo |
 | **SpotBugs 4.9** | Análise estática Java | 30 achados, **0 acionáveis** | **não** |

@@ -115,6 +115,7 @@
 - [D-92. Exceções checadas, tratadas no `catch` de cada Resource](#d-92-exceções-checadas-tratadas-no-catch-de-cada-resource)
 - [D-93. DTOs são classes, copiadas pelo ModelMapper onde a cópia é direta](#d-93-dtos-são-classes-copiadas-pelo-modelmapper-onde-a-cópia-é-direta)
 - [D-94. O schema do banco passa a ser mantido por script](#d-94-o-schema-do-banco-passa-a-ser-mantido-por-script)
+- [D-95. JaCoCo e axe-core saem por não estarem no material](#d-95-jacoco-e-axe-core-saem-por-não-estarem-no-material)
 
 ---
 
@@ -2581,6 +2582,30 @@ publicar o código que depende dele. O passo a passo está em [`deploy.md`](depl
 **O risco.** Um integrante esquecer de rodar um script. O schema é compartilhado entre a instância
 publicada, os testes de integração e a máquina de cada um, então o esquecimento aparece rápido -
 mas aparece como erro de SQL, e não como mensagem clara.
+
+---
+
+### D-95. JaCoCo e axe-core saem por não estarem no material
+
+**Contexto.** O Challenge só permite tecnologias descritas no conteúdo da FIAP. Em 12/11/2026, o
+projeto inteiro (backend, frontend e build) foi comparado com os 127 PDFs do 1º e do 2º ano. Todas
+as bibliotecas de produção estão no material. Fora dele ficaram só duas ferramentas de
+desenvolvimento: o `jacoco-maven-plugin`, no `pom.xml`, e o `axe-core`, devDependency do frontend.
+
+**A decisão.** As duas saem. Nenhuma ia para produção, então o app não muda. O que elas
+encontraram continua registrado em [`ferramentas-de-analise.md`](ferramentas-de-analise.md), e as
+correções que motivaram (D-84, D-86, D-88) continuam no código.
+
+**O que se perde.** A medição de cobertura, que deixa o RNF-05 dos requisitos da migração sem como
+ser conferido daqui em diante. A varredura de acessibilidade pode ser repetida de forma pontual,
+instalando o `axe-core` só na máquina e sem commit.
+
+**O que continua fora do material, e por quê.** O Gemini (serviço externo chamado pelo
+`HttpClient` do Java, e não uma biblioteca: **precisa da confirmação do professor**), o Docker, o
+Render e a Vercel (a rubrica aceita o deploy em qualquer provedor) e o `maven-shade-plugin`
+(exceção já justificada nos requisitos da migração).
+
+**Onde no código.** `backend/pom.xml`, `frontend/package.json`, `frontend/package-lock.json`.
 
 ---
 

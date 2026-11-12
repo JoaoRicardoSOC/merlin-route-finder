@@ -100,7 +100,7 @@ O frontend não pode precisar de nenhuma mudança de código.
 | ID | Requisito |
 |---|---|
 | **RC-01** | `pom.xml` sem nenhum artefato `org.springframework*`, Lombok, Hibernate, Bean Validation, SLF4J, Swagger, Mockito, AssertJ, SnakeYAML ou HikariCP. |
-| **RC-02** | Dependências do material: `jersey-bom`, `jersey-container-grizzly2-http`, `jersey-hk2`, `jersey-media-json-binding`, `ojdbc8` (`23.2.0.0`), `modelmapper` (`3.0.0`), `junit-jupiter` (`5.10.1`), `maven-compiler-plugin`, `exec-maven-plugin`, `maven-surefire-plugin`. Mais `maven-shade-plugin` e o JaCoCo, que já existe. |
+| **RC-02** | Dependências do material: `jersey-bom`, `jersey-container-grizzly2-http`, `jersey-hk2`, `jersey-media-json-binding`, `ojdbc8` (`23.2.0.0`), `modelmapper` (`3.0.0`), `junit-jupiter` (`5.10.1`), `maven-compiler-plugin`, `exec-maven-plugin`, `maven-surefire-plugin`. Mais `maven-shade-plugin` e o JaCoCo, que já existe. *(O JaCoCo saiu em 12/11/2026, por não estar no material: ver D-95 em `decisoes-tecnicas.md`.)* |
 | **RC-03** | A classe `Main` segue a do material, com três correções: escuta em `0.0.0.0` (não `localhost`), lê a porta de `PORT` e **não** usa `System.in.read()` (no container ele desligaria o servidor logo depois de subir). |
 | **RC-04** | Os Resources seguem o `ProdutoResource` do material: `@Path` na classe, `@Consumes`/`@Produces(APPLICATION_JSON)`, `try/catch` em cada método devolvendo `Response`. Construtor sem argumentos que cria os services com `new` e um segundo construtor que recebe os services, usado nos testes. |
 | **RC-05** | Os DAOs seguem o `ProdutoDao` do material: `PreparedStatement` com parâmetros, `ResultSet` lido coluna a coluna, `throws SQLException`. Correções obrigatórias em relação ao material: nenhum DAO guarda conexão aberta; `PreparedStatement` e `ResultSet` fechados com *try-with-resources*. |
@@ -125,7 +125,7 @@ O frontend não pode precisar de nenhuma mudança de código.
 | **RNF-02** | Nenhuma conexão fica aberta fora de uma transação ou consulta. A instância publicada e a máquina de quem cedeu a credencial dividem 20 sessões no Oracle da FIAP (D-46). |
 | **RNF-03** | A imagem continua cabendo no plano gratuito do Render (512 MB), com os mesmos `JAVA_OPTS`. |
 | **RNF-04** | Nenhuma credencial no código nem no repositório. O repositório é público no GitHub. |
-| **RNF-05** | A cobertura medida pelo JaCoCo não diminui. |
+| **RNF-05** | A cobertura medida pelo JaCoCo não diminui. *(Sem medição desde 12/11/2026, quando o JaCoCo saiu do `pom.xml` (D-95). A migração já tinha sido verificada antes disso.)* |
 | **RNF-06** | O tempo de resposta é medido antes e depois nos endpoints de busca de produtos, mapa e roteiro. Se a falta de pool piorar demais, o time decide o que fazer; o plano não resolve isso sozinho. |
 | **RNF-07** | Nenhum teste existente é apagado sem justificativa no commit. Testes que dependiam do Spring são reescritos, não descartados. |
 
