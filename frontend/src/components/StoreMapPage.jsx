@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { formatPrice } from '../utils/format'
 import {
   STORE_SECTORS,
@@ -87,21 +87,25 @@ export default function StoreMapPage({
     return { x: 195, y: 550, name: currentLocation.aisle || 'Entrada' }
   }, [currentLocation])
 
-  // Focus on product if passed
-  useEffect(() => {
-    if (focusedProduct) {
-      const foundPin = mappedRoteiroPins.find(p => p.id === focusedProduct.id || p.produtoId === focusedProduct.id)
-      if (foundPin) {
-        setSelectedPinItem(foundPin)
-        setSelectedSector(foundPin.sector)
-      } else {
-        const sector = findSectorForProduct(focusedProduct)
-        if (sector) {
-          setSelectedSector(sector)
-        }
+  /*
+   * Foca o produto recebido, quando ele (ou a lista de pinos) muda. Ajustado durante a
+   * renderizacao, como recomenda o React, e nao num efeito: no efeito, a tela pintava primeiro
+   * sem o foco e logo em seguida com ele.
+   */
+  const [focoAplicado, setFocoAplicado] = useState({ produto: null, pinos: null })
+  if (focusedProduct && (focoAplicado.produto !== focusedProduct || focoAplicado.pinos !== mappedRoteiroPins)) {
+    setFocoAplicado({ produto: focusedProduct, pinos: mappedRoteiroPins })
+    const foundPin = mappedRoteiroPins.find(p => p.id === focusedProduct.id || p.produtoId === focusedProduct.id)
+    if (foundPin) {
+      setSelectedPinItem(foundPin)
+      setSelectedSector(foundPin.sector)
+    } else {
+      const sector = findSectorForProduct(focusedProduct)
+      if (sector) {
+        setSelectedSector(sector)
       }
     }
-  }, [focusedProduct, mappedRoteiroPins])
+  }
 
   // Calculate route polyline through uncollected items -> checkout
   const routePoints = useMemo(() => {

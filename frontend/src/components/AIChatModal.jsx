@@ -1,7 +1,31 @@
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { consultarHistoricoChat, enviarMensagemChat } from '../services/chatService'
 import { formatPrice } from '../utils/format'
 import useModalAcessivel from '../hooks/useModalAcessivel'
+
+/**
+ * Id local de uma mensagem que ainda nao veio do servidor. Fica fora do componente porque o
+ * relogio e impuro: o React nao quer `Date.now()` no corpo de um componente.
+ */
+function idLocal(prefixo) {
+  return `${prefixo}-${Date.now()}`
+}
+
+/**
+ * A mensagem de abertura do assistente. E calculada, e nao guardada no estado: enquanto a
+ * conversa esta vazia, e ela que aparece; quando o cliente manda a primeira pergunta, ela entra
+ * no historico junto, para continuar na tela.
+ */
+function mensagemDeBoasVindas(produto) {
+  return {
+    id: 'welcome',
+    remetente: 'ASSISTANT',
+    conteudo: produto
+      ? `Olá! Vejo que você está olhando **${produto.nome || produto.name}** no **${produto.corredor || 'corredor da loja'}**. Como posso te ajudar com este produto ou aplicação?`
+      : 'Olá! Sou o assistente inteligente da Leroy Merlin. Pergunte sobre qualquer material, ferramenta ou projeto que indico os produtos e seus respectivos corredores!',
+    enviadoEm: null
+  }
+}
 
 export default function AIChatModal({
   isOpen,
@@ -42,59 +66,33 @@ export default function AIChatModal({
         'Ferramentas para furar parede de alvenaria'
       ]
 
-  // Initialize or load conversation history
-  useEffect(() => {
-    if (isOpen) {
-      if (sessionId) {
-        consultarHistoricoChat(sessionId)
-          .then((history) => {
-            if (history && history.length > 0) {
-              setMessages(history)
-            } else if (messages.length === 0) {
-              setMessages([
-                {
-                  id: 'welcome',
-                  remetente: 'ASSISTANT',
-                  conteudo: isProductContext
-                    ? `Olá! Vejo que você está olhando **${screenContext.product.nome || screenContext.product.name}** no **${screenContext.product.corredor || 'corredor da loja'}**. Como posso te ajudar com este produto ou aplicação?`
-                    : 'Olá! Sou o assistente inteligente da Leroy Merlin. Como posso te ajudar hoje com seu projeto, reforma ou localização de produtos na loja?',
-                  enviadoEm: new Date().toISOString()
-                }
-              ])
-            }
-          })
-          .catch(() => {
-            if (messages.length === 0) {
-              setMessages([
-                {
-                  id: 'welcome',
-                  remetente: 'ASSISTANT',
-                  conteudo: isProductContext
-                    ? `Olá! Estou pronto para tirar dúvidas sobre **${screenContext.product.nome || screenContext.product.name}**. O que gostaria de saber?`
-                    : 'Olá! Sou o assistente inteligente da Leroy Merlin. O que você procura ou gostaria de fazer na sua casa hoje?',
-                  enviadoEm: new Date().toISOString()
-                }
-              ])
-            }
-          })
-      } else if (messages.length === 0) {
-        setMessages([
-          {
-            id: 'welcome',
-            remetente: 'ASSISTANT',
-            conteudo: isProductContext
-              ? `Olá! Estou ciente de que você está na página de **${screenContext.product.nome || screenContext.product.name}** (${screenContext.product.corredor || 'corredor'}). O que deseja saber sobre ele?`
-              : 'Olá! Sou o assistente virtual da Leroy Merlin. Pergunte sobre qualquer material, ferramenta ou projeto que indico os produtos e seus respectivos corredores!',
-            enviadoEm: new Date().toISOString()
-          }
-        ])
-      }
+  const boasVindas = mensagemDeBoasVindas(isProductContext ? screenContext.product : null)
+  const mensagensExibidas = messages.length > 0 ? messages : [boasVindas]
 
-      setTimeout(() => {
-        if (inputRef.current) inputRef.current.focus()
-      }, 150)
+  // Ao abrir: carrega o historico da sessao, se houver, e poe o cursor no campo de texto.
+  useEffect(() => {
+    if (!isOpen) return undefined
+
+    let ativo = true
+    if (sessionId) {
+      consultarHistoricoChat(sessionId)
+        .then((history) => {
+          if (ativo && history && history.length > 0) {
+            setMessages(history)
+          }
+        })
+        // Sem historico, a conversa comeca pelas boas-vindas, que ja estao na tela.
+        .catch(() => {})
     }
-  }, [isOpen, sessionId, isProductContext])
+
+    const foco = setTimeout(() => {
+      if (inputRef.current) inputRef.current.focus()
+    }, 150)
+    return () => {
+      ativo = false
+      clearTimeout(foco)
+    }
+  }, [isOpen, sessionId])
 
   // Scroll to bottom on message updates
   useEffect(() => {
@@ -146,13 +144,14 @@ export default function AIChatModal({
     setUltimaPergunta(text)
 
     const userMessage = {
-      id: 'user-' + Date.now(),
+      id: idLocal('user'),
       remetente: 'USER',
       conteudo: text,
       enviadoEm: new Date().toISOString()
     }
 
-    setMessages(prev => [...prev, userMessage])
+    // A primeira pergunta leva junto as boas-vindas, para elas continuarem na tela.
+    setMessages(prev => [...(prev.length > 0 ? prev : [boasVindas]), userMessage])
     setInputText('')
     setIsLoading(true)
 
@@ -161,11 +160,11 @@ export default function AIChatModal({
       if (response) {
         setMessages(prev => [...prev, response])
       }
-    } catch (e) {
+    } catch {
       setMessages(prev => [
         ...prev,
         {
-          id: 'err-' + Date.now(),
+          id: idLocal('err'),
           falhou: true,
           remetente: 'ASSISTANT',
           conteudo: 'Desculpe, tive uma instabilidade momentânea na conexão. Por favor, tente novamente ou consulte um de nossos vendedores no corredor.',
@@ -260,7 +259,7 @@ export default function AIChatModal({
 
         {/* Messages Stream Area */}
         <div className="chat-messages-container">
-          {messages.map((msg, index) => {
+          {mensagensExibidas.map((msg, index) => {
             const isAssistant = msg.remetente === 'ASSISTANT' || msg.remetente === 'assistant'
             const citedProducts = isAssistant ? extractCitedProducts(msg) : []
 

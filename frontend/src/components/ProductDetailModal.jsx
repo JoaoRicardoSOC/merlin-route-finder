@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { fetchProdutoDetalhe } from '../services/catalogService'
 import { SECTOR_METADATA, DEFAULT_SECTOR_META } from '../constants/setores'
 import { formatPrice } from '../utils/format'
@@ -12,25 +12,30 @@ export default function ProductDetailModal({
   onNavigateToProduct,
   onViewOnMap
 }) {
-  const [detailedProduct, setDetailedProduct] = useState(null)
-  const [isLoading, setIsLoading] = useState(false)
+  /*
+   * Guarda so o que a API devolveu, marcado com o id do produto. O produto exibido e calculado
+   * na renderizacao: o que veio da lista, completado pelo detalhe quando ele for deste produto.
+   * Copiar a prop para o estado dentro do efeito custava uma renderizacao a mais.
+   */
+  const [detalhe, setDetalhe] = useState({ id: null, dados: null })
+  const produtoId = product?.id
 
   useEffect(() => {
-    if (isOpen && product) {
-      setDetailedProduct(product)
-      if (product.id) {
-        setIsLoading(true)
-        fetchProdutoDetalhe(product.id)
-          .then(data => {
-            if (data) setDetailedProduct(prev => ({ ...prev, ...data }))
-          })
-          .catch(err => console.warn('Erro ao carregar detalhes:', err))
-          .finally(() => setIsLoading(false))
-      }
-    } else {
-      setDetailedProduct(null)
-    }
-  }, [isOpen, product])
+    if (!isOpen || !produtoId) return undefined
+    let ativo = true
+    fetchProdutoDetalhe(produtoId)
+      .then(data => { if (ativo) setDetalhe({ id: produtoId, dados: data || null }) })
+      .catch(err => {
+        console.warn('Erro ao carregar detalhes:', err)
+        if (ativo) setDetalhe({ id: produtoId, dados: null })
+      })
+    return () => { ativo = false }
+  }, [isOpen, produtoId])
+
+  const detailedProduct = isOpen && product
+    ? { ...product, ...(produtoId && detalhe.id === produtoId ? detalhe.dados : null) }
+    : null
+  const isLoading = Boolean(isOpen && produtoId && detalhe.id !== produtoId)
 
   // Antes do retorno antecipado: hook nao pode ficar atras de um `return`.
   const refModal = useModalAcessivel(isOpen, onClose)

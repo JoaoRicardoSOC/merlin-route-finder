@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { fetchProdutoDetalhe } from '../services/catalogService'
 import { SECTOR_METADATA, DEFAULT_SECTOR_META } from '../constants/setores'
 import { formatPrice } from '../utils/format'
@@ -7,25 +7,34 @@ export default function ProductDetailPage({
   product,
   onBack,
   onAddToCart,
-  onNavigateToProduct,
   onViewOnMap
 }) {
-  const [detailedProduct, setDetailedProduct] = useState(product || {})
-  const [isLoading, setIsLoading] = useState(false)
+  /*
+   * Guarda so o que a API devolveu, marcado com o id do produto, e calcula o produto exibido na
+   * renderizacao. Antes, o estado nascia do primeiro produto e recebia o detalhe por cima:
+   * navegar para outro produto mostrava os dados do anterior ate a resposta chegar.
+   */
+  const [detalhe, setDetalhe] = useState({ id: null, dados: null })
   const [addedAnimation, setAddedAnimation] = useState(false)
+  const produtoId = product?.id
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
-    if (product?.id) {
-      setIsLoading(true)
-      fetchProdutoDetalhe(product.id)
-        .then(data => {
-          if (data) setDetailedProduct(prev => ({ ...prev, ...data }))
-        })
-        .catch(err => console.warn('Erro ao carregar especificações do produto:', err))
-        .finally(() => setIsLoading(false))
-    }
-  }, [product])
+    if (!produtoId) return undefined
+    let ativo = true
+    fetchProdutoDetalhe(produtoId)
+      .then(data => { if (ativo) setDetalhe({ id: produtoId, dados: data || null }) })
+      .catch(err => {
+        console.warn('Erro ao carregar especificações do produto:', err)
+        if (ativo) setDetalhe({ id: produtoId, dados: null })
+      })
+    return () => { ativo = false }
+  }, [produtoId])
+
+  const detailedProduct = product
+    ? { ...product, ...(produtoId && detalhe.id === produtoId ? detalhe.dados : null) }
+    : {}
+  const isLoading = Boolean(produtoId && detalhe.id !== produtoId)
 
   if (!product) return null
 
