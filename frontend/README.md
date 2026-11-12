@@ -1,16 +1,44 @@
-# React + Vite
+# Merlin Route Finder — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Web app para celular do Merlin Route Finder, em React 19 com Vite, sem biblioteca de rotas nem de estado. Publicado na Vercel em [merlin-route-finder.vercel.app](https://merlin-route-finder.vercel.app).
 
-Currently, two official plugins are available:
+**Documentação do projeto:**
+- [`../README.md`](../README.md) — visão geral, links de produção e equipe
+- [`../docs/guia-de-avaliacao-mvp.md`](../docs/guia-de-avaliacao-mvp.md) — roteiro passo a passo para testar o app
+- [`../docs/fluxo-do-cliente.md`](../docs/fluxo-do-cliente.md) — a jornada do cliente na loja, tela por tela
+- [`../docs/decisoes-tecnicas.md`](../docs/decisoes-tecnicas.md) — **por que** cada escolha não convencional foi feita
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Pré-requisitos
 
-## React Compiler
+- Node.js 20 ou mais novo, com npm
+- O backend rodando em `http://localhost:8080` (ver [`../backend/README.md`](../backend/README.md))
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Rodando
 
-## Expanding the ESLint configuration
+```bash
+npm install
+npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+O app abre em `http://localhost:5173`. Para entrar já posicionado num corredor, como faria o QR Code da placa: `http://localhost:5173/?ponto=TIN-02`.
+
+**Como o app chega à API.** Os serviços chamam sempre `/api/...` no próprio domínio. Em desenvolvimento, o proxy do Vite (`vite.config.js`) repassa para o backend local; em produção, o rewrite de `vercel.json` repassa para o Render. O backend não trata CORS, então o app nunca chama o Render direto ([D-91](../docs/decisoes-tecnicas.md#d-91-o-cors-sai-do-backend-a-vercel-repassa-api-para-o-render)).
+
+## Outros comandos
+
+| Comando | O que faz |
+|---|---|
+| `npm run build` | Gera a versão de produção em `dist/` |
+| `npm run preview` | Serve o `dist/` localmente, para conferir a build |
+| `npm run lint` | Roda o ESLint (há problemas conhecidos, ver O-38 em [`../docs/observacoes.md`](../docs/observacoes.md)) |
+
+## Estrutura
+
+| Pasta | Conteúdo |
+|---|---|
+| `src/App.jsx` | Estado da sessão, do roteiro e da navegação entre as telas |
+| `src/components/` | Telas e componentes: catálogo, produto, mapa, roteiro, ruptura, chat |
+| `src/services/` | Chamadas à API: sessão, catálogo, mapa, roteiro e chat. `filaDeSincronizacao.js` guarda as coletas feitas sem conexão e as reenvia depois |
+| `src/hooks/` | `useModalAcessivel`: trava de foco e `Escape` nos modais |
+| `src/constants/` e `src/utils/` | Metadados dos setores e formatação de valores |
+| `public/` | Ícone do app |
