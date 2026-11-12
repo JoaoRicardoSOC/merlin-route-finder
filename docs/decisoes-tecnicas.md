@@ -2607,7 +2607,7 @@ ser conferido daqui em diante. A varredura de acessibilidade pode ser repetida d
 instalando o `axe-core` só na máquina e sem commit.
 
 **O que continua fora do material, e por quê.** O Gemini (serviço externo chamado pelo
-`HttpClient` do Java, e não uma biblioteca: **precisa da confirmação do professor**), o Docker, o
+`HttpClient` do Java, e não uma biblioteca; **uso confirmado como permitido em 12/11/2026**), o Docker, o
 Render e a Vercel (a rubrica aceita o deploy em qualquer provedor) e o `maven-shade-plugin`
 (exceção já justificada nos requisitos da migração).
 
