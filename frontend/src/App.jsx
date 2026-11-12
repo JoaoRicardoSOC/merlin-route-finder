@@ -189,10 +189,11 @@ function App() {
   }
 
   // Parse location code from URL (?ponto=TIN-02 or ?codigo=TIN-02)
+  // O ?code= entra porque o README e o guia de avaliacao publicaram o link com ele.
   const getUrlPlateCode = () => {
     try {
       const params = new URLSearchParams(window.location.search)
-      return params.get('ponto') || params.get('codigo') || params.get('plate') || null
+      return params.get('ponto') || params.get('codigo') || params.get('code') || params.get('plate') || null
     } catch (e) {
       return null
     }
