@@ -2,6 +2,7 @@ package br.com.jence.backend.factory;
 
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,6 +18,12 @@ public class ConexaoFalsa {
 
     private final List<String> chamadas = Collections.synchronizedList(new ArrayList<>());
     private final Connection conexao;
+
+    /** O que {@code isValid} responde. Falso por padrao, como todo metodo booleano daqui. */
+    private volatile boolean valida;
+
+    /** Metodo que, quando chamado, lanca {@link SQLException}, para simular falha do banco. */
+    private volatile String metodoQueFalha;
 
     public ConexaoFalsa() {
         this.conexao = (Connection) Proxy.newProxyInstance(
@@ -36,6 +43,12 @@ public class ConexaoFalsa {
                     chamadas.add(argumentos == null || argumentos.length == 0
                             ? nome
                             : nome + "(" + argumentos[0] + ")");
+                    if (nome.equals(metodoQueFalha)) {
+                        throw new SQLException("falha simulada em " + nome);
+                    }
+                    if (nome.equals("isValid")) {
+                        return valida;
+                    }
                     Class<?> retorno = metodo.getReturnType();
                     if (retorno == boolean.class) {
                         return false;
@@ -45,6 +58,18 @@ public class ConexaoFalsa {
                     }
                     return null;
                 });
+    }
+
+    /** Faz {@code isValid} responder {@code true}, como uma conexao viva. */
+    public ConexaoFalsa viva() {
+        this.valida = true;
+        return this;
+    }
+
+    /** Faz o metodo dado lancar {@link SQLException}. */
+    public ConexaoFalsa falhandoEm(String metodo) {
+        this.metodoQueFalha = metodo;
+        return this;
     }
 
     public Connection getConexao() {

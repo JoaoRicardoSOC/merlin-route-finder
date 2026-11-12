@@ -16,7 +16,12 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Regras da {@link Transacao}, verificadas sem banco, com conexoes falsas. */
+/**
+ * Regras da {@link Transacao}, verificadas sem banco, com conexoes falsas.
+ * <p>
+ * O reaproveitamento de conexoes fica desligado aqui, para que cada transacao receba e feche a
+ * sua: o que ele faz e verificado a parte, em {@link ConnectionFactoryTest}.
+ */
 class TransacaoTest {
 
     /** Cada transacao nova recebe a proxima conexao falsa desta fila. */
@@ -24,6 +29,7 @@ class TransacaoTest {
 
     @BeforeEach
     void usarConexoesFalsas() {
+        ConnectionFactory.definirMaximoDeGuardadas(0);
         ConnectionFactory.usarFonte(() -> {
             ConexaoFalsa conexao = new ConexaoFalsa();
             abertas.add(conexao);
@@ -34,6 +40,7 @@ class TransacaoTest {
     @AfterEach
     void voltarAoBanco() {
         ConnectionFactory.usarBanco();
+        ConnectionFactory.definirMaximoDeGuardadas(null);
     }
 
     @Test
@@ -65,7 +72,7 @@ class TransacaoTest {
             transacao.confirmar();
         }
 
-        assertEquals(List.of("setAutoCommit(false)", "setReadOnly(true)", "commit", "close"),
+        assertEquals(List.of("setAutoCommit(false)", "setReadOnly(true)", "commit", "setReadOnly(false)", "close"),
                 abertas.getFirst().getChamadas());
     }
 

@@ -6,6 +6,7 @@ import br.com.jence.backend.dao.PontoMapaDao;
 import br.com.jence.backend.dao.ProdutoDao;
 import br.com.jence.backend.dao.RestricaoDeEnumDao;
 import br.com.jence.backend.dao.SessaoDao;
+import br.com.jence.backend.factory.ConnectionFactory;
 import br.com.jence.backend.scheduler.AgendadorDeExpiracao;
 import br.com.jence.backend.seed.CarregadorDadosIniciais;
 import br.com.jence.backend.service.ExpirarSessoesInativasUseCase;
@@ -73,6 +74,7 @@ public class Main {
             System.out.println("Desligando o servidor...");
             server.shutdownNow();
             agendador.parar();
+            ConnectionFactory.fecharGuardadas();
         }));
 
         System.out.println(String.format("Servidor no ar na porta %s.", configuracao.getPorta()));

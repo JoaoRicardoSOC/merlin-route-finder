@@ -41,6 +41,9 @@ public class Transacao implements AutoCloseable {
 
     private final Connection conexao;
 
+    /** Se esta transacao marcou a conexao como somente leitura, e precisa desfazer isso ao devolver. */
+    private final boolean somenteLeitura;
+
     /** Dados que vivem so durante a transacao, como a foto do roteiro lido (ver ListaRoteiroDao). */
     private final Map<Object, Object> recursos;
 
@@ -50,10 +53,11 @@ public class Transacao implements AutoCloseable {
     /** Marcada quando uma participante fecha sem confirmar: a de fora nao pode mais gravar. */
     private boolean somenteDesfazer;
 
-    private Transacao(Connection conexao, Transacao anterior) {
+    private Transacao(Connection conexao, boolean somenteLeitura, Transacao anterior) {
         this.dona = this;
         this.anterior = anterior;
         this.conexao = conexao;
+        this.somenteLeitura = somenteLeitura;
         this.recursos = new HashMap<>();
     }
 
@@ -61,6 +65,7 @@ public class Transacao implements AutoCloseable {
         this.dona = dona;
         this.anterior = null;
         this.conexao = dona.conexao;
+        this.somenteLeitura = false;
         this.recursos = dona.recursos;
     }
 
@@ -91,10 +96,10 @@ public class Transacao implements AutoCloseable {
                 conexao.setReadOnly(true);
             }
         } catch (SQLException e) {
-            conexao.close();
+            ConnectionFactory.devolverConexao(conexao, false);
             throw e;
         }
-        Transacao transacao = new Transacao(conexao, anterior);
+        Transacao transacao = new Transacao(conexao, somenteLeitura, anterior);
         ATUAL.set(transacao);
         return transacao;
     }
@@ -134,7 +139,10 @@ public class Transacao implements AutoCloseable {
         confirmada = true;
     }
 
-    /** Desfaz o que nao foi confirmado e devolve a conexao. Chamado pelo try-with-resources. */
+    /**
+     * Desfaz o que nao foi confirmado e devolve a conexao a {@link ConnectionFactory}, que a
+     * guarda para a proxima transacao. Chamado pelo try-with-resources.
+     */
     @Override
     public void close() throws SQLException {
         if (fechada) {
@@ -149,13 +157,23 @@ public class Transacao implements AutoCloseable {
             return;
         }
 
+        /*
+         * So volta a ser usada a conexao que terminou limpa: sem transacao aberta e sem a marca
+         * de somente leitura. Se algo falhar aqui, ninguem sabe em que estado ela ficou, e ela e
+         * fechada.
+         */
+        boolean reaproveitavel = false;
         try {
             if (!confirmada) {
                 conexao.rollback();
             }
+            if (somenteLeitura) {
+                conexao.setReadOnly(false);
+            }
+            reaproveitavel = true;
         } finally {
             try {
-                conexao.close();
+                ConnectionFactory.devolverConexao(conexao, reaproveitavel);
             } finally {
                 if (anterior != null) {
                     ATUAL.set(anterior);

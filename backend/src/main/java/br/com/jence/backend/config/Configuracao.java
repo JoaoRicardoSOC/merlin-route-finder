@@ -40,6 +40,15 @@ public class Configuracao {
         return obrigatoria("DB_PASSWORD");
     }
 
+    /**
+     * Quantas conexoes ficam guardadas para a proxima transacao (D-96). Mesma variavel e mesmo
+     * padrao do pool da versao com Spring (D-46): 3 na maquina de desenvolvimento e o que o
+     * painel do Render definir na publicada, dentro das 20 sessoes do schema. 0 desliga.
+     */
+    public int getDbConexoesGuardadas() {
+        return inteiro("DB_POOL_SIZE", 3);
+    }
+
     // ------------------------------------------------------------------ servidor HTTP
 
     /** Provedores de hospedagem injetam a porta em PORT; sem respeitar isso, o deploy nao sobe. */
