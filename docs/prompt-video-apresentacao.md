@@ -269,9 +269,9 @@ O que a IA não deve inventar e que a edição precisa inserir:
 - [ ] **Telas reais do app** (gravar o celular com o app publicado ou capturar a tela do
       navegador em modo mobile, 414 px de largura) para as cenas 3, 4, 6, 7 e 8. Fazer
       *screen replacement* sobre a tela neutra gerada. Gravar na véspera seguindo
-      [`roteiro-de-qa.md`](roteiro-de-qa.md).
+      o [`guia-de-avaliacao-mvp.md`](guia-de-avaliacao-mvp.md).
 - [ ] **Acordar o backend antes de gravar:** ele hiberna no plano gratuito e leva cerca de
-      **3 minutos** para subir na primeira abertura.
+      **um minuto** para subir na primeira abertura (64 s medidos em 12/11/2026).
 - [ ] **Planta real** para a cena 5: exportar a planta desenhada pelo app (tela Mapa) e animá-la
       traço a traço no After Effects/CapCut, em vez de usar a planta genérica da IA — é o
       diferencial do projeto, vale mostrar a verdadeira.
