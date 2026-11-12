@@ -14,11 +14,10 @@
 |---|---|---|
 | Entrega | 1 (E-5) | Time |
 | Credenciais e banco | 3 (O-1 a O-3) | João Ricardo |
-| Limpeza do repositório | 1 (L-3) | Time |
 
 **Nada aqui bloqueia o app.** O sistema roda de ponta a ponta em produção: entrar pela placa, buscar, montar a lista, ver no mapa, coletar, relatar prateleira vazia, aceitar o substituto e encerrar. O que falta é a entrega em si e a arrumação antes dela.
 
-**Ordem sugerida:** O-1 e O-2 (credenciais) → O-3 (limpar o banco) → E-5 (gravar) → L-3 (limpar o repositório) → enviar ao portal.
+**Ordem sugerida:** O-1 e O-2 (credenciais) → O-3 (limpar o banco) → E-5 (gravar) → enviar ao portal.
 
 *F-12 (lint do frontend) e O-4 (desempate da ruptura) foram concluídos em 12/11/2026.*
 
@@ -30,7 +29,7 @@
 
 **O que fazer.** Duas peças que andam juntas na rubrica:
 
-1. **o vídeo pitch de até 3 minutos**, mostrando o MVP funcionando. O briefing para produzi-lo está em [`prompt-video-apresentacao.md`](prompt-video-apresentacao.md), e o roteiro de demonstração passo a passo, em [`guia-de-avaliacao-mvp.md`](guia-de-avaliacao-mvp.md);
+1. **o vídeo pitch de até 3 minutos**, mostrando o MVP funcionando. O roteiro de demonstração passo a passo está em [`guia-de-avaliacao-mvp.md`](guia-de-avaliacao-mvp.md);
 2. **um PDF** com **nomes de todos os integrantes**, **link do vídeo** e **link do deploy** (`https://merlin-route-finder.vercel.app`).
 
 **O que a rubrica paga (5 pontos no total):** 0,5 pela duração dentro de 3 minutos · 0,5 pelo PDF completo · 1,0 por criatividade e edição · **3,0 por clareza na apresentação da solução e na demonstração** — de longe a maior linha, e a que depende do que já está construído.
@@ -83,20 +82,6 @@
 **Verificar:** nenhuma sessão de teste no schema; o app publicado continua abrindo sessão normalmente.
 
 **De quem:** João Ricardo.
-
----
-
-## [LIMPEZA] — antes de enviar ao portal
-
-### L-3. Remover o briefing do vídeo depois da gravação
-
-**O que fazer.** Depois da gravação, apagar o `prompt-video-apresentacao.md` e tirar os links que apontam para ele (o card E-5 e a `O-17` em [`observacoes.md`](observacoes.md)).
-
-**Já feito em 12/11/2026:** saíram os diários da migração, o protótipo do Stitch, as imagens do template do Vite, as pastas vazias e a configuração do editor. O plano e os requisitos da migração ficam, porque as decisões os citam.
-
-**Verificar:** `grep -rn prompt-video` sem resultado.
-
-**De quem:** time.
 
 ---
 

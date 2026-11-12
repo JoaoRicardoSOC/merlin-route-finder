@@ -16,7 +16,6 @@
 |---|---|---|---|
 | [O-01](#o-01-chave-do-gemini-precisa-ser-trocada-e-a-cota-gratuita-é-apertada) | Chave do Gemini e cota gratuita (afeta a suíte) | João Ricardo | **Alta — antes da entrega final** |
 | [O-02](#o-02-senha-do-oracle-passou-por-canal-de-conversa) | Senha do Oracle exposta | João Ricardo | Média |
-| [O-17](#o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final) | Tirar o briefing do vídeo depois da gravação | Time | **fim do ano** |
 | [O-20](#o-20-rodar-a-suíte-deixa-um-resto-de-sessões-no-banco-de-demonstração) | Limpar sessões de teste antes de gravar o vídeo | Backend | Média |
 | [O-21](#o-21-desenvolvimento-testes-e-demonstração-usam-o-mesmo-schema) | Um schema só para tudo | Time | Média |
 | [O-23](#o-23-processo-java-abandonado-trava-a-suíte-inteira-no-oracle) | Encerrar Maven e servidor local pela raiz | Backend | Média |
@@ -66,27 +65,6 @@ Habilitar o faturamento resolveria os dois problemas de uma vez.
 **Ao trocar, atualizar os dois lugares:** o painel do Render (`DB_PASSWORD`) e o `.env` local. Sem o segundo, a suíte de integração para de rodar nesta máquina.
 
 **De quem.** João Ricardo (é a credencial pessoal dele; cada integrante usa a sua).
-
----
-
-### O-17. Documentos de trabalho precisam sair antes da entrega final
-
-**O quê.** Só falta um documento: o `prompt-video-apresentacao.md`, que é ferramenta para produzir o vídeo e **sai depois da gravação**.
-
-**Já feito em 12/11/2026:**
-
-| Documento | Destino |
-|---|---|
-| `progresso-migracao-2026-11-04.md` e `progresso-migracao-2026-11-05.md` | **Saíram.** Eram o diário de dois dias de trabalho; o que importa está nas decisões D-89 a D-96 |
-| `plano-migracao-spring-para-jax-rs.md` e `requisitos-migracao-spring-para-jax-rs.md` | **Ficam.** As decisões D-89 a D-96 citam os requisitos pelo número (RF-04, RNF-02...), e os dois mostram como a troca foi verificada |
-| `insomnia/base-antes.md` | **Fica**: traz a comparação de tempos que defende a D-96 |
-| O protótipo do Stitch, as imagens do template do Vite, as pastas vazias e a configuração do editor | **Saíram** |
-
-**O critério**, o mesmo da limpeza de 01/09/2026: **fica** o que explica o que o projeto é, por que ficou assim e como se sabe que funciona (`contexto-e-planejamento.md`, `planejamento-tecnico.md`, `decisoes-tecnicas.md`, os READMEs, `dados/`, os diagramas). **Sai** o que estava amarrado a um momento do trabalho.
-
-**Ao apagar,** procurar os links que apontam para cada arquivo (`grep -rn` pelo nome) e redirecioná-los ou reescrevê-los.
-
-**De quem.** Time. **Quando:** antes do envio ao portal.
 
 ---
 
@@ -359,6 +337,7 @@ Resolvidas, sem objeto ou ligadas às apresentações ao vivo, que já acontecer
 
 | # | Desfecho |
 |---|---|
+| <a id="o-17-documentos-de-trabalho-precisam-sair-antes-da-entrega-final"></a>O-17 | Documentos de trabalho removidos em 12/11/2026, inclusive o briefing do vídeo. |
 | <a id="o-03-o-deploy-ainda-não-foi-feito--no-ar-e-verificado"></a>O-03 | Deploy no ar e verificado (25/08/2026). |
 | <a id="o-19-a-entrada-tem-um-plano-b-e-ele-é-uma-tela-que-ainda-não-existe"></a>O-19 | Tela de código manual feita; a arte da placa era para as apresentações ao vivo. |
 | <a id="o-04-origemsugestao-não-pode-ser-rotulado-como-ia-quando-for-proximidade--resolvida-na-tela"></a>O-04 | O selo da ruptura distingue sugestão da IA de proximidade. |
