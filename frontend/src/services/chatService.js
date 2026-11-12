@@ -1,5 +1,7 @@
 // Chat & Virtual AI Assistant Service with Screen Context Awareness (UC-007 a UC-009 / Passo 7)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+// A API e chamada sempre no proprio dominio: a Vercel repassa /api para o Render, e o proxy do
+// Vite faz o mesmo em desenvolvimento. Nenhuma variavel de ambiente muda isso (D-91).
+const API_BASE_URL = ''
 
 /**
  * Consultar histórico de mensagens da sessão

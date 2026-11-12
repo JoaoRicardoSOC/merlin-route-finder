@@ -17,7 +17,9 @@ import {
   lerFila
 } from './filaDeSincronizacao'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+// A API e chamada sempre no proprio dominio: a Vercel repassa /api para o Render, e o proxy do
+// Vite faz o mesmo em desenvolvimento. Nenhuma variavel de ambiente muda isso (D-91).
+const API_BASE_URL = ''
 const ROTEIRO_STORAGE_KEY = 'merlin_route_finder_roteiro_itens'
 
 const FORMATO_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

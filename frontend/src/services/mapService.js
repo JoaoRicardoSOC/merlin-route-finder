@@ -1,7 +1,9 @@
 // Map Service - Leroy Merlin Interlagos Store Floor Plan & Navigation
 // Integrates with backend GET /api/v1/mapa and local enriched geometry
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+// A API e chamada sempre no proprio dominio: a Vercel repassa /api para o Render, e o proxy do
+// Vite faz o mesmo em desenvolvimento. Nenhuma variavel de ambiente muda isso (D-91).
+const API_BASE_URL = ''
 
 export const STORE_SECTORS = [
   {

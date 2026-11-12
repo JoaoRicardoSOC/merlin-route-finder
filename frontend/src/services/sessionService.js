@@ -1,6 +1,8 @@
 // Service for Session & Location Code lifecycle (POST /api/v1/sessoes, GET /api/v1/sessoes/{id}, PUT /api/v1/sessoes/{id}/posicao)
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+// A API e chamada sempre no proprio dominio: a Vercel repassa /api para o Render, e o proxy do
+// Vite faz o mesmo em desenvolvimento. Nenhuma variavel de ambiente muda isso (D-91).
+const API_BASE_URL = ''
 const SESSION_STORAGE_KEY = 'merlin_route_finder_session_id'
 const SESSION_DATA_KEY = 'merlin_route_finder_session_data'
 
