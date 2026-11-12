@@ -14,7 +14,7 @@
 
 | Diagrama Oficial Atualizado | Localização no Repositório | Descrição |
 |---|---|---|
-| **C4 Model Atualizado** (Contexto & Contêiner) | [`../arquitetura/c4-model-atual.md`](../arquitetura/c4-model-atual.md) | Representa a arquitetura real do MVP: Mobile Web App (Vercel), Backend Spring Boot (Render), Oracle 19c e Google Gemini 3.5 Flash-Lite. |
+| **C4 Model Atualizado** (Contexto & Contêiner) | [`../arquitetura/c4-model-atual.md`](../arquitetura/c4-model-atual.md) | Representa a arquitetura real do MVP: Mobile Web App (Vercel), Backend JAX-RS com Jersey (Render), Oracle 19c e Google Gemini 3.5 Flash-Lite. |
 | **DER Atualizado** (8 Tabelas em Produção) | [`../dados/der-atualizado.md`](../dados/der-atualizado.md) | Modelo Entidade-Relacionamento completo contendo `TB_REGISTRO_RUPTURA`, `TB_CHAT_MENSAGEM`, `TB_PRODUTO_ATRIBUTO` e as demais 5 tabelas ativas no Oracle. |
 | **Arquitetura de Coleta de Dados** | [`../dados/coleta-de-dados-e-telemetria.md`](../dados/coleta-de-dados-e-telemetria.md) | Mapeamento dos fluxos de telemetria em tempo real (ruptura, dúvidas de chat, coletas e jornada indoor). |
 | **Sinalização Física de Loja** | [`../arquitetura/placa-sinalizacao-loja.md`](../arquitetura/placa-sinalizacao-loja.md) | Mockup e especificações da placa física de coluna (QR Code, URL curta e Código alfanumérico). |

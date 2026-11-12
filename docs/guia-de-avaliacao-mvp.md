@@ -10,12 +10,12 @@
 | Recurso | URL em Produção | Observações |
 |---|---|---|
 | **Mobile Web App (Frontend)** | [`https://merlin-route-finder.vercel.app`](https://merlin-route-finder.vercel.app) | Publicado na Vercel. Responsivo para smartphone ou navegador desktop. |
-| **API REST (Backend)** | [`https://merlin-route-finder-api.onrender.com`](https://merlin-route-finder-api.onrender.com) | Publicado no Render com Java 21 / Spring Boot 4.1.0 e Oracle 19c. |
-| **Documentação da API (Swagger)** | [`https://merlin-route-finder-api.onrender.com/swagger.html`](https://merlin-route-finder-api.onrender.com/swagger.html) | OpenAPI 3.0 com todos os endpoints documentados. |
+| **API REST (Backend)** | [`https://merlin-route-finder-api.onrender.com/health`](https://merlin-route-finder-api.onrender.com/health) | Publicado no Render com Java 21, JAX-RS (Jersey) e Oracle 19c, seguindo o material da FIAP. O `/health` responde sem tocar no banco. |
+| **Contrato da API** | [`openapi.yaml`](../backend/src/main/resources/openapi/openapi.yaml) | OpenAPI 3.0 com todos os endpoints documentados. Para chamar a API sem o app, há uma coleção do Insomnia em [`insomnia/merlin-paridade.json`](insomnia/merlin-paridade.json). |
 
 > [!TIP]
 > **Partida a Frio do Backend (Cold Start):**
-> O backend está hospedado no plano gratuito do Render. Caso a instância esteja ociosa há mais de 15 minutos, a primeira requisição levará cerca de **90 a 110 segundos** para acordar o processo Java. O aplicativo web detecta essa espera automaticamente e exibe uma barra informativa: *"Preparando o sistema… a primeira abertura do dia leva até dois minutos."* Após acordado, as respostas são instantâneas (~100-300ms).
+> O backend está hospedado no plano gratuito do Render. Caso a instância esteja ociosa há mais de 15 minutos, a primeira requisição levará cerca de **90 a 110 segundos** para acordar o processo Java. O aplicativo web detecta essa espera automaticamente e exibe uma barra informativa: *"Preparando o sistema… a primeira abertura do dia leva até dois minutos."* Depois de acordado, cada resposta leva menos de um segundo (de 0,4 s a 0,7 s, medido em 12/11/2026).
 
 ---
 

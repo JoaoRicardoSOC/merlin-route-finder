@@ -1,7 +1,7 @@
 # Diagrama Entidade-Relacionamento (DER) Atualizado — Merlin Route Finder
 
 > **Versão:** 2.0 (MVP Sprint 2 — Setembro/2026)  
-> **Status:** Mapeamento 1:1 com as entidades JPA e tabelas ativas no **Oracle Database 19c**.  
+> **Status:** Mapeamento 1:1 com as tabelas ativas no **Oracle Database 19c**, criadas pelo script [`database/migrations/V001__schema_inicial.sql`](../../database/migrations/V001__schema_inicial.sql) desde a migração para JAX-RS (D-94).  
 > **Substitui:** O PDF preliminar da Sprint 1 (`docs/diagramas/DER.pdf`), que não continha a tabela de telemetria `TB_REGISTRO_RUPTURA` nem `TB_PRODUTO_ATRIBUTO`.
 
 ---
