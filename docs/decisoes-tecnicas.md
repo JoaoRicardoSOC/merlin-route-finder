@@ -2522,8 +2522,14 @@ CORS em JAX-RS, o problema foi tirado do backend.
 `frontend/vercel.json` repassa para o Render. Para o navegador, frontend e API são o mesmo site, e
 não existe pedido entre origens. Em desenvolvimento, o proxy do Vite faz o mesmo.
 
-**A condição.** A variável `VITE_API_BASE_URL` não pode existir na Vercel: com ela, o frontend
-chamaria o Render direto e o navegador bloquearia as respostas. Ver [`deploy.md`](deploy.md).
+**A condição.** O frontend não pode chamar o Render direto, porque o navegador bloquearia as
+respostas. No começo isso dependia de apagar a variável `VITE_API_BASE_URL` no painel da Vercel.
+
+> **Revista em 12/11/2026.** O backend com Jersey foi publicado antes de a variável sair do
+> painel, e o frontend publicado parou de abrir a sessão por erro de CORS. Para a condição não
+> depender mais de um passo manual, os serviços do frontend deixaram de ler a variável: a URL da
+> API é sempre relativa (`/api/...`). Se a variável continuar no painel, ela não tem efeito.
+> Ver [`deploy.md`](deploy.md).
 
 ---
 

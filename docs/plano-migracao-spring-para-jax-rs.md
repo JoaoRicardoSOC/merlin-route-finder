@@ -28,7 +28,7 @@ Uma fase só é dada como concluída se a integração não tiver falha **além 
 **Dúvidas:** toda decisão não prevista aqui é perguntada ao time antes de ser tomada, e registrada neste documento.
 
 **Pendências que bloqueiam o push** (cada uma sai desta lista quando for resolvida)
-- [ ] Apagar `VITE_API_BASE_URL` no painel da Vercel e publicar o frontend de novo (passo 1.2). Sem isso, o backend publicado sem CORS deixa o frontend sem conseguir chamar a API.
+- [x] ~~Apagar `VITE_API_BASE_URL` no painel da Vercel e publicar o frontend de novo (passo 1.2).~~ Resolvido no código em 12/11/2026: o frontend deixou de ler a variável (revisão da D-91).
 
 ---
 
@@ -69,7 +69,7 @@ Objetivo: ter com o que comparar o antes e o depois, e ter o schema escrito ante
 Objetivo: o frontend publicado chamar a API no mesmo domínio, para o backend não precisar mais de CORS. Vem cedo porque precisa ser confirmado em produção antes de o Spring sair.
 
 - [x] **1.1** Criar `frontend/vercel.json` com rewrite de `/api/:caminho*` para `https://merlin-route-finder-api.onrender.com/api/:caminho*`.
-- [ ] **1.2** Push (perguntar antes) e, **no painel da Vercel**, apagar `VITE_API_BASE_URL` e publicar de novo. *Manual, feito por quem administra o projeto na Vercel.*
+- [x] **1.2** Push (perguntar antes) e, **no painel da Vercel**, apagar `VITE_API_BASE_URL` e publicar de novo. *Feito de outro jeito em 12/11/2026: os serviços do frontend deixaram de ler a variável, e o push publicou o frontend. O passo manual no painel deixou de ser necessário.*
 - [ ] **1.3** Percorrer a jornada no frontend publicado e confirmar, nas ferramentas do navegador, que as chamadas vão para o domínio da Vercel.
 - [x] **1.4** Remover `CorsConfig` e a propriedade `merlin.cors.allowed-origins`.
 - [x] **1.5** Remover `CORS_ALLOWED_ORIGINS` de `render.yaml` e atualizar `docs/deploy.md`.

@@ -152,9 +152,9 @@ O time decidiu (23/08/2026) seguir no plano gratuito e assumir o aquecimento man
 
 ## Depois que o frontend for publicado
 
-No painel da Vercel, em *Settings → Environment Variables*, a variável `VITE_API_BASE_URL` **não pode existir**. Sem ela, o frontend chama `/api/...` no próprio domínio e o rewrite de `frontend/vercel.json` repassa para o Render. Com ela, o frontend chama o Render direto, e o navegador bloqueia as respostas, porque o backend não envia cabeçalhos de CORS.
+O frontend chama `/api/...` sempre no próprio domínio, e o rewrite de `frontend/vercel.json` repassa para o Render. O backend não envia cabeçalhos de CORS, então o frontend nunca pode chamar o Render direto.
 
-Depois de apagar a variável, publicar o frontend de novo: o valor das variáveis `VITE_*` entra no build, não é lido em tempo de execução.
+Desde 12/11/2026, os serviços do frontend não leem mais a variável `VITE_API_BASE_URL` (revisão da [D-91](decisoes-tecnicas.md#d-91-o-cors-sai-do-backend-a-vercel-repassa-api-para-o-render)). Se ela ainda existir em *Settings → Environment Variables*, não tem efeito, e pode ser apagada quando for conveniente.
 
 ---
 
