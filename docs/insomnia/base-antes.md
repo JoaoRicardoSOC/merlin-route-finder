@@ -51,6 +51,28 @@ Média de 5 chamadas seguidas, depois de uma chamada de aquecimento, feitas de u
 
 | Endpoint | Antes (ms) | Depois (ms) |
 |---|---|---|
-| `GET /api/v1/produtos?query=tinta` | 883 | |
-| `GET /api/v1/mapa` | 835 | |
-| `GET /api/v1/sessoes/{id}/roteiro` | 491 | |
+| `GET /api/v1/produtos?query=tinta` | 883 | 1.816 / 2.236 |
+| `GET /api/v1/mapa` | 835 | 1.807 / 1.783 |
+| `GET /api/v1/sessoes/{id}/roteiro` | 491 | 1.496 / 1.532 |
+
+**Depois (12/11/2026, passo 11.6):** duas rodadas seguidas, mesma forma de medir, de uma máquina no Brasil contra o backend com Jersey publicado no Render. **Ficou de 2 a 3 vezes mais lento**, o que bate com o risco previsto para o JDBC sem pool (D-90): cada pedido abre uma conexão nova com o Oracle da FIAP. Pelo RNF-06, a decisão sobre isso é do time.
+
+## Resultado depois da migração (passo 11.6)
+
+A tabela de cima, da versão com Spring, **nunca foi preenchida**: o passo 0.3 não chegou a ser rodado. Por isso a comparação abaixo é contra a coluna **Esperado** e contra o contrato, e não contra uma execução anterior.
+
+Rodada em 12/11/2026 contra `https://merlin-route-finder-api.onrender.com`, seguindo a coleção pedido a pedido (método, caminho, cabeçalhos e corpo). Os erros que precisam de sessão ativa (E05 a E09) rodaram **antes** do 21, porque depois dele a sessão está concluída e o E07 responde 409 em vez de 404. O estoque alterado pelo 19 foi devolvido ao valor original no fim.
+
+| Pedido | Status obtido | Corpo |
+|---|---|---|
+| 01 a 14 | todos como esperado (200 e 201) | campos de primeiro nível iguais aos do `openapi.yaml` |
+| 15 Relatar ruptura | 200 (numa rodada, 422) | `justificativa`, `origemSugestao`, `produtoOriginalId`, `produtoSugerido`, `produtoSugeridoId`. O 422 apareceu quando o Gemini não indicou substituto, o que a coluna Esperado já previa |
+| 16 a 21 | todos como esperado (200, 201 e 204) | |
+| E01, E04, E10, E15 | 400 | `StandardError` com o `error` certo |
+| E02, E03, E07, E13 | 404 | `StandardError`, menos o E13, que vem sem corpo (aceito no RF-04) |
+| E05, E06, E08, E09 | 400 | `StandardError` com a lista em **`validationErrors`**, que é o nome no contrato. O "lista errors" da coluna Esperado é só o nome errado na anotação |
+| E11 | 405 | sem corpo (aceito no RF-04) |
+| E12 | 415 | sem corpo (aceito no RF-04) |
+| E14 | 404, e não 409 | **Achado, mas não regressão.** Na coleção, o E14 usa o item que o passo 20 apagou, então o 404 é o certo. Testado à parte, com um item que ainda existe: marcar como coletado um item de sessão concluída responde **200**. A versão com Spring fazia o mesmo (o `MarcarItemColetadoUseCase` nunca checou o estado da sessão). O 409 de sessão encerrada vale para adicionar item ao roteiro, que é o que o `RespostasDeErroIntegracaoTest` cobre |
+
+**Conclusão:** nenhuma diferença de status ou de formato que o frontend perceba. A jornada também foi percorrida no frontend publicado, com as chamadas saindo pelo domínio da Vercel.
