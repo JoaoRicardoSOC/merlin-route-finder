@@ -4,7 +4,7 @@
 > *Otimização da Jornada do Cliente em Loja com Inteligência Artificial e Localização Indoor.*
 
 [![Deploy Vercel](https://img.shields.io/badge/Frontend-Vercel-black?logo=vercel&logoColor=white)](https://merlin-route-finder.vercel.app)
-[![Deploy Render](https://img.shields.io/badge/Backend-Render-46E3B7?logo=render&logoColor=white)](https://merlin-route-finder-api.onrender.com)
+[![Deploy Render](https://img.shields.io/badge/Backend-Render-46E3B7?logo=render&logoColor=white)](https://merlin-route-finder-api.onrender.com/health)
 [![Java 21](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![Jersey](https://img.shields.io/badge/JAX--RS-Jersey%204.0.3-F8981D)](https://eclipse-ee4j.github.io/jersey/)
 [![Oracle Database](https://img.shields.io/badge/Oracle%20DB-19c-F80000?logo=oracle&logoColor=white)](https://www.oracle.com/database/)
@@ -17,13 +17,13 @@
 
 | Serviço | Link de Acesso | Descrição |
 |---|---|---|
-| 📱 **Mobile Web App** | [**merlin-route-finder.vercel.app**](https://merlin-route-finder.vercel.app) | Aplicação PWA para smartphone (zero instalação necessária). |
+| 📱 **Mobile Web App** | [**merlin-route-finder.vercel.app**](https://merlin-route-finder.vercel.app) | Web app para smartphone, aberto no navegador (zero instalação necessária). |
 | 📍 **Acesso com Ponto de Loja** | [**merlin-route-finder.vercel.app/?ponto=TIN-02**](https://merlin-route-finder.vercel.app/?ponto=TIN-02) | Simula a leitura de QR Code no corredor de Tintas. |
-| ⚙️ **Backend REST API** | [**merlin-route-finder-api.onrender.com**](https://merlin-route-finder-api.onrender.com) | API REST em JAX-RS (Jersey sobre Grizzly), com JDBC e Oracle 19c. |
+| ⚙️ **Backend REST API** | [**merlin-route-finder-api.onrender.com/health**](https://merlin-route-finder-api.onrender.com/health) | API REST em JAX-RS (Jersey sobre Grizzly), com JDBC e Oracle 19c. Os endpoints ficam sob `/api/v1`; o `/health` responde sem tocar no banco. |
 | 📄 **Contrato da API** | [**openapi.yaml**](backend/src/main/resources/openapi/openapi.yaml) | Especificação OpenAPI 3.0 de todos os endpoints. |
 
 > [!NOTE]
-> **Aviso sobre o Backend:** Hospedado no plano gratuito do Render, o backend entra em modo de suspensão após períodos de inatividade. A primeira chamada do dia pode levar cerca de 90 a 110 segundos (partida a frio). Uma vez acordado, o tempo de resposta é imediato (~150ms).
+> **Aviso sobre o Backend:** Hospedado no plano gratuito do Render, o backend entra em modo de suspensão após períodos de inatividade. A primeira chamada depois de um período parado leva cerca de um minuto (partida a frio; 64 s medidos em 12/11/2026), e o app avisa enquanto espera. Depois de acordado, cada resposta leva menos de um segundo (0,4 s a 0,7 s).
 
 ---
 
@@ -66,6 +66,7 @@ Consulte o dossiê completo em: [**Dossiê de Coleta de Dados e Telemetria**](do
 | 🏷️ **Placa Física de Sinalização da Loja** | [**`docs/arquitetura/placa-sinalizacao-loja.md`**](docs/arquitetura/placa-sinalizacao-loja.md) |
 | 🚶 **Jornada do Cliente (Pós-Mentoria)** | [**`docs/fluxo-do-cliente.md`**](docs/fluxo-do-cliente.md) |
 | 💡 **Registro de Decisões Técnicas (ADRs)** | [**`docs/decisoes-tecnicas.md`**](docs/decisoes-tecnicas.md) |
+| ⚠️ **Limitações Aceitas e Pendências** | [**`docs/observacoes.md`**](docs/observacoes.md) |
 | 🚀 **Instruções de Deploy** | [**`docs/deploy.md`**](docs/deploy.md) |
 
 ---
@@ -77,11 +78,16 @@ Consulte o dossiê completo em: [**Dossiê de Coleta de Dados e Telemetria**](do
 - Node.js 20+ e npm
 - Maven 3.9+ (ou utilizar o wrapper `./mvnw`)
 
+As tecnologias seguem o material da FIAP, como pede o Challenge: o backend usa só JAX-RS (Jersey), JSON-B, JDBC, ModelMapper e JUnit, mais o Java puro ([D-89](docs/decisoes-tecnicas.md#d-89-o-backend-sai-do-spring-boot-e-segue-o-material-da-fiap-à-risca) e [D-95](docs/decisoes-tecnicas.md#d-95-jacoco-e-axe-core-saem-por-não-estarem-no-material)). Detalhes de cada parte em [`backend/README.md`](backend/README.md) e [`frontend/README.md`](frontend/README.md).
+
 ### 2. Back-end (JAX-RS com Jersey)
 ```bash
 cd backend
 # Compilar e rodar os testes que nao precisam de banco
 ./mvnw clean test
+
+# Rodar tambem os testes de integracao, contra o Oracle (precisa de DB_URL, DB_USER e DB_PASSWORD)
+./mvnw test -Pintegracao
 
 # Executar a aplicação localmente (precisa de DB_URL, DB_USER e DB_PASSWORD)
 ./mvnw compile exec:java
