@@ -1,0 +1,35 @@
+# Mantem o backend publicado acordado (D-97).
+#
+# No plano gratuito, o Render suspende o servico depois de 15 minutos sem trafego, e a primeira
+# requisicao seguinte espera mais de um minuto pela subida. Este workflow chama o /health a cada
+# 10 minutos, nos servidores do GitHub, sem depender de nenhuma maquina do time ligada.
+#
+# O /health nao toca no banco: manter o servico acordado nao gasta sessoes do Oracle da FIAP.
+#
+# Para desligar: aba Actions do GitHub -> "Manter o backend acordado" -> "Disable workflow".
+# Para rodar na hora: o mesmo lugar -> "Run workflow".
+
+name: Manter o backend acordado
+
+on:
+  schedule:
+    # O GitHub nao garante o horario exato: em horario de pico, uma execucao agendada pode
+    # atrasar alguns minutos. Dez minutos deixa folga dentro dos 15 do Render.
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  chamar-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Chamar o /health do backend
+        # --max-time longo porque, se a instancia tiver dormido mesmo assim, a subida leva
+        # cerca de um minuto. --fail faz a execucao aparecer como falha se o servico nao
+        # responder 200, e o GitHub avisa por e-mail.
+        run: >
+          curl --fail --silent --show-error
+          --max-time 150 --retry 2 --retry-delay 15
+          https://merlin-route-finder-api.onrender.com/health
