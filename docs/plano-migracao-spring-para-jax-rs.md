@@ -70,7 +70,7 @@ Objetivo: o frontend publicado chamar a API no mesmo domínio, para o backend n�
 
 - [x] **1.1** Criar `frontend/vercel.json` com rewrite de `/api/:caminho*` para `https://merlin-route-finder-api.onrender.com/api/:caminho*`.
 - [x] **1.2** Push (perguntar antes) e, **no painel da Vercel**, apagar `VITE_API_BASE_URL` e publicar de novo. *Feito de outro jeito em 12/11/2026: os serviços do frontend deixaram de ler a variável, e o push publicou o frontend. O passo manual no painel deixou de ser necessário.*
-- [ ] **1.3** Percorrer a jornada no frontend publicado e confirmar, nas ferramentas do navegador, que as chamadas vão para o domínio da Vercel.
+- [x] **1.3** Percorrer a jornada no frontend publicado e confirmar, nas ferramentas do navegador, que as chamadas vão para o domínio da Vercel. *12/11/2026: sessão, seções, catálogo e roteiro respondendo pelo domínio da Vercel.*
 - [x] **1.4** Remover `CorsConfig` e a propriedade `merlin.cors.allowed-origins`.
 - [x] **1.5** Remover `CORS_ALLOWED_ORIGINS` de `render.yaml` e atualizar `docs/deploy.md`.
 
@@ -200,9 +200,9 @@ Nesta fase o Spring e o Jersey convivem no `pom.xml` até o passo 10.12. **Aten�
 - [x] **11.2** `docs/deploy.md` atualizado (variáveis, *health check*, execução manual de scripts de schema).
 - [x] **11.3** `decisoes-tecnicas.md`: novas decisões (migração para JAX-RS com adesão total ao material; JDBC sem pool; CORS por rewrite; exceções checadas; DTOs com ModelMapper; schema por script) e revisão das que mudam: D-01, D-03, D-10, D-11, D-16, D-30, D-33, D-34, D-45 e D-46. Um commit por decisão.
 - [x] **11.4** `docs/arquitetura` (C4) atualizado com a nova estrutura.
-- [ ] **11.5** Push e deploy (perguntar antes).
-- [ ] **11.6** 🔒 Coleção do Insomnia contra a produção, comparada com `base-antes.md`; medição de tempo de resposta comparada com a 0.6.
-- [ ] **11.7** Marcar a definição de pronto dos requisitos.
+- [x] **11.5** Push e deploy (perguntar antes). *O backend com Jersey já estava no ar quando o passo foi retomado, em 12/11/2026, e o frontend publicado estava quebrado por CORS (ver a revisão da D-91). Corrigido e publicado no mesmo dia.*
+- [x] **11.6** 🔒 Coleção do Insomnia contra a produção, comparada com `base-antes.md`; medição de tempo de resposta comparada com a 0.6. *12/11/2026: sem diferença que o frontend perceba; respostas 2 a 3 vezes mais lentas, que vão para o time decidir (RNF-06). Detalhes em [`base-antes.md`](insomnia/base-antes.md).*
+- [x] **11.7** Marcar a definição de pronto dos requisitos.
 
 ---
 

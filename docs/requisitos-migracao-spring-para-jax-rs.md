@@ -160,9 +160,9 @@ O frontend não pode precisar de nenhuma mudança de código.
 
 ## 9. Definição de pronto
 
-- [ ] Nenhuma ocorrência das importações listadas em RNF-01 em `backend/src`, e nenhuma das dependências de RC-01 no `pom.xml`.
-- [ ] `mvnw test` passa nesta máquina e `mvnw test -Pintegracao` passa na máquina de quem tem acesso ao Oracle.
-- [ ] O teste de contrato passa sem mudança no `openapi.yaml`.
-- [ ] A coleção do Insomnia dá os mesmos status e corpos de antes, com as mudanças aceitas da seção 4.
-- [ ] A aplicação sobe no Render, passa no *health check* e o frontend publicado funciona sem mudança de código.
-- [ ] `decisoes-tecnicas.md`, `deploy.md` e os documentos de arquitetura estão atualizados.
+- [x] Nenhuma ocorrência das importações listadas em RNF-01 em `backend/src`, e nenhuma das dependências de RC-01 no `pom.xml`. *(Conferido por busca em 12/11/2026.)*
+- [x] `mvnw test` passa nesta máquina e `mvnw test -Pintegracao` passa na máquina de quem tem acesso ao Oracle. *(195 testes em 12/11/2026; integração no passo 10.9, em 05/11/2026.)*
+- [x] O teste de contrato passa sem mudança no `openapi.yaml`.
+- [x] A coleção do Insomnia dá os mesmos status e corpos de antes, com as mudanças aceitas da seção 4. *(Comparada com o esperado, porque a execução de antes não foi registrada. Ver `insomnia/base-antes.md`.)*
+- [x] A aplicação sobe no Render, passa no *health check* e o frontend publicado funciona sem mudança de código. *(Com uma ressalva: o frontend precisou de uma mudança, que foi parar de ler `VITE_API_BASE_URL`. A variável continuava no painel da Vercel e mandava as chamadas direto ao Render. Ver a revisão da D-91.)*
+- [x] `decisoes-tecnicas.md`, `deploy.md` e os documentos de arquitetura estão atualizados.
