@@ -112,6 +112,10 @@ Quem muda o schema:
 
 A exceção são as restrições de enum (`CHECK ... IN (...)`): a carga de dados as refaz sozinha no startup, pelo `RestricaoDeEnumDao`, quando um enum ganha ou perde um valor (RF-15).
 
+**Num schema novo**, rodar os scripts em ordem: `V001__schema_inicial.sql` e depois `V002__prefixo_ch26.sql`. Não é preciso popular nada: ao subir, a aplicação carrega o catálogo, a planta e os atributos sozinha.
+
+**Nomes.** Toda tabela e chave do projeto leva o ID da atividade: `TB_CH26_...`, `PK_CH26_...`, `FK_CH26_...`, `UK_CH26_...` (CH26 = Challenge 2026). Um script novo segue o mesmo padrão ([D-98](decisoes-tecnicas.md#d-98-tabelas-e-chaves-com-o-id-da-atividade-tb_ch26_)).
+
 ---
 
 ## Se o Oracle não conectar do servidor

@@ -29,10 +29,10 @@ flowchart LR
     end
 
     subgraph Armazenamento["Oracle Database 19c"]
-        T1[(TB_SESSAO)]
-        T2[(TB_REGISTRO_RUPTURA)]
-        T3[(TB_CHAT_MENSAGEM)]
-        T4[(TB_ITEM_ROTEIRO)]
+        T1[(TB_CH26_SESSAO)]
+        T2[(TB_CH26_REGISTRO_RUPTURA)]
+        T3[(TB_CH26_CHAT_MENSAGEM)]
+        T4[(TB_CH26_ITEM_ROTEIRO)]
     end
 
     subgraph Inteligencia_De_Negocio["Painéis & Decisão Leroy Merlin"]
@@ -58,7 +58,7 @@ flowchart LR
 
 ## 2. As 4 Dimensões de Dados Coletados
 
-### Dimensão 1: Telemetria de Ruptura de Estoque (`TB_REGISTRO_RUPTURA`)
+### Dimensão 1: Telemetria de Ruptura de Estoque (`TB_CH26_REGISTRO_RUPTURA`)
 
 *O "Pulo do Gato" da coleta de dados do projeto.*
 
@@ -77,7 +77,7 @@ flowchart LR
 
 ---
 
-### Dimensão 2: Telemetria de Interação Conversacional e Dúvidas Técnicas (`TB_CHAT_MENSAGEM`)
+### Dimensão 2: Telemetria de Interação Conversacional e Dúvidas Técnicas (`TB_CH26_CHAT_MENSAGEM`)
 
 - **O que é coletado:**
   - `sessao_id`: Agrupamento cronológico da conversa por visitante.
@@ -93,7 +93,7 @@ flowchart LR
 
 ---
 
-### Dimensão 3: Telemetria de Jornada, Posição e Tempo de Permanência (`TB_SESSAO` e `TB_ITEM_ROTEIRO`)
+### Dimensão 3: Telemetria de Jornada, Posição e Tempo de Permanência (`TB_CH26_SESSAO` e `TB_CH26_ITEM_ROTEIRO`)
 
 - **O que é coletado:**
   - `ponto_escaneado_id`: Placa física onde o cliente ingressou na loja (ex: `ENT-01`, `TIN-02`, `FER-01`).
@@ -109,7 +109,7 @@ flowchart LR
 
 ---
 
-### Dimensão 4: Dados Mestres Geoespaciais e Catálogo (`TB_PRODUTO`, `TB_PONTO_MAPA`, `TB_PRODUTO_ATRIBUTO`)
+### Dimensão 4: Dados Mestres Geoespaciais e Catálogo (`TB_CH26_PRODUTO`, `TB_CH26_PONTO_MAPA`, `TB_CH26_PRODUTO_ATRIBUTO`)
 
 - **O que é coletado e mantido:**
   - Grid normalizado de coordenadas da loja `(X: 0..100, Y: 0..100)`.
@@ -126,10 +126,10 @@ flowchart LR
 
 | Entidade | Gatilho de Coleta | Campos Principais | Finalidade Operacional |
 |---|---|---|---|
-| **`TB_REGISTRO_RUPTURA`** | Cliente clica em "Não encontrei este produto" | `produto_faltante_id`, `produto_sugerido_id`, `origem`, `justificativa`, `registrado_em` | Detecção de divergência de estoque físico e acionamento de reposição. |
-| **`TB_CHAT_MENSAGEM`** | Envio de mensagem no chat do assistente | `sessao_id`, `remetente`, `conteudo`, `enviado_em` | Mapeamento de dúvidas do cliente e refinamento de prompts do assistente. |
-| **`TB_SESSAO`** | Leitura de QR Code ou digitação de placa | `id`, `ponto_escaneado_id`, `status`, `criado_em`, `expiracao_ttl` | Telemetria de fluxo de clientes e taxa de conversão até o caixa. |
-| **`TB_ITEM_ROTEIRO`** | Adição ao carrinho e clique em "Coletar" | `lista_id`, `produto_id`, `coletado`, `coletado_em` | Monitoramento da velocidade de coleta e rotas indoor espontâneas. |
+| **`TB_CH26_REGISTRO_RUPTURA`** | Cliente clica em "Não encontrei este produto" | `produto_faltante_id`, `produto_sugerido_id`, `origem`, `justificativa`, `registrado_em` | Detecção de divergência de estoque físico e acionamento de reposição. |
+| **`TB_CH26_CHAT_MENSAGEM`** | Envio de mensagem no chat do assistente | `sessao_id`, `remetente`, `conteudo`, `enviado_em` | Mapeamento de dúvidas do cliente e refinamento de prompts do assistente. |
+| **`TB_CH26_SESSAO`** | Leitura de QR Code ou digitação de placa | `id`, `ponto_escaneado_id`, `status`, `criado_em`, `expiracao_ttl` | Telemetria de fluxo de clientes e taxa de conversão até o caixa. |
+| **`TB_CH26_ITEM_ROTEIRO`** | Adição ao carrinho e clique em "Coletar" | `lista_id`, `produto_id`, `coletado`, `coletado_em` | Monitoramento da velocidade de coleta e rotas indoor espontâneas. |
 
 ---
 

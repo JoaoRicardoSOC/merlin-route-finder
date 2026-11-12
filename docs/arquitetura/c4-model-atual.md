@@ -56,7 +56,7 @@ graph TB
     end
 
     subgraph Provedores_Externos["Serviços em Nuvem & Dados"]
-        OracleDB[("Oracle Database 19c\n[FIAP Cloud Server]\n- Catálogo com 111 produtos reais\n- Busca tolerante a erros (UTL_MATCH)\n- Telemetria de Ruptura (TB_REGISTRO_RUPTURA)\n- Histórico de Chat e Sessões")]
+        OracleDB[("Oracle Database 19c\n[FIAP Cloud Server]\n- Catálogo com 111 produtos reais\n- Busca tolerante a erros (UTL_MATCH)\n- Telemetria de Ruptura (TB_CH26_REGISTRO_RUPTURA)\n- Histórico de Chat e Sessões")]
         GeminiAPI["Google AI Studio\n[Gemini 3.5 Flash-Lite]\n- Function Calling estruturado\n- Fallback determinístico de proximidade"]
     end
 

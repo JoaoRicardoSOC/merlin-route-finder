@@ -104,7 +104,7 @@ Este é o momento mais inovador da solução: resolver a frustração do cliente
    - O produto sugerido será a **`Lixa d'Água Grão 150`** (disponível no mesmo corredor de Tintas, R$ 4,20).
    - O assistente apresenta uma **justificativa técnica em linguagem natural**, explicando que a lixa d'água grão 150 possui granulometria próxima e cumpre perfeitamente o acabamento para pintura de paredes.
 5. Toque no botão **"Levar este"**:
-   - *O que observar:* Em **uma única ação atômica**, a lixa faltante é removida da lista e a lixa substituta é inserida, atualizando o mapa e gravando o evento na tabela `TB_REGISTRO_RUPTURA` do Oracle.
+   - *O que observar:* Em **uma única ação atômica**, a lixa faltante é removida da lista e a lixa substituta é inserida, atualizando o mapa e gravando o evento na tabela `TB_CH26_REGISTRO_RUPTURA` do Oracle.
 
 ---
 

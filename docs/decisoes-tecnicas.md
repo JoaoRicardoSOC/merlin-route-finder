@@ -118,6 +118,7 @@
 - [D-95. JaCoCo e axe-core saem por não estarem no material](#d-95-jacoco-e-axe-core-saem-por-não-estarem-no-material)
 - [D-96. Conexões reaproveitadas entre transações, em Java puro](#d-96-conexões-reaproveitadas-entre-transações-em-java-puro)
 - [D-97. Um workflow do GitHub mantém o backend acordado](#d-97-um-workflow-do-github-mantém-o-backend-acordado)
+- [D-98. Tabelas e chaves com o ID da atividade: `TB_CH26_`](#d-98-tabelas-e-chaves-com-o-id-da-atividade-tb_ch26_)
 
 ---
 
@@ -2708,6 +2709,43 @@ O plano pago do Render resolveria sem truque nenhum, e o time decidiu ficar no g
 a rodar de fato a cada 30 minutos, em vez de só quando alguém usa o app.
 
 **Onde no código.** `.github/workflows/manter-backend-acordado.yml`.
+
+---
+
+### D-98. Tabelas e chaves com o ID da atividade: `TB_CH26_`
+
+**Contexto.** O schema Oracle da FIAP é um por aluno, e o mesmo schema guarda o banco de mais de
+uma atividade. Conferido em 12/11/2026: além das 8 tabelas do Merlin, havia `TB_USUARIO`,
+`TB_DENUNCIA`, `TB_DIREITO` e outras, da Global Solution 2/2026, todas com o mesmo prefixo `TB_`.
+Bastaria a outra atividade criar uma `TB_PRODUTO` ou uma `TB_SESSAO` para as duas colidirem. As
+chaves tinham o mesmo problema, e pior: o Hibernate as tinha criado com nomes aleatórios
+(`FKDX8W5NP9...`, `SYS_C006965933`), que não dizem de quem são.
+
+**A decisão.** Todo objeto do projeto leva o ID da atividade depois do tipo: `TB_CH26_PRODUTO`,
+`PK_CH26_PRODUTO`, `FK_CH26_PRODUTO_PONTO_MAPA`, `UK_CH26_PRODUTO_SKU`. O ID segue
+`<atividade><ano>[S<semestre>]`: **CH26** é o Challenge 2026, FIAP + Leroy Merlin; a Global
+Solution 2/2026 seria `GS26S2`. Cada tabela também ganhou um `COMMENT ON TABLE` dizendo a que
+atividade pertence, que o SQL Developer mostra.
+
+**Como foi aplicada.** Pelo `V002__prefixo_ch26.sql`, que renomeia com `ALTER ... RENAME` e
+preserva os dados. Ele acha cada restrição pela tabela, pelo tipo e pelas colunas, e não pelo
+nome: serve tanto ao schema publicado, com os nomes do Hibernate, quanto a um criado do zero pelo
+`V001`. Pode rodar mais de uma vez. Antes de rodar de verdade, foi ensaiado contra o schema real
+com os comandos impressos em vez de executados: as 8 tabelas e as 20 restrições foram
+encontradas. O Oracle 19c da FIAP aceita nomes de até 128 caracteres (conferido), então os
+nomes não precisaram ser abreviados.
+
+**Alternativa considerada.** Um banco fora do schema pessoal, como o Autonomous Database
+gratuito da Oracle Cloud. Desvincularia o projeto do RM de um integrante, mas exige uma conta com
+cartão de crédito e para sozinho depois de 7 dias sem conexão. Com o prefixo, essa mudança fica
+barata se um dia for feita: rodar `V001` e `V002` no banco novo e trocar as três variáveis
+`DB_`; a carga inicial recria o catálogo.
+
+**O que não mudou.** As restrições `CHECK` continuam sem nome, porque a `RestricaoDeEnum` as acha
+pela condição. Os documentos históricos (este registro, o planejamento, o plano da migração e o
+`V001`) mantêm os nomes da época.
+
+**Onde no código.** `database/migrations/V002__prefixo_ch26.sql` e o SQL de todos os DAOs.
 
 ---
 

@@ -47,9 +47,9 @@ Lojas físicas da **Leroy Merlin** possuem até 10.000m² e mais de 30.000 itens
 
 O sistema não é apenas um visualizador passivo, mas um ativo de **coleta de dados em tempo real** para a gestão da Leroy Merlin:
 
-- **Telemetria de Rupturas (`TB_REGISTRO_RUPTURA`):** Captura ocorrências de falta de produto na gôndola, identificando "estoques fantasmas" no ERP e acionando a reposição física imediata.
-- **Mapeamento de Dúvidas Técnicas (`TB_CHAT_MENSAGEM`):** Registra perguntas em linguagem natural para identificar categorias que exigem capacitação dos consultores de loja.
-- **Métricas de Jornada e Coleta (`TB_SESSAO` e `TB_ITEM_ROTEIRO`):** Monitora tempo de permanência, taxas de abandono de roteiro e mapas de calor de tráfego de clientes.
+- **Telemetria de Rupturas (`TB_CH26_REGISTRO_RUPTURA`):** Captura ocorrências de falta de produto na gôndola, identificando "estoques fantasmas" no ERP e acionando a reposição física imediata.
+- **Mapeamento de Dúvidas Técnicas (`TB_CH26_CHAT_MENSAGEM`):** Registra perguntas em linguagem natural para identificar categorias que exigem capacitação dos consultores de loja.
+- **Métricas de Jornada e Coleta (`TB_CH26_SESSAO` e `TB_CH26_ITEM_ROTEIRO`):** Monitora tempo de permanência, taxas de abandono de roteiro e mapas de calor de tráfego de clientes.
 
 Consulte o dossiê completo em: [**Dossiê de Coleta de Dados e Telemetria**](docs/dados/coleta-de-dados-e-telemetria.md).
 

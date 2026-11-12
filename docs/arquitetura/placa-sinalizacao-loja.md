@@ -61,7 +61,7 @@ Cada placa afixada nas colunas da Leroy Merlin contém obrigatoriamente **três 
 
 ## 3. Matriz de Códigos de Sinalização da Loja Modelo (Interlagos)
 
-Os códigos mapeados no banco de dados (`TB_PONTO_MAPA`) correspondem às coordenadas de gôndolas reais:
+Os códigos mapeados no banco de dados (`TB_CH26_PONTO_MAPA`) correspondem às coordenadas de gôndolas reais:
 
 | Código da Placa | Seção / Corredor | Coordenada X | Coordenada Y | Setor de Referência |
 |---|---|:---:|:---:|---|
