@@ -1,6 +1,9 @@
 -- =====================================================================================
 -- Merlin Route Finder - schema inicial
 --
+-- ATENCAO: os nomes deste script sao os de antes do prefixo do projeto. Depois dele, rodar o
+-- V002__prefixo_ch26.sql, que renomeia tudo para TB_CH26_... (D-98).
+--
 -- Executar no SQL Developer, como no material, num schema vazio. Ate a migracao para
 -- JAX-RS o schema era criado pelo Hibernate (ddl-auto: update); este script foi gerado a
 -- partir das entidades JPA e reescrito a mao.
