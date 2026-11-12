@@ -348,6 +348,8 @@ paths:
                 $ref: "#/components/schemas/ItemRoteiroDetalhado"
         "404":
           $ref: "#/components/responses/NaoEncontrado"
+        "409":
+          $ref: "#/components/responses/SessaoInativa"
 
   /roteiro/itens/{itemId}/desmarcar:
     patch:
@@ -370,6 +372,8 @@ paths:
                 $ref: "#/components/schemas/ItemRoteiroDetalhado"
         "404":
           $ref: "#/components/responses/NaoEncontrado"
+        "409":
+          $ref: "#/components/responses/SessaoInativa"
         "500":
           $ref: "#/components/responses/ErroInterno"
 
