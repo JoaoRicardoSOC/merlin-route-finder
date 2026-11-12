@@ -65,9 +65,10 @@ No painel do serviço, em *Environment*. As marcadas com `sync: false` no bluepr
 | `MERLIN_SEED_ENABLED` | opcional | `false` desliga a carga de dados no startup; padrão ligada |
 | `MERLIN_AGENDADOR_ENABLED` | opcional | `false` desliga a varredura de TTL; padrão ligada |
 | `AGENDADOR_INTERVALO_MS` / `AGENDADOR_ATRASO_INICIAL_MS` | opcionais | padrões 1.800.000 (30 min) e 60.000 |
+| `DB_POOL_SIZE` | opcional | quantas conexões ficam guardadas entre requisições; padrão 3, e `0` desliga ([D-96](decisoes-tecnicas.md#d-96-conexões-reaproveitadas-entre-transações-em-java-puro)). Na publicada, 5; somada aos 3 da máquina de quem cedeu a credencial, fica dentro das 20 sessões do schema |
 | `MERLIN_HTTP_CONNECT_TIMEOUT_SECONDS` / `MERLIN_HTTP_READ_TIMEOUT_SECONDS` | opcionais | tempos limite do Gemini; padrões 5 e 20 |
 
-**Variáveis que sobraram da versão Spring e podem ser apagadas do painel:** `SPRING_PROFILES_ACTIVE`, `DB_POOL_SIZE` (sem pool, cada transação abre e fecha a própria conexão), `CORS_ALLOWED_ORIGINS` (o CORS saiu; o rewrite da Vercel o substitui) e `JWT_SECRET` (nenhum código a lê). Deixá-las não quebra nada, mas engana quem ler o painel.
+**Variáveis que sobraram da versão Spring e podem ser apagadas do painel:** `SPRING_PROFILES_ACTIVE`, `CORS_ALLOWED_ORIGINS` (o CORS saiu; o rewrite da Vercel o substitui) e `JWT_SECRET` (nenhum código a lê). Deixá-las não quebra nada, mas engana quem ler o painel.
 
 Nenhum desses valores vai para o repositório. O `render.yaml` declara apenas os nomes.
 

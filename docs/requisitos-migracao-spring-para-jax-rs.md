@@ -122,7 +122,7 @@ O frontend não pode precisar de nenhuma mudança de código.
 | ID | Requisito |
 |---|---|
 | **RNF-01** | Nenhum arquivo do backend importa `org.springframework`, `lombok`, `jakarta.persistence`, `jakarta.validation`, `org.slf4j`, `io.swagger`, `org.mockito`, `org.assertj` ou `org.yaml`. |
-| **RNF-02** | Nenhuma conexão fica aberta fora de uma transação ou consulta. A instância publicada e a máquina de quem cedeu a credencial dividem 20 sessões no Oracle da FIAP (D-46). |
+| **RNF-02** | Nenhuma conexão fica aberta fora de uma transação ou consulta. A instância publicada e a máquina de quem cedeu a credencial dividem 20 sessões no Oracle da FIAP (D-46). *(Revisto em 12/11/2026: até `DB_POOL_SIZE` conexões ficam guardadas entre transações, por no máximo 5 minutos paradas. Ver D-96 em `decisoes-tecnicas.md`.)* |
 | **RNF-03** | A imagem continua cabendo no plano gratuito do Render (512 MB), com os mesmos `JAVA_OPTS`. |
 | **RNF-04** | Nenhuma credencial no código nem no repositório. O repositório é público no GitHub. |
 | **RNF-05** | A cobertura medida pelo JaCoCo não diminui. *(Sem medição desde 12/11/2026, quando o JaCoCo saiu do `pom.xml` (D-95). A migração já tinha sido verificada antes disso.)* |
