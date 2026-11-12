@@ -49,13 +49,15 @@
 
 Média de 5 chamadas seguidas, depois de uma chamada de aquecimento, feitas de uma máquina de desenvolvimento no Brasil contra a API publicada no Render (04/11/2026). O tempo inclui a ida até os EUA, onde o Render roda, e a volta até o Oracle da FIAP.
 
-| Endpoint | Antes (ms) | Depois (ms) |
-|---|---|---|
-| `GET /api/v1/produtos?query=tinta` | 883 | 1.816 / 2.236 |
-| `GET /api/v1/mapa` | 835 | 1.807 / 1.783 |
-| `GET /api/v1/sessoes/{id}/roteiro` | 491 | 1.496 / 1.532 |
+| Endpoint | Antes (ms) | Depois (ms) | Com conexões reaproveitadas (ms) |
+|---|---|---|---|
+| `GET /api/v1/produtos?query=tinta` | 883 | 1.816 / 2.236 | 716 / 653 |
+| `GET /api/v1/mapa` | 835 | 1.807 / 1.783 | 628 / 640 |
+| `GET /api/v1/sessoes/{id}/roteiro` | 491 | 1.496 / 1.532 | 417 / 356 |
 
 **Depois (12/11/2026, passo 11.6):** duas rodadas seguidas, mesma forma de medir, de uma máquina no Brasil contra o backend com Jersey publicado no Render. **Ficou de 2 a 3 vezes mais lento**, o que bate com o risco previsto para o JDBC sem pool (D-90): cada pedido abre uma conexão nova com o Oracle da FIAP. Pelo RNF-06, a decisão sobre isso é do time.
+
+**Com conexões reaproveitadas (12/11/2026, depois da D-96):** mesma forma de medir, duas rodadas. As três rotas ficaram **mais rápidas que a versão com Spring**: o custo de abrir a conexão saiu, e o resto do caminho ficou mais leve sem o Spring.
 
 ## Resultado depois da migração (passo 11.6)
 

@@ -2657,6 +2657,15 @@ Oracle da FIAP (média de 5 chamadas depois de uma de aquecimento):
 A suíte de integração completa passou com o reaproveitamento ligado: 365 testes, 0 falhas, 8
 pulados (os de IA, sem chave).
 
+**Medido em produção depois de publicar** (Render, `DB_POOL_SIZE=5`, mesma forma de medir da
+linha de base em [`base-antes.md`](insomnia/base-antes.md)):
+
+| Rota | Com Spring e HikariCP | JAX-RS sem pool | JAX-RS com a D-96 |
+|---|---|---|---|
+| `GET /api/v1/produtos?query=tinta` | 883 ms | 1.816 a 2.236 ms | 653 a 716 ms |
+| `GET /api/v1/mapa` | 835 ms | 1.783 a 1.807 ms | 628 a 640 ms |
+| `GET /api/v1/sessoes/{id}/roteiro` | 491 ms | 1.496 a 1.532 ms | 356 a 417 ms |
+
 **O que a `Transacao` muda.** Ela devolve a conexão em vez de fechá-la, e desfaz o
 `setReadOnly(true)` antes, para que a próxima transação não receba uma conexão só de leitura.
 Nenhum DAO altera o estado da sessão do Oracle, então nada mais vaza de uma transação para a
