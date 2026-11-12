@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react'
+import { useRef, useEffect } from 'react'
 import ActiveFilterChips from './ActiveFilterChips'
 import ProductCard from './ProductCard'
 
@@ -49,7 +49,7 @@ export default function CatalogSearchPage({
         try {
           const len = searchInputRef.current.value.length
           searchInputRef.current.setSelectionRange(len, len)
-        } catch (e) {
+        } catch {
           // ignore if not supported
         }
       }

@@ -1,4 +1,3 @@
-import React from 'react'
 
 /**
  * Onde o cliente está — ou o convite para descobrir, quando ainda não sabemos.

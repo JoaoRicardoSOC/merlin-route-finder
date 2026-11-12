@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { KNOWN_PLATES, normalizarCodigo } from '../services/sessionService'
 import useModalAcessivel from '../hooks/useModalAcessivel'
 

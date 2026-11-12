@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Header from './components/Header'
 import LocationStatus from './components/LocationStatus'
 import SearchBar from './components/SearchBar'
@@ -25,8 +25,7 @@ import { SECTOR_METADATA, DEFAULT_SECTOR_META } from './constants/setores'
 import {
   obterOuCriarSessao,
   recentrarPosicao,
-  concluirSessao,
-  normalizarCodigo
+  concluirSessao
 } from './services/sessionService'
 
 import { pendencias } from './services/filaDeSincronizacao'
@@ -194,7 +193,7 @@ function App() {
     try {
       const params = new URLSearchParams(window.location.search)
       return params.get('ponto') || params.get('codigo') || params.get('code') || params.get('plate') || null
-    } catch (e) {
+    } catch {
       return null
     }
   }

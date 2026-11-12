@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { SECTOR_METADATA, DEFAULT_SECTOR_META } from '../constants/setores'
 import useModalAcessivel from '../hooks/useModalAcessivel'
 
