@@ -124,6 +124,10 @@ Se ainda assim falhar, a causa mais provável é **filtro por país de origem**.
 
 ## Duas coisas a saber antes da apresentação
 
+> **Desde 12/11/2026, um workflow do GitHub mantém a instância acordada**, chamando o `/health` a cada 10 minutos ([D-97](decisoes-tecnicas.md#d-97-um-workflow-do-github-mantém-o-backend-acordado)). A partida a frio descrita abaixo só volta a acontecer se o workflow estiver desligado ou atrasar. Antes de gravar, vale conferir na aba **Actions** do repositório que as últimas execuções passaram.
+>
+> **Com o backend em JAX-RS, a partida a frio caiu para 64 s** (12/11/2026). Os números abaixo são da versão com Spring.
+
 **A instância dorme, e acordar demora mais do que parece.** No plano gratuito o serviço é suspenso após alguns minutos sem tráfego, e a requisição seguinte espera o processo subir. Medido no primeiro deploy real:
 
 ```

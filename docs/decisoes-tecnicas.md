@@ -117,6 +117,7 @@
 - [D-94. O schema do banco passa a ser mantido por script](#d-94-o-schema-do-banco-passa-a-ser-mantido-por-script)
 - [D-95. JaCoCo e axe-core saem por não estarem no material](#d-95-jacoco-e-axe-core-saem-por-não-estarem-no-material)
 - [D-96. Conexões reaproveitadas entre transações, em Java puro](#d-96-conexões-reaproveitadas-entre-transações-em-java-puro)
+- [D-97. Um workflow do GitHub mantém o backend acordado](#d-97-um-workflow-do-github-mantém-o-backend-acordado)
 
 ---
 
@@ -2678,6 +2679,35 @@ paradas. Na D-46, o mesmo arranjo deixava 8 das 20 sessões ocupadas, com folga.
 **Onde no código.** `factory/ConnectionFactory.java`, `factory/Transacao.java`,
 `config/Configuracao.java`, `Main.java` (fecha as guardadas ao desligar),
 `ConnectionFactoryTest`.
+
+---
+
+### D-97. Um workflow do GitHub mantém o backend acordado
+
+**Contexto.** No plano gratuito, o Render suspende o serviço depois de 15 minutos sem tráfego.
+A primeira requisição seguinte espera a subida: 64 s medidos em 12/11/2026. Até aqui, a saída era
+acordar a instância à mão antes de cada demonstração.
+
+**A decisão.** O workflow `.github/workflows/manter-backend-acordado.yml` chama o `/health` a
+cada 10 minutos, nos servidores do GitHub. Não depende de nenhuma máquina do time ligada, e o
+`/health` não toca no banco, então não gasta sessões do Oracle.
+
+**Alternativas.** Um script na máquina de um integrante só funcionaria com ela ligada. Serviços
+de monitoramento externos (como UptimeRobot) exigiriam uma conta pessoal fora do repositório.
+O plano pago do Render resolveria sem truque nenhum, e o time decidiu ficar no gratuito (23/08).
+
+**Os limites, para ninguém ser pego de surpresa.**
+
+| Limite | Efeito |
+|---|---|
+| O Render dá **750 horas grátis por mês** por conta | Um serviço acordado o mês inteiro gasta ~744. Se a mesma conta tiver outro serviço gratuito, as horas acabam antes do fim do mês e os serviços param até o mês seguinte |
+| O GitHub **não garante o horário** de execuções agendadas | Em horário de pico, uma execução pode atrasar. Os 10 minutos deixam 5 de folga, mas uma suspensão ocasional ainda pode acontecer |
+| O GitHub **desliga workflows agendados** de repositórios públicos sem atividade por 60 dias | Depois da entrega, ele para sozinho. Para religar, a aba Actions do repositório |
+
+**Efeito colateral bom.** Com a aplicação acordada, a varredura de sessões vencidas (D-42) passa
+a rodar de fato a cada 30 minutos, em vez de só quando alguém usa o app.
+
+**Onde no código.** `.github/workflows/manter-backend-acordado.yml`.
 
 ---
 
