@@ -78,7 +78,7 @@ class FalhaDeInfraestruturaTest {
     void consultaLenta() throws Exception {
         assertRespostaLimpa(
                 quandoOBancoFalhaCom(new SQLTimeoutException(
-                        "ORA-01013: user requested cancel of current operation on tb_produto")),
+                        "ORA-01013: user requested cancel of current operation on tb_ch26_produto")),
                 "consulta excedeu o tempo limite");
     }
 

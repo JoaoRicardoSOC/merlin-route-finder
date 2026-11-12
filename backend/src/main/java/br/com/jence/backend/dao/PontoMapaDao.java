@@ -15,7 +15,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Acesso a tabela {@code tb_ponto_mapa}: prateleiras, caixas, banheiros e placas de QR Code.
+ * Acesso a tabela {@code tb_ch26_ponto_mapa}: prateleiras, caixas, banheiros e placas de QR Code.
  * <p>
  * Usa a conexao da transacao em andamento ({@link ConnectionFactory#getConnection()}) e nunca a
  * fecha: quem abre e fecha a conexao e a transacao. Aqui so se fecham os comandos e resultados.
@@ -28,7 +28,7 @@ public class PontoMapaDao {
             + "%1$s.coordenada_x %1$s_coordenada_x, %1$s.coordenada_y %1$s_coordenada_y, "
             + "%1$s.codigo_curto %1$s_codigo_curto";
 
-    private static final String SELECT = "select " + COLUNAS.formatted("m") + " from tb_ponto_mapa m";
+    private static final String SELECT = "select " + COLUNAS.formatted("m") + " from tb_ch26_ponto_mapa m";
 
     public Optional<PontoMapa> buscarPorId(UUID id) throws SQLException {
         try (PreparedStatement stm = conexao().prepareStatement(SELECT + " where m.id = ?")) {
@@ -63,7 +63,7 @@ public class PontoMapaDao {
     /** Insere o ponto, ou atualiza se o id ja existir. */
     public PontoMapa salvar(PontoMapa ponto) throws SQLException {
         String sql = """
-                merge into tb_ponto_mapa d
+                merge into tb_ch26_ponto_mapa d
                 using (select ? id from dual) s
                    on (d.id = s.id)
                  when matched then update set
@@ -89,7 +89,7 @@ public class PontoMapaDao {
      * que precisam sair.
      */
     public int apagarPorTipoBruto(String tipo) throws SQLException {
-        try (PreparedStatement stm = conexao().prepareStatement("delete from tb_ponto_mapa where tipo = ?")) {
+        try (PreparedStatement stm = conexao().prepareStatement("delete from tb_ch26_ponto_mapa where tipo = ?")) {
             stm.setString(1, tipo);
             return stm.executeUpdate();
         }
@@ -104,7 +104,7 @@ public class PontoMapaDao {
      */
     public int renomearCorredor(String antigo, String novo) throws SQLException {
         try (PreparedStatement stm = conexao().prepareStatement(
-                "update tb_ponto_mapa set corredor = ? where corredor = ?")) {
+                "update tb_ch26_ponto_mapa set corredor = ? where corredor = ?")) {
             stm.setString(1, novo);
             stm.setString(2, antigo);
             return stm.executeUpdate();
@@ -121,10 +121,10 @@ public class PontoMapaDao {
      */
     public int apagarPrateleiraVaziaChamada(String corredor) throws SQLException {
         String sql = """
-                delete from tb_ponto_mapa
+                delete from tb_ch26_ponto_mapa
                  where corredor = ?
                    and tipo = 'PRATELEIRA'
-                   and id not in (select ponto_mapa_id from tb_produto where ponto_mapa_id is not null)
+                   and id not in (select ponto_mapa_id from tb_ch26_produto where ponto_mapa_id is not null)
                 """;
         try (PreparedStatement stm = conexao().prepareStatement(sql)) {
             stm.setString(1, corredor);

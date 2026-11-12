@@ -22,7 +22,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Acesso ao roteiro: {@code tb_lista_roteiro} e seus itens em {@code tb_item_roteiro}.
+ * Acesso ao roteiro: {@code tb_ch26_lista_roteiro} e seus itens em {@code tb_ch26_item_roteiro}.
  *
  * <h2>Grava so o que mudou desde a leitura (D-48)</h2>
  * Os casos de uso leem a lista, mexem nela e a gravam inteira. Se a gravacao comparasse com o
@@ -47,10 +47,10 @@ public class ListaRoteiroDao {
 
     private static final String SELECT = "select l.id l_id, l.sessao_id l_sessao_id, "
             + "i.id i_id, i.coletado_em i_coletado_em, " + ProdutoDao.COLUNAS
-            + " from tb_lista_roteiro l"
-            + " left join tb_item_roteiro i on i.lista_id = l.id"
-            + " left join tb_produto p on p.id = i.produto_id"
-            + " left join tb_ponto_mapa m on m.id = p.ponto_mapa_id";
+            + " from tb_ch26_lista_roteiro l"
+            + " left join tb_ch26_item_roteiro i on i.lista_id = l.id"
+            + " left join tb_ch26_produto p on p.id = i.produto_id"
+            + " left join tb_ch26_ponto_mapa m on m.id = p.ponto_mapa_id";
 
     public Optional<ListaRoteiro> buscarPorId(UUID id) throws SQLException {
         return buscarUma(" where l.id = ?", id);
@@ -62,12 +62,12 @@ public class ListaRoteiroDao {
 
     /** A lista que contem o item. */
     public Optional<ListaRoteiro> buscarPorItem(UUID itemId) throws SQLException {
-        return buscarUma(" where l.id = (select lista_id from tb_item_roteiro where id = ?)", itemId);
+        return buscarUma(" where l.id = (select lista_id from tb_ch26_item_roteiro where id = ?)", itemId);
     }
 
     public ListaRoteiro salvar(ListaRoteiro lista) throws SQLException {
         try (PreparedStatement stm = conexao().prepareStatement("""
-                merge into tb_lista_roteiro d
+                merge into tb_ch26_lista_roteiro d
                 using (select ? id, ? sessao_id from dual) s
                    on (d.id = s.id)
                  when not matched then insert (id, sessao_id) values (s.id, s.sessao_id)
@@ -162,7 +162,7 @@ public class ListaRoteiroDao {
     private Map<UUID, LocalDateTime> itensNoBanco(UUID listaId) throws SQLException {
         Map<UUID, LocalDateTime> itens = new HashMap<>();
         try (PreparedStatement stm = conexao().prepareStatement(
-                "select id, coletado_em from tb_item_roteiro where lista_id = ?")) {
+                "select id, coletado_em from tb_ch26_item_roteiro where lista_id = ?")) {
             stm.setString(1, listaId.toString());
             try (ResultSet result = stm.executeQuery()) {
                 while (result.next()) {
@@ -176,7 +176,7 @@ public class ListaRoteiroDao {
 
     private void inserir(UUID listaId, ItemRoteiro item) throws SQLException {
         try (PreparedStatement stm = conexao().prepareStatement("""
-                insert into tb_item_roteiro (id, lista_id, produto_id, coletado, coletado_em)
+                insert into tb_ch26_item_roteiro (id, lista_id, produto_id, coletado, coletado_em)
                 values (?, ?, ?, ?, ?)
                 """)) {
             stm.setString(1, item.getId().toString());
@@ -189,7 +189,7 @@ public class ListaRoteiroDao {
 
     private void atualizarColeta(ItemRoteiro item) throws SQLException {
         try (PreparedStatement stm = conexao().prepareStatement(
-                "update tb_item_roteiro set coletado = ?, coletado_em = ? where id = ?")) {
+                "update tb_ch26_item_roteiro set coletado = ?, coletado_em = ? where id = ?")) {
             preencherColeta(stm, 1, item);
             stm.setString(3, item.getId().toString());
             stm.executeUpdate();
@@ -197,7 +197,7 @@ public class ListaRoteiroDao {
     }
 
     private void apagar(UUID itemId) throws SQLException {
-        try (PreparedStatement stm = conexao().prepareStatement("delete from tb_item_roteiro where id = ?")) {
+        try (PreparedStatement stm = conexao().prepareStatement("delete from tb_ch26_item_roteiro where id = ?")) {
             stm.setString(1, itemId.toString());
             stm.executeUpdate();
         }

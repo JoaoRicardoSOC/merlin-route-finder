@@ -65,15 +65,15 @@ class ListaRoteiroDaoIntegracaoTest {
     void limpar() throws Exception {
         try (Transacao transacao = Transacao.iniciar()) {
             for (String sql : new String[]{
-                    "delete from tb_item_roteiro where lista_id = ?",
-                    "delete from tb_lista_roteiro where id = ?"}) {
+                    "delete from tb_ch26_item_roteiro where lista_id = ?",
+                    "delete from tb_ch26_lista_roteiro where id = ?"}) {
                 try (PreparedStatement stm = ConnectionFactory.getConnection().prepareStatement(sql)) {
                     stm.setString(1, listaId.toString());
                     stm.executeUpdate();
                 }
             }
             try (PreparedStatement stm = ConnectionFactory.getConnection()
-                    .prepareStatement("delete from tb_sessao where id = ?")) {
+                    .prepareStatement("delete from tb_ch26_sessao where id = ?")) {
                 stm.setString(1, sessaoId.toString());
                 stm.executeUpdate();
             }

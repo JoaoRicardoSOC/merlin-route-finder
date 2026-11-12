@@ -92,12 +92,12 @@ public final class BancoDeTeste {
      */
     public static void apagarSessao(UUID sessaoId) throws SQLException {
         try (Transacao transacao = Transacao.iniciar()) {
-            executar("delete from tb_chat_mensagem where sessao_id = ?", sessaoId);
-            executar("delete from tb_registro_ruptura where sessao_id = ?", sessaoId);
-            executar("delete from tb_item_roteiro where lista_id in "
-                    + "(select id from tb_lista_roteiro where sessao_id = ?)", sessaoId);
-            executar("delete from tb_lista_roteiro where sessao_id = ?", sessaoId);
-            executar("delete from tb_sessao where id = ?", sessaoId);
+            executar("delete from tb_ch26_chat_mensagem where sessao_id = ?", sessaoId);
+            executar("delete from tb_ch26_registro_ruptura where sessao_id = ?", sessaoId);
+            executar("delete from tb_ch26_item_roteiro where lista_id in "
+                    + "(select id from tb_ch26_lista_roteiro where sessao_id = ?)", sessaoId);
+            executar("delete from tb_ch26_lista_roteiro where sessao_id = ?", sessaoId);
+            executar("delete from tb_ch26_sessao where id = ?", sessaoId);
             transacao.confirmar();
         }
     }

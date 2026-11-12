@@ -48,8 +48,8 @@ public class RestricaoDeEnumDao {
     }
 
     private static final List<ColunaDeEnum> COLUNAS = List.of(
-            new ColunaDeEnum("TB_PONTO_MAPA", "TIPO", TipoPonto.class),
-            new ColunaDeEnum("TB_PRODUTO_ATRIBUTO", "CHAVE", AtributoProduto.class));
+            new ColunaDeEnum("TB_CH26_PONTO_MAPA", "TIPO", TipoPonto.class),
+            new ColunaDeEnum("TB_CH26_PRODUTO_ATRIBUTO", "CHAVE", AtributoProduto.class));
 
     /** Captura cada literal entre aspas simples da condicao da restricao. */
     private static final Pattern LITERAL = Pattern.compile("'([^']*)'");

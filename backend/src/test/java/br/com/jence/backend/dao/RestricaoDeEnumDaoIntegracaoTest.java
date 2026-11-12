@@ -30,7 +30,7 @@ class RestricaoDeEnumDaoIntegracaoTest {
             String condicao = null;
             try (PreparedStatement stm = ConnectionFactory.getConnection().prepareStatement("""
                     select search_condition_vc from user_constraints
-                     where table_name = 'TB_PONTO_MAPA' and constraint_type = 'C'
+                     where table_name = 'TB_CH26_PONTO_MAPA' and constraint_type = 'C'
                        and lower(search_condition_vc) like 'tipo in (%'
                     """);
                  ResultSet result = stm.executeQuery()) {

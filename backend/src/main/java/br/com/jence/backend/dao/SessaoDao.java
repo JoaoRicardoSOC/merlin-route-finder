@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Acesso a tabela {@code tb_sessao}. A placa em que o cliente entrou vem junto, num
+ * Acesso a tabela {@code tb_ch26_sessao}. A placa em que o cliente entrou vem junto, num
  * {@code left join}: ela pode nao existir.
  */
 // Provisorio: so enquanto o Spring injeta as dependencias. Sai na fase 10 do plano.
@@ -24,7 +24,7 @@ public class SessaoDao {
 
     private static final String SELECT = "select s.id, s.status, s.criado_em, s.expiracao_ttl, s.escaneado_em, "
             + PontoMapaDao.COLUNAS.formatted("m")
-            + " from tb_sessao s left join tb_ponto_mapa m on m.id = s.ponto_escaneado_id";
+            + " from tb_ch26_sessao s left join tb_ch26_ponto_mapa m on m.id = s.ponto_escaneado_id";
 
     public Optional<Sessao> buscarPorId(UUID id) throws SQLException {
         try (PreparedStatement stm = conexao().prepareStatement(SELECT + " where s.id = ?")) {
@@ -55,7 +55,7 @@ public class SessaoDao {
     /** Insere a sessao, ou atualiza se o id ja existir. */
     public Sessao salvar(Sessao sessao) throws SQLException {
         String sql = """
-                merge into tb_sessao d
+                merge into tb_ch26_sessao d
                 using (select ? id from dual) s
                    on (d.id = s.id)
                  when matched then update set

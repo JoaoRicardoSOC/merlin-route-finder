@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * A contagem e feita na propria conexao JDBC: durante o teste, a {@link ConnectionFactory}
  * entrega uma conexao de verdade embrulhada num {@link Proxy}, que embrulha cada
  * {@link PreparedStatement} e soma as linhas que cada {@code insert}, {@code update} e
- * {@code delete} em {@code tb_item_roteiro} diz ter afetado.
+ * {@code delete} em {@code tb_ch26_item_roteiro} diz ter afetado.
  */
 @Tag("integracao")
 class AmplitudeDeEscritaIntegracaoTest {
@@ -77,7 +77,7 @@ class AmplitudeDeEscritaIntegracaoTest {
 
     private UUID sessaoId;
 
-    /** Linhas de {@code tb_item_roteiro} escritas desde o inicio do teste, por tipo de comando. */
+    /** Linhas de {@code tb_ch26_item_roteiro} escritas desde o inicio do teste, por tipo de comando. */
     private final AtomicLong atualizadas = new AtomicLong();
     private final AtomicLong inseridas = new AtomicLong();
     private final AtomicLong apagadas = new AtomicLong();
@@ -160,9 +160,9 @@ class AmplitudeDeEscritaIntegracaoTest {
     /** O comando, que ao executar soma as linhas afetadas no contador do seu tipo. */
     private PreparedStatement queConta(PreparedStatement real, String sql) {
         String texto = sql.strip().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
-        AtomicLong contador = texto.startsWith("insert into tb_item_roteiro") ? inseridas
-                : texto.startsWith("update tb_item_roteiro") ? atualizadas
-                : texto.startsWith("delete from tb_item_roteiro") ? apagadas
+        AtomicLong contador = texto.startsWith("insert into tb_ch26_item_roteiro") ? inseridas
+                : texto.startsWith("update tb_ch26_item_roteiro") ? atualizadas
+                : texto.startsWith("delete from tb_ch26_item_roteiro") ? apagadas
                 : null;
 
         return (PreparedStatement) Proxy.newProxyInstance(

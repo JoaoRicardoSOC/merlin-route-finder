@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/** Acesso a tabela {@code tb_chat_mensagem}: o historico da conversa com o assistente. */
+/** Acesso a tabela {@code tb_ch26_chat_mensagem}: o historico da conversa com o assistente. */
 // Provisorio: so enquanto o Spring injeta as dependencias. Sai na fase 10 do plano.
 public class ChatMensagemDao {
 
@@ -22,7 +22,7 @@ public class ChatMensagemDao {
         List<ChatMensagem> mensagens = new ArrayList<>();
         try (PreparedStatement stm = conexao().prepareStatement("""
                 select id, sessao_id, remetente, conteudo, enviado_em
-                  from tb_chat_mensagem
+                  from tb_ch26_chat_mensagem
                  where sessao_id = ?
                  order by enviado_em
                 """)) {
@@ -44,7 +44,7 @@ public class ChatMensagemDao {
 
     public ChatMensagem salvar(ChatMensagem mensagem) throws SQLException {
         try (PreparedStatement stm = conexao().prepareStatement("""
-                insert into tb_chat_mensagem (id, sessao_id, remetente, conteudo, enviado_em)
+                insert into tb_ch26_chat_mensagem (id, sessao_id, remetente, conteudo, enviado_em)
                 values (?, ?, ?, ?, ?)
                 """)) {
             stm.setString(1, mensagem.getId().toString());

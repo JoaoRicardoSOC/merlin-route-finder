@@ -46,8 +46,8 @@ class RegistroRupturaDaoIntegracaoTest {
     void limpar() throws Exception {
         try (Transacao transacao = Transacao.iniciar()) {
             for (String sql : new String[]{
-                    "delete from tb_registro_ruptura where sessao_id = ?",
-                    "delete from tb_sessao where id = ?"}) {
+                    "delete from tb_ch26_registro_ruptura where sessao_id = ?",
+                    "delete from tb_ch26_sessao where id = ?"}) {
                 try (PreparedStatement stm = ConnectionFactory.getConnection().prepareStatement(sql)) {
                     stm.setString(1, sessaoId.toString());
                     stm.executeUpdate();

@@ -26,7 +26,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Acesso ao catalogo: {@code tb_produto} e as caracteristicas em {@code tb_produto_atributo}.
+ * Acesso ao catalogo: {@code tb_ch26_produto} e as caracteristicas em {@code tb_ch26_produto_atributo}.
  * <p>
  * Usa a conexao da transacao em andamento e nunca a fecha. Todo valor vindo do cliente vai como
  * parametro ({@code ?}); o SQL so cresce com trechos constantes.
@@ -40,7 +40,7 @@ public class ProdutoDao {
             + PontoMapaDao.COLUNAS.formatted("m");
 
     /* Comeca com espaco porque e concatenado logo depois da lista de colunas. */
-    private static final String DE = " from tb_produto p join tb_ponto_mapa m on m.id = p.ponto_mapa_id";
+    private static final String DE = " from tb_ch26_produto p join tb_ch26_ponto_mapa m on m.id = p.ponto_mapa_id";
 
     /*
      * Dobra acento para a letra base, dos dois lados de toda comparacao de texto.
@@ -155,7 +155,7 @@ public class ProdutoDao {
         for (Map.Entry<AtributoProduto, List<String>> escolha : filtro.atributos().entrySet()) {
             String marcadores = String.join(", ", escolha.getValue().stream().map(v -> "?").toList());
             onde.append(" " + """
-                     and exists (select 1 from tb_produto_atributo a%1$d
+                     and exists (select 1 from tb_ch26_produto_atributo a%1$d
                                   where a%1$d.produto_id = p.id
                                     and a%1$d.chave = ?
                                     and a%1$d.valor in (%2$s))""".formatted(indice, marcadores));
@@ -172,8 +172,8 @@ public class ProdutoDao {
     public List<SecaoDoCatalogo> listarSecoes() throws SQLException {
         String sql = """
                 select m.corredor, count(*)
-                  from tb_produto p
-                  join tb_ponto_mapa m on m.id = p.ponto_mapa_id
+                  from tb_ch26_produto p
+                  join tb_ch26_ponto_mapa m on m.id = p.ponto_mapa_id
                  group by m.corredor
                  order by m.corredor
                 """;
@@ -190,7 +190,7 @@ public class ProdutoDao {
     public List<FacetaDeProdutos> calcularFacetas(FiltroDeProdutos filtro) throws SQLException {
         List<Object> parametros = new ArrayList<>();
         String sql = "select a.chave, a.valor, count(*)" + DE
-                + " join tb_produto_atributo a on a.produto_id = p.id"
+                + " join tb_ch26_produto_atributo a on a.produto_id = p.id"
                 + condicoes(filtro, parametros)
                 + " group by a.chave, a.valor";
 
@@ -228,7 +228,7 @@ public class ProdutoDao {
     public List<ValorDeAtributo> buscarAtributosDe(UUID produtoId) throws SQLException {
         List<ValorDeAtributo> atributos = new ArrayList<>();
         try (PreparedStatement stm = conexao().prepareStatement(
-                "select chave, valor from tb_produto_atributo where produto_id = ? order by chave")) {
+                "select chave, valor from tb_ch26_produto_atributo where produto_id = ? order by chave")) {
             stm.setString(1, produtoId.toString());
             try (ResultSet result = stm.executeQuery()) {
                 while (result.next()) {
@@ -250,7 +250,7 @@ public class ProdutoDao {
     public Map<UUID, List<ValorDeAtributo>> buscarAtributosDeTodos() throws SQLException {
         Map<UUID, List<ValorDeAtributo>> porProduto = new HashMap<>();
         try (PreparedStatement stm = conexao().prepareStatement(
-                "select produto_id, chave, valor from tb_produto_atributo")) {
+                "select produto_id, chave, valor from tb_ch26_produto_atributo")) {
             stm.setFetchSize(500);
             try (ResultSet result = stm.executeQuery()) {
                 while (result.next()) {
@@ -272,12 +272,12 @@ public class ProdutoDao {
      */
     public void salvarAtributos(UUID produtoId, List<ValorDeAtributo> atributos) throws SQLException {
         try (PreparedStatement stm = conexao().prepareStatement(
-                "delete from tb_produto_atributo where produto_id = ?")) {
+                "delete from tb_ch26_produto_atributo where produto_id = ?")) {
             stm.setString(1, produtoId.toString());
             stm.executeUpdate();
         }
         try (PreparedStatement stm = conexao().prepareStatement(
-                "insert into tb_produto_atributo (id, produto_id, chave, valor) values (?, ?, ?, ?)")) {
+                "insert into tb_ch26_produto_atributo (id, produto_id, chave, valor) values (?, ?, ?, ?)")) {
             for (ValorDeAtributo atributo : atributos) {
                 stm.setString(1, UUID.randomUUID().toString());
                 stm.setString(2, produtoId.toString());
@@ -311,10 +311,10 @@ public class ProdutoDao {
                    and p.id <> ?
                    and sqrt(power(m.coordenada_x - ?, 2) + power(m.coordenada_y - ?, 2)) <= ?
                  order by
-                   case when exists (select 1 from tb_produto_atributo a
+                   case when exists (select 1 from tb_ch26_produto_atributo a
                                       where a.produto_id = p.id
                                         and a.chave = 'TIPO' and a.valor = ?) then 0 else 1 end,
-                   case when exists (select 1 from tb_produto_atributo a
+                   case when exists (select 1 from tb_ch26_produto_atributo a
                                       where a.produto_id = p.id
                                         and a.chave = 'MARCA' and a.valor = ?) then 0 else 1 end,
                    sqrt(power(m.coordenada_x - ?, 2) + power(m.coordenada_y - ?, 2)),
@@ -337,7 +337,7 @@ public class ProdutoDao {
     /** Insere o produto, ou atualiza se o id ja existir. Nao grava o ponto do mapa. */
     public Produto salvar(Produto produto) throws SQLException {
         String sql = """
-                merge into tb_produto d
+                merge into tb_ch26_produto d
                 using (select ? id from dual) s
                    on (d.id = s.id)
                  when matched then update set

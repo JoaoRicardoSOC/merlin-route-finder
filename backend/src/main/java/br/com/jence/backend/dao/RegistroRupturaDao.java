@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/** Acesso a tabela {@code tb_registro_ruptura}: os relatos de gondola vazia. */
+/** Acesso a tabela {@code tb_ch26_registro_ruptura}: os relatos de gondola vazia. */
 // Provisorio: so enquanto o Spring injeta as dependencias. Sai na fase 10 do plano.
 public class RegistroRupturaDao {
 
@@ -30,7 +30,7 @@ public class RegistroRupturaDao {
     public RegistroRuptura salvar(RegistroRuptura registro) throws SQLException {
         try (Transacao propria = Transacao.iniciarNova();
              PreparedStatement stm = conexao().prepareStatement("""
-                     insert into tb_registro_ruptura
+                     insert into tb_ch26_registro_ruptura
                             (id, sessao_id, item_roteiro_id, produto_faltante_id, produto_sugerido_id,
                              justificativa, origem, registrado_em)
                      values (?, ?, ?, ?, ?, ?, ?, ?)
@@ -63,7 +63,7 @@ public class RegistroRupturaDao {
         try (PreparedStatement stm = conexao().prepareStatement("""
                 select id, sessao_id, item_roteiro_id, produto_faltante_id, produto_sugerido_id,
                        justificativa, origem, registrado_em
-                  from tb_registro_ruptura
+                  from tb_ch26_registro_ruptura
                  where sessao_id = ?
                  order by registrado_em desc
                 """)) {
