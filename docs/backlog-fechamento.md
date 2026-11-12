@@ -2,7 +2,9 @@
 
 > **Para colar no Trello.** Cada card tem título, o que fazer, como verificar que ficou pronto e de quem é. Escritos em 30/08/2026, contra o código que existe hoje — cada afirmação aqui foi medida, não estimada.
 >
-> **Prazo que manda em tudo: 13/09/2026**, o vídeo da seletiva. Depois dele, 21/09 é a banca.
+> **Revisado em 12/11/2026.** Os prazos de setembro passaram (seletiva em 13/09, banca em 21/09, NEXT em 24/10), e o resultado deles **não está registrado neste repositório**: vale anotar aqui, com data. **O prazo que manda agora é a entrega final ao portal, no fim do ano**, com o vídeo de até 3 minutos, o PDF e o repositório.
+>
+> Nesta revisão: os cards de diagrama (D-1 a D-3) foram fechados; entraram L-3 (documentos da migração), F-12 (lint do frontend) e O-4 (afinidade da ruptura).
 >
 > Os prefixos entre colchetes servem para etiqueta no Trello. A ordem dentro de cada bloco é a sugerida.
 
@@ -10,14 +12,16 @@
 
 ## Placar
 
-| Bloco | Cards | Quem |
+| Bloco | Abertos | Quem |
 |---|---|---|
-| Entrega e publicação | 3 | João Ricardo e time | *(2 fechados em 30/08)*
-| Frontend — acabamentos | 1 | Bielecky e Marcela | *(10 fechados em 30/08)*
-| Banco e diagramas | 3 | Vicentini |
-| Decisões e trabalho do time | 4 | Time |
-| Backend e operação | 3 | João Ricardo e Caio |
-| Limpeza antes da entrega | 2 | Time |
+| Entrega e publicação | **1** (E-5) | Time |
+| Frontend | 1 (F-12) | Bielecky e Marcela |
+| Banco e diagramas | 0 | Vicentini |
+| Decisões e trabalho do time | 3 (T-1, T-2, T-4) | Time |
+| Backend e operação | 4 (O-1 a O-4) | João Ricardo e Caio |
+| Limpeza antes da entrega | 1 (L-3) | Time |
+
+*Situação em 12/11/2026. Os cards fechados continuam no documento, riscados, como registro.*
 
 **Nada aqui bloqueia a demonstração.** O sistema roda de ponta a ponta: entrar pela placa, buscar, montar a lista, ver no mapa, coletar, relatar prateleira vazia, aceitar o substituto e encerrar. O que falta é acabamento, publicação e material de apresentação.
 
@@ -72,7 +76,9 @@ O backend está publicado e responde (`https://merlin-route-finder-api.onrender.
 
 ---
 
-### E-2. ~~Preencher `CORS_ALLOWED_ORIGINS` no Render~~ — **FEITO em 30/08/2026**
+### E-2. ~~Preencher `CORS_ALLOWED_ORIGINS` no Render~~ — **FEITO em 30/08/2026, e depois sem objeto**
+
+> **Sem objeto desde a migração para JAX-RS.** O backend não trata mais CORS: a Vercel repassa `/api/*` para o Render, e frontend e API ficam no mesmo domínio ([D-91](decisoes-tecnicas.md#d-91-o-cors-sai-do-backend-a-vercel-repassa-api-para-o-render)). A variável foi apagada do painel do Render em 12/11/2026. O texto abaixo vale só como histórico.
 
 > ✅ **Preenchido com as duas origens**, e as duas foram verificadas por requisição direta:
 >
@@ -101,6 +107,8 @@ Enquanto o frontend não estiver publicado, essa variável **tem que continuar v
 
 ### E-3. Escrever o roteiro do vídeo da seletiva — até 5 minutos, 13/09
 
+> **Prazo passado.** O resultado não está registrado aqui. O roteiro abaixo continua útil para o vídeo de 3 minutos do E-5.
+
 **O que fazer.** Roteiro cena a cena, com o tempo de cada bloco. Sugestão de espinha, que segue o caminho que o sistema realmente faz:
 
 1. o problema — o "último metro" numa loja de 10.000 m²;
@@ -123,6 +131,8 @@ Enquanto o frontend não estiver publicado, essa variável **tem que continuar v
 
 ### E-4. Gravar e editar o vídeo da seletiva
 
+> **Prazo passado.** Registrar aqui se o vídeo foi entregue e o que a seletiva decidiu.
+
 **O que fazer.** Gravar seguindo o E-3, com a aplicação **aquecida** e o banco limpo (ver O-3).
 
 **Por que a ordem importa:** este é o vídeo que decide se existe banca final. Se algo tiver que ser cortado por tempo, corte a introdução — nunca a cena da prateleira vazia, que é a única que mostra a IA decidindo com dados reais da loja.
@@ -135,7 +145,7 @@ Enquanto o frontend não estiver publicado, essa variável **tem que continuar v
 
 ### E-5. O vídeo do portal (até 3 min) e o PDF — a entrega avaliada
 
-> **Não é para agora.** Fica registrado para não ser esquecido depois da seletiva. Sem data confirmada — vai junto do repositório, no fim do ano.
+> **É o card que manda agora.** Vai junto do repositório, no fim do ano. Antes de gravar: acordar a instância (a partida a frio levou 64 s em 12/11), limpar as sessões de teste (O-3) e ninguém rodar a suíte de integração durante a gravação.
 
 **O que fazer.** Duas peças que andam juntas na rubrica:
 
@@ -340,17 +350,17 @@ Três ajustes que andam juntos e cabem num card só:
 
 ## [BANCO E DIAGRAMAS] — Vicentini
 
-Três cards, e o primeiro é o mais urgente da lista inteira depois do E-1: **diagrama é o que a banca abre antes do código**.
+> **Os três foram fechados**, conferido em 12/11/2026. O C4 e o DER vigentes estão em Markdown ([`arquitetura/c4-model-atual.md`](arquitetura/c4-model-atual.md) e [`dados/der-atualizado.md`](dados/der-atualizado.md)), e o [`README` da pasta de diagramas](diagramas/README.md) avisa que os PDFs são da Sprint 1 antes de qualquer outro conteúdo. Ver O-08 e O-24 em [`observacoes.md`](observacoes.md).
 
-### D-1. Atualizar o DER com a tabela de registro de ruptura
+### D-1. ~~Atualizar o DER com a tabela de registro de ruptura~~ — feito
 
 **O que fazer.** O DER não tem a tabela que registra os relatos de prateleira vazia, e ela existe no banco desde 25/08.
 
-**Verificar:** o DER lista todas as tabelas que o Hibernate cria.
+**Verificar:** o DER lista todas as tabelas do script `database/migrations/V001__schema_inicial.sql`.
 
 ---
 
-### D-2. Refazer o C4 para o produto que existe
+### D-2. ~~Refazer o C4 para o produto que existe~~ — feito
 
 **O que fazer.** O C4 atual mostra **dois containers de frontend** (Totem e Mobile PWA) e um fluxo de handoff. Hoje existe **um** frontend, e o handoff foi removido.
 
@@ -360,7 +370,9 @@ Três cards, e o primeiro é o mais urgente da lista inteira depois do E-1: **di
 
 ---
 
-### D-3. Carimbar os outros três diagramas como Sprint 1
+### D-3. ~~Carimbar os outros três diagramas como Sprint 1~~ — feito pelo README
+
+> O carimbo ficou no `README` da pasta, e não na primeira página de cada PDF. Se o time quiser o carimbo dentro do arquivo também, é trabalho de minutos em qualquer editor de PDF.
 
 **O que fazer.** Casos de uso, classes e sequência ainda desenham totem, handoff e rota calculada. Refazer os três não cabe no prazo; **rotular** cada um como *"Sprint 1 — anterior à revisão de escopo de 24/08"* custa minutos e evita que sejam lidos como o produto atual.
 
@@ -385,6 +397,8 @@ Três cards, e o primeiro é o mais urgente da lista inteira depois do E-1: **di
 **O que fazer.** A placa precisa dos **três** elementos: o QR Code, uma **URL curta e legível** e o **código de localização** (`TIN-02`).
 
 **Por quê.** O QR é o único acesso ao sistema. Se o cliente não consegue escanear — câmera ruim, adesivo riscado — ele fica sem nada. O código curto sozinho não resolve: sem a URL impressa, não há onde digitá-lo. Os dois planos precisam existir juntos.
+
+**URL do QR:** `https://merlin-route-finder.vercel.app/?ponto=TIN-02`, trocando o código por coluna. O app também aceita `?codigo=` e `?code=`.
 
 **Verificar:** uma placa impressa de teste, escaneada e digitada, leva ao app.
 
@@ -432,9 +446,9 @@ Três cards, e o primeiro é o mais urgente da lista inteira depois do E-1: **di
 
 ### O-2. Trocar a senha do Oracle
 
-**O que fazer.** A senha atual passou por canal de conversa. Trocar no portal da FIAP e atualizar a variável no Render.
+**O que fazer.** A senha atual passou por canal de conversa. Trocar no portal da FIAP e atualizar a variável `DB_PASSWORD` no Render **e** o `.env` da raiz do repositório na máquina de desenvolvimento.
 
-**Verificar:** o serviço publicado volta a responder depois da troca.
+**Verificar:** o serviço publicado volta a responder depois da troca, e a suíte de integração (`mvnw test -Pintegracao`) continua rodando localmente.
 
 ---
 
@@ -444,7 +458,21 @@ Três cards, e o primeiro é o mais urgente da lista inteira depois do E-1: **di
 
 **Por quê.** Desenvolvimento, testes e demonstração usam **o mesmo schema** — a FIAP dá um por aluno e o orçamento é zero. Não incomoda no dia a dia, mas incomoda no dia da gravação.
 
+> **Em 12/11/2026 sobraram mais sessões**, da coleção de paridade, da suíte de integração e das conferências em produção. Todas foram concluídas, mas contam nas métricas de jornada.
+
 > **Não é o caso de mexer no StrictMode.** A duplicação de sessão que se vê em desenvolvimento **não acontece em produção** — medido em 30/08. Ver O-30 nas observações.
+
+---
+
+### O-4. Desempatar a afinidade da ruptura por atributos em comum
+
+**O que fazer.** Quando vários candidatos a substituto têm o mesmo `TIPO`, ordenar o empate pela quantidade de atributos em comum com o produto em falta, em vez de pelo nome.
+
+**Por quê.** É o substituto que o cliente recebe quando o assistente está fora do ar ou sem cota. Hoje ele acerta a lâmpada por ordem alfabética, e renomear um produto quebra isso. Ver `O-35` em [`observacoes.md`](observacoes.md).
+
+**Verificar:** `mvnw test -Pintegracao` antes e depois, e os cinco pares de ruptura do O-14 continuam sugerindo o mesmo substituto.
+
+**De quem:** backend.
 
 ---
 
@@ -475,6 +503,26 @@ Três cards, e o primeiro é o mais urgente da lista inteira depois do E-1: **di
 
 ---
 
+### L-3. Remover os documentos de trabalho da migração
+
+**O que fazer.** Decidir e aplicar o destino de cada documento listado em `O-17` ([`observacoes.md`](observacoes.md)): os dois diários `progresso-migracao-*.md` saem; o plano e os requisitos da migração ficam ou saem por decisão do time; o `prompt-video-apresentacao.md` sai depois da gravação.
+
+**Verificar:** nenhum link quebrado depois (`grep -rn` pelo nome de cada arquivo apagado).
+
+**De quem:** time.
+
+---
+
+### F-12. Zerar o lint do frontend
+
+**O que fazer.** `npm run lint` acusa 37 problemas: 31 variáveis sem uso e 6 regras de hooks do React. Ver `O-38` em [`observacoes.md`](observacoes.md).
+
+**Verificar:** `npm run lint` sem erro, e o app publicado percorrendo a jornada inteira como antes. Os 6 de hooks mexem em quando a tela renderiza, então cada um pede um teste no navegador.
+
+**De quem:** Bielecky e Marcela.
+
+---
+
 ## O que **não** entra nesta lista, e por quê
 
 Três coisas foram avaliadas e ficam de fora de propósito:
@@ -483,4 +531,4 @@ Três coisas foram avaliadas e ficam de fora de propósito:
 |---|---|
 | **Renomear "roteiro" para "lista"** no código | O prazo era "antes de a integração começar", e ela começou e terminou. Renomear agora atinge entidades, endpoints, contrato, testes e tela, a duas semanas do vídeo, sem mudar nada que o cliente veja. Na **tela** vale unificar (está no F-11); no código, não |
 | **Guarda contra a sessão duplicada** | Não é defeito: é o StrictMode em desenvolvimento, e não acontece em produção. Silenciá-lo perderia o sinal que ele existe para dar |
-| **Swagger exposto, raio da ruptura, simulação de estoque sem proteção** | Limitações **aceitas conscientemente**, com o motivo registrado. Não são pendências — são respostas prontas para a banca |
+| **Raio da ruptura, simulação de estoque sem proteção** | Limitações **aceitas conscientemente**, com o motivo registrado. Não são pendências — são respostas prontas para a banca. (O Swagger, que também estava aqui, saiu com o Spring) |
