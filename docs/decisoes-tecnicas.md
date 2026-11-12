@@ -116,6 +116,7 @@
 - [D-93. DTOs são classes, copiadas pelo ModelMapper onde a cópia é direta](#d-93-dtos-são-classes-copiadas-pelo-modelmapper-onde-a-cópia-é-direta)
 - [D-94. O schema do banco passa a ser mantido por script](#d-94-o-schema-do-banco-passa-a-ser-mantido-por-script)
 - [D-95. JaCoCo e axe-core saem por não estarem no material](#d-95-jacoco-e-axe-core-saem-por-não-estarem-no-material)
+- [D-96. Conexões reaproveitadas entre transações, em Java puro](#d-96-conexões-reaproveitadas-entre-transações-em-java-puro)
 
 ---
 
@@ -1110,6 +1111,8 @@ O valor 100 não é arbitrário: é o teto de página que a busca de produtos pe
 
 ### D-46. O pool de conexões é dimensionado pelos limites reais do schema da FIAP
 
+> **Revista de novo em 12/11/2026:** as conexões voltaram a ser reaproveitadas, agora sem biblioteca, e a `DB_POOL_SIZE` voltou a valer, como o número de conexões guardadas. Os limites medidos abaixo continuam sendo a base. Ver [D-96](#d-96-conexões-reaproveitadas-entre-transações-em-java-puro).
+>
 > **Revista em 05/11/2026, na migração para JAX-RS:** **não há mais pool.** Cada transação abre e fecha a própria conexão, então o número de sessões ocupadas no Oracle passa a ser o de transações em andamento, e não o tamanho do pool. A variável `DB_POOL_SIZE` não tem mais efeito. Ver [D-90](#d-90-jdbc-sem-pool-cada-transação-abre-e-fecha-a-própria-conexão).
 
 **Contexto.** O pool ficou no padrão do Hikari — **10 conexões** — até o primeiro deploy. Com a aplicação publicada usando a credencial de um integrante, passou a existir um segundo consumidor da mesma cota.
@@ -2495,6 +2498,8 @@ e [`plano-migracao-spring-para-jax-rs.md`](plano-migracao-spring-para-jax-rs.md)
 
 ### D-90. JDBC sem pool: cada transação abre e fecha a própria conexão
 
+> **Revista em 12/11/2026:** medido em produção, o custo ficou alto demais, e as conexões passaram a ser reaproveitadas entre transações. Ver [D-96](#d-96-conexões-reaproveitadas-entre-transações-em-java-puro).
+
 **Contexto.** O material usa uma `ConnectionFactory` que abre a conexão quando alguém pede, sem
 pool. O HikariCP do Spring saiu junto.
 
@@ -2612,6 +2617,58 @@ Render e a Vercel (a rubrica aceita o deploy em qualquer provedor) e o `maven-sh
 (exceção já justificada nos requisitos da migração).
 
 **Onde no código.** `backend/pom.xml`, `frontend/package.json`, `frontend/package-lock.json`.
+
+---
+
+### D-96. Conexões reaproveitadas entre transações, em Java puro
+
+**Contexto.** Sem pool (D-90), cada requisição abria uma conexão nova com o Oracle da FIAP. Na
+coleção de paridade contra a produção (12/11/2026), as rotas ficaram **2 a 3 vezes mais lentas**
+que na versão com HikariCP: 1,5 s a 2,2 s, contra 0,5 s a 0,9 s.
+
+**O que foi medido.** Da máquina de desenvolvimento, no Brasil, abrir uma conexão leva ~230 ms
+e uma consulta leva ~21 ms, que é uma ida e volta na rede. **Abrir custa umas onze idas e
+voltas**: é o aperto de mão do protocolo do Oracle com a autenticação. Do Render, nos EUA, cada
+ida e volta é bem mais longa, e só a abertura passa de um segundo. As consultas em si não
+mudaram.
+
+**A decisão.** Ao fim de cada transação, a `ConnectionFactory` guarda a conexão para a próxima,
+em vez de fechá-la. É um pool, escrito com `java.util` e `java.util.concurrent`, sem biblioteca:
+o HikariCP não está no material, e a regra do time (D-89) permite o Java puro. As regras vêm dos
+limites do schema medidos na [D-46](#d-46-o-pool-de-conexões-é-dimensionado-pelos-limites-reais-do-schema-da-fiap):
+
+| Regra | Valor | Por quê |
+|---|---|---|
+| Conexões guardadas | `DB_POOL_SIZE`, padrão 3 | Mesma variável e mesmo padrão da D-46: a publicada e a máquina de quem cedeu a credencial dividem 20 sessões. `0` desliga e volta ao comportamento da D-90 |
+| Ociosa por 5 min | fechada | A sessão volta para a cota. Uma faxina em segundo plano roda a cada minuto |
+| Vida total de 25 min | não volta a ser guardada | Abaixo dos 30 min de `IDLE_TIME`: a conexão morre do nosso lado, e não derrubada pelo Oracle no meio de uma requisição |
+| Parada há 30 s ou mais | testada com `isValid` antes do uso | O teste custa uma ida e volta; abrir de novo custaria onze |
+| Falha ao encerrar a transação | fechada | Ninguém sabe em que estado ela ficou |
+
+**Medido antes de publicar**, com o mesmo jar rodando na máquina de desenvolvimento contra o
+Oracle da FIAP (média de 5 chamadas depois de uma de aquecimento):
+
+| Rota | `DB_POOL_SIZE=0` (como na D-90) | `DB_POOL_SIZE=5` |
+|---|---|---|
+| `GET /api/v1/produtos?query=tinta` | 341 ms | 91 ms |
+| `GET /api/v1/mapa` | 321 ms | 70 ms |
+| `GET /api/v1/sessoes/{id}/roteiro` | 274 ms | 25 ms |
+
+A suíte de integração completa passou com o reaproveitamento ligado: 365 testes, 0 falhas, 8
+pulados (os de IA, sem chave).
+
+**O que a `Transacao` muda.** Ela devolve a conexão em vez de fechá-la, e desfaz o
+`setReadOnly(true)` antes, para que a próxima transação não receba uma conexão só de leitura.
+Nenhum DAO altera o estado da sessão do Oracle, então nada mais vaza de uma transação para a
+outra.
+
+**O que deixa de valer.** O RNF-02 dos requisitos da migração ("nenhuma conexão fica aberta fora
+de uma transação"). Agora até `DB_POOL_SIZE` conexões ficam abertas, por no máximo 5 minutos
+paradas. Na D-46, o mesmo arranjo deixava 8 das 20 sessões ocupadas, com folga.
+
+**Onde no código.** `factory/ConnectionFactory.java`, `factory/Transacao.java`,
+`config/Configuracao.java`, `Main.java` (fecha as guardadas ao desligar),
+`ConnectionFactoryTest`.
 
 ---
 
