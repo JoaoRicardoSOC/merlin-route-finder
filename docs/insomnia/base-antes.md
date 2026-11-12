@@ -73,6 +73,6 @@ Rodada em 12/11/2026 contra `https://merlin-route-finder-api.onrender.com`, segu
 | E05, E06, E08, E09 | 400 | `StandardError` com a lista em **`validationErrors`**, que é o nome no contrato. O "lista errors" da coluna Esperado é só o nome errado na anotação |
 | E11 | 405 | sem corpo (aceito no RF-04) |
 | E12 | 415 | sem corpo (aceito no RF-04) |
-| E14 | 404, e não 409 | **Achado, mas não regressão.** Na coleção, o E14 usa o item que o passo 20 apagou, então o 404 é o certo. Testado à parte, com um item que ainda existe: marcar como coletado um item de sessão concluída responde **200**. A versão com Spring fazia o mesmo (o `MarcarItemColetadoUseCase` nunca checou o estado da sessão). O 409 de sessão encerrada vale para adicionar item ao roteiro, que é o que o `RespostasDeErroIntegracaoTest` cobre |
+| E14 | 404, e não 409 | **Achado, mas não regressão.** Na coleção, o E14 usa o item que o passo 20 apagou, então o 404 é o certo. Testado à parte, com um item que ainda existe: marcar como coletado um item de sessão concluída responde **200**. A versão com Spring fazia o mesmo (o `MarcarItemColetadoUseCase` nunca checou o estado da sessão). O 409 de sessão encerrada valia só para adicionar item ao roteiro. **Corrigido em 12/11/2026:** coletar e desmarcar também respondem 409 numa sessão encerrada |
 
 **Conclusão:** nenhuma diferença de status ou de formato que o frontend perceba. A jornada também foi percorrida no frontend publicado, com as chamadas saindo pelo domínio da Vercel.
