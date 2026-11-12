@@ -256,6 +256,20 @@ class RespostasDeErroIntegracaoTest {
     }
 
     @Test
+    @DisplayName("409 ao marcar ou desmarcar a coleta numa sessao encerrada")
+    void coletaEmSessaoEncerrada() {
+        UUID sessao = sessaoAberta();
+        String item = corpoDe(chamar("POST", "/api/v1/sessoes/" + sessao + "/roteiro/itens",
+                "{\"produtoId\":\"" + algumProdutoDe("Tintas") + "\"}")).get("id").asText();
+        chamar("POST", "/api/v1/sessoes/" + sessao + "/concluir", null);
+
+        for (String acao : new String[] {"coletar", "desmarcar"}) {
+            String caminho = "/api/v1/roteiro/itens/" + item + "/" + acao;
+            erroBemFormado(chamar("PATCH", caminho, null), 409, caminho);
+        }
+    }
+
+    @Test
     @DisplayName("409 ao trocar um produto por ele mesmo")
     void substituirPorSiMesmo() {
         UUID sessao = sessaoAberta();

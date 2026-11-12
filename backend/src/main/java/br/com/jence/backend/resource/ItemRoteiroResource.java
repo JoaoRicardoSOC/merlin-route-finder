@@ -85,6 +85,8 @@ public class ItemRoteiroResource {
             return e.getResposta();
         } catch (RecursoNaoEncontradoException e) {
             return RespostaDeErro.recursoNaoEncontrado(e, path);
+        } catch (OperacaoNaoPermitidaException e) {
+            return RespostaDeErro.operacaoNaoPermitida(e, path);
         } catch (Exception e) {
             return RespostaDeErro.erroInterno(e, path);
         }
@@ -102,6 +104,8 @@ public class ItemRoteiroResource {
             return e.getResposta();
         } catch (RecursoNaoEncontradoException e) {
             return RespostaDeErro.recursoNaoEncontrado(e, path);
+        } catch (OperacaoNaoPermitidaException e) {
+            return RespostaDeErro.operacaoNaoPermitida(e, path);
         } catch (Exception e) {
             return RespostaDeErro.erroInterno(e, path);
         }

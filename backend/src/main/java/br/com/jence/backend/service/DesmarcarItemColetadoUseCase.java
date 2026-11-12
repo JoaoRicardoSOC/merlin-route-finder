@@ -3,6 +3,7 @@ package br.com.jence.backend.service;
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.model.ItemRoteiro;
 import br.com.jence.backend.model.ListaRoteiro;
+import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dao.ListaRoteiroDao;
 import br.com.jence.backend.dao.SessaoDao;
@@ -10,7 +11,6 @@ import br.com.jence.backend.factory.Transacao;
 import br.com.jence.backend.model.Sessao;
 
 import java.sql.SQLException;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -33,7 +33,8 @@ public class DesmarcarItemColetadoUseCase {
         this.sessaoDao = sessaoDao;
     }
 
-    public ItemRoteiroDetalhadoResponse executar(UUID itemId) throws SQLException, RecursoNaoEncontradoException {
+    public ItemRoteiroDetalhadoResponse executar(UUID itemId)
+            throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
         try (Transacao transacao = Transacao.iniciar()) {
             ItemRoteiroDetalhadoResponse resposta = desmarcar(itemId);
             transacao.confirmar();
@@ -41,7 +42,8 @@ public class DesmarcarItemColetadoUseCase {
         }
     }
 
-    private ItemRoteiroDetalhadoResponse desmarcar(UUID itemId) throws SQLException, RecursoNaoEncontradoException {
+    private ItemRoteiroDetalhadoResponse desmarcar(UUID itemId)
+            throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
         // Pela raiz do agregado, e nao pelo item isolado: e por ela que se chega a sessao.
         ListaRoteiro lista = listaRoteiroDao.buscarPorItem(itemId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Item do roteiro", itemId));
@@ -52,6 +54,17 @@ public class DesmarcarItemColetadoUseCase {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Item do roteiro", itemId));
 
         /*
+         * Sessao encerrada nao aceita mais escrita, como o resto do roteiro (adicionar, remover,
+         * substituir e ruptura). Sem isto, a coleta passava com 200 numa rota ja concluida.
+         */
+        Sessao sessao = sessaoDao.buscarPorId(lista.getSessaoId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao", lista.getSessaoId()));
+        if (!sessao.isValida()) {
+            throw new OperacaoNaoPermitidaException(
+                    "Sessao %s nao esta mais ativa (status %s)".formatted(sessao.getId(), sessao.getStatus()));
+        }
+
+        /*
          * Nao ha nada a fazer com a posicao aqui. Ela e deduzida do item coletado mais
          * recente, entao apagar o instante ja a devolve ao item marcado antes deste - ou a
          * placa lida, se nao houver nenhum. Ver D-64.
@@ -59,11 +72,8 @@ public class DesmarcarItemColetadoUseCase {
         item.desmarcarComoColetado();
         listaRoteiroDao.salvar(lista);
 
-        Optional<Sessao> sessao = sessaoDao.buscarPorId(lista.getSessaoId());
-        if (sessao.isPresent()) {
-            sessao.get().renovarSessao();
-            sessaoDao.salvar(sessao.get());
-        }
+        sessao.renovarSessao();
+        sessaoDao.salvar(sessao);
 
         return ItemRoteiroDetalhadoResponse.de(item);
     }

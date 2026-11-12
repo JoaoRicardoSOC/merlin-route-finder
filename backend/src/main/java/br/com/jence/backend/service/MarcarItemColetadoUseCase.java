@@ -3,6 +3,7 @@ package br.com.jence.backend.service;
 import br.com.jence.backend.dto.ItemRoteiroDetalhadoResponse;
 import br.com.jence.backend.model.ItemRoteiro;
 import br.com.jence.backend.model.ListaRoteiro;
+import br.com.jence.backend.exception.OperacaoNaoPermitidaException;
 import br.com.jence.backend.exception.RecursoNaoEncontradoException;
 import br.com.jence.backend.dao.ListaRoteiroDao;
 import br.com.jence.backend.dao.SessaoDao;
@@ -11,7 +12,6 @@ import br.com.jence.backend.model.Sessao;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -31,7 +31,8 @@ public class MarcarItemColetadoUseCase {
         this.sessaoDao = sessaoDao;
     }
 
-    public ItemRoteiroDetalhadoResponse executar(UUID itemId) throws SQLException, RecursoNaoEncontradoException {
+    public ItemRoteiroDetalhadoResponse executar(UUID itemId)
+            throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
         try (Transacao transacao = Transacao.iniciar()) {
             ItemRoteiroDetalhadoResponse resposta = marcar(itemId);
             transacao.confirmar();
@@ -39,7 +40,8 @@ public class MarcarItemColetadoUseCase {
         }
     }
 
-    private ItemRoteiroDetalhadoResponse marcar(UUID itemId) throws SQLException, RecursoNaoEncontradoException {
+    private ItemRoteiroDetalhadoResponse marcar(UUID itemId)
+            throws SQLException, RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
         /*
          * Carrega pela raiz do agregado em vez de alterar o item isolado: e por ela que se
          * chega a sessao, que precisa ser renovada abaixo.
@@ -52,6 +54,17 @@ public class MarcarItemColetadoUseCase {
                 .findFirst()
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Item do roteiro", itemId));
 
+        /*
+         * Sessao encerrada nao aceita mais escrita, como o resto do roteiro (adicionar, remover,
+         * substituir e ruptura). Sem isto, a coleta passava com 200 numa rota ja concluida.
+         */
+        Sessao sessao = sessaoDao.buscarPorId(lista.getSessaoId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao", lista.getSessaoId()));
+        if (!sessao.isValida()) {
+            throw new OperacaoNaoPermitidaException(
+                    "Sessao %s nao esta mais ativa (status %s)".formatted(sessao.getId(), sessao.getStatus()));
+        }
+
         // Idempotente: tocar duas vezes, ou a rede reenviar, nao e erro - e a hora que vale
         // continua sendo a da primeira confirmacao, para nao mover a posicao do cliente.
         item.marcarComoColetado(LocalDateTime.now());
@@ -62,11 +75,8 @@ public class MarcarItemColetadoUseCase {
          * caminhada de quem tem lista grande numa loja de 10.000m2, quebrando a marcacao dos
          * itens seguintes e o tratamento de ruptura.
          */
-        Optional<Sessao> sessao = sessaoDao.buscarPorId(lista.getSessaoId());
-        if (sessao.isPresent()) {
-            sessao.get().renovarSessao();
-            sessaoDao.salvar(sessao.get());
-        }
+        sessao.renovarSessao();
+        sessaoDao.salvar(sessao);
 
         return ItemRoteiroDetalhadoResponse.de(item);
     }

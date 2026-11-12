@@ -32,19 +32,28 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** As acoes sobre um item do roteiro pelo Jersey, com casos de uso falsos. */
 class ItemRoteiroResourceTest {
 
+    /** Lanca a falha configurada no falso da coleta, se houver. */
+    static void lancar(Exception falha) throws RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+        if (falha instanceof RecursoNaoEncontradoException e) {
+            throw e;
+        }
+        if (falha instanceof OperacaoNaoPermitidaException e) {
+            throw e;
+        }
+    }
+
     static class MarcarFalso extends MarcarItemColetadoUseCase {
         ItemRoteiroDetalhadoResponse item;
-        RecursoNaoEncontradoException falha;
+        Exception falha;
 
         MarcarFalso() {
             super(null, null);
         }
 
         @Override
-        public ItemRoteiroDetalhadoResponse executar(UUID itemId) throws RecursoNaoEncontradoException {
-            if (falha != null) {
-                throw falha;
-            }
+        public ItemRoteiroDetalhadoResponse executar(UUID itemId)
+                throws RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+            lancar(falha);
             return item;
         }
     }
@@ -52,18 +61,17 @@ class ItemRoteiroResourceTest {
     static class DesmarcarFalso extends DesmarcarItemColetadoUseCase {
         final List<UUID> chamadas = new ArrayList<>();
         ItemRoteiroDetalhadoResponse item;
-        RecursoNaoEncontradoException falha;
+        Exception falha;
 
         DesmarcarFalso() {
             super(null, null);
         }
 
         @Override
-        public ItemRoteiroDetalhadoResponse executar(UUID itemId) throws RecursoNaoEncontradoException {
+        public ItemRoteiroDetalhadoResponse executar(UUID itemId)
+                throws RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
             chamadas.add(itemId);
-            if (falha != null) {
-                throw falha;
-            }
+            lancar(falha);
             return item;
         }
     }
@@ -185,6 +193,28 @@ class ItemRoteiroResourceTest {
         desmarcar.falha = new RecursoNaoEncontradoException("Item do roteiro", itemId);
 
         assertEquals(404, servidor.semCorpo("PATCH", item(itemId, "desmarcar")).status());
+    }
+
+    @Test
+    @DisplayName("coletar em sessao encerrada devolve 409")
+    void coletarEmSessaoEncerrada() throws Exception {
+        marcar.falha = new OperacaoNaoPermitidaException("Sessao nao esta mais ativa (status COMPLETED)");
+
+        ServidorDeTeste.Resposta resposta = servidor.semCorpo("PATCH", item(UUID.randomUUID(), "coletar"));
+
+        assertEquals(409, resposta.status());
+        assertEquals("Operação Não Permitida", resposta.texto("error"));
+    }
+
+    @Test
+    @DisplayName("desmarcar em sessao encerrada devolve 409")
+    void desmarcarEmSessaoEncerrada() throws Exception {
+        desmarcar.falha = new OperacaoNaoPermitidaException("Sessao nao esta mais ativa (status COMPLETED)");
+
+        ServidorDeTeste.Resposta resposta = servidor.semCorpo("PATCH", item(UUID.randomUUID(), "desmarcar"));
+
+        assertEquals(409, resposta.status());
+        assertEquals("Operação Não Permitida", resposta.texto("error"));
     }
 
     // ---------------------------------------------------------------- aceitar o substituto
