@@ -20,6 +20,11 @@ services:
     healthCheckPath: /health
 
     envVars:
+      # Conexoes guardadas entre requisicoes (D-96). O schema da FIAP permite 20 sessoes por
+      # usuario, divididas entre esta instancia e a maquina de quem cedeu a credencial. Ver D-46.
+      - key: DB_POOL_SIZE
+        value: "5"
+
       # --- credenciais: definir no painel, nunca aqui ---
       - key: DB_URL
         sync: false
