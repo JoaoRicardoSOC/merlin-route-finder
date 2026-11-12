@@ -1,6 +1,6 @@
 # Especificação Técnica da Placa Física de Sinalização de Loja
 
-> **Card do Backlog:** `T-2` / `O-19`  
+> **Card do Backlog:** `T-2` / `O-19`, encerrados em 12/11/2026: a placa impressa servia às apresentações ao vivo, que já aconteceram. Esta especificação fica como registro de como a solução funcionaria na loja.  
 > **Finalidade:** Comprovar a viabilidade e aplicabilidade física da solução no espaço de 10.000m² da **Leroy Merlin**, demonstrando como os clientes conectam o mundo físico ao Mobile Web App sem barreiras.
 
 ---
