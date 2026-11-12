@@ -51,7 +51,7 @@ journey
 
 1. **Acesso com QR Code Simulado:**
    - Acesse a URL direta com o código do corredor de tintas:  
-     👉 [`https://merlin-route-finder.vercel.app/?code=TIN-02`](https://merlin-route-finder.vercel.app/?code=TIN-02)
+     👉 [`https://merlin-route-finder.vercel.app/?ponto=TIN-02`](https://merlin-route-finder.vercel.app/?ponto=TIN-02)
    - *O que observar:* O sistema inicia uma nova sessão sem pedir login/senha e exibe no topo o chip de localização: **"Você está em: Corredor de Tintas"**.
 2. **Plano B (Digitação Manual do Código):**
    - Caso acesse a URL raiz [`https://merlin-route-finder.vercel.app`](https://merlin-route-finder.vercel.app), toque no chip de localização ou em "Digitar código" e insira `TIN-02` ou `FER-01`.

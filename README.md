@@ -18,7 +18,7 @@
 | Serviço | Link de Acesso | Descrição |
 |---|---|---|
 | 📱 **Mobile Web App** | [**merlin-route-finder.vercel.app**](https://merlin-route-finder.vercel.app) | Aplicação PWA para smartphone (zero instalação necessária). |
-| 📍 **Acesso com Ponto de Loja** | [**merlin-route-finder.vercel.app/?code=TIN-02**](https://merlin-route-finder.vercel.app/?code=TIN-02) | Simula a leitura de QR Code no corredor de Tintas. |
+| 📍 **Acesso com Ponto de Loja** | [**merlin-route-finder.vercel.app/?ponto=TIN-02**](https://merlin-route-finder.vercel.app/?ponto=TIN-02) | Simula a leitura de QR Code no corredor de Tintas. |
 | ⚙️ **Backend REST API** | [**merlin-route-finder-api.onrender.com**](https://merlin-route-finder-api.onrender.com) | API REST em JAX-RS (Jersey sobre Grizzly), com JDBC e Oracle 19c. |
 | 📄 **Contrato da API** | [**openapi.yaml**](backend/src/main/resources/openapi/openapi.yaml) | Especificação OpenAPI 3.0 de todos os endpoints. |
 

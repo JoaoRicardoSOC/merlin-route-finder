@@ -45,7 +45,7 @@ Cada placa afixada nas colunas da Leroy Merlin contém obrigatoriamente **três 
 
 ### 1. O QR Code (Plano A — Caminho Principal)
 - **Conteúdo codificado:** URL completa com parâmetro de inicialização:  
-  `https://merlin-route-finder.vercel.app/?code=TIN-02`
+  `https://merlin-route-finder.vercel.app/?ponto=TIN-02`
 - **Experiência do cliente:** O cliente aponta a câmera nativa do smartphone, clica no link e o aplicativo abre direto no catálogo exibindo: *"Você está em: Corredor de Tintas"*. Sem telas intermediárias.
 
 ### 2. A URL Curta e Legível (Plano B — Conexão)
